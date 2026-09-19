@@ -2,6 +2,7 @@
 data/raw_html/
 data/articles.json
 data/*.log
+data/chroma/
 
 # Python
 __pycache__/
