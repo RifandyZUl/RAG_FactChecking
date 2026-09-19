@@ -1,0 +1,15 @@
+﻿# Cache HTML mentah dan hasil scraping
+data/raw_html/
+data/articles.json
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Rahasia
+.env
+
+# Virtual environment
+.venv/
+venv/
+env/
