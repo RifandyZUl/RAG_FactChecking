@@ -13,7 +13,7 @@ import json
 import re
 import time
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urldefrag, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -31,6 +31,30 @@ DELAY = 1.5  # jeda antar-request, hindari membebani server
 TIMEOUT = 45  # detik; server turnbackhoax.id lambat mengirim respons pertama
 MAX_RETRIES = 3  # retry setelah percobaan pertama (total maksimal 4 percobaan)
 BACKOFF_BASE = 2.0  # jeda retry: 2 dtk, 4 dtk, 8 dtk (exponential backoff)
+
+# Domain media sosial dan arsip: tautan ke sini hampir pasti unggahan hoaks
+# aslinya atau arsipnya, bukan rujukan sahih, sehingga disaring dari
+# `references`. Pencocokan mencakup subdomain (vt.tiktok.com, web.archive.org).
+# Tambahkan domain baru di sini bila ditemukan kebocoran pada artikel lain.
+SOCIAL_ARCHIVE_DOMAINS: tuple[str, ...] = (
+    "tiktok.com",
+    "facebook.com",
+    "fb.watch",  # pemendek resmi Facebook
+    "instagram.com",
+    "x.com",
+    "twitter.com",
+    "youtube.com",
+    "youtu.be",  # pemendek resmi YouTube
+    "archive.li",
+    "archive.ph",
+    "archive.org",
+    "web.archive.org",
+    "archive.today",
+    "archive.is",
+    "archive.vn",
+    "webarchive.io",
+    "ghostarchive.org",
+)
 
 # Dijangkar ke root proyek agar tidak bergantung pada direktori kerja
 RAW_HTML_DIR = Path(__file__).resolve().parent.parent / "data" / "raw_html"
@@ -250,6 +274,136 @@ def extract_claim_sources(container) -> list[str]:
     return sources
 
 
+def normalize_url(url: str) -> str:
+    """Bersihkan URL: buang spasi di ujung dan fragmen (bagian setelah #)."""
+    return urldefrag(url.strip())[0]
+
+
+def unique_urls(urls: list[str]) -> list[str]:
+    """Normalkan tiap URL lalu buang duplikat dengan urutan tetap."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for u in urls:
+        n = normalize_url(u)
+        if n and n not in seen:
+            seen.add(n)
+            result.append(n)
+    return result
+
+
+def matching_blocked_domain(url: str) -> str | None:
+    """Kembalikan domain daftar-blokir yang cocok dengan URL (termasuk subdomain)."""
+    host = (urlparse(url).hostname or "").lower()
+    for domain in SOCIAL_ARCHIVE_DOMAINS:
+        if host == domain or host.endswith("." + domain):
+            return domain
+    return None
+
+
+def filter_references(
+    references_raw: list[str], claim_sources: list[str]
+) -> tuple[list[str], list[dict]]:
+    """
+    Pisahkan referensi mentah menjadi yang aman ditampilkan dan yang dibuang.
+
+    Dua kriteria berlaku sekaligus (sebuah URL bisa memenuhi keduanya):
+      (a) URL juga ada di claim_sources, dan
+      (b) domainnya masuk SOCIAL_ARCHIVE_DOMAINS.
+
+    Mengembalikan (references, references_filtered); tiap elemen yang
+    dibuang berbentuk {"url": ..., "reasons": [...]} agar bisa diaudit.
+    """
+    claim_set = set(claim_sources)
+    kept: list[str] = []
+    filtered: list[dict] = []
+
+    for url in references_raw:
+        reasons: list[str] = []
+        if url in claim_set:
+            reasons.append("cocok dengan claim_sources")
+        domain = matching_blocked_domain(url)
+        if domain:
+            reasons.append(f"domain daftar-blokir: {domain}")
+
+        if reasons:
+            filtered.append({"url": url, "reasons": reasons})
+        else:
+            kept.append(url)
+
+    return kept, filtered
+
+
+def parse_article(html: str, url: str) -> dict | None:
+    """
+    Parse HTML mentah satu artikel menjadi dict terstruktur (tanpa jaringan).
+
+    Dipisah dari scrape_article() agar bisa diuji dengan HTML nyata dari cache.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    h1 = soup.find("h1")
+    if h1 is None:
+        print(f"  [lewati] tidak ada <h1>: {url}")
+        return None
+
+    raw_title = h1.get_text(" ", strip=True)
+    label, clean_title = parse_title(raw_title)
+
+    m_id = re.search(r"/articles/(\d+)-", url)
+    article_id = m_id.group(1) if m_id else None
+
+    # Blok judul: induk terdekat <h1>. Hanya memuat header (judul, kategori,
+    # tanggal), BUKAN seksi isi artikel.
+    header = h1.find_parent(["article", "main", "div"]) or soup
+
+    # Kontainer isi: ancestor terdekat <h1> yang memuat seksi artikel
+    # (<section class="article-origin|article-explanation|article-references">).
+    # Terverifikasi pada HTML asli TurnBackHoax; induk langsung <h1> tidak cukup.
+    container = header
+    while container is not None and container.select_one(
+        "section.article-origin, section.article-explanation, "
+        "section.article-references"
+    ) is None:
+        container = container.parent
+    if container is None:
+        print(f"  [peringatan] seksi artikel tidak ditemukan: {url}")
+        container = header
+
+    sections = extract_sections(container)
+    references_raw = unique_urls(extract_references(container))
+    claim_sources = unique_urls(extract_claim_sources(container))
+    references, references_filtered = filter_references(references_raw, claim_sources)
+
+    # Kategori dan tanggal dicari di blok judul, bukan di seluruh artikel,
+    # agar tidak tertukar dengan tautan/tanggal di isi artikel.
+    category = None
+    cat_link = header.find("a", href=re.compile(r"category="))
+    if cat_link:
+        category = cat_link.get_text(strip=True)
+
+    date = None
+    m_date = re.search(r"\b(\d{2}/\d{2}/\d{4})\b", header.get_text(" ", strip=True))
+    if m_date:
+        date = m_date.group(1)
+
+    return {
+        "article_id": article_id,
+        "url": url,
+        "title": clean_title,
+        "title_raw": raw_title,
+        "label": label,
+        "category": category,
+        "date": date,
+        "narasi": sections.get("narasi", ""),
+        "penjelasan": sections.get("penjelasan", ""),
+        "kesimpulan": sections.get("kesimpulan", ""),
+        "references_raw": references_raw,
+        "references": references,
+        "references_filtered": references_filtered,
+        "claim_sources": claim_sources,
+    }
+
+
 def scrape_article(
     url: str, session: requests.Session, force_refresh: bool = False
 ) -> tuple[dict | None, bool]:
@@ -266,49 +420,7 @@ def scrape_article(
     html, from_network = fetch_html(url, session, cache_path, force_refresh)
     if html is None:
         return None, from_network
-    soup = BeautifulSoup(html, "html.parser")
-
-    h1 = soup.find("h1")
-    if h1 is None:
-        print(f"  [lewati] tidak ada <h1>: {url}")
-        return None, from_network
-
-    raw_title = h1.get_text(" ", strip=True)
-    label, clean_title = parse_title(raw_title)
-
-    # Kontainer isi artikel: ambil elemen induk dari <h1> sebagai perkiraan.
-    # VERIFIKASI: sesuaikan selector ini setelah memeriksa HTML asli.
-    container = h1.find_parent(["article", "main", "div"]) or soup
-
-    sections = extract_sections(container)
-    references = extract_references(container)
-    claim_sources = extract_claim_sources(container)
-
-    # Kategori dan tanggal: dicari dari tautan kategori dan pola tanggal
-    category = None
-    cat_link = container.find("a", href=re.compile(r"category="))
-    if cat_link:
-        category = cat_link.get_text(strip=True)
-
-    date = None
-    m_date = re.search(r"\b(\d{2}/\d{2}/\d{4})\b", container.get_text(" ", strip=True))
-    if m_date:
-        date = m_date.group(1)
-
-    return {
-        "article_id": article_id,
-        "url": url,
-        "title": clean_title,
-        "title_raw": raw_title,
-        "label": label,
-        "category": category,
-        "date": date,
-        "narasi": sections.get("narasi", ""),
-        "penjelasan": sections.get("penjelasan", ""),
-        "kesimpulan": sections.get("kesimpulan", ""),
-        "references": references,
-        "claim_sources": claim_sources,
-    }, from_network
+    return parse_article(html, url), from_network
 
 
 def main(
