@@ -1,6 +1,7 @@
 ﻿# Cache HTML mentah dan hasil scraping
 data/raw_html/
 data/articles.json
+data/*.log
 
 # Python
 __pycache__/

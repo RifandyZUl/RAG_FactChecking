@@ -187,3 +187,16 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
 - Total artikel di situs sumber sekitar 15.000 (1.558 halaman × 10
   artikel). Scraping penuh memakan waktu berjam-jam karena latensi
   server. Tahap awal dibatasi 100–200 artikel terbaru.
+- Jalur retry dan backoff belum teruji pada beban nyata. Selama scraping
+  150 artikel server merespons stabil: tidak ada read timeout maupun
+  connection error, sehingga tidak satu pun retry terpicu (hanya satu
+  `ConnectionError` yang di-retry, pada pengambilan ulang satu artikel
+  sesudahnya). Selebihnya jalur ini hanya diuji dengan session palsu di
+  `src/test_parser.py`. Server juga pernah membalas 200 OK dengan halaman
+  galat ("Terjadi kesalahan saat mengambil data"); kasus ini ditangani
+  validasi HTML sebelum caching, yang juga baru diuji dengan fixture.
+- Penyaringan `references` bersifat konservatif: postingan media sosial,
+  arsip, dan hosting gambar dibuang, sehingga sebagian artikel (16 dari
+  150 pada scraping awal) berakhir dengan `references` kosong padahal
+  Referensi aslinya berisi tautan. Tautan yang dibuang tetap tersimpan di
+  `references_raw` dan `references_filtered`.
