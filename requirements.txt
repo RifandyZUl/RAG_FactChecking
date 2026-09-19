@@ -1,2 +1,7 @@
-requests>=2.31.0
-beautifulsoup4>=4.12.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+# torch: build CPU (mesin dev tanpa CUDA); di Windows, torch dari PyPI adalah build CPU
+torch==2.5.1
+sentence-transformers==6.1.0
+transformers==5.17.0
+chromadb==1.5.9

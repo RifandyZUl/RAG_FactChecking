@@ -28,7 +28,8 @@ Proyek dibangun bertahap dalam dua versi:
   relevansi dokumen, penulis ulang kueri, dan penilaian kredibilitas
   sumber.
 
-Tahap saat ini: penyempurnaan modul scraping (`src/scraper.py`).
+Tahap saat ini: modul ingestion (chunking, embedding, penyimpanan vektor)
+sudah ditulis; scraping (`src/scraper.py`) selesai untuk 150 artikel.
 
 ---
 
@@ -71,11 +72,17 @@ rujukan sahih, `claim_sources` untuk sumber hoaks.
 Pemotongan dokumen dilakukan per seksi (Narasi, Penjelasan, Kesimpulan),
 **bukan** dengan pemotongan buta berdasarkan jumlah karakter.
 
-Alasannya: pencarian semantik mencocokkan klaim pengguna dengan chunk
-seksi **Narasi**, sementara jawaban yang ditampilkan diambil dari chunk
-seksi **Kesimpulan** pada artikel yang sama. Pemotongan berbasis
-karakter merusak logika ini karena satu chunk dapat berisi campuran
-akhir Narasi dan awal Penjelasan.
+Alasannya: chunk per seksi memisahkan peran tiap seksi. Narasi memuat
+klaim yang beredar, Penjelasan memuat proses penelusuran, dan
+**Kesimpulan** memuat fakta yang ditampilkan sebagai jawaban dari artikel
+yang sama. Pemotongan berbasis karakter merusak pemisahan ini karena satu
+chunk dapat berisi campuran akhir Narasi dan awal Penjelasan.
+
+> **Koreksi rasional (hasil uji Versi 1):** rumusan awal aturan ini
+> menyatakan bahwa klaim pengguna paling cocok dengan chunk Narasi.
+> Asumsi itu **tidak terbukti** pada pengujian; lihat "Temuan Ingestion
+> dan Retrieval". Manfaat chunking per seksi adalah pemisahan peran seksi,
+> bukan pencocokan lewat Narasi. Aturannya sendiri tidak berubah.
 
 ### 3. Jangan biarkan LLM mengarang tautan
 
@@ -130,10 +137,15 @@ Ketentuan yang berlaku:
 RAG_FactChecking/
 ├── src/
 │   ├── scraper.py        # Pengambilan & parsing artikel TurnBackHoax
-│   └── test_parser.py    # Uji logika parsing dengan HTML tiruan
+│   ├── test_parser.py    # Uji parsing/retry/penyaringan dengan HTML nyata
+│   ├── fixtures/         # HTML nyata untuk uji (di-commit)
+│   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
+│   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
+│   └── test_retrieval.py # Verifikasi retrieval pada kueri sehari-hari
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
-│   └── articles.json     # Hasil scraping terstruktur
+│   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)
+│   └── chroma/           # Basis vektor ChromaDB (tidak di-commit)
 ├── requirements.txt
 └── CLAUDE.md
 ```
@@ -174,6 +186,57 @@ bukan hanya hasil akhirnya.
 
 ---
 
+## Temuan Ingestion dan Retrieval (Versi 1)
+
+Hasil pengujian pertama terhadap 450 chunk (150 artikel), memakai 5 kueri
+berbahasa sehari-hari (`src/test_retrieval.py`). **Sampelnya baru 5
+kueri**: cukup untuk sanity check dan menemukan masalah, bukan evaluasi
+statistik.
+
+### Penjelasan menang atas Narasi
+
+Asumsi awal bahwa klaim pengguna paling cocok dengan chunk Narasi
+**tidak terbukti**. Pada peringkat satu, chunk Penjelasan menang pada 3
+dari 5 kueri, Narasi 1, Kesimpulan 1. Pada seluruh top-5 chunk (25 hasil):
+Penjelasan 11, Kesimpulan 7, Narasi 7. Chunk Penjelasan yang terpotong
+pada 512 token pun tetap cocok kuat. Chunking per seksi dipertahankan
+karena jawaban diambil dari Kesimpulan artikel yang sama, tetapi
+rasionalnya adalah pemisahan peran seksi, bukan pencocokan lewat Narasi
+(lihat koreksi pada Aturan Wajib #2).
+
+### Retrieval diagregasi per `article_id`
+
+Skor sebuah artikel adalah skor tertinggi di antara chunk-chunknya, apa
+pun seksinya (`src/retriever.py`, `aggregate_by_article`). Tanpa agregasi,
+satu artikel bisa mengisi beberapa peringkat teratas. Jawaban tetap
+diambil dari chunk Kesimpulan artikel pemenang, dan tautan dari metadata
+(Aturan Wajib #3).
+
+### Skor kemiripan berdaya pisah rendah
+
+Pada level artikel: kueri 2 memberi artikel benar 0,6227 dan artikel lain
+0,6213 (selisih ≈ 0,001); kueri 5 memberi artikel lain 0,6877 melawan
+artikel benar 0,6922. Skor artikel benar berkisar 0,567 sampai 0,692,
+sedangkan tetangga yang salah bisa mencapai 0,688. Akibatnya
+**Aturan Wajib #4 (menyatakan klaim belum ditemukan) tidak dapat
+diwujudkan dengan ambang skor kemiripan yang sederhana.** Ini justifikasi
+empiris kebutuhan node penilai relevansi (grader) di Versi 2.
+
+### Pemuatan model: safetensors dari PR konversi #130
+
+`transformers` 5.x menolak memuat `pytorch_model.bin` bila torch < 2.6
+(CVE-2025-32434), sedangkan torch terpasang 2.5.1. Repo `BAAI/bge-m3`
+hanya menyediakan `.bin` di branch `main`, sehingga model dimuat dari
+varian safetensors milik PR konversi #130 (pembuat: `SFconvertbot`, akun
+konversi otomatis Hugging Face) dengan `revision` dikunci ke hash commit
+`9a0624b8…` (`MODEL_REVISION` di `src/ingest.py`). Yang **belum
+terverifikasi**: PR itu belum di-review atau di-merge BAAI, dan kesamaan
+numerik bobotnya dengan `.bin` belum dibandingkan. Yang cocok: ukuran
+berkas, 391 tensor, dan 567,8 juta parameter. Embedding 450 chunk saat ini
+dihasilkan dari bobot ini.
+
+---
+
 ## Keterbatasan yang Diketahui
 
 Batasan berikut sudah disadari dan diterima. Jangan memperlakukannya
@@ -195,6 +258,16 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   `src/test_parser.py`. Server juga pernah membalas 200 OK dengan halaman
   galat ("Terjadi kesalahan saat mengambil data"); kasus ini ditangani
   validasi HTML sebelum caching, yang juga baru diuji dengan fixture.
+- Embedding dibatasi ke **512 token** (`MAX_SEQ_LENGTH` di
+  `src/chunker.py`) meski bge-m3 mendukung 8192. Alasan: mesin dev
+  hanya berCPU dengan RAM bebas ~2,5 GB, sehingga batas pendek menekan
+  memori dan waktu embedding; dan target pencocokan utama adalah seksi
+  Narasi (median 270 token) yang mayoritas muat utuh. Terukur pada 450
+  chunk (150 artikel): Narasi terpotong 11/150 (7,3%), Penjelasan 58/150
+  (38,7%), Kesimpulan 0/150. Chunk terpotong ditandai `truncated` pada
+  metadata untuk audit. Bagian ekor Narasi/Penjelasan yang terpotong tidak
+  ikut terindeks; keputusan ini perlu ditinjau ulang di Versi 2 (mengubah
+  batas berarti embedding ulang semua chunk: `python src/ingest.py --force`).
 - Penyaringan `references` bersifat konservatif dan berbasis domain:
   semua tautan ke media sosial (Instagram, Facebook, TikTok, X/Twitter,
   Threads, YouTube), arsip, dan hosting gambar dibuang, tanpa membedakan
