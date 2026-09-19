@@ -195,8 +195,22 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   `src/test_parser.py`. Server juga pernah membalas 200 OK dengan halaman
   galat ("Terjadi kesalahan saat mengambil data"); kasus ini ditangani
   validasi HTML sebelum caching, yang juga baru diuji dengan fixture.
-- Penyaringan `references` bersifat konservatif: postingan media sosial,
-  arsip, dan hosting gambar dibuang, sehingga sebagian artikel (16 dari
-  150 pada scraping awal) berakhir dengan `references` kosong padahal
+- Penyaringan `references` bersifat konservatif dan berbasis domain:
+  semua tautan ke media sosial (Instagram, Facebook, TikTok, X/Twitter,
+  Threads, YouTube), arsip, dan hosting gambar dibuang, tanpa membedakan
+  postingan dari beranda akun. Akibatnya sebagian artikel (16 dari 150
+  pada scraping awal) berakhir dengan `references` kosong padahal
   Referensi aslinya berisi tautan. Tautan yang dibuang tetap tersimpan di
   `references_raw` dan `references_filtered`.
+- **Ditunda ke Versi 2:** penyaringan berbasis kredibilitas sumber yang
+  lebih cerdas, termasuk membedakan akun resmi instansi (mis.
+  `instagram.com/kemensetneg.ri/`) dari akun penyebar hoaks. Alasan
+  keputusan: (1) percobaan meloloskan beranda akun ("Opsi 2") tidak
+  menyelamatkan satu pun dari 16 artikel yang `references`-nya kosong,
+  karena artikel-artikel itu hanya berisi postingan dan arsip; (2) 11
+  beranda akun yang lolos tidak bisa diverifikasi dari sini (Instagram dan
+  TikTok menyajikan halaman kosong/login untuk klien HTTP biasa), sehingga
+  sebagian bisa saja akun penyebar hoaks, yang melanggar Aturan Wajib #1.
+  Trade-off-nya dinilai merugikan, jadi dipilih penyaringan penuh per
+  domain. Penilaian kredibilitas sumber memang bagian dari lingkup
+  Corrective RAG.

@@ -37,9 +37,23 @@ BACKOFF_BASE = 2.0  # jeda retry: 2 dtk, 4 dtk, 8 dtk (exponential backoff)
 # (vt.tiktok.com, web.archive.org). Tambahkan domain baru di sini bila
 # ditemukan kebocoran pada artikel lain.
 
-# Domain yang SELALU disaring: arsip (salinan unggahan hoaks) dan hosting
-# gambar (tangkapan layar yang tidak bisa diverifikasi pengguna).
+# Domain yang disaring dari `references`, apa pun path-nya (postingan maupun
+# beranda akun). Tiga kelompok: media sosial (tempat hoaks beredar; akun resmi
+# instansi tidak bisa dibedakan dari akun penyebar hoaks tanpa penilaian
+# kredibilitas, ditunda ke Versi 2), arsip (salinan unggahan hoaks), dan
+# hosting gambar (tangkapan layar yang tidak bisa diverifikasi pengguna).
 ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
+    # media sosial
+    "tiktok.com",
+    "facebook.com",
+    "fb.watch",  # pemendek resmi Facebook
+    "instagram.com",
+    "x.com",
+    "twitter.com",
+    "threads.com",
+    "youtube.com",
+    "youtu.be",  # pemendek resmi YouTube
+    # arsip
     "archive.li",
     "archive.ph",
     "archive.org",
@@ -50,30 +64,10 @@ ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
     "archive.md",
     "webarchive.io",
     "ghostarchive.org",
+    # hosting gambar
     "ibb.co.com",
     "ibb.co",  # domain asli imgbb; ibb.co.com adalah cerminannya
 )
-
-# Domain media sosial: hanya tautan ke POSTINGAN yang disaring (kemungkinan
-# unggahan hoaks). Beranda akun (mis. instagram.com/kemensetneg.ri/) lolos
-# karena sering dipakai artikel sebagai rujukan "akun resmi". Nilainya adalah
-# pola path yang menandai sebuah postingan.
-SOCIAL_POST_PATTERNS: dict[str, re.Pattern[str]] = {
-    "instagram.com": re.compile(r"/(p|reel|reels|tv|stories)/"),
-    "facebook.com": re.compile(
-        r"/(posts/|photos?/|videos/|reel/|share/|watch(/|\?|$)"
-        r"|permalink\.php|photo\.php|story\.php)"
-    ),
-    "fb.watch": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
-    "x.com": re.compile(r"/status(es)?/"),
-    "twitter.com": re.compile(r"/status(es)?/"),
-    "youtube.com": re.compile(r"^/(watch|shorts|live|embed)(/|\?|$)"),
-    "youtu.be": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
-    "tiktok.com": re.compile(r"/(video|photo)/"),
-    "vt.tiktok.com": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
-    "vm.tiktok.com": re.compile(r"^/."),
-    "threads.com": re.compile(r"/post/"),
-}
 
 # Dijangkar ke root proyek agar tidak bergantung pada direktori kerja
 RAW_HTML_DIR = Path(__file__).resolve().parent.parent / "data" / "raw_html"
@@ -352,28 +346,17 @@ def unique_urls(urls: list[str]) -> list[str]:
     return result
 
 
-def _host_matches(host: str, domain: str) -> bool:
-    return host == domain or host.endswith("." + domain)
-
-
 def blocked_reason(url: str) -> str | None:
     """
-    Kembalikan alasan URL harus disaring berdasarkan domain/path, atau None.
+    Kembalikan alasan URL harus disaring berdasarkan domainnya, atau None.
 
-    - domain di ALWAYS_BLOCKED_DOMAINS: selalu disaring
-    - domain di SOCIAL_POST_PATTERNS: disaring hanya bila path menandai
-      sebuah postingan (beranda akun lolos)
+    Pencocokan mencakup subdomain (vt.tiktok.com, web.archive.org) dan tidak
+    memperhatikan path: postingan maupun beranda akun sama-sama disaring.
     """
-    parsed = urlparse(url)
-    host = (parsed.hostname or "").lower()
-
+    host = (urlparse(url).hostname or "").lower()
     for domain in ALWAYS_BLOCKED_DOMAINS:
-        if _host_matches(host, domain):
+        if host == domain or host.endswith("." + domain):
             return f"domain daftar-blokir: {domain}"
-
-    for domain, pattern in SOCIAL_POST_PATTERNS.items():
-        if _host_matches(host, domain) and pattern.search(parsed.path):
-            return f"postingan media sosial: {domain}"
     return None
 
 
@@ -385,8 +368,8 @@ def filter_references(
 
     Dua kriteria berlaku sekaligus (sebuah URL bisa memenuhi keduanya):
       (a) URL juga ada di claim_sources, dan
-      (b) domain/path-nya cocok aturan blocked_reason() (arsip, hosting
-          gambar, atau postingan media sosial).
+      (b) domainnya masuk ALWAYS_BLOCKED_DOMAINS (media sosial, arsip,
+          atau hosting gambar), apa pun path-nya.
 
     Mengembalikan (references, references_filtered); tiap elemen yang
     dibuang berbentuk {"url": ..., "reasons": [...]} agar bisa diaudit.

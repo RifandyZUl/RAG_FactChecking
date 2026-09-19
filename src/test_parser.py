@@ -59,7 +59,7 @@ def test_normalize_and_domain() -> None:
     ]:
         assert blocked_reason(u), f"seharusnya disaring: {u}"
 
-    # Media sosial: postingan disaring
+    # Media sosial: disaring, baik postingan maupun beranda akun
     for u in [
         "https://vt.tiktok.com/ZSq9c6ky7/",
         "https://www.tiktok.com/@sindonews/video/7516875885891374343",
@@ -74,11 +74,8 @@ def test_normalize_and_domain() -> None:
         "https://www.youtube.com/watch?v=T7UMijc_ddI",
         "https://www.youtube.com/shorts/a3B204GdwtI", "https://youtu.be/abc",
         "https://www.threads.com/@bacotwakanda.id/post/DcgGDHyEkiA",
-    ]:
-        assert blocked_reason(u), f"postingan seharusnya disaring: {u}"
-
-    # Media sosial: beranda akun lolos (Opsi 2)
-    for u in [
+        # beranda akun: sengaja ikut disaring (penilaian akun resmi vs
+        # penyebar hoaks ditunda ke Versi 2, lihat CLAUDE.md)
         "https://www.instagram.com/kemensetneg.ri/",
         "https://www.instagram.com/bank_brksyariah?igshid=YzAw",
         "https://x.com/brksyariahid",
@@ -87,7 +84,7 @@ def test_normalize_and_domain() -> None:
         "https://www.youtube.com/@kemenkes",
         "https://www.threads.com/@lowongankerja209",
     ]:
-        assert blocked_reason(u) is None, f"beranda akun seharusnya lolos: {u}"
+        assert blocked_reason(u), f"seharusnya disaring: {u}"
 
     # Tidak boleh salah cocok pada domain yang hanya berakhiran mirip
     assert blocked_reason("https://www.netflix.com/id") is None
