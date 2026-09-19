@@ -4,9 +4,9 @@ Scraper artikel TurnBackHoax.id
 Mengambil artikel cek fakta dan memecahnya berdasarkan seksi (Narasi,
 Penjelasan, Kesimpulan) sesuai struktur baku artikel TurnBackHoax.
 
-Catatan: halaman daftar artikel kemungkinan dimuat lewat JavaScript
-(tombol "Load More"). Jika discover_article_urls() mengembalikan daftar
-kosong, lihat catatan di bagian bawah file ini.
+Catatan: halaman daftar artikel sudah terverifikasi server-side rendered
+dengan paginasi ?page=N. Kendala utamanya adalah latensi server yang
+tinggi, sehingga semua permintaan memakai timeout, retry, dan cache HTML.
 """
 
 import json
@@ -22,23 +22,85 @@ BASE_URL = "https://turnbackhoax.id"
 LIST_URL = f"{BASE_URL}/articles"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Connection": "keep-alive",
 }
 DELAY = 1.5  # jeda antar-request, hindari membebani server
+TIMEOUT = 45  # detik; server turnbackhoax.id lambat mengirim respons pertama
+MAX_RETRIES = 3  # retry setelah percobaan pertama (total maksimal 4 percobaan)
+BACKOFF_BASE = 2.0  # jeda retry: 2 dtk, 4 dtk, 8 dtk (exponential backoff)
+
+# Dijangkar ke root proyek agar tidak bergantung pada direktori kerja
+RAW_HTML_DIR = Path(__file__).resolve().parent.parent / "data" / "raw_html"
 
 
-def get_soup(url: str) -> BeautifulSoup | None:
-    """Ambil halaman dan kembalikan objek BeautifulSoup."""
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-        return BeautifulSoup(resp.text, "html.parser")
-    except requests.RequestException as e:
-        print(f"  [gagal] {url} -> {e}")
-        return None
+def make_session() -> requests.Session:
+    """Buat Session yang dipakai ulang (koneksi keep-alive) dengan header browser."""
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    return session
 
 
-def discover_article_urls(max_articles: int = 150, max_pages: int = 40) -> list[str]:
+def fetch_html(
+    url: str,
+    session: requests.Session,
+    cache_path: Path | None = None,
+    force_refresh: bool = False,
+) -> tuple[str | None, bool]:
+    """
+    Ambil HTML mentah sebuah halaman, memakai cache bila tersedia.
+
+    Mengembalikan (html, dari_jaringan). Nilai kedua False bila HTML dibaca
+    dari cache, sehingga pemanggil boleh melewati jeda antar-request.
+
+    Retry dengan exponential backoff HANYA untuk read timeout dan connection
+    error. Galat HTTP (termasuk 404) tidak di-retry.
+    """
+    if cache_path is not None and not force_refresh and cache_path.exists():
+        return cache_path.read_text(encoding="utf-8"), False
+
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            resp = session.get(url, timeout=TIMEOUT)
+            resp.raise_for_status()
+        except (requests.ReadTimeout, requests.ConnectionError) as e:
+            # ConnectTimeout adalah turunan ConnectionError, jadi ikut tertangkap
+            if attempt == MAX_RETRIES:
+                print(f"  [gagal] {url} -> {type(e).__name__} setelah "
+                      f"{MAX_RETRIES + 1} percobaan")
+                return None, True
+            wait = BACKOFF_BASE * (2 ** attempt)
+            print(f"  [retry {attempt + 1}/{MAX_RETRIES}] {type(e).__name__}; "
+                  f"menunggu {wait:.0f} dtk")
+            time.sleep(wait)
+        except requests.RequestException as e:
+            # Termasuk HTTPError (404, 5xx): tidak di-retry
+            print(f"  [gagal] {url} -> {e}")
+            return None, True
+        else:
+            if cache_path is not None:
+                # Tulis ke berkas sementara lalu ganti, agar cache tidak
+                # berisi HTML terpotong bila proses terhenti di tengah jalan
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                tmp = cache_path.with_suffix(".tmp")
+                tmp.write_text(resp.text, encoding="utf-8")
+                tmp.replace(cache_path)
+            return resp.text, True
+
+    return None, True  # tak tercapai; menenangkan pemeriksa tipe
+
+
+def get_soup(url: str, session: requests.Session) -> BeautifulSoup | None:
+    """Ambil halaman daftar (tanpa cache) dan kembalikan objek BeautifulSoup."""
+    html, _ = fetch_html(url, session)
+    return BeautifulSoup(html, "html.parser") if html is not None else None
+
+
+def discover_article_urls(
+    session: requests.Session, max_articles: int = 150, max_pages: int = 40
+) -> list[str]:
     """
     Kumpulkan URL artikel dari halaman daftar.
 
@@ -51,7 +113,7 @@ def discover_article_urls(max_articles: int = 150, max_pages: int = 40) -> list[
     for page in range(1, max_pages + 1):
         page_url = f"{LIST_URL}?page={page}"
         print(f"[daftar] halaman {page}")
-        soup = get_soup(page_url)
+        soup = get_soup(page_url, session)
         if soup is None:
             break
 
@@ -188,16 +250,28 @@ def extract_claim_sources(container) -> list[str]:
     return sources
 
 
-def scrape_article(url: str) -> dict | None:
-    """Ambil dan parse satu artikel menjadi dict terstruktur."""
-    soup = get_soup(url)
-    if soup is None:
-        return None
+def scrape_article(
+    url: str, session: requests.Session, force_refresh: bool = False
+) -> tuple[dict | None, bool]:
+    """
+    Ambil dan parse satu artikel menjadi dict terstruktur.
+
+    HTML mentah di-cache di data/raw_html/{article_id}.html; force_refresh=True
+    melewati cache. Mengembalikan (artikel, dari_jaringan).
+    """
+    m_id = re.search(r"/articles/(\d+)-", url)
+    article_id = m_id.group(1) if m_id else None
+    cache_path = RAW_HTML_DIR / f"{article_id}.html" if article_id else None
+
+    html, from_network = fetch_html(url, session, cache_path, force_refresh)
+    if html is None:
+        return None, from_network
+    soup = BeautifulSoup(html, "html.parser")
 
     h1 = soup.find("h1")
     if h1 is None:
         print(f"  [lewati] tidak ada <h1>: {url}")
-        return None
+        return None, from_network
 
     raw_title = h1.get_text(" ", strip=True)
     label, clean_title = parse_title(raw_title)
@@ -209,9 +283,6 @@ def scrape_article(url: str) -> dict | None:
     sections = extract_sections(container)
     references = extract_references(container)
     claim_sources = extract_claim_sources(container)
-
-    m_id = re.search(r"/articles/(\d+)-", url)
-    article_id = m_id.group(1) if m_id else None
 
     # Kategori dan tanggal: dicari dari tautan kategori dan pola tanggal
     category = None
@@ -237,20 +308,26 @@ def scrape_article(url: str) -> dict | None:
         "kesimpulan": sections.get("kesimpulan", ""),
         "references": references,
         "claim_sources": claim_sources,
-    }
+    }, from_network
 
 
-def main(max_articles: int = 150, out_path: str = "data/articles.json") -> None:
+def main(
+    max_articles: int = 150,
+    out_path: str = "data/articles.json",
+    force_refresh: bool = False,
+) -> None:
+    session = make_session()
+
     print("=== Tahap 1: mengumpulkan URL artikel ===")
-    urls = discover_article_urls(max_articles=max_articles)
+    urls = discover_article_urls(session, max_articles=max_articles)
 
     if not urls:
         print(
             "\nTidak ada URL artikel yang ditemukan.\n"
-            "Kemungkinan daftar artikel dimuat lewat JavaScript.\n"
-            "Alternatif: gunakan Playwright/Selenium untuk merender halaman daftar,\n"
-            "atau periksa tab Network di browser untuk menemukan endpoint JSON\n"
-            "yang dipakai tombol 'Load More'."
+            "Halaman daftar sudah terverifikasi server-side rendered, jadi "
+            "periksa log di atas:\n"
+            "kemungkinan timeout/connection error atau perubahan pola tautan "
+            "/articles/{id}-{slug}."
         )
         return
 
@@ -258,10 +335,11 @@ def main(max_articles: int = 150, out_path: str = "data/articles.json") -> None:
     articles = []
     for i, url in enumerate(urls, 1):
         print(f"[{i}/{len(urls)}] {url}")
-        art = scrape_article(url)
+        art, from_network = scrape_article(url, session, force_refresh)
         if art:
             articles.append(art)
-        time.sleep(DELAY)
+        if from_network:  # jeda hanya perlu bila server benar-benar dipanggil
+            time.sleep(DELAY)
 
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
