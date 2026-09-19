@@ -12,6 +12,7 @@ tinggi, sehingga semua permintaan memakai timeout, retry, dan cache HTML.
 import json
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import urldefrag, urljoin, urlparse
 
@@ -32,19 +33,13 @@ TIMEOUT = 45  # detik; server turnbackhoax.id lambat mengirim respons pertama
 MAX_RETRIES = 3  # retry setelah percobaan pertama (total maksimal 4 percobaan)
 BACKOFF_BASE = 2.0  # jeda retry: 2 dtk, 4 dtk, 8 dtk (exponential backoff)
 
-# Domain media sosial dan arsip: tautan ke sini hampir pasti unggahan hoaks
-# aslinya atau arsipnya, bukan rujukan sahih, sehingga disaring dari
-# `references`. Pencocokan mencakup subdomain (vt.tiktok.com, web.archive.org).
-# Tambahkan domain baru di sini bila ditemukan kebocoran pada artikel lain.
-SOCIAL_ARCHIVE_DOMAINS: tuple[str, ...] = (
-    "tiktok.com",
-    "facebook.com",
-    "fb.watch",  # pemendek resmi Facebook
-    "instagram.com",
-    "x.com",
-    "twitter.com",
-    "youtube.com",
-    "youtu.be",  # pemendek resmi YouTube
+# Penyaringan `references`. Pencocokan domain mencakup subdomain
+# (vt.tiktok.com, web.archive.org). Tambahkan domain baru di sini bila
+# ditemukan kebocoran pada artikel lain.
+
+# Domain yang SELALU disaring: arsip (salinan unggahan hoaks) dan hosting
+# gambar (tangkapan layar yang tidak bisa diverifikasi pengguna).
+ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
     "archive.li",
     "archive.ph",
     "archive.org",
@@ -52,9 +47,33 @@ SOCIAL_ARCHIVE_DOMAINS: tuple[str, ...] = (
     "archive.today",
     "archive.is",
     "archive.vn",
+    "archive.md",
     "webarchive.io",
     "ghostarchive.org",
+    "ibb.co.com",
+    "ibb.co",  # domain asli imgbb; ibb.co.com adalah cerminannya
 )
+
+# Domain media sosial: hanya tautan ke POSTINGAN yang disaring (kemungkinan
+# unggahan hoaks). Beranda akun (mis. instagram.com/kemensetneg.ri/) lolos
+# karena sering dipakai artikel sebagai rujukan "akun resmi". Nilainya adalah
+# pola path yang menandai sebuah postingan.
+SOCIAL_POST_PATTERNS: dict[str, re.Pattern[str]] = {
+    "instagram.com": re.compile(r"/(p|reel|reels|tv|stories)/"),
+    "facebook.com": re.compile(
+        r"/(posts/|photos?/|videos/|reel/|share/|watch(/|\?|$)"
+        r"|permalink\.php|photo\.php|story\.php)"
+    ),
+    "fb.watch": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
+    "x.com": re.compile(r"/status(es)?/"),
+    "twitter.com": re.compile(r"/status(es)?/"),
+    "youtube.com": re.compile(r"^/(watch|shorts|live|embed)(/|\?|$)"),
+    "youtu.be": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
+    "tiktok.com": re.compile(r"/(video|photo)/"),
+    "vt.tiktok.com": re.compile(r"^/."),  # pemendek: selalu mengarah ke video
+    "vm.tiktok.com": re.compile(r"^/."),
+    "threads.com": re.compile(r"/post/"),
+}
 
 # Dijangkar ke root proyek agar tidak bergantung pada direktori kerja
 RAW_HTML_DIR = Path(__file__).resolve().parent.parent / "data" / "raw_html"
@@ -67,11 +86,44 @@ def make_session() -> requests.Session:
     return session
 
 
+ARTICLE_PATH = re.compile(r"^/articles/\d+-")
+
+
+def find_article_urls(soup: BeautifulSoup) -> list[str]:
+    """Ambil URL artikel (pola /articles/{id}-{slug}) dari halaman daftar."""
+    urls: list[str] = []
+    for a in soup.find_all("a", href=True):
+        path = a["href"].replace(BASE_URL, "")
+        if ARTICLE_PATH.match(path):
+            urls.append(urljoin(BASE_URL, path))
+    return urls
+
+
+def is_valid_list_html(html: str) -> bool:
+    """Halaman daftar sah bila memuat minimal satu tautan artikel."""
+    return bool(find_article_urls(BeautifulSoup(html, "html.parser")))
+
+
+def is_valid_article_html(html: str) -> bool:
+    """
+    Halaman artikel sah bila punya <h1> dan minimal satu seksi artikel.
+
+    Server sesekali membalas 200 OK dengan halaman galat ("Terjadi kesalahan
+    saat mengambil data") yang tidak punya keduanya.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    return soup.find("h1") is not None and soup.select_one(
+        "section.article-origin, section.article-explanation, "
+        "section.article-references"
+    ) is not None
+
+
 def fetch_html(
     url: str,
     session: requests.Session,
     cache_path: Path | None = None,
     force_refresh: bool = False,
+    validate: Callable[[str], bool] | None = None,
 ) -> tuple[str | None, bool]:
     """
     Ambil HTML mentah sebuah halaman, memakai cache bila tersedia.
@@ -79,11 +131,17 @@ def fetch_html(
     Mengembalikan (html, dari_jaringan). Nilai kedua False bila HTML dibaca
     dari cache, sehingga pemanggil boleh melewati jeda antar-request.
 
-    Retry dengan exponential backoff HANYA untuk read timeout dan connection
-    error. Galat HTTP (termasuk 404) tidak di-retry.
+    Retry dengan exponential backoff untuk read timeout, connection error,
+    dan respons 200 yang gagal `validate` (halaman galat dari server).
+    Galat HTTP (termasuk 404) tidak di-retry. HTML yang tidak lolos validasi
+    tidak pernah ditulis ke cache, dan cache yang tidak lolos validasi
+    diabaikan lalu diambil ulang dari jaringan.
     """
     if cache_path is not None and not force_refresh and cache_path.exists():
-        return cache_path.read_text(encoding="utf-8"), False
+        cached = cache_path.read_text(encoding="utf-8")
+        if validate is None or validate(cached):
+            return cached, False
+        print(f"  [cache rusak] {cache_path.name} tidak lolos validasi -> ambil ulang")
 
     for attempt in range(MAX_RETRIES + 1):
         try:
@@ -91,34 +149,36 @@ def fetch_html(
             resp.raise_for_status()
         except (requests.ReadTimeout, requests.ConnectionError) as e:
             # ConnectTimeout adalah turunan ConnectionError, jadi ikut tertangkap
-            if attempt == MAX_RETRIES:
-                print(f"  [gagal] {url} -> {type(e).__name__} setelah "
-                      f"{MAX_RETRIES + 1} percobaan")
-                return None, True
-            wait = BACKOFF_BASE * (2 ** attempt)
-            print(f"  [retry {attempt + 1}/{MAX_RETRIES}] {type(e).__name__}; "
-                  f"menunggu {wait:.0f} dtk")
-            time.sleep(wait)
+            reason = type(e).__name__
         except requests.RequestException as e:
             # Termasuk HTTPError (404, 5xx): tidak di-retry
             print(f"  [gagal] {url} -> {e}")
             return None, True
         else:
-            if cache_path is not None:
-                # Tulis ke berkas sementara lalu ganti, agar cache tidak
-                # berisi HTML terpotong bila proses terhenti di tengah jalan
-                cache_path.parent.mkdir(parents=True, exist_ok=True)
-                tmp = cache_path.with_suffix(".tmp")
-                tmp.write_text(resp.text, encoding="utf-8")
-                tmp.replace(cache_path)
-            return resp.text, True
+            if validate is None or validate(resp.text):
+                if cache_path is not None:
+                    # Tulis ke berkas sementara lalu ganti, agar cache tidak
+                    # berisi HTML terpotong bila proses terhenti di tengah jalan
+                    cache_path.parent.mkdir(parents=True, exist_ok=True)
+                    tmp = cache_path.with_suffix(".tmp")
+                    tmp.write_text(resp.text, encoding="utf-8")
+                    tmp.replace(cache_path)
+                return resp.text, True
+            reason = "halaman galat (HTML tidak lolos validasi)"
+
+        if attempt == MAX_RETRIES:
+            print(f"  [gagal] {url} -> {reason} setelah {MAX_RETRIES + 1} percobaan")
+            return None, True
+        wait = BACKOFF_BASE * (2 ** attempt)
+        print(f"  [retry {attempt + 1}/{MAX_RETRIES}] {reason}; menunggu {wait:.0f} dtk")
+        time.sleep(wait)
 
     return None, True  # tak tercapai; menenangkan pemeriksa tipe
 
 
 def get_soup(url: str, session: requests.Session) -> BeautifulSoup | None:
-    """Ambil halaman daftar (tanpa cache) dan kembalikan objek BeautifulSoup."""
-    html, _ = fetch_html(url, session)
+    """Ambil halaman daftar (tanpa cache, divalidasi) sebagai BeautifulSoup."""
+    html, _ = fetch_html(url, session, validate=is_valid_list_html)
     return BeautifulSoup(html, "html.parser") if html is not None else None
 
 
@@ -128,33 +188,34 @@ def discover_article_urls(
     """
     Kumpulkan URL artikel dari halaman daftar.
 
-    Pola URL artikel: /articles/{id}-{slug}
+    Pola URL artikel: /articles/{id}-{slug}. Halaman tanpa tautan artikel
+    dianggap galat server (di-retry oleh fetch_html), BUKAN akhir paginasi.
+    Bila halaman tetap gagal setelah retry, pengumpulan berhenti dengan
+    pesan eksplisit dan hasil parsial dikembalikan.
     """
     urls: list[str] = []
     seen: set[str] = set()
-    pattern = re.compile(r"^/articles/\d+-")
 
     for page in range(1, max_pages + 1):
         page_url = f"{LIST_URL}?page={page}"
         print(f"[daftar] halaman {page}")
         soup = get_soup(page_url, session)
         if soup is None:
+            print(f"  [berhenti] halaman {page} gagal diambil; "
+                  f"hasil parsial: {len(urls)} URL")
             break
 
         found_on_page = 0
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            path = href.replace(BASE_URL, "")
-            if pattern.match(path):
-                full = urljoin(BASE_URL, path)
-                if full not in seen:
-                    seen.add(full)
-                    urls.append(full)
-                    found_on_page += 1
+        for full in find_article_urls(soup):
+            if full not in seen:
+                seen.add(full)
+                urls.append(full)
+                found_on_page += 1
 
         print(f"  ditemukan {found_on_page} artikel baru (total {len(urls)})")
 
         if found_on_page == 0:
+            # Halaman sah tetapi semua artikelnya sudah pernah terlihat
             print("  tidak ada artikel baru -> berhenti")
             break
         if len(urls) >= max_articles:
@@ -291,12 +352,28 @@ def unique_urls(urls: list[str]) -> list[str]:
     return result
 
 
-def matching_blocked_domain(url: str) -> str | None:
-    """Kembalikan domain daftar-blokir yang cocok dengan URL (termasuk subdomain)."""
-    host = (urlparse(url).hostname or "").lower()
-    for domain in SOCIAL_ARCHIVE_DOMAINS:
-        if host == domain or host.endswith("." + domain):
-            return domain
+def _host_matches(host: str, domain: str) -> bool:
+    return host == domain or host.endswith("." + domain)
+
+
+def blocked_reason(url: str) -> str | None:
+    """
+    Kembalikan alasan URL harus disaring berdasarkan domain/path, atau None.
+
+    - domain di ALWAYS_BLOCKED_DOMAINS: selalu disaring
+    - domain di SOCIAL_POST_PATTERNS: disaring hanya bila path menandai
+      sebuah postingan (beranda akun lolos)
+    """
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+
+    for domain in ALWAYS_BLOCKED_DOMAINS:
+        if _host_matches(host, domain):
+            return f"domain daftar-blokir: {domain}"
+
+    for domain, pattern in SOCIAL_POST_PATTERNS.items():
+        if _host_matches(host, domain) and pattern.search(parsed.path):
+            return f"postingan media sosial: {domain}"
     return None
 
 
@@ -308,7 +385,8 @@ def filter_references(
 
     Dua kriteria berlaku sekaligus (sebuah URL bisa memenuhi keduanya):
       (a) URL juga ada di claim_sources, dan
-      (b) domainnya masuk SOCIAL_ARCHIVE_DOMAINS.
+      (b) domain/path-nya cocok aturan blocked_reason() (arsip, hosting
+          gambar, atau postingan media sosial).
 
     Mengembalikan (references, references_filtered); tiap elemen yang
     dibuang berbentuk {"url": ..., "reasons": [...]} agar bisa diaudit.
@@ -321,9 +399,9 @@ def filter_references(
         reasons: list[str] = []
         if url in claim_set:
             reasons.append("cocok dengan claim_sources")
-        domain = matching_blocked_domain(url)
-        if domain:
-            reasons.append(f"domain daftar-blokir: {domain}")
+        reason = blocked_reason(url)
+        if reason:
+            reasons.append(reason)
 
         if reasons:
             filtered.append({"url": url, "reasons": reasons})
@@ -417,7 +495,9 @@ def scrape_article(
     article_id = m_id.group(1) if m_id else None
     cache_path = RAW_HTML_DIR / f"{article_id}.html" if article_id else None
 
-    html, from_network = fetch_html(url, session, cache_path, force_refresh)
+    html, from_network = fetch_html(
+        url, session, cache_path, force_refresh, validate=is_valid_article_html
+    )
     if html is None:
         return None, from_network
     return parse_article(html, url), from_network
