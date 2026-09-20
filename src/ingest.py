@@ -20,6 +20,12 @@ from pathlib import Path
 from typing import Any
 
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+# Repo BAAI/bge-m3 di main hanya punya .bin. Setiap kali memuat .bin,
+# transformers menjalankan Thread non-daemon yang mengunduh varian safetensors
+# dari PR konversi (2,3 GB) di latar belakang, sehingga proses tidak berhenti
+# sampai unduhan selesai (use_safetensors=False tidak mencegahnya). Variabel
+# ini mematikan konversi otomatis itu (transformers/modeling_utils.py).
+os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
 
 import chromadb
 from chromadb.config import Settings
@@ -35,14 +41,12 @@ from chunker import (
 )
 
 MODEL_NAME = "BAAI/bge-m3"
-# Repo BAAI/bge-m3 di branch main hanya menyediakan pytorch_model.bin, dan
-# transformers >= 5 menolak memuat .bin bila torch < 2.6 (CVE-2025-32434;
-# torch terpasang 2.5.1). Solusinya memakai varian safetensors dari PR
-# konversi otomatis milik SFconvertbot (akun konversi resmi Hugging Face,
-# PR #130), dikunci ke hash commit agar reproducible. Bobot berasal dari
-# konversi .bin yang sama, tetapi PR ini belum di-merge/di-review BAAI dan
-# kesamaan numeriknya dengan .bin belum diverifikasi di sini.
-MODEL_REVISION = "9a0624b896d81da7492a910ffa53731274b6cf3d"
+# Model dimuat dari branch main (pytorch_model.bin resmi BAAI). transformers
+# >= 5 hanya mau memuat .bin bila torch >= 2.6 (CVE-2025-32434), yang dipenuhi
+# venv proyek (lihat requirements.txt). Embedding awal sempat dibuat dari
+# varian safetensors PR #130 (SFconvertbot) saat torch masih 2.5.1; bobotnya
+# sudah dibuktikan identik bit-per-bit dengan .bin (391/391 tensor), sehingga
+# embedding yang tersimpan tetap valid.
 CHROMA_DIR = PROJECT_ROOT / "data" / "chroma"
 COLLECTION_NAME = "turnbackhoax"
 BATCH_SIZE = 8  # batch kecil menahan puncak RAM (mesin dev hanya ~2,5 GB bebas)
@@ -65,12 +69,7 @@ def load_model() -> Any:
 
     # CPU eksplisit: build torch terpasang hanya CPU, dan GPU MX550 (2 GB VRAM)
     # sengaja tidak dipakai.
-    model = SentenceTransformer(
-        MODEL_NAME,
-        device="cpu",
-        revision=MODEL_REVISION,
-        model_kwargs={"use_safetensors": True},
-    )
+    model = SentenceTransformer(MODEL_NAME, device="cpu")
     model.max_seq_length = MAX_SEQ_LENGTH
     return model
 
