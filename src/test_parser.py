@@ -316,8 +316,352 @@ def test_aggregate_by_article() -> None:
     assert len({h.article_id for h in hits}) == len(hits)
 
 
+class ScriptedProvider:
+    """Penyedia palsu untuk uji generator: mengembalikan keluaran berurutan."""
+
+    def __init__(self, outputs: list) -> None:
+        self.outputs = list(outputs)
+        self.records: list = []
+        self.prompts: list[str] = []
+
+    def generate(self, system_prompt: str, user_prompt: str, json_schema=None) -> str:
+        self.prompts.append(user_prompt)
+        item = self.outputs.pop(0) if len(self.outputs) > 1 else self.outputs[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def make_hit(aid: str, label: str = "SALAH", refs: list[str] | None = None):
+    from retriever import ArticleHit
+
+    return ArticleHit(
+        article_id=aid, title=f"Judul {aid}", url=f"https://turnbackhoax.id/articles/{aid}-x",
+        label=label, score=0.6, best_section="narasi",
+        references=refs if refs is not None else [f"https://sumber-sahih.example/{aid}"],
+        date="01/01/2026", narasi=f"Narasi {aid}", kesimpulan=f"Kesimpulan {aid}",
+    )
+
+
+def llm_json(**kw) -> str:
+    import json as _json
+
+    base = {"artikel_terpilih": "", "klaim_sama": False, "alasan": "", "klarifikasi": ""}
+    base.update(kw)
+    return _json.dumps(base)
+
+
+def test_generator_logic() -> None:
+    from generator import AnswerGenerator, allowed_urls, find_urls, render
+    from llm_provider import LLMError
+
+    hits = [make_hit("100", "SALAH"), make_hit("200", "PARODI"), make_hit("300", "PENIPUAN", refs=[])]
+    retrieve = lambda claim, k: hits[:k]  # noqa: E731
+
+    # 1. Cocok: status dan rujukan dari METADATA; URL buatan LLM dibuang dan dihitung
+    out = llm_json(artikel_terpilih="200", klaim_sama=True, alasan="mirip lihat http://palsu.example/a",
+                   klarifikasi="Ini parodi. Lihat www.karangan.com dan kompas.com/berita.")
+    ans = AnswerGenerator(ScriptedProvider([out]), retrieve).answer("klaim")
+    assert ans.verdict == "ditemukan" and ans.article_id == "200"
+    assert ans.status_label == "PARODI", "status harus dari label metadata"
+    assert ans.references == ["https://sumber-sahih.example/200"]
+    assert len(ans.llm_urls_found) >= 2, "URL pada keluaran mentah LLM harus terhitung"
+    text = render(ans)
+    outside = [u for u in find_urls(text) if u not in allowed_urls(ans)]
+    assert not outside, f"URL di luar metadata pada keluaran akhir: {outside}"
+    assert "palsu.example" not in text and "karangan.com" not in text and "kompas.com" not in text
+
+    # 2. Label dari metadata walau LLM menyebut label lain di teksnya
+    out = llm_json(artikel_terpilih="100", klaim_sama=True, klarifikasi="Ini PENIPUAN.")
+    ans = AnswerGenerator(ScriptedProvider([out]), retrieve).answer("klaim")
+    assert ans.status_label == "SALAH"
+
+    # 3. id di luar kandidat ditolak -> tidak cocok
+    out = llm_json(artikel_terpilih="999", klaim_sama=True, klarifikasi="x")
+    ans = AnswerGenerator(ScriptedProvider([out]), retrieve).answer("klaim")
+    assert ans.verdict == "tidak_ditemukan" and ans.invalid_id and ans.article_id is None
+    assert "BELUM DITEMUKAN" in render(ans)
+
+    # 4. klaim_sama=false -> tidak ditemukan, walau LLM tetap mengisi id
+    out = llm_json(artikel_terpilih="100", klaim_sama=False, alasan="hanya mirip topik")
+    ans = AnswerGenerator(ScriptedProvider([out]), retrieve).answer("klaim")
+    assert ans.verdict == "tidak_ditemukan" and not ans.invalid_id
+    assert "hanya mirip topik" in render(ans)
+
+    # 5. Artikel tanpa references: jawaban tetap ada, tanpa bagian rujukan
+    out = llm_json(artikel_terpilih="300", klaim_sama=True, klarifikasi="Penipuan.")
+    ans = AnswerGenerator(ScriptedProvider([out]), retrieve).answer("klaim")
+    assert ans.verdict == "ditemukan" and ans.references == []
+    assert "RUJUKAN" not in render(ans)
+
+    # 6. Gagal parse: sekali lalu sukses -> 1 kegagalan; terus gagal -> "gagal"
+    good = llm_json(artikel_terpilih="100", klaim_sama=True, klarifikasi="ok")
+    ans = AnswerGenerator(ScriptedProvider(["bukan json", good]), retrieve).answer("klaim")
+    assert ans.verdict == "ditemukan" and ans.parse_failures == 1
+    ans = AnswerGenerator(ScriptedProvider(["bukan json"]), retrieve).answer("klaim")
+    assert ans.verdict == "gagal" and ans.parse_failures == 2
+    assert "TIDAK DAPAT DIPROSES" in render(ans)
+    # tipe salah (klaim_sama string) juga pelanggaran format
+    bad = '{"artikel_terpilih": "100", "klaim_sama": "true", "alasan": "", "klarifikasi": ""}'
+    ans = AnswerGenerator(ScriptedProvider([bad]), retrieve).answer("klaim")
+    assert ans.verdict == "gagal" and ans.parse_failures == 2
+
+    # 7. Pagar kode ```json diterima
+    fenced = "```json\n" + good + "\n```"
+    ans = AnswerGenerator(ScriptedProvider([fenced]), retrieve).answer("klaim")
+    assert ans.verdict == "ditemukan" and ans.parse_failures == 0
+
+    # 8. LLMError tidak menjatuhkan proses
+    ans = AnswerGenerator(ScriptedProvider([LLMError("kuota habis")]), retrieve).answer("klaim")
+    assert ans.verdict == "gagal" and "kuota habis" in ans.error
+
+    # 9. Konteks: Narasi dan Kesimpulan dikirim; Penjelasan tidak ada di ArticleHit
+    prov = ScriptedProvider([out])
+    AnswerGenerator(prov, retrieve).answer("klaim pengguna X")
+    p = prov.prompts[0]
+    assert "Narasi 100" in p and "Kesimpulan 100" in p and "klaim pengguna X" in p
+    assert "Penjelasan" not in p
+
+
+class _FakeHTTPError(Exception):
+    """Meniru GenAiError: status_code, body, headers, message."""
+
+    def __init__(self, status: int, body: str = "", message: str = "galat", headers=None) -> None:
+        super().__init__(message)
+        self.status_code, self.body, self.message = status, body, message
+        self.headers = headers or {}
+
+
+class _FakeInteraction:
+    def __init__(self, text="{}", status="completed") -> None:
+        from types import SimpleNamespace
+
+        self.output_text, self.status = text, status
+        self.usage = SimpleNamespace(total_input_tokens=11, total_output_tokens=7, total_thought_tokens=3)
+
+
+class _FakeInteractions:
+    def __init__(self, script: list) -> None:
+        self.script, self.calls = list(script), []
+
+    def create(self, **kw):
+        self.calls.append(kw)
+        item = self.script.pop(0) if len(self.script) > 1 else self.script[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def make_gemini(script: list):
+    from types import SimpleNamespace
+
+    from llm_provider import GeminiProvider
+
+    key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
+    p = GeminiProvider(api_key=key, min_interval_s=0)
+    fake = _FakeInteractions(script)
+    p._client = SimpleNamespace(interactions=fake)
+    return p, fake, key
+
+
+def test_gemini_provider_error_handling() -> None:
+    import llm_provider as lp
+    from llm_provider import LLMConfigError, LLMError, redact
+
+    slept: list[float] = []
+    lp.time.sleep = lambda s: slept.append(s)  # jangan benar-benar menunggu
+
+    # 429 dengan retryDelay -> menunggu sesuai saran, lalu sukses; token dicatat
+    body = '{"error": {"details": [{"retryDelay": "3s"}]}}'
+    p, fake, _ = make_gemini([_FakeHTTPError(429, body), _FakeInteraction('{"a": 1}')])
+    out = p.generate("sys", "usr", json_schema={"type": "object"})
+    rec = p.records[-1]
+    assert out == '{"a": 1}' and rec.ok and rec.attempts == 2 and rec.rate_limited == 1
+    assert (rec.input_tokens, rec.output_tokens, rec.thought_tokens) == (11, 7, 3)
+    assert 3.0 <= slept[-1] <= 4.1, "harus menunggu sesuai retryDelay 3s (+jitter)"
+    assert fake.calls[0]["store"] is False and fake.calls[0]["timeout"] == lp.REQUEST_TIMEOUT_S
+    assert fake.calls[0]["response_format"]["mime_type"] == "application/json"
+    assert fake.calls[0]["system_instruction"] == "sys" and fake.calls[0]["input"] == "usr"
+
+    # 429 terus -> menyerah setelah MAX_ATTEMPTS dengan LLMError (proses tidak mati diam-diam)
+    p, fake, _ = make_gemini([_FakeHTTPError(429)])
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMError")
+    except LLMError:
+        pass
+    assert len(fake.calls) == lp.MAX_ATTEMPTS and p.records[-1].rate_limited == lp.MAX_ATTEMPTS
+
+    # Saran tunggu sangat lama (kuota harian) -> berhenti tanpa tidur berjam-jam
+    p, fake, _ = make_gemini([_FakeHTTPError(429, '{"retryDelay": "3600s"}')])
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMError")
+    except LLMError as e:
+        assert e.retry_after_s == 3600 and len(fake.calls) == 1
+
+    # 400 dengan skema server -> turun ke mode teks sekali
+    p, fake, _ = make_gemini([_FakeHTTPError(400), _FakeInteraction("ok")])
+    assert p.generate("s", "u", json_schema={"type": "object"}) == "ok"
+    assert "response_format" in fake.calls[0] and "response_format" not in fake.calls[1]
+    assert p.records[-1].structured_mode == "teks"
+
+    # 401: tidak di-retry, kunci tidak bocor ke pesan galat
+    p, fake, key = make_gemini([_FakeHTTPError(401, message=f"API key {'AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234'} tidak valid")])
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMError")
+    except LLMError as e:
+        assert key not in str(e) and "KUNCI-DISAMARKAN" in str(e)
+    assert len(fake.calls) == 1
+
+    # Status tidak completed -> LLMError
+    p, fake, _ = make_gemini([_FakeInteraction("potongan", status="incomplete")])
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMError")
+    except LLMError:
+        assert p.records[-1].ok is False
+
+    # redact dan konfigurasi
+    assert "AIzaSy" not in redact("x AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ012345 y")
+    # .env asli (kini berisi kunci) tidak boleh ikut terbaca oleh uji ini
+    old = lp.os.environ.pop("GEMINI_API_KEY", None)
+    real_load_env, lp.load_env = lp.load_env, lambda path=None: None
+    try:
+        lp.GeminiProvider(api_key="")
+        raise AssertionError("seharusnya LLMConfigError")
+    except LLMConfigError:
+        pass
+    finally:
+        lp.load_env = real_load_env
+        if old is not None:
+            lp.os.environ["GEMINI_API_KEY"] = old
+    try:
+        lp.get_provider("tidak-ada")
+        raise AssertionError("seharusnya LLMConfigError")
+    except LLMConfigError:
+        pass
+
+
+def _quota_body(quota_id: str, retry_delay: str = "30s") -> dict:
+    """Bentuk galat 429 Gemini (QuotaFailure + RetryInfo) seperti pada dokumentasi galat Google."""
+    return {"error": {"code": 429, "message": "quota", "status": "RESOURCE_EXHAUSTED", "details": [
+        {"@type": "type.googleapis.com/google.rpc.QuotaFailure",
+         "violations": [{"quotaMetric": "generate_content_free_tier_requests", "quotaId": quota_id}]},
+        {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": retry_delay}]}}
+
+
+def test_provider_with_real_sdk_errors() -> None:
+    """
+    Galat SDK ASLI (transport palsu, tanpa jaringan): membuktikan (1) retry internal SDK
+    mati sehingga satu percobaan = satu permintaan, (2) 429 harian tidak di-retry,
+    (3) 429 per menit di-retry maksimal 3 kali, (4) saran server terbaca dari galat nyata
+    (body berupa dict, header di err.response), bukan dari fake berbentuk lain.
+    """
+    import httpx
+    from google import genai
+    from google.genai import types
+
+    import llm_provider as lp
+    from llm_provider import LLMError, LLMQuotaExhaustedError
+
+    lp.time.sleep = lambda s: None  # jangan menunggu sungguhan
+
+    def provider_for(status: int, body: dict, headers: dict) -> tuple[lp.GeminiProvider, list]:
+        calls: list = []
+
+        def handler(req: httpx.Request) -> httpx.Response:
+            calls.append(req)
+            return httpx.Response(status, headers=headers, json=body)
+
+        p = lp.GeminiProvider(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234", min_interval_s=0)
+        hx = httpx.Client(transport=httpx.MockTransport(handler))
+        p._client = genai.Client(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234",
+                                 http_options=types.HttpOptions(httpx_client=hx))
+        assert lp.disable_sdk_retry(p._client), "retry internal SDK harus bisa dimatikan"
+        return p, calls
+
+    # harian: satu permintaan saja, jenis kuota habis
+    p, calls = provider_for(429, _quota_body("GenerateRequestsPerDayPerProjectPerModel-FreeTier"),
+                            {"retry-after": "5"})
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMQuotaExhaustedError")
+    except LLMQuotaExhaustedError as e:
+        assert "harian" in str(e)
+    assert len(calls) == 1, f"kuota harian tidak boleh di-retry (permintaan: {len(calls)})"
+
+    # per menit: 1 awal + 3 retry = MAX_ATTEMPTS permintaan, bukan dikali retry SDK
+    p, calls = provider_for(429, _quota_body("GenerateRequestsPerMinutePerProjectPerModel-FreeTier"),
+                            {"retry-after": "5"})
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMError")
+    except LLMError as e:
+        assert not isinstance(e, LLMQuotaExhaustedError)
+    assert len(calls) == lp.MAX_ATTEMPTS == 4, f"permintaan: {len(calls)}"
+    assert p.records[-1].rate_limited == 4 and "per_menit" in p.records[-1].error
+
+    # saran server terbaca dari galat nyata; > batas -> kuota habis tanpa retry
+    p, calls = provider_for(429, _quota_body("GenerateRequestsPerMinutePerProjectPerModel-FreeTier"),
+                            {"retry-after": "3600"})
+    try:
+        p.generate("s", "u")
+        raise AssertionError("seharusnya LLMQuotaExhaustedError")
+    except LLMQuotaExhaustedError as e:
+        assert e.retry_after_s == 3600
+    assert len(calls) == 1
+
+    # 429 tanpa rincian: diperlakukan sementara, tetap dibatasi 3 retry
+    p, calls = provider_for(429, {"error": {"code": 429}}, {})
+    try:
+        p.generate("s", "u")
+    except LLMError:
+        pass
+    assert len(calls) == lp.MAX_ATTEMPTS and "tidak_diketahui" in p.records[-1].error
+
+
+def test_find_urls_strict_and_loose() -> None:
+    from generator import find_urls, strip_urls
+
+    brand = "belum ditemukan dalam basis data cek fakta TurnBackHoax.id sebagai klaim"
+    assert find_urls(brand) == [], "nama merek tanpa skema bukan URL"
+    assert find_urls(brand, loose=True) == ["TurnBackHoax.id"]
+    txt = "lihat https://a.example/x, www.b.example dan kompas.com/berita."
+    assert find_urls(txt) == ["https://a.example/x", "www.b.example"]
+    assert len(find_urls(txt, loose=True)) == 3
+    assert "kompas.com" not in strip_urls(txt), "strip tetap membuang domain telanjang"
+
+
+def test_eval_resume_and_incremental() -> None:
+    import json
+    import tempfile
+    from pathlib import Path
+
+    from test_generation import append_record, load_done
+
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "x.jsonl"
+        assert load_done(path) == {}
+        append_record(path, {"claim": "a", "verdict": "ditemukan"})
+        append_record(path, {"claim": "b", "verdict": "gagal"})
+        append_record(path, {"claim": "c", "verdict": "tidak_ditemukan"})
+        done = load_done(path)
+        assert set(done) == {"a", "c"}, "yang gagal harus diulang, bukan dilewati"
+        append_record(path, {"claim": "b", "verdict": "ditemukan"})  # hasil ulang menimpa
+        assert set(load_done(path)) == {"a", "b", "c"}
+        assert len(path.read_text(encoding="utf-8").splitlines()) == 4
+        assert all(json.loads(x) for x in path.read_text(encoding="utf-8").splitlines())
+
+
 def run() -> None:
     tests = [
+        test_generator_logic,
+        test_gemini_provider_error_handling,
+        test_provider_with_real_sdk_errors,
+        test_find_urls_strict_and_loose,
+        test_eval_resume_and_incremental,
         test_aggregate_by_article,
         test_normalize_and_domain,
         test_html_validators,
