@@ -30,6 +30,8 @@ class ArticleHit:
     best_section: str  # seksi asal chunk terbaik
     section_scores: dict[str, float] = field(default_factory=dict)
     references: list[str] = field(default_factory=list)  # sudah tersaring
+    date: str = ""
+    narasi: str = ""  # klaim yang beredar; dipakai untuk menilai kesamaan klaim
     kesimpulan: str = ""
 
 
@@ -56,6 +58,7 @@ def aggregate_by_article(
                 score=score,
                 best_section=meta["section"],
                 references=decode_references(meta["references"]),
+                date=meta.get("date", ""),
             )
         hit.section_scores[meta["section"]] = max(
             score, hit.section_scores.get(meta["section"], float("-inf"))
@@ -78,11 +81,12 @@ def retrieve(
     )
     hits = aggregate_by_article(res["metadatas"][0], res["distances"][0])[:top_k]
 
-    # Jawaban berasal dari chunk Kesimpulan artikel yang sama
-    stored = collection.get(
-        ids=[f"{h.article_id}_kesimpulan" for h in hits], include=["documents"]
-    )
-    concl = dict(zip(stored["ids"], stored["documents"]))
+    # Jawaban berasal dari chunk Kesimpulan artikel yang sama; Narasi diambil
+    # agar klaim pengguna bisa dibandingkan dengan klaim artikel.
+    ids = [f"{h.article_id}_{s}" for h in hits for s in ("narasi", "kesimpulan")]
+    stored = collection.get(ids=ids, include=["documents"])
+    docs = dict(zip(stored["ids"], stored["documents"]))
     for h in hits:
-        h.kesimpulan = concl.get(f"{h.article_id}_kesimpulan", "")
+        h.narasi = docs.get(f"{h.article_id}_narasi", "")
+        h.kesimpulan = docs.get(f"{h.article_id}_kesimpulan", "")
     return hits

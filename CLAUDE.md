@@ -28,8 +28,10 @@ Proyek dibangun bertahap dalam dua versi:
   relevansi dokumen, penulis ulang kueri, dan penilaian kredibilitas
   sumber.
 
-Tahap saat ini: modul ingestion (chunking, embedding, penyimpanan vektor)
-sudah ditulis; scraping (`src/scraper.py`) selesai untuk 150 artikel.
+Tahap saat ini: lapisan generasi jawaban (`src/generator.py`) sudah ditulis
+dan lolos uji offline; evaluasi live menunggu `GEMINI_API_KEY`. Modul
+ingestion dan scraping (150 artikel) sudah selesai, dengan satu masalah
+terbuka pada duplikasi teks seksi (lihat "Masalah terbuka").
 
 ---
 
@@ -161,6 +163,9 @@ RAG_FactChecking/
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
+│   ├── llm_provider.py   # Abstraksi penyedia LLM (Gemini) + retry/backoff
+│   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur
+│   ├── test_generation.py # Evaluasi live 5 positif + 5 negatif (butuh .env)
 │   └── test_retrieval.py # Verifikasi retrieval pada kueri sehari-hari
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
@@ -298,6 +303,133 @@ Python tidak berhenti sampai unduhan selesai. Skripnya tampak selesai
 mencegahnya; yang efektif adalah variabel lingkungan
 `DISABLE_SAFETENSORS_CONVERSION=1`, yang di-set di bagian atas
 `src/ingest.py`. Jangan dihapus.
+
+---
+
+## Lapisan Generasi Jawaban (Versi 1)
+
+Kode: `src/llm_provider.py` (abstraksi penyedia), `src/generator.py`
+(alur klaim -> retrieval 3 artikel -> LLM -> jawaban), `src/test_generation.py`
+(evaluasi live 5 positif + 5 negatif). Kunci API dibaca dari `.env`
+(`GEMINI_API_KEY`; contoh di `.env.example`) dan tidak pernah dicetak:
+semua log dan pesan galat melewati `redact()`.
+
+### Keputusan jalur: API gratis (Gemini), bukan Claude API atau model lokal
+
+- **Claude API dibatalkan** karena berbayar (estimasi ±$0,25 sampai $0,65
+  per 10 kueri pada Opus 5; harga dari tabel cache skill bertanggal
+  2026-06-24, tidak diverifikasi ulang).
+- **Model lokal dibatalkan**: RAM tersedia ±3,9 GB dan CPU-only membuat
+  model 3B memakan ±2,5-3,5 menit per kueri (perkiraan dari benchmark CPU,
+  tidak diukur langsung).
+- **Gemini tier gratis** dipilih sebagai implementasi pertama.
+
+### Desain provider-agnostic
+
+Pipeline hanya bergantung pada `LLMProvider.generate(system_prompt,
+user_prompt, json_schema=None) -> str`; penyedia dipilih lewat `LLM_PROVIDER`
+di `.env`. Alasan: tier gratis dapat memperketat batas tanpa pemberitahuan
+atau berhenti total tanpa kompensasi, dan tahap evaluasi perlu membandingkan
+beberapa model tanpa menulis ulang pipeline. Setiap panggilan dicatat
+(model, token bila tersedia, latensi, keberhasilan, jumlah 429).
+
+Penanganan 429 (diperbaiki setelah percobaan live pertama): 429 dibedakan
+menurut `quotaId` pada rincian galat (`classify_429`). **Kuota harian** ->
+`LLMQuotaExhaustedError`, tanpa retry, dan evaluasi berhenti dengan pesan
+jelas. **Per menit / tidak diketahui** -> maksimal 3 retry, menunggu sesuai
+saran server (`Retry-After` / `retryDelay`); saran > 120 dtk dianggap kuota
+habis. Format `quotaId` dikenal dari galat Gemini API umumnya dan diuji dengan
+transport palsu; **belum diamati pada 429 asli akun ini**.
+
+**Jebakan SDK:** klien Interactions di `google-genai` 2.24 mengulang 429/5xx
+sendiri (3 retry, menunggu `Retry-After` tanpa batas atas) tanpa log. Di
+percobaan live pertama itu menjelaskan mengapa satu "percobaan" memakan 2-3
+menit padahal log menulis "menunggu 2,3 dtk" (terukur dengan transport palsu:
+4 permintaan per panggilan; bahwa itulah yang terjadi pada server nyata adalah
+kesimpulan, bukan pengamatan langsung). `disable_sdk_retry()` mematikannya
+lewat konfigurasi internal SDK (opsi publik `retry_options.attempts` tidak bisa
+di bawah 1 retry); `test_provider_with_real_sdk_errors` akan gagal bila SDK
+berubah dan retry internal kembali aktif. Uji lama memakai galat palsu
+berbentuk lain (body `str`, header di `err.headers`), sehingga tidak
+menangkap bahwa saran server tidak pernah terbaca.
+
+`test_generation.py` menulis hasil ke `data/generation_eval.jsonl` per kueri,
+dapat dilanjutkan (kueri yang sudah punya hasil dilewati; `--force` untuk
+mengulang), dan berhenti bila kuota harian habis.
+
+### Model dan kuota (diverifikasi dari dokumentasi resmi pada 2026-09-20)
+
+- **Model bawaan: `gemini-3.8-flash`** (status Stable). Sumber:
+  https://ai.google.dev/gemini-api/docs/models (halaman diperbarui
+  2026-09-17 UTC). Flash stabil lain di halaman itu: 3.7, 3.6, 3.5,
+  3.5-flash-lite, 3.1-flash-lite, 2.5-flash, 2.5-flash-lite. Ganti lewat
+  `LLM_MODEL`. `gemini-2.0-flash` dan `-lite` tercatat sudah dimatikan.
+- **Tier gratis:** halaman harga (https://ai.google.dev/gemini-api/docs/pricing)
+  mencantumkan `gemini-3.8-flash` "Free of charge" pada Free tier.
+- **Batas kuota: angka konkret (RPM/TPM/RPD) TIDAK dipublikasikan di
+  dokumentasi.** Halaman https://ai.google.dev/gemini-api/docs/rate-limits
+  hanya menyatakan batas "can be viewed in Google AI Studio"
+  (https://aistudio.google.com/rate-limit) dan "Specified rate limits are not
+  guaranteed and actual capacity may vary". Angka untuk akun ini belum
+  diverifikasi; cek di AI Studio.
+- **SDK:** `google-genai` 2.24.0, memakai Interactions API
+  (`client.interactions.create`) sesuai quickstart resmi; bentuk permintaan
+  dan tipe respons (`output_text`, `status`, `usage.total_*_tokens`, galat
+  `GenAiError`) diverifikasi terhadap paket terpasang. Klien Interactions di
+  SDK itu berlabel versi preview (`2.4.1-preview.5`, v1beta). Terhadap
+  server nyata: 5 panggilan pertama (kueri positif 1-5) berhasil pada
+  percobaan pertama dengan skema terstruktur dan token tercatat, jadi
+  integrasi dasarnya bekerja; kueri 6-8 kena 429 (lihat penanganan 429).
+
+### Privasi data
+
+Halaman harga menyatakan konten pada **Free tier digunakan untuk
+meningkatkan produk Google** ("Used to improve our products": Yes; Paid: No).
+Dapat diterima di proyek ini karena sumber datanya publik (artikel cek fakta),
+tetapi klaim yang diketik pengguna juga terkirim. Perlu dipertimbangkan ulang
+bila proyek ini kelak menangani data sensitif. Permintaan memakai
+`store=False`; bila `store` dibiarkan bawaan, dokumentasi menyatakan
+interaksi Free tier disimpan 1 hari.
+
+### Pengaman di kode (bukan di prompt)
+
+Status verifikasi diambil dari label metadata, bukan dari LLM. Tautan rujukan
+hanya dari metadata `references` (Aturan Wajib #3); URL apa pun pada keluaran
+LLM dibuang dan dihitung. LLM hanya memilih `article_id` dari 3 kandidat; id
+di luar kandidat ditolak dan dianggap "tidak cocok". Artikel tanpa `references`
+tetap dijawab tanpa bagian rujukan. Konteks per artikel: judul, label,
+tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
+
+### Hipotesis dan status
+
+- **H1** (LLM yang membaca Narasi dapat membedakan klaim identik dari klaim
+  bertetangga topik; gugur bila pada "vaksin flu bikin mandul" LLM
+  merujuk artikel 36214): **belum diuji**, menunggu `GEMINI_API_KEY`.
+  Bila gugur, node grader Versi 2 harus komponen terpisah berprompt khusus.
+- **H3** (model kelas Flash cukup; gugur bila format terstruktur dilanggar
+  berulang atau keliru pada >= 2 dari 10 kueri): **belum diuji**. Bila gugur,
+  catat sebagai keterbatasan dan bedakan masalah model dari masalah prompt
+  sebelum mengganti model.
+- Sampel evaluasi hanya 5 positif dan 5 negatif: indikasi, bukan bukti statistik.
+
+### Catatan untuk tahap evaluasi (RAGAS)
+
+Model juri sebaiknya **berbeda** dari model generator agar penilaian tidak
+bias terhadap keluarannya sendiri. Abstraksi penyedia membuat ini mudah:
+cukup instansiasi penyedia kedua dengan `LLM_MODEL` lain.
+
+### Masalah terbuka (belum diperbaiki, menunggu persetujuan)
+
+Ditemukan saat menyusun generator: teks **Narasi dan Penjelasan di
+`articles.json` terduplikasi** pada 150 dari 150 artikel (panjang JSON /
+panjang teks seksi HTML asli: median 2,00; Kesimpulan 1,00). Penyebabnya
+`extract_sections()` mengiterasi elemen bersarang (induk `div` dan anak
+`p`/`strong`) sehingga isinya tercatat dua kali. Artikel 36590 juga tidak
+punya seksi Penjelasan terpisah di HTML, sehingga bagian Penjelasan ikut
+masuk Narasi; 36603 dan 36483 menunjukkan awal Kesimpulan di Narasi/Penjelasan.
+Dampak: statistik token dan pemotongan 512 token, embedding, dan angka
+"Penjelasan menang atas Narasi" dihitung pada teks yang terduplikasi dan
+perlu diukur ulang setelah perbaikan.
 
 ---
 
