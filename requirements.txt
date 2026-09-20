@@ -1,7 +1,8 @@
 requests==2.31.0
 beautifulsoup4==4.12.2
-# torch: build CPU (mesin dev tanpa CUDA); di Windows, torch dari PyPI adalah build CPU
-torch==2.5.1
+# torch >= 2.6 diperlukan agar transformers 5.x mau memuat pytorch_model.bin
+# (CVE-2025-32434). Di Windows, torch dari PyPI adalah build CPU (~120 MB).
+torch==2.14.0
 sentence-transformers==6.1.0
 transformers==5.17.0
 chromadb==1.5.9

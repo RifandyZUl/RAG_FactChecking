@@ -106,6 +106,25 @@ ditemukan dalam basis data — bukan memaksakan kesimpulan.
 - **Python:** 3.11.4 (64-bit)
 - **IDE:** Antigravity (turunan VS Code)
 
+### Virtual environment (wajib)
+
+Proyek ini memakai virtual environment di `.venv/` (di-gitignore). Semua
+perintah Python **harus dijalankan dari venv ini**, bukan dari Python
+global, agar dependensi terisolasi. Python global mesin dev juga dipakai
+proyek lain (mis. TensorFlow), dan memasang paket proyek ini ke sana
+pernah menimbulkan konflik `protobuf`.
+
+```powershell
+python -m venv .venv                          # sekali saja
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe src\test_parser.py       # contoh menjalankan
+.\.venv\Scripts\Activate.ps1                        # atau aktifkan dulu
+```
+
+`requirements.txt` mengunci versi (`torch==2.14.0`, build CPU dari PyPI).
+torch harus >= 2.6 agar `transformers` 5.x mau memuat
+`pytorch_model.bin` bge-m3 (CVE-2025-32434).
+
 ### Catatan PowerShell
 
 Di PowerShell, `curl` adalah alias untuk `Invoke-WebRequest`, bukan curl
@@ -141,6 +160,7 @@ RAG_FactChecking/
 │   ├── fixtures/         # HTML nyata untuk uji (di-commit)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
+│   ├── retriever.py      # Retrieval, diagregasi per article_id
 │   └── test_retrieval.py # Verifikasi retrieval pada kueri sehari-hari
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
@@ -217,23 +237,67 @@ diambil dari chunk Kesimpulan artikel pemenang, dan tautan dari metadata
 Pada level artikel: kueri 2 memberi artikel benar 0,6227 dan artikel lain
 0,6213 (selisih ≈ 0,001); kueri 5 memberi artikel lain 0,6877 melawan
 artikel benar 0,6922. Skor artikel benar berkisar 0,567 sampai 0,692,
-sedangkan tetangga yang salah bisa mencapai 0,688. Akibatnya
-**Aturan Wajib #4 (menyatakan klaim belum ditemukan) tidak dapat
-diwujudkan dengan ambang skor kemiripan yang sederhana.** Ini justifikasi
-empiris kebutuhan node penilai relevansi (grader) di Versi 2.
+sedangkan tetangga yang salah bisa mencapai 0,688.
 
-### Pemuatan model: safetensors dari PR konversi #130
+Uji kueri negatif (5 klaim yang tidak ada di basis data; ketiadaan
+kata kunci diperiksa otomatis di `test_retrieval.py`) menambah bukti.
+Skor artikel teratas tiap kueri negatif: 0,5204 (kebijakan subsidi, gas
+melon), **0,6508** (vaksin flu bikin mandul; tetangga dekat artikel vaksin
+HPV bikin impoten), 0,4825 (gempa megathrust), 0,4813 (daun sirsak), 0,5037
+(bumi datar). Skor positif: 0,5669 sampai 0,6922. Klaim "vaksin flu bikin
+mandul" sengaja dipertahankan sebagai kueri negatif: itu kasus tersulit
+sekaligus paling realistis, karena hoaks nyata sering bervariasi di sekitar
+tema yang sama, dan menguji hanya dengan klaim yang jauh dari topik akan
+memberi gambaran yang terlalu optimistis. Hasilnya:
+
+- Negatif yang jauh dari topik basis data (0,48 sampai 0,52) masih
+  terpisah dari positif terendah (0,5669), tetapi celahnya hanya ≈ 0,05
+  dan dihitung dari sampel 5 lawan 5.
+- Klaim yang **serupa bentuknya** dengan klaim yang ada (vaksin flu vs
+  vaksin HPV) mencetak 0,6508, di atas 3 dari 5 skor positif. Ambang skor
+  tidak bisa memisahkannya, karena embedding menilai kemiripan topik, bukan
+  apakah klaimnya sama.
+
+**Kesimpulan:** hasil kueri negatif membuktikan, pada sampel ini, bahwa
+skor kemiripan tidak dapat memisahkan klaim yang ada dari yang tidak ada.
+Klaim negatif "vaksin flu bikin mandul" mencetak 0,6508, di atas 3 dari 5
+skor positif, sehingga ambang skor apa pun akan menerima klaim itu atau
+menolak tiga klaim yang memang ada di basis data. Karena itu **Aturan Wajib
+#4 (menyatakan klaim belum ditemukan) tidak akan diwujudkan dengan ambang
+skor di Versi 1.** Ini justifikasi empiris bahwa node penilai relevansi
+(grader) di Versi 2, yang menilai apakah klaim pengguna sama dengan klaim
+pada artikel hasil retrieval, adalah jawabannya.
+
+**Ukuran sampel: baru 5 positif dan 5 negatif.** Angka-angka di atas
+(termasuk celah ≈ 0,05 untuk negatif yang jauh dari topik) adalah indikasi
+yang kuat untuk arah keputusan, bukan evaluasi statistik.
+
+### Pemuatan model: riwayat safetensors PR #130
 
 `transformers` 5.x menolak memuat `pytorch_model.bin` bila torch < 2.6
-(CVE-2025-32434), sedangkan torch terpasang 2.5.1. Repo `BAAI/bge-m3`
-hanya menyediakan `.bin` di branch `main`, sehingga model dimuat dari
-varian safetensors milik PR konversi #130 (pembuat: `SFconvertbot`, akun
-konversi otomatis Hugging Face) dengan `revision` dikunci ke hash commit
-`9a0624b8…` (`MODEL_REVISION` di `src/ingest.py`). Yang **belum
-terverifikasi**: PR itu belum di-review atau di-merge BAAI, dan kesamaan
-numerik bobotnya dengan `.bin` belum dibandingkan. Yang cocok: ukuran
-berkas, 391 tensor, dan 567,8 juta parameter. Embedding 450 chunk saat ini
-dihasilkan dari bobot ini.
+(CVE-2025-32434). Saat torch global masih 2.5.1, embedding 450 chunk
+dibuat dari varian safetensors milik PR konversi #130 di repo
+`BAAI/bge-m3` (pembuat: `SFconvertbot`, akun konversi otomatis Hugging
+Face; commit `9a0624b8…`). PR itu belum di-review atau di-merge BAAI,
+sehingga sempat menjadi ketergantungan yang belum terverifikasi.
+
+**Sudah dibuktikan:** bobot safetensors tersebut identik bit-per-bit dengan
+`pytorch_model.bin` resmi di branch `main` (391 dari 391 tensor, tanpa
+selisih nama, dibandingkan dengan `torch.load(mmap=True, weights_only=True)`
+di dalam venv). Karena itu embedding yang tersimpan tetap valid tanpa
+diulang, dan skor retrieval sebelum dan sesudah peralihan identik.
+
+**Keadaan sekarang:** venv memakai torch >= 2.6, sehingga `src/ingest.py`
+memuat `.bin` resmi dari branch `main` dan tidak lagi bergantung pada PR.
+
+**Jebakan:** setiap kali `transformers` memuat `.bin` dari repo tanpa
+safetensors, ia menjalankan `Thread` non-daemon yang mengunduh varian
+safetensors dari PR konversi (2,3 GB) di latar belakang, sehingga proses
+Python tidak berhenti sampai unduhan selesai. Skripnya tampak selesai
+(hasil tercetak) tetapi proses menggantung. `use_safetensors=False` tidak
+mencegahnya; yang efektif adalah variabel lingkungan
+`DISABLE_SAFETENSORS_CONVERSION=1`, yang di-set di bagian atas
+`src/ingest.py`. Jangan dihapus.
 
 ---
 
