@@ -217,6 +217,20 @@ RAG_FactChecking/
 - Tangani galat secara eksplisit; jangan menelan *exception* diam-diam
 - Setiap perubahan pada logika parsing wajib diikuti menjalankan `pytest`
   (khususnya `tests/test_parser.py`, `test_links.py`, `test_client.py`)
+- **Setiap perubahan logika parsing atau chunking mewajibkan pembangunan ulang
+  indeks vektor**, berurutan: `python -m scraping.reparse` (offline, dari cache)
+  -> `python src/ingest.py --rebuild` (hapus koleksi lama, embed semua chunk
+  dari nol) -> `python -m evaluation.index_check` (kode keluar 0 = indeks segar).
+  Indeks basi tidak menimbulkan galat: retriever tetap mengembalikan hasil,
+  hanya dari teks dan embedding lama. Ingestion **inkremental** (tanpa
+  `--rebuild`) hanya aman bila isi teks chunk tidak berubah: ia membandingkan
+  teks tersimpan dengan teks baru dan meng-embed ulang yang berbeda
+  (`select_chunks_to_embed`), tetapi TIDAK mendeteksi perubahan tokenizer,
+  batas token (`MAX_SEQ_LENGTH`), model, atau metadata pada chunk yang teksnya
+  sama, dan hanya melaporkan (tidak menghapus) chunk usang. Contoh terukur:
+  setelah perbaikan duplikasi, ingest inkremental akan meng-embed 300 chunk
+  yang berubah (Narasi dan Penjelasan) dan melewati 150 Kesimpulan yang
+  teksnya identik.
 
 ---
 
