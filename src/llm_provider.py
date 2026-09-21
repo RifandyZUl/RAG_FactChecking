@@ -22,6 +22,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from rate_limit import DailyLedger, ModelLimits, RateLimiter, estimate_tokens, limits_for
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 logger = logging.getLogger("llm")
 
@@ -237,6 +239,22 @@ def disable_sdk_retry(client: Any) -> bool:
         return False
 
 
+# Nilai thinking_level yang didukung, dari https://ai.google.dev/gemini-api/docs/thinking
+# (diambil 2026-09-21). Model di luar tabel tidak divalidasi. Gemma 4: hanya
+# "high" (aktif) atau "minimal" (nonaktif) menurut dokumentasi Gemma di Gemini API.
+_ALL_LEVELS = {"minimal", "low", "medium", "high"}
+
+
+def supported_thinking_levels(model: str) -> set[str] | None:
+    if model.startswith("gemma-4"):
+        return {"minimal", "high"}
+    if "flash-lite" in model:
+        return _ALL_LEVELS
+    if model == "gemini-3.8-flash":
+        return {"low", "medium", "high"}
+    return None
+
+
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 _TRANSIENT_NAMES = ("Timeout", "Connect", "Network", "RemoteProtocol", "ReadError")
 
@@ -256,6 +274,9 @@ class GeminiProvider(LLMProvider):
         thinking_level: str | None = None,
         max_output_tokens: int = 8192,
         min_interval_s: float | None = None,
+        proactive: bool = True,
+        limits: ModelLimits | None = None,
+        ledger: DailyLedger | None = None,
     ) -> None:
         super().__init__()
         load_env()
@@ -267,7 +288,20 @@ class GeminiProvider(LLMProvider):
             )
         self.model = model or os.environ.get("LLM_MODEL") or DEFAULT_GEMINI_MODEL
         self.thinking_level = thinking_level or os.environ.get("LLM_THINKING_LEVEL", "medium")
+        allowed = supported_thinking_levels(self.model)
+        if allowed is not None and self.thinking_level not in allowed:
+            raise LLMConfigError(
+                f"thinking_level '{self.thinking_level}' tidak didukung {self.model}; "
+                f"pilihan: {sorted(allowed)} (atur LLM_THINKING_LEVEL)."
+            )
         self.max_output_tokens = max_output_tokens
+        # Throttling proaktif: RPM/TPM per model + anggaran harian (buku besar lokal).
+        self.limits = (limits or limits_for(self.model)) if proactive else None
+        self.limiter = RateLimiter(self.limits) if self.limits else None
+        self.ledger = (ledger or DailyLedger(self.model)) if self.limits else None
+        if proactive and self.limits is None:
+            logger.warning("Batas kuota model %s tidak dikenal: throttling proaktif dan "
+                           "anggaran harian NONAKTIF (isi LLM_RPM/LLM_TPM/LLM_RPD).", self.model)
         self.min_interval_s = (
             min_interval_s if min_interval_s is not None
             else float(os.environ.get("LLM_MIN_INTERVAL_S", "4"))
@@ -288,6 +322,30 @@ class GeminiProvider(LLMProvider):
         wait = self.min_interval_s - (time.monotonic() - self._last_call_end)
         if wait > 0:
             time.sleep(wait)
+
+    def _before_call(self, est_tokens: int, t_start: float, attempt: int, mode: str) -> None:
+        """Tahan permintaan sampai aman (RPM/TPM) dan catat ke anggaran harian."""
+        self._pace()
+        if self.limiter is None or self.ledger is None or self.limits is None:
+            return
+        used = self.ledger.used_today()
+        if used >= self.limits.rpd:
+            self._log(CallRecord(self.name, self.model, time.monotonic() - t_start, False,
+                                 attempt - 1, structured_mode=mode, error="anggaran-lokal-habis"))
+            reset = self.ledger.next_reset().astimezone().strftime("%Y-%m-%d %H:%M %Z")
+            raise LLMQuotaExhaustedError(
+                f"Anggaran harian {self.model} habis menurut buku besar lokal "
+                f"({used}/{self.limits.rpd} permintaan); tidak ada permintaan dikirim. "
+                f"Reset: {reset}."
+            )
+        try:
+            waited = self.limiter.acquire(est_tokens)
+        except ValueError as e:
+            raise LLMError(str(e)) from None
+        if waited >= 1.0:
+            logger.info("throttling proaktif: menunggu %.1f dtk (RPM %d, TPM %d)",
+                        waited, self.limits.rpm, self.limits.tpm)
+        self.ledger.add(1)  # dihitung sebelum dikirim: hasil akhir permintaan tak dijamin terlihat
 
     def _create(self, system_prompt: str, user_prompt: str, json_schema: dict | None) -> Any:
         kwargs: dict[str, Any] = {
@@ -320,9 +378,10 @@ class GeminiProvider(LLMProvider):
         rate_limited = 0
         mode = "schema" if json_schema is not None else "teks"
         last_error = ""
+        est_tokens = estimate_tokens(system_prompt, user_prompt)
 
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            self._pace()
+            self._before_call(est_tokens, t_start, attempt, mode)
             t_attempt = time.monotonic()
             try:
                 interaction = self._create(
@@ -400,6 +459,8 @@ class GeminiProvider(LLMProvider):
                 thought_tokens=getattr(usage, "total_thought_tokens", None),
                 structured_mode=mode, rate_limited=rate_limited,
             )
+            if self.limiter is not None:
+                self.limiter.settle(rec.input_tokens)  # token nyata menggantikan perkiraan
             if status_val != "completed" or not text:
                 rec.ok = False
                 rec.error = f"status={status_val} teks_kosong={not text}"

@@ -12,6 +12,7 @@ Sampel kecil (5 positif, 5 negatif): hasilnya indikasi, bukan evaluasi statistik
 Prasyarat: python src/ingest.py sudah dijalankan dan .env berisi GEMINI_API_KEY.
 """
 
+import argparse
 import json
 import logging
 import os
@@ -21,13 +22,13 @@ import sys
 from pathlib import Path
 
 from chunker import PROJECT_ROOT, load_articles
-from generator import Answer, AnswerGenerator, allowed_urls, find_urls, render
+from generator import MAX_FORMAT_RETRIES, Answer, AnswerGenerator, allowed_urls, find_urls, render
 from ingest import get_collection, load_model
 from llm_provider import LLMConfigError, get_provider
+from rate_limit import plan_budget
 from retriever import retrieve
 from test_retrieval import NEGATIVE_QUERIES, QUERIES
 
-OUT_PATH = PROJECT_ROOT / "data" / "generation_eval.jsonl"
 LOG_PATH = PROJECT_ROOT / "data" / "llm_calls.log"
 HOAX_TARGET = "36214"  # artikel vaksin HPV bikin impoten (tetangga dekat kasus H1)
 VAKSIN_FLU_MARK = "vaksin flu"
@@ -76,7 +77,69 @@ def load_done(path: Path) -> dict[str, dict]:
     return done
 
 
+def out_path_for(model: str) -> Path:
+    """Berkas hasil per model, agar perbandingan antarmodel tidak saling menimpa."""
+    return PROJECT_ROOT / "data" / f"generation_eval_{re.sub(r'[^A-Za-z0-9._-]', '_', model)}.jsonl"
+
+
+def decision(rec: dict) -> tuple[str, str | None]:
+    """Keputusan sebuah kueri: verdict dan artikel yang dipilih (bukan teks bebas)."""
+    return rec["verdict"], rec["article_id"]
+
+
+def compare_models(base: dict[str, dict], cand: dict[str, dict], cases: list[tuple]) -> tuple[str, str]:
+    """
+    Bandingkan keputusan dua model per kueri; kembalikan (tabel, status H3).
+
+    Kriteria pra-ditetapkan: model kandidat (Flash Lite) cukup bila keputusannya
+    sama dengan model dasar pada SELURUH kueri negatif dan berbeda paling banyak
+    pada satu kueri positif. Kueri yang belum dijalankan/gagal pada salah satu
+    model membuat status BELUM KONKLUSIF.
+    """
+    lines = [f"{'#':>2} {'jenis':<8} {'dasar':<24} {'kandidat':<24} sama  klaim"]
+    diff_pos = diff_neg = missing = 0
+    for i, (claim, _exp, kind) in enumerate(cases, 1):
+        a, b = base.get(claim), cand.get(claim)
+        if a is None or b is None:
+            missing += 1
+            lines.append(f"{i:>2} {kind:<8} {'-' if a is None else str(decision(a)):<24} "
+                         f"{'-' if b is None else str(decision(b)):<24} ?     {claim[:50]}")
+            continue
+        same = decision(a) == decision(b)
+        if not same:
+            diff_pos += kind == "positif"
+            diff_neg += kind == "negatif"
+        lines.append(f"{i:>2} {kind:<8} {str(decision(a)):<24} {str(decision(b)):<24} "
+                     f"{'ya' if same else 'TIDAK':<5} {claim[:50]}")
+    if missing:
+        status = f"BELUM KONKLUSIF ({missing} kueri belum ada hasil pada salah satu model)"
+    elif diff_neg == 0 and diff_pos <= 1:
+        status = (f"TERDUKUNG (beda pada negatif: {diff_neg}, pada positif: {diff_pos}). "
+                  "Kesetaraan keputusan, bukan kebenaran: periksa juga akurasi masing-masing.")
+    else:
+        status = (f"TIDAK TERDUKUNG (beda pada negatif: {diff_neg}, pada positif: {diff_pos}); "
+                  "pertahankan 3.8 Flash sebagai generator dan rencanakan evaluasi lintas hari.")
+    return "\n".join(lines), status
+
+
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
+    ap.add_argument("--model", help="ID model (bawaan: LLM_MODEL / bawaan penyedia)")
+    ap.add_argument("--force", action="store_true", help="abaikan hasil lama dan mulai ulang")
+    ap.add_argument("--check-budget", action="store_true",
+                    help="hanya laporkan anggaran kuota harian; tidak ada panggilan LLM")
+    ap.add_argument("--compare", nargs=2, metavar=("MODEL_DASAR", "MODEL_KANDIDAT"),
+                    help="bandingkan dua berkas hasil (tanpa panggilan LLM) dan nilai H3")
+    args = ap.parse_args()
+
+    cases = [(q, exp, "positif") for q, exp in QUERIES] + \
+            [(q, None, "negatif") for q, _, _ in NEGATIVE_QUERIES]
+    if args.compare:
+        base, cand = (load_done(out_path_for(m)) for m in args.compare)
+        table, status = compare_models(base, cand, cases)
+        print(f"Dasar: {args.compare[0]} | kandidat: {args.compare[1]}\n{table}\nStatus H3 (Flash Lite): {status}")
+        return 0
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
@@ -86,24 +149,36 @@ def main() -> int:
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     try:
-        provider = get_provider()
+        provider = get_provider(**({"model": args.model} if args.model else {}))
     except LLMConfigError as e:
         print(f"Konfigurasi LLM belum siap: {e}")
         return 2
 
-    force = "--force" in sys.argv[1:]
-    cases = [(q, exp, "positif") for q, exp in QUERIES] + \
-            [(q, None, "negatif") for q, _, _ in NEGATIVE_QUERIES]
-    done = {} if force else load_done(OUT_PATH)
-    if force and OUT_PATH.exists():
-        OUT_PATH.unlink()
+    force = args.force
+    out_path = out_path_for(provider.model)
+    done = {} if force else load_done(out_path)
     todo = [c for c in cases if c[0] not in done]
     print(f"Penyedia: {provider.name} | model: {provider.model} | "
           f"thinking: {getattr(provider, 'thinking_level', '-')} | "
           f"retry internal SDK dimatikan: {getattr(provider, 'sdk_retry_disabled', '-')}")
-    print(f"Kueri: {len(cases)} (5 positif + 5 negatif); sudah ada di jsonl: "
-          f"{len(done)}; dijalankan sekarang: {len(todo)}"
-          f"{' (--force)' if force else ''}\n")
+    print(f"Kueri: {len(cases)} (5 positif + 5 negatif); sudah ada di {out_path.name}: "
+          f"{len(done)}; akan dijalankan: {len(todo)}"
+          f"{' (--force)' if force else ''}")
+
+    # Anggaran kuota harian: hitung SEBELUM memulai; bila tidak cukup, laporkan saja.
+    if provider.ledger is not None and provider.limits is not None:
+        plan = plan_budget(provider.ledger, provider.limits, len(todo), 1 + MAX_FORMAT_RETRIES)
+        print(f"RPM {provider.limits.rpm} | TPM {provider.limits.tpm} | {plan.describe()}\n")
+        if todo and not plan.ok:
+            print(f"TIDAK DIMULAI: kuota harian tidak cukup ({plan.needed} dibutuhkan, "
+                  f"{plan.remaining} tersisa). Jalankan lagi setelah reset.")
+            return 4
+    else:
+        print("Batas kuota model ini tidak dikenal: anggaran harian tidak dihitung.\n")
+    if args.check_budget:
+        return 0
+    if force and out_path.exists():
+        out_path.unlink()
     if not todo:
         print("Semua kueri sudah punya hasil; tidak ada panggilan LLM. "
               "Pakai --force untuk mengulang.")
@@ -171,11 +246,11 @@ def main() -> int:
             "input_tokens": [c.input_tokens for c in ans.calls],
             "output_tokens": [c.output_tokens for c in ans.calls],
         }
-        append_record(OUT_PATH, record)  # langsung ke disk: hasil tak hilang bila proses mati
+        append_record(out_path, record)  # langsung ke disk: hasil tak hilang bila proses mati
         results.append(record)
 
     if aborted:
-        print(f"\nEvaluasi dihentikan: {aborted}\nHasil sejauh ini tersimpan di {OUT_PATH}; "
+        print(f"\nEvaluasi dihentikan: {aborted}\nHasil sejauh ini tersimpan di {out_path}; "
               "jalankan ulang untuk melanjutkan (kueri yang sudah punya hasil dilewati).")
         return 3
     # urutan sesuai daftar kueri
@@ -225,7 +300,7 @@ def main() -> int:
     else:
         h3 = f"TERDUKUNG pada sampel ini (keliru {len(wrong)}/10; pelanggaran format {fmt_bad})"
     print("Status H3:", h3)
-    print(f"\nHasil lengkap: {OUT_PATH}\nLog panggilan: {LOG_PATH}")
+    print(f"\nHasil lengkap: {out_path}\nLog panggilan: {LOG_PATH}")
     return 0
 
 
