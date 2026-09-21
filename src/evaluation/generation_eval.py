@@ -21,15 +21,22 @@ import sys
 
 from chunker import load_articles
 from evaluation.comparison import compare_models
+from evaluation.devset import DEV_QUERIES, VERDICT_BELUM, VERDICT_DITEMUKAN
+from evaluation.metrics import error_report, format_error_report
 from evaluation.results_store import append_record, load_done, out_path_for
-from evaluation.retrieval_eval import NEGATIVE_QUERIES, QUERIES
-from generator import MAX_FORMAT_RETRIES, Answer, AnswerGenerator, allowed_urls, find_urls, render
+from generator import (
+    MAX_FORMAT_RETRIES,
+    Answer,
+    AnswerGenerator,
+    allowed_urls,
+    find_urls,
+    render,
+)
 from ingest import get_collection, load_model
 from llm import LLMConfigError, get_provider
 from llm.ledger import plan_budget
 from paths import PROJECT_ROOT
 from retriever import retrieve
-
 
 LOG_PATH = PROJECT_ROOT / "data" / "llm_calls.log"
 
@@ -65,8 +72,11 @@ def main() -> int:
                     help="bandingkan dua berkas hasil (tanpa panggilan LLM) dan nilai H3")
     args = ap.parse_args()
 
-    cases = [(q, exp, "positif") for q, exp in QUERIES] + \
-            [(q, None, "negatif") for q, _, _ in NEGATIVE_QUERIES]
+    # Dua label terpisah per kueri (lihat evaluation.devset): artikel yang seharusnya terjangkau retrieval
+    # vs keputusan akhir yang seharusnya. `kind` di sini mengikuti expected_verdict.
+    queries = {d.claim: d for d in DEV_QUERIES}
+    cases = [(d.claim, d.expected_retrieval_article,
+              "positif" if d.expected_verdict == VERDICT_DITEMUKAN else "negatif") for d in DEV_QUERIES]
     if args.compare:
         base, cand = (load_done(out_path_for(m)) for m in args.compare)
         table, status = compare_models(base, cand, cases)
@@ -96,7 +106,9 @@ def main() -> int:
     print(f"Penyedia: {provider.name} | model: {provider.model} | "
           f"thinking: {getattr(provider, 'thinking_level', '-')} | "
           f"retry internal SDK dimatikan: {getattr(provider, 'sdk_retry_disabled', '-')}")
-    print(f"Kueri: {len(cases)} (5 positif + 5 negatif); sudah ada di {out_path.name}: "
+    print(f"Kueri: {len(cases)} ({sum(c[2] == 'positif' for c in cases)} positif + "
+          f"{sum(c[2] == 'negatif' for c in cases)} negatif menurut expected_verdict); "
+          f"sudah ada di {out_path.name}: "
           f"{len(done)}; akan dijalankan: {len(todo)}"
           f"{' (--force)' if force else ''}")
 
@@ -131,6 +143,7 @@ def main() -> int:
     consecutive_api_failures = 0
     for claim, expected, kind in todo:
         i = cases.index((claim, expected, kind)) + 1
+        dq = queries[claim]
         ans = gen.answer(claim)
         if ans.quota_exhausted:
             # Bukan hasil evaluasi: tidak ditulis ke jsonl, supaya diulang saat lanjut.
@@ -169,9 +182,13 @@ def main() -> int:
             print("GALAT:", ans.error)
 
         record = {
-            "claim": claim, "kind": kind, "expected": expected, "verdict": ans.verdict,
+            "claim": claim, "kind": kind, "tipe": dq.tipe,
+            "expected": dq.expected_article_id,  # artikel yang seharusnya DIPILIH (None bila belum_ditemukan)
+            "expected_retrieval_article": dq.expected_retrieval_article,
+            "expected_verdict": dq.expected_verdict, "kekhususan": dq.kekhususan, "batas": dq.batas,
+            "verdict": ans.verdict,
             "article_id": ans.article_id, "status_label": ans.status_label,
-            "expected_label": articles[expected]["label"] if expected else None,
+            "expected_label": articles[dq.expected_article_id]["label"] if dq.expected_article_id else None,
             "invalid_id": ans.invalid_id, "parse_failures": ans.parse_failures,
             "llm_urls": ans.llm_urls_found, "urls_outside": outside, "unsupported": unsup,
             "latency": latency, "rate_limited": sum(c.rate_limited for c in ans.calls),
@@ -202,17 +219,26 @@ def main() -> int:
     order = {c[0]: n for n, c in enumerate(cases)}
     results.sort(key=lambda r: order[r["claim"]])
 
-    pos = [r for r in results if r["kind"] == "positif"]
-    neg = [r for r in results if r["kind"] == "negatif"]
-    pos_ok = [r for r in pos if r["verdict"] == "ditemukan" and r["article_id"] == r["expected"]
-              and r["status_label"] == r["expected_label"]]
-    neg_ok = [r for r in neg if r["verdict"] == "tidak_ditemukan"]
+    def is_correct(r: dict) -> bool:
+        if r["expected_verdict"] == VERDICT_BELUM:
+            return r["verdict"] == "tidak_ditemukan"
+        return (r["verdict"] == "ditemukan" and r["article_id"] == r["expected"]
+                and r["status_label"] == r["expected_label"])
+
     failed = [r for r in results if r["verdict"] == "gagal"]
     lat = [r["latency"] for r in results if r["latency"] > 0]
+    core = [r for r in results if not r["batas"]]  # butir batas dilaporkan terpisah, tidak masuk hitungan utama
+    core_pos = [r for r in core if r["expected_verdict"] == VERDICT_DITEMUKAN]
+    core_neg = [r for r in core if r["expected_verdict"] == VERDICT_BELUM]
+    borderline = [r for r in results if r["batas"]]
 
-    print("\n" + "=" * 78 + "\nRINGKASAN KRITERIA PENERIMAAN")
-    print(f"1. Positif dengan status sesuai label artikel benar : {len(pos_ok)}/5")
-    print(f"2. Negatif dijawab 'tidak ditemukan/berbeda'         : {len(neg_ok)}/5")
+    print("\n" + "=" * 78 + "\nRINGKASAN KRITERIA PENERIMAAN (set pengembangan; BUKAN bukti mutu)")
+    print(f"1. Positif (expected ditemukan), non-batas, artikel dan status benar : "
+          f"{sum(map(is_correct, core_pos))}/{len(core_pos)}")
+    print(f"2. Negatif (expected belum_ditemukan), non-batas, dijawab belum       : "
+          f"{sum(map(is_correct, core_neg))}/{len(core_neg)}")
+    for r in borderline:
+        print(f"   butir BATAS (tidak dihitung di atas): {r['claim']!r} -> {r['verdict']} {r['article_id'] or ''}")
     print(f"3. URL di keluaran akhir di luar metadata            : "
           f"{sum(len(r['urls_outside']) for r in results)} (URL pada keluaran mentah LLM: "
           f"{sum(len(r['llm_urls']) for r in results)})")
@@ -223,8 +249,11 @@ def main() -> int:
     print(f"6. Latensi rata-rata per kueri: "
           f"{statistics.mean(lat) if lat else 0:.1f}s | galat 429: "
           f"{sum(r['rate_limited'] for r in results)}")
+    print("\nJenis kesalahan (dipisah; akurasi total menyembunyikan pergeseran antar-jenis):")
+    print(format_error_report(error_report(results)))
 
-    vaksin = next(r for r in neg if VAKSIN_FLU_MARK in r["claim"].lower())
+    vaksin = next(r for r in results if r["expected_verdict"] == VERDICT_BELUM
+                  and VAKSIN_FLU_MARK in r["claim"].lower())
     print("\nH1 (kasus 'vaksin flu bikin mandul'): "
           f"verdict={vaksin['verdict']} id={vaksin['article_id']}")
     if vaksin["verdict"] == "gagal":
@@ -235,16 +264,15 @@ def main() -> int:
         h1 = "TERDUKUNG pada kasus ini (klaim dinyatakan berbeda / tidak ditemukan)"
     print("Status H1:", h1, "-- satu kasus sulit; jangan digeneralisasi.")
 
-    wrong = [r for r in results if (r["kind"] == "positif" and r not in pos_ok)
-             or (r["kind"] == "negatif" and r not in neg_ok)]
+    wrong = [r for r in core if r["verdict"] != "gagal" and not is_correct(r)]
     fmt_bad = sum(r["parse_failures"] for r in results)
     if failed:
         h3 = f"BELUM KONKLUSIF ({len(failed)} kueri gagal diproses: galat/format)"
     elif fmt_bad >= 2 or len(wrong) >= 2:
-        h3 = f"GUGUR (format bermasalah {fmt_bad}x; keliru {len(wrong)}/10)"
+        h3 = f"GUGUR (format bermasalah {fmt_bad}x; keliru {len(wrong)}/{len(core)} non-batas)"
     else:
-        h3 = f"TERDUKUNG pada sampel ini (keliru {len(wrong)}/10; pelanggaran format {fmt_bad})"
-    print("Status H3:", h3)
+        h3 = f"TERDUKUNG pada sampel ini (keliru {len(wrong)}/{len(core)} non-batas; pelanggaran format {fmt_bad})"
+    print("Status H3 (mekanis, set pengembangan, bukan bukti mutu):", h3)
     print(f"\nHasil lengkap: {out_path}\nLog panggilan: {LOG_PATH}")
     return 0
 
