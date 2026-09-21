@@ -28,9 +28,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 logger = logging.getLogger("llm")
 
 DEFAULT_PROVIDER = "gemini"
-# Flash stabil terbaru pada halaman model Google (diperbarui 2026-09-17);
-# lihat CLAUDE.md untuk sumber dan batas kuota. Dapat diganti lewat LLM_MODEL.
-DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+# Generator Versi 1 (keputusan 2026-09-21): Flash Lite. gemini-3.8-flash dihentikan
+# karena layanan tidak stabil (lihat CLAUDE.md). Dapat diganti lewat LLM_MODEL.
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite"
 
 MAX_ATTEMPTS = 4  # percobaan total per panggilan (1 awal + maksimal 3 retry)
 BACKOFF_BASE_S = 2.0
