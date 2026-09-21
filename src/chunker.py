@@ -20,8 +20,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ARTICLES_PATH = PROJECT_ROOT / "data" / "articles.json"
+from paths import ARTICLES_PATH, PROJECT_ROOT  # noqa: F401 (PROJECT_ROOT diekspor ulang)
+
 
 SECTIONS: tuple[str, ...] = ("narasi", "penjelasan", "kesimpulan")
 
@@ -51,7 +51,7 @@ def decode_references(value: str) -> list[str]:
 def load_articles(path: Path = ARTICLES_PATH) -> list[dict]:
     """Baca hasil scraping. Galat dilempar bila berkas belum ada."""
     if not path.exists():
-        raise FileNotFoundError(f"{path} tidak ditemukan; jalankan scraper.py dulu")
+        raise FileNotFoundError(f"{path} tidak ditemukan; jalankan `python -m scraping` dulu")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
