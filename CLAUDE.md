@@ -215,12 +215,21 @@ bukan hanya hasil akhirnya.
 
 ## Temuan Ingestion dan Retrieval (Versi 1)
 
+> **PERINGATAN: angka di bagian ini, di "Hipotesis dan status", dan di
+> "Keterbatasan" yang bertanda `[DIUKUR PADA DATA CACAT]` diukur pada teks
+> Narasi/Penjelasan yang terduplikasi (150 dari 150 artikel; lihat "Masalah
+> terbuka"), yaitu embedding, statistik token, pemotongan 512 token, seksi
+> pemenang retrieval, skor kemiripan, dan konteks yang dikirim ke LLM. Semua
+> itu TIDAK SAH sebagai temuan sampai diukur ulang setelah perbaikan duplikasi
+> dan pengindeksan ulang. Perlakukan sebagai indikasi awal yang menunggu
+> pengukuran ulang, bukan sebagai kesimpulan.**
+
 Hasil pengujian pertama terhadap 450 chunk (150 artikel), memakai 5 kueri
 berbahasa sehari-hari (`src/test_retrieval.py`). **Sampelnya baru 5
 kueri**: cukup untuk sanity check dan menemukan masalah, bukan evaluasi
 statistik.
 
-### Penjelasan menang atas Narasi
+### Penjelasan menang atas Narasi [DIUKUR PADA DATA CACAT]
 
 Asumsi awal bahwa klaim pengguna paling cocok dengan chunk Narasi
 **tidak terbukti**. Pada peringkat satu, chunk Penjelasan menang pada 3
@@ -239,7 +248,11 @@ satu artikel bisa mengisi beberapa peringkat teratas. Jawaban tetap
 diambil dari chunk Kesimpulan artikel pemenang, dan tautan dari metadata
 (Aturan Wajib #3).
 
-### Skor kemiripan berdaya pisah rendah
+### Skor kemiripan berdaya pisah rendah [DIUKUR PADA DATA CACAT]
+
+Semua skor di bagian ini (termasuk 0,6508 pada kasus "vaksin flu bikin
+mandul") berasal dari embedding teks terduplikasi; angkanya dapat berubah
+setelah pengukuran ulang, dan kesimpulan tentang daya pisah skor belum sah.
 
 Pada level artikel: kueri 2 memberi artikel benar 0,6227 dan artikel lain
 0,6213 (selisih ≈ 0,001); kueri 5 memberi artikel lain 0,6877 melawan
@@ -483,10 +496,12 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
 
 - **H1** (LLM yang membaca Narasi dapat membedakan klaim identik dari klaim
   bertetangga topik; gugur bila pada "vaksin flu bikin mandul" LLM
-  merujuk artikel 36214): **terdukung pada `gemini-3.5-flash-lite` untuk satu
-  kasus inti** (kueri itu dijawab tidak ditemukan; alasan: berbeda dari artikel
-  vaksin HPV dan cacar air). **Belum konklusif sampai diuji pada set uji**
-  (satu kasus, pada set pengembangan); jangan digeneralisasi.
+  merujuk artikel 36214): **dukungan awal pada `gemini-3.5-flash-lite` untuk
+  satu kasus inti** (kueri itu dijawab tidak ditemukan; alasan: berbeda dari
+  artikel vaksin HPV dan cacar air) [DIUKUR PADA DATA CACAT]: kandidat retrieval (skor 0,6508)
+  dan konteks yang dibaca LLM berasal dari data terduplikasi, sehingga
+  dukungan ini menunggu pengukuran ulang. **Belum konklusif sampai diuji pada
+  set uji** (satu kasus, pada set pengembangan); jangan digeneralisasi.
 - **H3** (model kelas Flash cukup untuk tugas ini; gugur bila format terstruktur
   dilanggar berulang atau keliru pada >= 2 dari 10 kueri). **Kriteria dinilai
   terhadap ground truth (label yang ditetapkan manusia), bukan terhadap model
@@ -494,8 +509,9 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   keputusannya sama dengan 3.8 Flash"); itu **kesalahan desain hipotesis**:
   kesetaraan dengan model pembanding bukan kebenaran (kesalahan yang sama tampak
   "setara"), dan hasilnya bergantung pada ketersediaan layanan pembanding.
-  Status pada 10 kueri: **terdukung terhadap ground truth** (Flash Lite 5/5
-  positif dan 5/5 negatif benar, 0 pelanggaran format), **dengan catatan bahwa
+  Status pada 10 kueri [DIUKUR PADA DATA CACAT]: **terdukung terhadap ground truth** (Flash
+  Lite 5/5 positif dan 5/5 negatif benar, 0 pelanggaran format; diukur pada
+  konteks terduplikasi, menunggu pengukuran ulang), **dengan catatan bahwa
   10 kueri itu adalah set pengembangan yang sudah dipakai berulang** (menyusun
   uji retrieval, uji generasi, dan keputusan desain), sehingga **tidak sah
   sebagai bukti mutu**. Bukti mutu hanya dari set uji yang dibekukan (lihat
@@ -527,7 +543,9 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   ditetapkan (jangan ubah dua variabel sekaligus). Selama ini semua hasil
   Gemini memakai `thinking_level=medium` eksplisit, bukan bawaan Flash Lite
   (`minimal`).
-- **Hasil live 2026-09-21** (bukan evaluasi statistik; 10 kueri):
+- **Hasil live 2026-09-21** (bukan evaluasi statistik; 10 kueri) [DIUKUR PADA DATA CACAT]:
+  konteks yang dikirim ke LLM dan kandidat retrieval berasal dari teks
+  terduplikasi; menunggu jalankan ulang setelah perbaikan dan pengindeksan ulang.
   - `gemini-3.5-flash-lite` (thinking medium): 10/10 selesai tanpa 429/503,
     positif 5/5 (artikel dan label benar), negatif 5/5 "tidak ditemukan",
     0 pelanggaran format, 0 URL di luar metadata, latensi rata-rata 6,9 dtk.
@@ -552,7 +570,9 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
 
 ### Perencanaan kapasitas (evaluasi 50 kueri)
 
-Perkiraan, bukan pengukuran; angka kuota per 2026-09-21.
+Perkiraan, bukan pengukuran; angka kuota per 2026-09-21. Perkiraan token
+per panggilan (2,2-2,6K masuk untuk generator; basis perkiraan RAGAS) [DIUKUR PADA DATA CACAT]:
+konteks terduplikasi membuatnya membengkak; ukur ulang setelah perbaikan.
 
 - **Generator Flash Lite** (RPD 500, RPM 15): 50 panggilan (terburuk 100 dengan
   percobaan ulang format) = **1 hari**, >= 3,4 menit menurut RPM (terukur:
@@ -631,8 +651,10 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   hanya berCPU dengan RAM bebas ~2,5 GB, sehingga batas pendek menekan
   memori dan waktu embedding; dan target pencocokan utama adalah seksi
   Narasi (median 270 token) yang mayoritas muat utuh. Terukur pada 450
-  chunk (150 artikel): Narasi terpotong 11/150 (7,3%), Penjelasan 58/150
-  (38,7%), Kesimpulan 0/150. Chunk terpotong ditandai `truncated` pada
+  chunk (150 artikel) [DIUKUR PADA DATA CACAT]: Narasi terpotong 11/150 (7,3%), Penjelasan
+  58/150 (38,7%), Kesimpulan 0/150; median token dan angka pemotongan dihitung
+  pada teks terduplikasi (Narasi/Penjelasan tercatat ~2x) sehingga terlalu besar,
+  dan alasan "mayoritas muat utuh" perlu diperiksa ulang. Chunk terpotong ditandai `truncated` pada
   metadata untuk audit. Bagian ekor Narasi/Penjelasan yang terpotong tidak
   ikut terindeks; keputusan ini perlu ditinjau ulang di Versi 2 (mengubah
   batas berarti embedding ulang semua chunk: `python src/ingest.py --force`).
