@@ -7,10 +7,12 @@ dan tidak menangkap dua cacat pada artikel nyata: kontainer salah dan tautan hoa
 daftar referensi.
 """
 
+from bs4 import BeautifulSoup
+
 from _fakes import FIXTURE_DIR, read_fixture
 from scraping.discovery import is_valid_list_html
 from scraping.links import blocked_reason
-from scraping.parser import is_valid_article_html, parse_article
+from scraping.parser import extract_sections, is_valid_article_html, parse_article
 
 
 # id artikel -> URL asli (id dipakai sebagai nama berkas fixture)
@@ -20,6 +22,10 @@ ARTICLE_URLS = {
     "36731": "https://turnbackhoax.id/articles/36731-penipuan-tautan-pendaftaran-cek-kesehatan-gratis",
     "36730": "https://turnbackhoax.id/articles/36730-salah-ojol-dilarang-beli-pertalite",
     "36729": "https://turnbackhoax.id/articles/36729-salah-malaysia-laporkan-indonesia-ke-pbb-soal-karhutla",
+    # struktur bersarang/tak lazim (Penjelasan/Kesimpulan terselip di dalam blok lain)
+    "36590": "https://turnbackhoax.id/articles/36590-salah-erupsi-gunung-di-indonesia-berkaitan-dengan-haarp",
+    "36603": "https://turnbackhoax.id/articles/36603-salah-anies-baswedan-menolak-ruu-perampasan-aset",
+    "36483": "https://turnbackhoax.id/articles/36483-salah-efek-samping-vaksin-dpt-daptacel-sengaja-disembunyikan",
 }
 
 
@@ -109,3 +115,72 @@ def test_html_validators() -> None:
     assert not is_valid_list_html(error_html), "halaman galat lolos sbg daftar"
     assert is_valid_article_html(read_fixture("36738.html"))
     assert is_valid_list_html(read_fixture("list_page.html"))
+
+
+def html_section_chars(html: str) -> tuple[int, dict[str, int]]:
+    """
+    Panjang teks HTML ASLI seksi isi artikel (section.article-origin / article-explanation
+    terluar), tanpa label seksi di depannya. Mengembalikan (total, per label).
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    selector = "section.article-origin, section.article-explanation"
+    total, per_label = 0, {}
+    for sec in soup.select(selector):
+        if any(a.name == "section" and {"article-origin", "article-explanation"} & set(a.get("class", []))
+               for a in sec.parents):
+            continue  # section bersarang sudah terhitung pada section terluarnya
+        label = sec.find("strong").get_text(strip=True)
+        chars = len(sec.get_text(" ", strip=True)) - len(label) - 1
+        total += chars
+        per_label[label.lower()] = chars
+    return total, per_label
+
+
+def test_section_text_is_not_duplicated_on_real_articles() -> None:
+    """
+    Rasio panjang teks hasil parse terhadap teks HTML asli harus ~1. Duplikasi (induk dan anak
+    sama-sama mencatat teks) membuatnya ~2 (gagal di atas 1,1); teks yang hilang membuatnya di
+    bawah 0,9.
+    """
+    for article_id in ARTICLE_URLS:
+        a = load(article_id)
+        total_html, per_label = html_section_chars(read_fixture(f"{article_id}.html"))
+        parsed_total = sum(len(a[k]) for k in ("narasi", "penjelasan", "kesimpulan"))
+        ratio = parsed_total / total_html
+        assert ratio <= 1.1, f"{article_id}: teks terduplikasi? rasio {ratio:.3f} (parse {parsed_total} / HTML {total_html})"
+        assert ratio >= 0.9, f"{article_id}: teks hilang? rasio {ratio:.3f} (parse {parsed_total} / HTML {total_html})"
+        for key, label in (("narasi", "narasi"), ("penjelasan", "penjelasan")):
+            if label in per_label:
+                r = len(a[key]) / per_label[label]
+                assert r <= 1.1, f"{article_id}: seksi {key} terduplikasi, rasio {r:.3f}"
+
+
+def test_extract_sections_has_no_nested_duplication() -> None:
+    html = (
+        "<section><strong>Narasi</strong><div class='quoted'><p>A satu</p><p>B <strong>dua</strong> tiga</p></div>"
+        "<strong>Penjelasan</strong><div><p>C</p><ul><li>D</li><li>E</li></ul></div>"
+        "<strong>Kesimpulan</strong><div>Faktanya F</div></section>"
+    )
+    sections = extract_sections(BeautifulSoup(html, "html.parser"))
+    assert sections["narasi"] == "A satu\nB dua tiga", "strong inline tidak boleh menggandakan teks paragraf"
+    assert sections["penjelasan"] == "C\nD E"
+    assert sections["kesimpulan"] == "Faktanya F"
+
+
+def test_nested_section_markers_are_separated() -> None:
+    """Penjelasan/Kesimpulan yang terselip di dalam blok lain tidak boleh menumpang di seksi sebelumnya."""
+    a = load("36590")  # Penjelasan bersarang di dalam Narasi
+    assert "Tim Pemeriksa Fakta Mafindo" not in a["narasi"], "Penjelasan masuk ke Narasi"
+    assert a["penjelasan"].startswith("Tim Pemeriksa Fakta Mafindo (TurnBackHoax) mencari tahu")
+    assert a["kesimpulan"].startswith("Faktanya, gelombang radio dari HAARP")
+    assert a["kesimpulan"] not in a["narasi"] and a["kesimpulan"] not in a["penjelasan"]
+
+    a = load("36483")  # Kesimpulan bersarang di dalam Penjelasan
+    assert a["kesimpulan"].startswith("Faktanya, dokumen sumber tangkapan layar bersifat terbuka")
+    assert "Faktanya, dokumen sumber tangkapan layar" not in a["penjelasan"], "awal Kesimpulan masuk ke Penjelasan"
+    assert a["penjelasan"].startswith("Disadur dari artikel Periksa Fakta tirto.id")
+
+    a = load("36603")  # struktur biasa, tetapi Kesimpulan sebelumnya tercatat di seksi lain
+    assert a["kesimpulan"].startswith("Tidak ditemukan pemberitaan atau sumber kredibel")
+    assert a["kesimpulan"] not in a["narasi"] and a["kesimpulan"] not in a["penjelasan"]
+    assert a["narasi"].startswith("Akun Facebook") and a["penjelasan"].startswith("Tim Pemeriksa Fakta Mafindo")

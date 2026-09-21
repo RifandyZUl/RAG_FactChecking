@@ -235,7 +235,10 @@ bukan hanya hasil akhirnya.
 - **Ubah seperlunya.** Jangan merefaktor bagian yang tidak diminta.
   Logika parsing pada `extract_sections`, `extract_references`, dan
   `extract_claim_sources` sudah tervalidasi — jangan diubah tanpa alasan
-  kuat.
+  kuat. (Pengecualian yang disetujui 2026-09-21: `extract_sections`
+  diperbaiki karena menduplikasi teks; lihat "Masalah terbuka" dan
+  `tests/test_parser.py`, yang kini gagal bila rasio panjang hasil parse
+  terhadap teks HTML asli melebihi 1,1.)
 - **Jelaskan keputusan desain.** Bila ada beberapa pendekatan, sebutkan
   pilihan yang diambil beserta alasan dan konsekuensinya.
 - **Sampaikan ketidakpastian secara jujur.** Bila sesuatu belum
