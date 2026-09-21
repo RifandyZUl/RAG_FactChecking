@@ -5,6 +5,8 @@ data/*.log
 data/*.jsonl
 data/quota_ledger.json
 data/chroma/
+data/candidates/
+data/candidates_cache/
 
 # Python
 __pycache__/

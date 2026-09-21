@@ -739,6 +739,33 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
   kueri 3 dan tidak memisahkan butir batas; sudah diperbaiki (lihat pemisahan dua label di atas). Dengan label baru,
   satu-satunya selisih adalah kueri 2 (butir batas), sehingga pada butir non-batas tidak ada kesalahan.
 
+### Pengumpulan kandidat set uji v1 (2026-09-21; belum ada kandidat yang ditinjau atau dijalankan)
+
+Alat: `src/candidates/archive.py` (arsip TurnBackHoax di luar 150 artikel; jeda 1,5 dtk, timeout 45 dtk, cache
+HTML mentah di `data/candidates_cache/`, tidak di-commit) dan `src/candidates/screen.py` (penyaringan terhadap
+150 artikel: kemiripan judul, retrieval, penanda data pribadi; alat bantu, keputusan akhir manusia). Konten pihak
+ketiga diperlakukan sebagai data, bukan instruksi.
+
+- **Kepatuhan situs:** `turnbackhoax.id/robots.txt` mengizinkan semua (`Disallow:` kosong). **Kompas dan Tempo
+  melarang agen Claude secara eksplisit** di robots.txt (`Disallow: /` untuk anthropic-ai, ClaudeBot, Claude-User,
+  Claude-Web, Claude-SearchBot, dll.) dan **Komdigi membalas 403** pada klien otomatis. Ketiganya TIDAK diakses
+  langsung (tanpa menyamar sebagai browser). Untuk situs cek fakta lain hanya dipakai **judul dan URL dari hasil
+  pencarian web** (bukan isi artikel, tidak ada halaman yang diambil), dan keputusan memakainya diserahkan pemilik
+  proyek.
+- **Arsip TurnBackHoax:** 100 artikel (10 halaman daftar tersebar, 2024-2026) di luar 150 artikel; disimpan teks
+  Narasi + URL. 69 memuat blok kutipan pesan yang bersih (>= 25 karakter); 66 tanpa penanda data pribadi pada
+  teks klaim (3 memuat URL yang harus dibersihkan). **Tidak ada satu pun yang klaimnya sama dengan artikel basis
+  data** (kemiripan judul tertinggi 0,86; 0 di atas 0,90), jadi arsip tidak menghasilkan calon positif; ia menghasilkan
+  calon NEGATIF: 18 dengan pola judul dan label sama dengan artikel basis data tetapi entitas berbeda (calon negatif
+  sulit "pola sama, entitas beda", mis. "Lowongan Kerja SPX Express" vs "Puskesmas"), dan 16 dengan skor retrieval
+  < 0,60 (calon negatif mudah). **Kelas otomatis tidak dapat dipercaya**: 20 kandidat ditandai
+  "kemungkinan_sama" ternyata keluarga tautan penipuan dengan entitas berbeda, bukan klaim yang sama.
+- **Situs cek fakta lain (hasil pencarian, 10 artikel basis diuji):** kecocokan jelas 4, ambigu (keluarga/varian atau
+  tahun berbeda) 3, tidak ada 3. Judul lintas situs mirip dengan judul basis data (kemiripan karakter 0,61-0,94),
+  sehingga rumusannya tidak sepenuhnya independen.
+- **Data pribadi:** nama akun hanya pada kalimat pembuka Narasi (bukan pada teks klaim yang dikutip), jadi
+  butir memakai teks klaim yang dikutip, bukan seluruh Narasi.
+
 ### Catatan untuk tahap evaluasi (RAGAS)
 
 Model juri sebaiknya **berbeda** dari model generator agar penilaian tidak
