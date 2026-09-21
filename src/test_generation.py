@@ -90,12 +90,13 @@ def decision(rec: dict) -> tuple[str, str | None]:
 
 def compare_models(base: dict[str, dict], cand: dict[str, dict], cases: list[tuple]) -> tuple[str, str]:
     """
-    Bandingkan keputusan dua model per kueri; kembalikan (tabel, status H3).
+    Bandingkan keputusan dua model per kueri; kembalikan (tabel, status kesetaraan).
 
-    Kriteria pra-ditetapkan: model kandidat (Flash Lite) cukup bila keputusannya
-    sama dengan model dasar pada SELURUH kueri negatif dan berbeda paling banyak
-    pada satu kueri positif. Kueri yang belum dijalankan/gagal pada salah satu
-    model membuat status BELUM KONKLUSIF.
+    Hanya informasi kesetaraan keputusan antarmodel. BUKAN kriteria H3: kesetaraan
+    dengan model lain bukan kebenaran (rumusan H3 relatif sebelumnya adalah kesalahan
+    desain); H3 dinilai terhadap ground truth. Status: TERDUKUNG bila sama pada semua
+    negatif dan berbeda paling banyak pada satu positif; kueri yang belum ada hasilnya
+    membuat BELUM KONKLUSIF.
     """
     lines = [f"{'#':>2} {'jenis':<8} {'dasar':<24} {'kandidat':<24} sama  klaim"]
     diff_pos = diff_neg = missing = 0
@@ -138,7 +139,9 @@ def main() -> int:
     if args.compare:
         base, cand = (load_done(out_path_for(m)) for m in args.compare)
         table, status = compare_models(base, cand, cases)
-        print(f"Dasar: {args.compare[0]} | kandidat: {args.compare[1]}\n{table}\nStatus H3 (Flash Lite): {status}")
+        print(f"Dasar: {args.compare[0]} | kandidat: {args.compare[1]}\n{table}\n"
+              f"Kesetaraan keputusan antarmodel (informasi; BUKAN kriteria H3, yang dinilai "
+              f"terhadap ground truth): {status}")
         return 0
 
     logging.basicConfig(

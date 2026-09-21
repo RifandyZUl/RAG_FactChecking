@@ -28,10 +28,12 @@ Proyek dibangun bertahap dalam dua versi:
   relevansi dokumen, penulis ulang kueri, dan penilaian kredibilitas
   sumber.
 
-Tahap saat ini: lapisan generasi jawaban (`src/generator.py`) sudah ditulis
-dan lolos uji offline; evaluasi live menunggu `GEMINI_API_KEY`. Modul
-ingestion dan scraping (150 artikel) sudah selesai, dengan satu masalah
-terbuka pada duplikasi teks seksi (lihat "Masalah terbuka").
+Tahap saat ini: lapisan generasi jawaban (`src/generator.py`) sudah ditulis,
+lolos uji offline, dan dijalankan live pada 10 kueri pengembangan
+(`gemini-3.5-flash-lite` dipilih sebagai generator Versi 1; lihat "Hipotesis
+dan status"). Berikutnya: merancang set uji 50 kueri yang terpisah dari set
+pengembangan. Modul ingestion dan scraping (150 artikel) sudah selesai, dengan
+satu masalah terbuka pada duplikasi teks seksi (lihat "Masalah terbuka").
 
 ---
 
@@ -357,8 +359,9 @@ menangkap bahwa saran server tidak pernah terbaca.
 kueri, dapat dilanjutkan (kueri yang sudah punya hasil dilewati; `--force` untuk
 mengulang), dan berhenti bila kuota harian habis. Opsi: `--model ID`,
 `--check-budget` (hanya laporan anggaran, tanpa panggilan LLM), dan
-`--compare DASAR KANDIDAT` (tabel keputusan berdampingan + status H3, tanpa
-panggilan LLM).
+`--compare DASAR KANDIDAT` (tabel keputusan berdampingan antarmodel, tanpa
+panggilan LLM; hanya informasi kesetaraan keputusan dan BUKAN kriteria H3,
+lihat "Hipotesis dan status").
 
 **Throttling proaktif dan anggaran harian** (`src/rate_limit.py`): batas
 RPM/TPM/RPD per model dibaca dari `DEFAULT_LIMITS` (dapat ditimpa `LLM_RPM`,
@@ -371,17 +374,23 @@ menyatakan apakah 429 ikut terhitung. Sebelum evaluasi dimulai, kebutuhan
 (minimal 1 panggilan/kueri; terburuk 1 + `MAX_FORMAT_RETRIES`) dibandingkan
 dengan sisa; bila tidak cukup, evaluasi tidak dimulai (kode keluar 4) dan saat
 anggaran habis di tengah jalan permintaan tidak dikirim. **Buku besar hanya
-tahu permintaan dari kode ini**; sebelum berkas itu ada, samakan dengan angka
-AI Studio (`DailyLedger(model).seed(n)`). `src/probe_quota.py` adalah probe
-tunggal (1 permintaan) untuk melihat bentuk 429 asli.
+tahu permintaan dari kode ini.** Koreksi logika pengisian awal: buku besar
+sempat diisi (`seed(21)`) dari kolom "penggunaan puncak 28 hari" di dashboard AI
+Studio, padahal angka itu puncak historis, bukan pemakaian hari berjalan, jadi
+tidak sah sebagai nilai awal; entri keliru itu sudah dihapus. Nilai awal hanya
+boleh berasal dari hitungan yang dapat ditelusuri (mis. log panggilan kita
+sendiri); bila pemakaian hari itu tidak diketahui, buktinya adalah probe tunggal
+(`src/probe_quota.py`, 1 permintaan), bukan dashboard.
 
 ### Model dan kuota (diverifikasi dari dokumentasi resmi pada 2026-09-20)
 
-- **Model bawaan: `gemini-3.8-flash`** (status Stable). Sumber:
+- **Model bawaan (keputusan 2026-09-21): `gemini-3.5-flash-lite`**, generator
+  Versi 1. `gemini-3.8-flash` (sebelumnya bawaan) **dihentikan** karena
+  ketidakstabilan layanan (lihat "Hipotesis dan status"). Sumber daftar model:
   https://ai.google.dev/gemini-api/docs/models (halaman diperbarui
-  2026-09-17 UTC). Flash stabil lain di halaman itu: 3.7, 3.6, 3.5,
-  3.5-flash-lite, 3.1-flash-lite, 2.5-flash, 2.5-flash-lite. Ganti lewat
-  `LLM_MODEL`. `gemini-2.0-flash` dan `-lite` tercatat sudah dimatikan.
+  2026-09-17 UTC); Flash stabil lain di halaman itu: 3.8, 3.7, 3.6, 3.5,
+  3.1-flash-lite, 2.5-flash, 2.5-flash-lite. Ganti lewat `LLM_MODEL`.
+  `gemini-2.0-flash` dan `-lite` tercatat sudah dimatikan.
 - **Tier gratis:** halaman harga (https://ai.google.dev/gemini-api/docs/pricing)
   mencantumkan `gemini-3.8-flash` "Free of charge" pada Free tier.
 - **Batas kuota: angka konkret TIDAK dipublikasikan di dokumentasi**, hanya
@@ -474,22 +483,31 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
 
 - **H1** (LLM yang membaca Narasi dapat membedakan klaim identik dari klaim
   bertetangga topik; gugur bila pada "vaksin flu bikin mandul" LLM
-  merujuk artikel 36214): **terdukung pada `gemini-3.5-flash-lite`** (kueri
-  itu dijawab tidak ditemukan; alasan: berbeda dari artikel vaksin HPV dan
-  cacar air), satu kasus. **Belum diuji pada 3.8 Flash**, yang justru
-  menjadi model dasar; jangan digeneralisasi.
-- **H3** (model kelas Flash cukup; gugur bila format terstruktur dilanggar
-  berulang atau keliru pada >= 2 dari 10 kueri): **belum diuji konklusif**
-  (tercatat 5 panggilan 3.8 Flash sukses dengan 0 pelanggaran format dan 1
-  dari 5 positif dijawab "tidak ditemukan", tetapi 3 kueri gagal dengan 429
-  di percobaan pertama). **Diperluas:** bandingkan `gemini-3.8-flash` dengan Flash Lite
-  (`gemini-3.5-flash-lite`) pada 10 kueri yang sama. Flash Lite dinyatakan
-  cukup bila keputusannya (verdict + artikel) sama dengan 3.8 Flash pada
-  SELURUH kueri negatif dan berbeda paling banyak pada satu kueri positif
-  (`test_generation.py --compare`). Bila tidak cukup: 3.8 Flash tetap sebagai
-  generator dan evaluasi 50 kueri dijalankan lintas hari. Kesetaraan
-  keputusan bukan kebenaran: akurasi tiap model tetap dilaporkan sendiri.
-  Bedakan masalah model dari masalah prompt sebelum mengganti model.
+  merujuk artikel 36214): **terdukung pada `gemini-3.5-flash-lite` untuk satu
+  kasus inti** (kueri itu dijawab tidak ditemukan; alasan: berbeda dari artikel
+  vaksin HPV dan cacar air). **Belum konklusif sampai diuji pada set uji**
+  (satu kasus, pada set pengembangan); jangan digeneralisasi.
+- **H3** (model kelas Flash cukup untuk tugas ini; gugur bila format terstruktur
+  dilanggar berulang atau keliru pada >= 2 dari 10 kueri). **Kriteria dinilai
+  terhadap ground truth (label yang ditetapkan manusia), bukan terhadap model
+  lain.** Sempat dirumuskan ulang secara relatif ("Flash Lite cukup bila
+  keputusannya sama dengan 3.8 Flash"); itu **kesalahan desain hipotesis**:
+  kesetaraan dengan model pembanding bukan kebenaran (kesalahan yang sama tampak
+  "setara"), dan hasilnya bergantung pada ketersediaan layanan pembanding.
+  Status pada 10 kueri: **terdukung terhadap ground truth** (Flash Lite 5/5
+  positif dan 5/5 negatif benar, 0 pelanggaran format), **dengan catatan bahwa
+  10 kueri itu adalah set pengembangan yang sudah dipakai berulang** (menyusun
+  uji retrieval, uji generasi, dan keputusan desain), sehingga **tidak sah
+  sebagai bukti mutu**. Bukti mutu hanya dari set uji yang dibekukan (lihat
+  "Set uji Versi 1").
+- **`gemini-3.8-flash` dihentikan (keputusan 2026-09-21)** karena
+  ketidakstabilan layanan: 503 dan `APITimeoutError` di server, serta 429 yang
+  muncul saat hitungan permintaan lokal masih di bawah batas harian 20 (penyebab
+  429 tidak didiagnosis; diagnosis dihentikan atas keputusan). Baseline 3.8
+  Flash tidak selesai (1 dari 10 kueri valid) dan perbandingan mutu tidak
+  pernah terjadi: **hasil itu tidak boleh ditafsirkan sebagai 3.8 Flash lebih
+  buruk dari Flash Lite.** `--compare` dipertahankan hanya sebagai alat
+  informasi.
 - **H4** (Gemma 4 dapat menjadi model juri RAGAS): **belum diuji sebagai
   juri**. Uji format JSON (`src/test_gemma_json.py`, `gemma-4-31b-it`,
   thinking `minimal`, 3 prompt x 2 mode, 2026-09-21): 6/6 panggilan berhasil;
@@ -502,14 +520,13 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   **Latensi 31-52 dtk per panggilan** walau prompt kecil (121-2521 token
   masuk, tanpa throttling), jauh lebih lambat daripada Gemini (Flash Lite
   ~4-10 dtk). Cukup TPM 16K per panggilan, tetapi waktu jam-dinding menjadi
-  kendala (lihat "Perencanaan kapasitas").
-- Urutan eksekusi setelah reset kuota: (1) probe tunggal 3.8 Flash untuk
-  melihat bentuk `quotaId` 429 asli; (2) baseline 10 kueri 3.8 Flash dengan
-  thinking bawaan kode (medium), lengkap dengan status H1 dan keluaran utuh
-  kasus "vaksin flu bikin mandul"; (3) 10 kueri yang sama dengan Flash Lite;
-  (4) eksperimen thinking baru setelah generator final dipilih (jangan ubah dua
-  variabel sekaligus). Langkah 1-2 harus <= 20 permintaan per hari Pasifik
-  (1 + 10 = 11 bila tak ada percobaan ulang format).
+  kendala (lihat "Perencanaan kapasitas"). Karena mode skema berfungsi, risiko
+  format untuk H4 sebagian besar gugur; yang tersisa adalah latensi dan mutu
+  penilaian. **RAGAS belum dipasang: menunggu set uji selesai.**
+- Eksperimen thinking ditunda sampai set uji dibekukan dan generator final
+  ditetapkan (jangan ubah dua variabel sekaligus). Selama ini semua hasil
+  Gemini memakai `thinking_level=medium` eksplisit, bukan bawaan Flash Lite
+  (`minimal`).
 - **Hasil live 2026-09-21** (bukan evaluasi statistik; 10 kueri):
   - `gemini-3.5-flash-lite` (thinking medium): 10/10 selesai tanpa 429/503,
     positif 5/5 (artikel dan label benar), negatif 5/5 "tidak ditemukan",
@@ -527,25 +544,21 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
     diketahui: bukan RPM dari sisi kita (percobaan berjarak >= 30 dtk) dan 429
     muncul saat hitungan lokal baru ~8-19 dari 20, tetapi apakah ini beban/
     kapasitas server ("actual capacity may vary") atau batas lain belum dapat
-    dibedakan. Baseline 3.8 Flash dilanjutkan setelah reset berikutnya
-    (2026-09-22 07:00 UTC); `test_generation.py` melewati kueri 1.
+    dibedakan. Dihentikan (lihat di atas); `data/generation_eval_gemini-3.8-flash.jsonl`
+    hanya memuat 1 kueri valid dan tidak dipakai.
   - Pemutus baru: evaluasi berhenti setelah 2 kueri beruntun gagal di API.
-  - **H3 tidak dapat dinilai**: perbandingan 3.8 Flash vs Flash Lite hanya
-    punya 1 kueri berpasangan (sama). Jangan menyimpulkan bahwa Flash Lite
-    "lebih baik" dari 3.8 Flash: ketidakstabilan 3.8 Flash adalah masalah
-    layanan, bukan mutu keputusan.
-- Sampel evaluasi hanya 5 positif dan 5 negatif: indikasi, bukan bukti statistik.
+- Sampel evaluasi hanya 5 positif dan 5 negatif dan berstatus set
+  pengembangan: indikasi, bukan bukti statistik.
 
 ### Perencanaan kapasitas (evaluasi 50 kueri)
 
 Perkiraan, bukan pengukuran; angka kuota per 2026-09-21.
 
-- **Generator 3.8 Flash** (RPD 20, RPM 5): >= 50 panggilan + 1 probe =>
-  **3 hari** (20 + 20 + 11) bila hampir tak ada percobaan ulang format; tiap
-  percobaan ulang memakan jatah hari itu. Waktu jam-dinding kecil (RPM 5 =
-  12 dtk/panggilan, <= 4 menit per 20 panggilan); yang membatasi adalah RPD.
-- **Generator Flash Lite** (RPD 500, RPM 15): **1 hari**, >= 3,3 menit
-  menurut RPM.
+- **Generator Flash Lite** (RPD 500, RPM 15): 50 panggilan (terburuk 100 dengan
+  percobaan ulang format) = **1 hari**, >= 3,4 menit menurut RPM (terukur:
+  ~6,9 dtk per kueri). Ini generator Versi 1.
+- (Dihentikan) generator 3.8 Flash: RPD 20 akan membutuhkan 3 hari; tidak
+  ditempuh.
 - **Juri Gemma 4** (TPM 16K, RPM 30, RPD 14,4K), bila H4 layak: RAGAS ~6-7
   panggilan/sampel, ~8-14K token masuk/sampel (perkiraan dari struktur metrik
   dan konteks kita; RAGAS belum terpasang dan tidak diperiksa), prompt
@@ -555,8 +568,21 @@ Perkiraan, bukan pengukuran; angka kuota per 2026-09-21.
   membatasi. Dengan konkurensi ~4 (RPM 30 dan TPM 16K masih cukup) sekitar
   ~1 jam; keduanya masih perkiraan. Tetap **1 hari**, kuotanya terpisah dari
   generator.
-- **Skenario realistis:** Flash Lite + juri Gemma = 1 hari; 3.8 Flash + juri
-  Gemma = 3 hari (juri di hari mana pun). Mana yang berlaku bergantung pada H3.
+- **Skenario realistis:** Flash Lite + juri Gemma = 1 hari. RAGAS belum
+  dipasang; menunggu set uji selesai.
+
+### Set uji Versi 1 (dalam perancangan; menunggu persetujuan pemilik proyek)
+
+Set uji 50 kueri untuk bukti mutu, terpisah dari 10 kueri pengembangan.
+Prinsip yang sudah ditetapkan pemilik proyek: 10 kueri pengembangan tidak boleh
+masuk; setelah set uji dibekukan, prompt sistem dan logika generator tidak
+boleh diubah berdasarkan hasilnya (bila perlu diubah, dibuat set uji baru);
+komposisi mencakup positif, negatif sulit (tetangga topik, seperti "vaksin flu
+bikin mandul"), dan negatif mudah; sebaran positif mengikuti label dan
+kategori 150 artikel; ragam gaya bahasa (formal, percakapan, pesan berantai
+WhatsApp, salah ketik); setiap butir ditinjau manual oleh pemilik proyek;
+disimpan sebagai berkas bernomor versi dan di-commit. Rancangan rinci
+(komposisi, prosedur, kuota) menunggu persetujuan; datanya belum dibuat.
 
 ### Catatan untuk tahap evaluasi (RAGAS)
 

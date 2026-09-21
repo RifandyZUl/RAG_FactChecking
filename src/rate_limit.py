@@ -157,8 +157,9 @@ class DailyLedger:
     Buku besar lokal: jumlah permintaan yang DIKIRIM per model per hari Pasifik.
 
     Hanya mengetahui permintaan dari kode ini; tidak tahu pemakaian di luar itu
-    (mis. AI Studio, proses lain, atau sebelum berkas ini ada). Angka resmi ada di
-    AI Studio; gunakan `seed` bila perlu menyamakan.
+    (mis. proses lain atau sebelum berkas ini ada). JANGAN mengisinya dari dashboard
+    AI Studio: kolom penggunaannya adalah puncak 28 hari, bukan pemakaian hari
+    berjalan. Bukti kuota hari ini adalah probe tunggal (src/probe_quota.py).
     """
 
     def __init__(
@@ -209,7 +210,10 @@ class DailyLedger:
         return days[key]
 
     def seed(self, used: int) -> None:
-        """Set hitungan hari ini (mis. menyamakan dengan angka AI Studio)."""
+        """
+        Set hitungan hari ini. Hanya untuk nilai yang dapat ditelusuri (mis. log panggilan
+        sendiri); BUKAN dari angka puncak dashboard AI Studio.
+        """
         data = self._load()
         data.setdefault(self.model, {})[self.day_key()] = int(used)
         self._save(data)
