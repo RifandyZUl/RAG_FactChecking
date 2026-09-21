@@ -15,7 +15,7 @@ setelah ekstraksi longgar, dan bentuk (kunci + tipe) sesuai. Kegagalan pemanggil
 
 Bukan evaluasi juri RAGAS itu sendiri: RAGAS belum terpasang, dan prompt di sini
 adalah perkiraan bentuk langkahnya. Sampel: 3 prompt x 2 mode, indikasi saja.
-Pemakaian: python src/test_gemma_json.py [--model gemma-4-31b-it]
+Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.gemma_json_check [--model gemma-4-31b-it]
 """
 
 import argparse
@@ -24,12 +24,13 @@ import logging
 import re
 import sys
 
-from chunker import PROJECT_ROOT, load_articles
+from chunker import load_articles
 from generator import RESPONSE_SCHEMA, SYSTEM_PROMPT, build_user_prompt, parse_llm_output
 from llm import LLMConfigError, LLMError, LLMQuotaExhaustedError, get_provider
+from evaluation.results_store import append_record
 from llm.ledger import plan_budget
+from paths import PROJECT_ROOT
 from retriever import ArticleHit
-from test_generation import append_record
 
 OUT_PATH = PROJECT_ROOT / "data" / "gemma_json_test.jsonl"
 LOG_PATH = PROJECT_ROOT / "data" / "llm_calls.log"

@@ -32,13 +32,13 @@ from chromadb.config import Settings
 
 from chunker import (
     MAX_SEQ_LENGTH,
-    PROJECT_ROOT,
     Chunk,
     build_chunks,
     load_articles,
     make_token_counter,
     truncation_report,
 )
+from paths import PROJECT_ROOT
 
 MODEL_NAME = "BAAI/bge-m3"
 # Model dimuat dari branch main (pytorch_model.bin resmi BAAI). transformers

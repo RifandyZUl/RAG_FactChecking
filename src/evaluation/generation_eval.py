@@ -1,7 +1,7 @@
 """
 Evaluasi lapisan generasi (LIVE: memanggil LLM sungguhan; butuh kunci di .env).
 
-Menjalankan 5 kueri positif dan 5 kueri negatif dari test_retrieval.py, mencetak
+Menjalankan 5 kueri positif dan 5 kueri negatif dari evaluation/retrieval_eval.py, mencetak
 keluaran lengkap, lalu melaporkan kriteria penerimaan dan status hipotesis:
 
   H1  LLM yang membaca Narasi dapat membedakan klaim identik dari klaim yang
@@ -10,28 +10,36 @@ keluaran lengkap, lalu melaporkan kriteria penerimaan dan status hipotesis:
 
 Sampel kecil (5 positif, 5 negatif): hasilnya indikasi, bukan evaluasi statistik.
 Prasyarat: python src/ingest.py sudah dijalankan dan .env berisi GEMINI_API_KEY.
+Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.generation_eval [--model ID]
 """
 
 import argparse
-import json
 import logging
-import os
 import re
 import statistics
 import sys
-from pathlib import Path
 
-from chunker import PROJECT_ROOT, load_articles
+from chunker import load_articles
+from evaluation.comparison import compare_models
+from evaluation.results_store import append_record, load_done, out_path_for
+from evaluation.retrieval_eval import NEGATIVE_QUERIES, QUERIES
 from generator import MAX_FORMAT_RETRIES, Answer, AnswerGenerator, allowed_urls, find_urls, render
 from ingest import get_collection, load_model
 from llm import LLMConfigError, get_provider
 from llm.ledger import plan_budget
+from paths import PROJECT_ROOT
 from retriever import retrieve
-from test_retrieval import NEGATIVE_QUERIES, QUERIES
+
 
 LOG_PATH = PROJECT_ROOT / "data" / "llm_calls.log"
+
+
 HOAX_TARGET = "36214"  # artikel vaksin HPV bikin impoten (tetangga dekat kasus H1)
+
+
 VAKSIN_FLU_MARK = "vaksin flu"
+
+
 MAX_CONSECUTIVE_API_FAILURES = 2  # setelah ini evaluasi berhenti agar anggaran tidak terbakar
 
 
@@ -45,83 +53,6 @@ def unsupported_tokens(ans: Answer, context: str) -> list[str]:
     haystack = (context + " " + ans.claim).lower()
     cands = re.findall(r"\d[\d.,]*|\b[A-Z][a-zA-Z]{3,}\b", text)
     return sorted({t for t in cands if t.lower().rstrip(".,") not in haystack})
-
-
-def append_record(path: Path, record: dict) -> None:
-    """Tambahkan satu hasil ke jsonl dan paksa ke disk (tahan terhadap proses yang dihentikan)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        f.flush()
-        os.fsync(f.fileno())
-
-
-def load_done(path: Path) -> dict[str, dict]:
-    """
-    Hasil yang sudah ada per klaim (baris terakhir menang). Kueri berstatus "gagal"
-    tidak dianggap selesai, jadi diulang saat dilanjutkan.
-    """
-    done: dict[str, dict] = {}
-    if not path.exists():
-        return done
-    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not line.strip():
-            continue
-        try:
-            rec = json.loads(line)
-        except ValueError as e:
-            raise SystemExit(f"{path} baris {n} rusak ({e}); perbaiki atau pakai --force.")
-        if rec.get("verdict") == "gagal":
-            done.pop(rec["claim"], None)
-        else:
-            done[rec["claim"]] = rec
-    return done
-
-
-def out_path_for(model: str) -> Path:
-    """Berkas hasil per model, agar perbandingan antarmodel tidak saling menimpa."""
-    return PROJECT_ROOT / "data" / f"generation_eval_{re.sub(r'[^A-Za-z0-9._-]', '_', model)}.jsonl"
-
-
-def decision(rec: dict) -> tuple[str, str | None]:
-    """Keputusan sebuah kueri: verdict dan artikel yang dipilih (bukan teks bebas)."""
-    return rec["verdict"], rec["article_id"]
-
-
-def compare_models(base: dict[str, dict], cand: dict[str, dict], cases: list[tuple]) -> tuple[str, str]:
-    """
-    Bandingkan keputusan dua model per kueri; kembalikan (tabel, status kesetaraan).
-
-    Hanya informasi kesetaraan keputusan antarmodel. BUKAN kriteria H3: kesetaraan
-    dengan model lain bukan kebenaran (rumusan H3 relatif sebelumnya adalah kesalahan
-    desain); H3 dinilai terhadap ground truth. Status: TERDUKUNG bila sama pada semua
-    negatif dan berbeda paling banyak pada satu positif; kueri yang belum ada hasilnya
-    membuat BELUM KONKLUSIF.
-    """
-    lines = [f"{'#':>2} {'jenis':<8} {'dasar':<24} {'kandidat':<24} sama  klaim"]
-    diff_pos = diff_neg = missing = 0
-    for i, (claim, _exp, kind) in enumerate(cases, 1):
-        a, b = base.get(claim), cand.get(claim)
-        if a is None or b is None:
-            missing += 1
-            lines.append(f"{i:>2} {kind:<8} {'-' if a is None else str(decision(a)):<24} "
-                         f"{'-' if b is None else str(decision(b)):<24} ?     {claim[:50]}")
-            continue
-        same = decision(a) == decision(b)
-        if not same:
-            diff_pos += kind == "positif"
-            diff_neg += kind == "negatif"
-        lines.append(f"{i:>2} {kind:<8} {str(decision(a)):<24} {str(decision(b)):<24} "
-                     f"{'ya' if same else 'TIDAK':<5} {claim[:50]}")
-    if missing:
-        status = f"BELUM KONKLUSIF ({missing} kueri belum ada hasil pada salah satu model)"
-    elif diff_neg == 0 and diff_pos <= 1:
-        status = (f"TERDUKUNG (beda pada negatif: {diff_neg}, pada positif: {diff_pos}). "
-                  "Kesetaraan keputusan, bukan kebenaran: periksa juga akurasi masing-masing.")
-    else:
-        status = (f"TIDAK TERDUKUNG (beda pada negatif: {diff_neg}, pada positif: {diff_pos}); "
-                  "pertahankan 3.8 Flash sebagai generator dan rencanakan evaluasi lintas hari.")
-    return "\n".join(lines), status
 
 
 def main() -> int:

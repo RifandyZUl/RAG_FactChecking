@@ -1,0 +1,3 @@
+# Dependensi pengembangan (uji offline). Pasang: pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
