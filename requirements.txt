@@ -8,3 +8,5 @@ transformers==5.17.0
 chromadb==1.5.9
 # Klien Gemini (Interactions API) untuk lapisan generasi jawaban
 google-genai==2.24.0
+# Data zona waktu (America/Los_Angeles) untuk reset kuota harian; Windows tak punya bawaan
+tzdata==2026.4

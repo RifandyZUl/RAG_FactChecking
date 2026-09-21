@@ -353,9 +353,27 @@ berubah dan retry internal kembali aktif. Uji lama memakai galat palsu
 berbentuk lain (body `str`, header di `err.headers`), sehingga tidak
 menangkap bahwa saran server tidak pernah terbaca.
 
-`test_generation.py` menulis hasil ke `data/generation_eval.jsonl` per kueri,
-dapat dilanjutkan (kueri yang sudah punya hasil dilewati; `--force` untuk
-mengulang), dan berhenti bila kuota harian habis.
+`test_generation.py` menulis hasil ke `data/generation_eval_<model>.jsonl` per
+kueri, dapat dilanjutkan (kueri yang sudah punya hasil dilewati; `--force` untuk
+mengulang), dan berhenti bila kuota harian habis. Opsi: `--model ID`,
+`--check-budget` (hanya laporan anggaran, tanpa panggilan LLM), dan
+`--compare DASAR KANDIDAT` (tabel keputusan berdampingan + status H3, tanpa
+panggilan LLM).
+
+**Throttling proaktif dan anggaran harian** (`src/rate_limit.py`): batas
+RPM/TPM/RPD per model dibaca dari `DEFAULT_LIMITS` (dapat ditimpa `LLM_RPM`,
+`LLM_TPM`, `LLM_RPD`). Jendela geser 60 dtk menjaga RPM dan TPM tidak pernah
+tersentuh (setiap percobaan, termasuk retry, melewatinya); retry 429 tinggal
+jaring pengaman. RPD dicatat di `data/quota_ledger.json` per hari **Pasifik**
+(reset tengah malam Pasifik menurut dokumentasi) dan **setiap permintaan yang
+dikirim dihitung, termasuk yang ditolak 429**, karena dokumentasi tidak
+menyatakan apakah 429 ikut terhitung. Sebelum evaluasi dimulai, kebutuhan
+(minimal 1 panggilan/kueri; terburuk 1 + `MAX_FORMAT_RETRIES`) dibandingkan
+dengan sisa; bila tidak cukup, evaluasi tidak dimulai (kode keluar 4) dan saat
+anggaran habis di tengah jalan permintaan tidak dikirim. **Buku besar hanya
+tahu permintaan dari kode ini**; sebelum berkas itu ada, samakan dengan angka
+AI Studio (`DailyLedger(model).seed(n)`). `src/probe_quota.py` adalah probe
+tunggal (1 permintaan) untuk melihat bentuk 429 asli.
 
 ### Model dan kuota (diverifikasi dari dokumentasi resmi pada 2026-09-20)
 
@@ -366,12 +384,40 @@ mengulang), dan berhenti bila kuota harian habis.
   `LLM_MODEL`. `gemini-2.0-flash` dan `-lite` tercatat sudah dimatikan.
 - **Tier gratis:** halaman harga (https://ai.google.dev/gemini-api/docs/pricing)
   mencantumkan `gemini-3.8-flash` "Free of charge" pada Free tier.
-- **Batas kuota: angka konkret (RPM/TPM/RPD) TIDAK dipublikasikan di
-  dokumentasi.** Halaman https://ai.google.dev/gemini-api/docs/rate-limits
-  hanya menyatakan batas "can be viewed in Google AI Studio"
-  (https://aistudio.google.com/rate-limit) dan "Specified rate limits are not
-  guaranteed and actual capacity may vary". Angka untuk akun ini belum
-  diverifikasi; cek di AI Studio.
+- **Batas kuota: angka konkret TIDAK dipublikasikan di dokumentasi**, hanya
+  di AI Studio (https://aistudio.google.com/rate-limit; dokumentasi:
+  https://ai.google.dev/gemini-api/docs/rate-limits, yang juga menyatakan
+  batas "not guaranteed"). **Angka akun ini, diambil dari AI Studio pada
+  2026-09-21 (kolom penggunaan puncak 28 hari / batas; tier gratis dapat
+  berubah tanpa pemberitahuan, ambil ulang berkala):**
+
+  | Model | RPM | TPM (input) | RPD |
+  | --- | --- | --- | --- |
+  | `gemini-3.8-flash` | 5 (puncak 7) | 250K (puncak 15,19K) | 20 (puncak 21) |
+  | `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite` | 15 | 250K | 500 |
+  | `gemma-4-26b-a4b-it`, `gemma-4-31b-it` | 30 | 16K | 14,4K |
+
+  Puncak 7/5 RPM dan 21/20 RPD pada 3.8 Flash berarti kedua batas sudah
+  terlampaui pada percobaan live pertama. Nama di AI Studio ("gemma-4-26b",
+  "gemma-4-31b") dipetakan ke ID API di atas; pemetaan itu asumsi.
+- **Reset kuota harian:** dokumentasi rate-limits: "Requests per day (RPD)
+  quotas reset at midnight Pacific time"; batas berlaku **per proyek**, bukan
+  per kunci. Tidak dinyatakan: apakah 429 ikut terhitung, dan apakah TPM Gemma
+  dihitung sama. Musim panas (PDT) = 07:00 UTC (15:00 di UTC+8); setelah
+  1 Nov 2026 (PST) = 08:00 UTC.
+- **ID model diverifikasi dari dokumentasi resmi pada 2026-09-21:**
+  `gemini-3.5-flash-lite` dan `gemini-3.1-flash-lite` (halaman models, diperbarui
+  2026-09-17 UTC); Gemma 4 lewat Gemini API: `gemma-4-31b-it` dan
+  `gemma-4-26b-a4b-it` (https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api;
+  tidak tercantum di halaman models). Semuanya "Free of charge" pada halaman
+  harga, dengan konten Free tier dipakai untuk meningkatkan produk Google.
+- **`thinking_level` yang didukung** (https://ai.google.dev/gemini-api/docs/thinking,
+  2026-09-21): `gemini-3.8-flash` low/medium/high (bawaan medium; **tidak ada
+  minimal**); Flash Lite minimal/low/medium/high (bawaan **minimal**); Gemma 4
+  hanya `high` (aktif) atau `minimal` (nonaktif). Kode menolak nilai tak
+  didukung sebelum mengirim (`supported_thinking_levels`). Proyek ini memakai
+  `medium` eksplisit untuk semua model Gemini agar perbandingan model tidak
+  bercampur dengan perbedaan thinking; bawaan Flash Lite sendiri `minimal`.
 - **SDK:** `google-genai` 2.24.0, memakai Interactions API
   (`client.interactions.create`) sesuai quickstart resmi; bentuk permintaan
   dan tipe respons (`output_text`, `status`, `usage.total_*_tokens`, galat
@@ -391,6 +437,17 @@ bila proyek ini kelak menangani data sensitif. Permintaan memakai
 `store=False`; bila `store` dibiarkan bawaan, dokumentasi menyatakan
 interaksi Free tier disimpan 1 hari.
 
+### Retry internal SDK dan kuota harian
+
+Retry internal SDK (3 retry per panggilan, tanpa log) **kemungkinan besar ikut
+menghabiskan kuota harian**: percobaan live pertama mencatat 5 panggilan
+sukses tetapi puncak 21 dari 20 RPD dan 7 dari 5 RPM di AI Studio. Itu sesuai
+dengan permintaan tertolak (dan retry tersembunyi) yang ikut terhitung, tetapi
+belum terbukti karena dokumentasi tidak menyatakannya dan hitungan pasti tidak
+tersedia. Jadi menonaktifkan retry internal (`disable_sdk_retry`) bukan hanya
+soal kejujuran log, melainkan juga **anggaran kuota**: dengan RPD 20, satu
+kueri yang gagal dulu bisa memakan 24 permintaan.
+
 ### Pengaman di kode (bukan di prompt)
 
 Status verifikasi diambil dari label metadata, bukan dari LLM. Tautan rujukan
@@ -407,10 +464,48 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   merujuk artikel 36214): **belum diuji**, menunggu `GEMINI_API_KEY`.
   Bila gugur, node grader Versi 2 harus komponen terpisah berprompt khusus.
 - **H3** (model kelas Flash cukup; gugur bila format terstruktur dilanggar
-  berulang atau keliru pada >= 2 dari 10 kueri): **belum diuji**. Bila gugur,
-  catat sebagai keterbatasan dan bedakan masalah model dari masalah prompt
-  sebelum mengganti model.
+  berulang atau keliru pada >= 2 dari 10 kueri): **belum diuji konklusif**
+  (tercatat 5 panggilan 3.8 Flash sukses dengan 0 pelanggaran format dan 1
+  dari 5 positif dijawab "tidak ditemukan", tetapi 3 kueri gagal karena
+  kuota). **Diperluas:** bandingkan `gemini-3.8-flash` dengan Flash Lite
+  (`gemini-3.5-flash-lite`) pada 10 kueri yang sama. Flash Lite dinyatakan
+  cukup bila keputusannya (verdict + artikel) sama dengan 3.8 Flash pada
+  SELURUH kueri negatif dan berbeda paling banyak pada satu kueri positif
+  (`test_generation.py --compare`). Bila tidak cukup: 3.8 Flash tetap sebagai
+  generator dan evaluasi 50 kueri dijalankan lintas hari. Kesetaraan
+  keputusan bukan kebenaran: akurasi tiap model tetap dilaporkan sendiri.
+  Bedakan masalah model dari masalah prompt sebelum mengganti model.
+- **H4** (Gemma 4 dapat menjadi model juri RAGAS): **belum diuji**. Yang baru
+  diperkirakan: apakah TPM 16K memadai (lihat "Perencanaan kapasitas").
+  Risiko terpisah: halaman Gemma-di-Gemini-API tidak menyebut keluaran JSON
+  terstruktur, padahal RAGAS bergantung pada JSON.
+- Urutan eksekusi setelah reset kuota: (1) probe tunggal 3.8 Flash untuk
+  melihat bentuk `quotaId` 429 asli; (2) baseline 10 kueri 3.8 Flash dengan
+  thinking bawaan kode (medium), lengkap dengan status H1 dan keluaran utuh
+  kasus "vaksin flu bikin mandul"; (3) 10 kueri yang sama dengan Flash Lite;
+  (4) eksperimen thinking baru setelah generator final dipilih (jangan ubah dua
+  variabel sekaligus). Langkah 1-2 harus <= 20 permintaan per hari Pasifik
+  (1 + 10 = 11 bila tak ada percobaan ulang format).
 - Sampel evaluasi hanya 5 positif dan 5 negatif: indikasi, bukan bukti statistik.
+
+### Perencanaan kapasitas (evaluasi 50 kueri)
+
+Perkiraan, bukan pengukuran; angka kuota per 2026-09-21.
+
+- **Generator 3.8 Flash** (RPD 20, RPM 5): >= 50 panggilan + 1 probe =>
+  **3 hari** (20 + 20 + 11) bila hampir tak ada percobaan ulang format; tiap
+  percobaan ulang memakan jatah hari itu. Waktu jam-dinding kecil (RPM 5 =
+  12 dtk/panggilan, <= 4 menit per 20 panggilan); yang membatasi adalah RPD.
+- **Generator Flash Lite** (RPD 500, RPM 15): **1 hari**, >= 3,3 menit
+  menurut RPM.
+- **Juri Gemma 4** (TPM 16K, RPM 30, RPD 14,4K), bila H4 layak: RAGAS ~6-7
+  panggilan/sampel, ~8-14K token masuk/sampel (perkiraan dari struktur metrik
+  dan konteks kita; RAGAS belum terpasang dan tidak diperiksa), prompt
+  terbesar ~3-4K << 16K. TPM yang membatasi: ~1-2 sampel/menit => 50 sampel
+  ~25-60 menit, **1 hari**, dan kuotanya terpisah dari generator sehingga
+  dapat berjalan pada hari yang sama.
+- **Skenario realistis:** Flash Lite + juri Gemma = 1 hari; 3.8 Flash + juri
+  Gemma = 3 hari (juri di hari mana pun). Mana yang berlaku bergantung pada H3.
 
 ### Catatan untuk tahap evaluasi (RAGAS)
 

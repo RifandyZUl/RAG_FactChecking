@@ -458,7 +458,7 @@ def make_gemini(script: list):
     from llm_provider import GeminiProvider
 
     key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
-    p = GeminiProvider(api_key=key, min_interval_s=0)
+    p = GeminiProvider(api_key=key, min_interval_s=0, proactive=False)
     fake = _FakeInteractions(script)
     p._client = SimpleNamespace(interactions=fake)
     return p, fake, key
@@ -575,7 +575,8 @@ def test_provider_with_real_sdk_errors() -> None:
             calls.append(req)
             return httpx.Response(status, headers=headers, json=body)
 
-        p = lp.GeminiProvider(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234", min_interval_s=0)
+        p = lp.GeminiProvider(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234", min_interval_s=0,
+                             proactive=False)
         hx = httpx.Client(transport=httpx.MockTransport(handler))
         p._client = genai.Client(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234",
                                  http_options=types.HttpOptions(httpx_client=hx))
@@ -655,6 +656,157 @@ def test_eval_resume_and_incremental() -> None:
         assert all(json.loads(x) for x in path.read_text(encoding="utf-8").splitlines())
 
 
+def test_rate_limiter_sliding_window() -> None:
+    from rate_limit import MARGIN_S, ModelLimits, RateLimiter
+
+    now = [0.0]
+    sleeps: list[float] = []
+
+    def sleep(x: float) -> None:
+        sleeps.append(x)
+        now[0] += x
+
+    # RPM 5: dalam JENDELA 60 dtk mana pun tak boleh ada > 5 permintaan
+    rl = RateLimiter(ModelLimits(rpm=5, tpm=250_000, rpd=20), clock=lambda: now[0], sleep=sleep)
+    stamps = []
+    for _ in range(13):
+        rl.acquire(100)
+        stamps.append(now[0])
+    for t in stamps:
+        in_window = [x for x in stamps if t - 60 < x <= t]
+        assert len(in_window) <= 5, f"jendela 60 dtk berisi {len(in_window)} permintaan"
+    assert sleeps and abs(sleeps[0] - (60 + MARGIN_S)) < 1e-6, "permintaan ke-6 menunggu ~60 dtk"
+
+    # TPM: dua prompt 600 token tak muat dalam 1000 token/menit -> yang kedua menunggu
+    now[0], sleeps[:] = 0.0, []
+    rl = RateLimiter(ModelLimits(rpm=100, tpm=1000, rpd=100), clock=lambda: now[0], sleep=sleep)
+    rl.acquire(600)
+    assert rl.acquire(600) > 0 and sleeps
+    # settle: perkiraan besar diganti angka nyata kecil -> permintaan berikut tidak menunggu
+    now[0], sleeps[:] = 0.0, []
+    rl = RateLimiter(ModelLimits(rpm=100, tpm=1000, rpd=100), clock=lambda: now[0], sleep=sleep)
+    rl.acquire(900)
+    rl.settle(100)
+    assert rl.acquire(900) == 0 and not sleeps
+    # prompt yang mustahil muat di TPM ditolak, bukan menunggu selamanya
+    try:
+        rl.acquire(5000)
+        raise AssertionError("seharusnya ValueError")
+    except ValueError:
+        pass
+
+
+def test_daily_ledger_and_budget() -> None:
+    import tempfile
+    from datetime import datetime, timezone
+
+    from rate_limit import DailyLedger, ModelLimits, plan_budget
+
+    def at(*a):
+        return lambda: datetime(*a, tzinfo=timezone.utc)
+
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "ledger.json"
+        # Musim panas (PDT, UTC-7): tengah malam Pasifik = 07:00 UTC
+        before = DailyLedger("m", path, at(2026, 9, 21, 6, 59))
+        after = DailyLedger("m", path, at(2026, 9, 21, 7, 1))
+        assert before.day_key() == "2026-09-20" and after.day_key() == "2026-09-21"
+        assert before.next_reset() == datetime(2026, 9, 21, 7, 0, tzinfo=timezone.utc)
+        # Musim dingin (PST, UTC-8): tengah malam Pasifik = 08:00 UTC
+        assert DailyLedger("m", path, at(2026, 11, 2, 7, 59)).day_key() == "2026-11-01"
+        assert DailyLedger("m", path, at(2026, 11, 2, 8, 1)).day_key() == "2026-11-02"
+        assert DailyLedger("m", path, at(2026, 11, 2, 7, 59)).next_reset() == \
+            datetime(2026, 11, 2, 8, 0, tzinfo=timezone.utc)
+
+        assert before.used_today() == 0
+        before.add()
+        before.add(3)
+        assert before.used_today() == 4 and after.used_today() == 0, "hari baru mulai dari nol"
+        assert DailyLedger("lain", path, at(2026, 9, 21, 6, 59)).used_today() == 0, "per model"
+        before.seed(21)
+        assert before.used_today() == 21
+
+        lim = ModelLimits(rpm=5, tpm=250_000, rpd=20)
+        plan = plan_budget(before, lim, n_queries=10, calls_per_query_worst=2)
+        assert plan.remaining == 0 and not plan.ok, "21/20 terpakai: jangan mulai"
+        plan = plan_budget(after, lim, n_queries=10, calls_per_query_worst=2)
+        assert plan.ok and plan.remaining == 20 and plan.worst_case == 20
+        after.seed(15)
+        plan = plan_budget(after, lim, n_queries=10, calls_per_query_worst=2)
+        assert not plan.ok and plan.remaining == 5
+        after.seed(0)
+        assert not plan_budget(after, lim, 21, 2).ok
+
+
+def test_provider_proactive_budget() -> None:
+    import tempfile
+    from types import SimpleNamespace
+
+    import llm_provider as lp
+    from llm_provider import GeminiProvider, LLMConfigError, LLMQuotaExhaustedError
+    from rate_limit import DailyLedger, ModelLimits
+
+    key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
+    lp.time.sleep = lambda s: None
+    with tempfile.TemporaryDirectory() as d:
+        ledger = DailyLedger("gemini-3.8-flash", Path(d) / "l.json")
+        p = GeminiProvider(api_key=key, model="gemini-3.8-flash", min_interval_s=0,
+                           limits=ModelLimits(rpm=1000, tpm=10**7, rpd=3), ledger=ledger)
+        # 429 per menit lalu sukses: KEDUA permintaan terhitung di anggaran harian
+        body = _quota_body("GenerateRequestsPerMinutePerProjectPerModel-FreeTier", "1s")
+        fake = _FakeInteractions([_FakeHTTPError(429, body), _FakeInteraction("a"),
+                                  _FakeInteraction("b"), _FakeInteraction("c")])
+        p._client = SimpleNamespace(interactions=fake)
+        assert p.generate("s", "u") == "a"
+        assert ledger.used_today() == 2 and len(fake.calls) == 2
+        assert p.generate("s", "u") == "b"
+        assert ledger.used_today() == 3
+        # anggaran habis: tidak ada permintaan dikirim sama sekali
+        try:
+            p.generate("s", "u")
+            raise AssertionError("seharusnya LLMQuotaExhaustedError")
+        except LLMQuotaExhaustedError as e:
+            assert "3/3" in str(e)
+        assert len(fake.calls) == 3, "permintaan tidak boleh dikirim saat anggaran habis"
+
+    # thinking_level tidak didukung model -> galat konfigurasi, bukan 400 dari server
+    for model, level, ok in [
+        ("gemini-3.8-flash", "minimal", False), ("gemini-3.8-flash", "medium", True),
+        ("gemini-3.5-flash-lite", "minimal", True), ("gemma-4-31b-it", "medium", False),
+        ("gemma-4-26b-a4b-it", "minimal", True),
+    ]:
+        try:
+            GeminiProvider(api_key=key, model=model, thinking_level=level, proactive=False)
+            assert ok, f"{model}/{level} seharusnya ditolak"
+        except LLMConfigError:
+            assert not ok, f"{model}/{level} seharusnya diterima"
+
+
+def test_compare_models_h3() -> None:
+    from test_generation import compare_models
+
+    cases = [(f"p{i}", f"9{i}", "positif") for i in range(5)] + \
+            [(f"n{i}", None, "negatif") for i in range(5)]
+
+    def mk(v, a=None):
+        return {"verdict": v, "article_id": a}
+
+    base = {f"p{i}": mk("ditemukan", f"9{i}") for i in range(5)}
+    base.update({f"n{i}": mk("tidak_ditemukan") for i in range(5)})
+
+    assert compare_models(base, dict(base), cases)[1].startswith("TERDUKUNG")
+    one_pos = dict(base, p0=mk("tidak_ditemukan"))
+    assert compare_models(base, one_pos, cases)[1].startswith("TERDUKUNG"), "1 beda positif lolos"
+    two_pos = dict(one_pos, p1=mk("tidak_ditemukan"))
+    assert compare_models(base, two_pos, cases)[1].startswith("TIDAK TERDUKUNG")
+    one_neg = dict(base, n2=mk("ditemukan", "36214"))
+    assert compare_models(base, one_neg, cases)[1].startswith("TIDAK TERDUKUNG"), "negatif harus sama"
+    wrong_id = dict(base, p3=mk("ditemukan", "lain"))
+    assert compare_models(base, wrong_id, cases)[1].startswith("TERDUKUNG"), "beda id = 1 beda positif"
+    partial = {k: v for k, v in base.items() if k != "n4"}
+    assert compare_models(base, partial, cases)[1].startswith("BELUM KONKLUSIF")
+
+
 def run() -> None:
     tests = [
         test_generator_logic,
@@ -662,6 +814,10 @@ def run() -> None:
         test_provider_with_real_sdk_errors,
         test_find_urls_strict_and_loose,
         test_eval_resume_and_incremental,
+        test_rate_limiter_sliding_window,
+        test_daily_ledger_and_budget,
+        test_provider_proactive_budget,
+        test_compare_models_h3,
         test_aggregate_by_article,
         test_normalize_and_domain,
         test_html_validators,
