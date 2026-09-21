@@ -615,11 +615,16 @@ def test_provider_with_real_sdk_errors() -> None:
     assert len(calls) == 1
 
     # 429 tanpa rincian: diperlakukan sementara, tetap dibatasi 3 retry
-    p, calls = provider_for(429, {"error": {"code": 429}}, {})
+    p, calls = provider_for(
+        429, {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "message": "coba lagi nanti"}}, {}
+    )
     try:
         p.generate("s", "u")
-    except LLMError:
-        pass
+        raise AssertionError("seharusnya LLMError")
+    except LLMError as e:
+        # isi galat yang tak terklasifikasi harus tampil di pesan, bukan disembunyikan
+        assert "RESOURCE_EXHAUSTED" in str(e) and "coba lagi nanti" in str(e), str(e)
+        assert "tidak ada quotaId" in str(e)
     assert len(calls) == lp.MAX_ATTEMPTS and "tidak_diketahui" in p.records[-1].error
 
 

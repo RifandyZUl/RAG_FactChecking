@@ -196,6 +196,16 @@ def classify_429(err: Any) -> str:
     karena itu yang mengikat. Format ini dikenal dari galat Gemini API umumnya;
     belum diamati langsung pada akun ini (lihat CLAUDE.md).
     """
+    joined = " ".join(_quota_ids(err)).lower()
+    if "perday" in joined or "per_day" in joined:
+        return "harian"
+    if "perminute" in joined or "per_minute" in joined:
+        return "per_menit"
+    return "tidak_diketahui"
+
+
+def _quota_ids(err: Any) -> list[str]:
+    """Semua nilai quotaId/quotaMetric pada isi galat (kosong bila tidak ada)."""
     ids: list[str] = []
     stack = [_error_payload(err)]
     while stack:
@@ -207,12 +217,28 @@ def classify_429(err: Any) -> str:
             stack.extend(cur.values())
         elif isinstance(cur, list):
             stack.extend(cur)
-    joined = " ".join(ids).lower()
-    if "perday" in joined or "per_day" in joined:
-        return "harian"
-    if "perminute" in joined or "per_minute" in joined:
-        return "per_menit"
-    return "tidak_diketahui"
+    return ids
+
+
+def error_detail(err: Any) -> str:
+    """
+    Ringkasan isi galat HTTP untuk log: status/pesan server dan quotaId bila ada.
+
+    Ditambahkan setelah 429 pada akun ini tidak dapat diklasifikasi ("tidak_diketahui")
+    dan log tidak memuat alasannya. Pemanggil wajib menyamarkan hasilnya (`_safe`).
+    """
+    payload = _error_payload(err)
+    body = payload.get("error", payload) if isinstance(payload, dict) else None
+    parts: list[str] = []
+    if isinstance(body, dict):
+        for key in ("status", "message"):
+            if isinstance(body.get(key), str):
+                parts.append(f"{key}={body[key][:200]!r}")
+    ids = _quota_ids(err)
+    parts.append(f"quota={ids}" if ids else "quota=(tidak ada quotaId pada isi galat)")
+    if not isinstance(body, dict):
+        parts.append(f"isi={str(payload)[:120]!r}")
+    return " ".join(parts)
 
 
 def disable_sdk_retry(client: Any) -> bool:
@@ -391,6 +417,7 @@ class GeminiProvider(LLMProvider):
                 self._last_call_end = time.monotonic()
                 status = getattr(e, "status_code", None)
                 last_error = f"{type(e).__name__} status={status}"
+                detail = self._safe(error_detail(e))
 
                 # 400 saat memakai skema server: turunkan ke mode teks sekali saja
                 if status == 400 and mode == "schema":
@@ -435,16 +462,16 @@ class GeminiProvider(LLMProvider):
                                          error=last_error, rate_limited=rate_limited))
                     raise LLMError(
                         f"Panggilan {self.name}/{self.model} gagal setelah {attempt} "
-                        f"percobaan ({last_error})."
+                        f"percobaan ({last_error}) | {detail}"
                     ) from None
                 backoff = min(BACKOFF_MAX_S, BACKOFF_BASE_S * 2 ** (attempt - 1))
                 wait = (hinted if hinted is not None else backoff) + random.uniform(0, 1)
                 logger.warning(
                     "[retry %d/%d] %s; panggilan berlangsung %.1f dtk; jeda sebelum retry "
-                    "%.1f dtk (saran server: %s)",
+                    "%.1f dtk (saran server: %s) | %s",
                     attempt, MAX_ATTEMPTS - 1, last_error,
                     self._last_call_end - t_attempt, wait,
-                    f"{hinted:.0f} dtk" if hinted is not None else "tidak ada")
+                    f"{hinted:.0f} dtk" if hinted is not None else "tidak ada", detail)
                 time.sleep(wait)
                 continue
 
