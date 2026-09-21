@@ -24,18 +24,18 @@ def test_gemini_provider_error_handling(monkeypatch) -> None:
     assert out == '{"a": 1}' and rec.ok and rec.attempts == 2 and rec.rate_limited == 1
     assert (rec.input_tokens, rec.output_tokens, rec.thought_tokens) == (11, 7, 3)
     assert 3.0 <= slept[-1] <= 4.1, "harus menunggu sesuai retryDelay 3s (+jitter)"
-    assert fake.calls[0]["store"] is False and fake.calls[0]["timeout"] == lp.REQUEST_TIMEOUT_S
+    assert fake.calls[0]["store"] is False and fake.calls[0]["timeout"] == 90.0
     assert fake.calls[0]["response_format"]["mime_type"] == "application/json"
     assert fake.calls[0]["system_instruction"] == "sys" and fake.calls[0]["input"] == "usr"
 
-    # 429 terus -> menyerah setelah MAX_ATTEMPTS dengan LLMError (proses tidak mati diam-diam)
+    # 429 terus -> menyerah setelah 4 percobaan (1 awal + 3 retry) dengan LLMError (proses tidak mati diam-diam)
     p, fake, _ = make_gemini([FakeHTTPError(429)])
     try:
         p.generate("s", "u")
         raise AssertionError("seharusnya LLMError")
     except LLMError:
         pass
-    assert len(fake.calls) == lp.MAX_ATTEMPTS and p.records[-1].rate_limited == lp.MAX_ATTEMPTS
+    assert len(fake.calls) == 4 and p.records[-1].rate_limited == 4
 
     # Saran tunggu sangat lama (kuota harian) -> berhenti tanpa tidur berjam-jam
     p, fake, _ = make_gemini([FakeHTTPError(429, '{"retryDelay": "3600s"}')])
@@ -129,7 +129,7 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
         assert "harian" in str(e)
     assert len(calls) == 1, f"kuota harian tidak boleh di-retry (permintaan: {len(calls)})"
 
-    # per menit: 1 awal + 3 retry = MAX_ATTEMPTS permintaan, bukan dikali retry SDK
+    # per menit: 1 awal + 3 retry = 4 permintaan, bukan dikali retry SDK
     p, calls = provider_for(429, quota_body("GenerateRequestsPerMinutePerProjectPerModel-FreeTier"),
                             {"retry-after": "5"})
     try:
@@ -137,7 +137,7 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
         raise AssertionError("seharusnya LLMError")
     except LLMError as e:
         assert not isinstance(e, LLMQuotaExhaustedError)
-    assert len(calls) == lp.MAX_ATTEMPTS == 4, f"permintaan: {len(calls)}"
+    assert len(calls) == 4, f"permintaan: {len(calls)}"
     assert p.records[-1].rate_limited == 4 and "per_menit" in p.records[-1].error
 
     # saran server terbaca dari galat nyata; > batas -> kuota habis tanpa retry
@@ -161,7 +161,7 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
         # isi galat yang tak terklasifikasi harus tampil di pesan, bukan disembunyikan
         assert "RESOURCE_EXHAUSTED" in str(e) and "coba lagi nanti" in str(e), str(e)
         assert "tidak ada quotaId" in str(e)
-    assert len(calls) == lp.MAX_ATTEMPTS and "tidak_diketahui" in p.records[-1].error
+    assert len(calls) == 4 and "tidak_diketahui" in p.records[-1].error
 
 
 def test_provider_proactive_budget(monkeypatch) -> None:

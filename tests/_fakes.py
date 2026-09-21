@@ -5,8 +5,6 @@ from pathlib import Path
 
 import requests
 
-import scraping.client as scraping_client
-
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -29,7 +27,7 @@ class FakeSession:
         self.calls = 0
 
     def get(self, url: str, timeout: float) -> FakeResponse:
-        assert timeout == scraping_client.TIMEOUT, "timeout eksplisit 45 dtk wajib dipakai"
+        assert timeout == 45, "timeout eksplisit 45 dtk wajib dipakai (nilai literal, bukan dari konstanta)"
         self.calls += 1
         item = self.script.pop(0) if len(self.script) > 1 else self.script[0]
         if isinstance(item, Exception):
