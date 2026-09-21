@@ -15,8 +15,8 @@ import logging
 import re
 import sys
 
+from evaluation.devset import DEV_QUERIES, VERDICT_DITEMUKAN
 from evaluation.results_store import append_record
-from evaluation.retrieval_eval import NEGATIVE_QUERIES, QUERIES
 from generator import MAX_FORMAT_RETRIES, AnswerGenerator
 from ingest import get_collection, load_model
 from llm import LLMConfigError, get_provider
@@ -48,7 +48,8 @@ def main() -> int:
         print(f"Konfigurasi LLM belum siap: {e}")
         return 2
 
-    cases = [(q, exp, "positif") for q, exp in QUERIES] + [(q, None, "negatif") for q, _, _ in NEGATIVE_QUERIES]
+    cases = [(d.claim, d.expected_article_id, "positif" if d.expected_verdict == VERDICT_DITEMUKAN else "negatif")
+             for d in DEV_QUERIES]
     out = repeat_path(provider.model)
     done: set[tuple[int, int]] = set()
     if out.exists():
@@ -77,11 +78,14 @@ def main() -> int:
     consecutive = 0
     for run, i in todo:
         claim, expected, kind = cases[i]
+        dq = DEV_QUERIES[i]
         ans = gen.answer(claim)
         if ans.quota_exhausted:
             print(f"BERHENTI (kuota): {ans.error}")
             return 3
         rec = {"run": run, "idx": i, "claim": claim, "kind": kind, "expected": expected,
+               "expected_retrieval_article": dq.expected_retrieval_article,
+               "expected_verdict": dq.expected_verdict, "kekhususan": dq.kekhususan, "batas": dq.batas,
                "verdict": ans.verdict, "article_id": ans.article_id, "alasan": ans.alasan,
                "klarifikasi": ans.klarifikasi, "raw": ans.raw_outputs, "error": ans.error,
                "parse_failures": ans.parse_failures,

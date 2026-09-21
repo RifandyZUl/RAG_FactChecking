@@ -13,6 +13,7 @@ import sys
 from collections import Counter
 
 from chunker import load_articles
+from evaluation.devset import DEV_QUERIES
 from ingest import get_collection, load_model
 from retriever import retrieve
 
@@ -20,37 +21,20 @@ TOP_K = 5
 # Artikel yang diharapkan wajib muncul dalam TOP_PASS artikel teratas
 TOP_PASS = 3
 
-# (kueri, article_id yang diharapkan)
+# (kueri, article_id yang diharapkan TERJANGKAU retrieval). Diturunkan dari `expected_retrieval_article`
+# pada evaluation.devset, BUKAN dari keputusan akhir generator: kueri 3 seharusnya terjangkau (36729)
+# walau keputusan akhirnya "belum_ditemukan".
 QUERIES: list[tuple[str, str]] = [
-    ("katanya ojol nggak boleh isi pertalite lagi ya?", "36730"),
-    ("ada link pendaftaran bantuan buat orang tua, itu beneran?", "36737"),
-    ("malaysia marah ke indonesia soal asap", "36729"),
-    ("polisi mau razia motor sampai ke rumah-rumah warga?", "36738"),
-    ("daftar cek kesehatan gratis lewat link yang beredar, asli gak sih?", "36731"),
+    (d.claim, d.expected_retrieval_article) for d in DEV_QUERIES if d.expected_retrieval_article
 ]
 
 
-# Kueri negatif: klaim yang TIDAK ada di basis data. Kata kunci pada kolom ke-3
-# harus nol kemunculannya di judul/Narasi/Penjelasan/Kesimpulan seluruh artikel
-# (diperiksa otomatis, jadi uji gagal bila basis data kelak memuat klaim itu).
-# Catatan: pemeriksaan berbasis kata kunci, bukan bukti ketiadaan makna.
-# (kueri, jenis, kata kunci yang harus absen)
+# Kueri negatif murni: klaim yang TIDAK ada di basis data. Kata kunci pada kolom ke-3 harus nol
+# kemunculannya di judul/Narasi/Penjelasan/Kesimpulan seluruh artikel (diperiksa otomatis, jadi uji gagal
+# bila basis data kelak memuat klaim itu). Catatan: pemeriksaan berbasis kata kunci, bukan bukti
+# ketiadaan makna. (kueri, jenis, kata kunci yang harus absen)
 NEGATIVE_QUERIES: list[tuple[str, str, list[str]]] = [
-    ("katanya gas melon 3 kg mau dihapus bulan depan, harus beli yang nonsubsidi?",
-     "sulit: ranah kebijakan/subsidi seperti artikel Pertalite dan bansos",
-     ["elpiji", "gas melon", "3 kg"]),
-    ("vaksin flu bikin laki-laki jadi mandul, benar nggak sih?",
-     "sulit: tetangga dekat 36214 (vaksin HPV bikin impoten)",
-     ["vaksin flu", "influenza", "infertil"]),
-    ("katanya BMKG bilang bakal ada gempa megathrust besar di Jawa minggu ini",
-     "sedang: ranah gempa ada, tetapi bukan klaim prediksi",
-     ["megathrust"]),
-    ("minum rebusan daun sirsak tiap pagi katanya bisa sembuhin diabetes",
-     "mudah: ranah kesehatan tetapi klaimnya tidak ada",
-     ["sirsak", "diabetes"]),
-    ("NASA ngaku kalau bumi ternyata datar ya?",
-     "mudah: tidak berhubungan dengan isi basis data",
-     ["bumi datar", "bumi itu datar"]),
+    (d.claim, d.jenis, list(d.absence_keywords)) for d in DEV_QUERIES if d.expected_retrieval_article is None
 ]
 
 
