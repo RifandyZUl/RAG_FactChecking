@@ -179,7 +179,8 @@ RAG_FactChecking/
 │   │   ├── client.py     #   sesi HTTP, timeout/retry, cache HTML
 │   │   ├── discovery.py  #   pengumpulan URL dari halaman daftar
 │   │   ├── parser.py     #   parsing HTML artikel -> dict terstruktur
-│   │   └── pipeline.py   #   orkestrasi + CLI (python -m scraping)
+│   │   ├── pipeline.py   #   orkestrasi + CLI (python -m scraping)
+│   │   └── reparse.py    #   parse ulang dari cache TANPA jaringan (python -m scraping.reparse)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
