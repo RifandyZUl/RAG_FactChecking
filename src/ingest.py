@@ -63,6 +63,24 @@ def get_collection(path: Path = CHROMA_DIR) -> Any:
     )
 
 
+def reset_collection(path: Path = CHROMA_DIR) -> Any:
+    """
+    Hapus koleksi lama (bila ada) lalu buat koleksi kosong: pembangunan ulang indeks dari nol.
+
+    Ingestion inkremental hanya membandingkan TEKS chunk yang tersimpan dengan teks baru; ia tidak
+    mendeteksi perubahan tokenizer, batas token, model, atau metadata pada chunk yang teksnya sama,
+    dan tidak menghapus chunk usang. Setiap perubahan logika parsing atau chunking wajib memakai ini.
+    """
+    client = chromadb.PersistentClient(
+        path=str(path), settings=Settings(anonymized_telemetry=False)
+    )
+    existing = [str(getattr(c, "name", c)) for c in client.list_collections()]
+    if COLLECTION_NAME in existing:
+        client.delete_collection(COLLECTION_NAME)
+        print(f"Koleksi lama '{COLLECTION_NAME}' dihapus; indeks dibangun ulang dari nol.")
+    return get_collection(path)
+
+
 def load_model() -> Any:
     """Muat bge-m3 di CPU dengan batas token MAX_SEQ_LENGTH."""
     from sentence_transformers import SentenceTransformer
@@ -144,6 +162,9 @@ def ingest(chunks: list[Chunk], collection: Any, force: bool = False) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--force", action="store_true", help="embed ulang semua chunk")
+    parser.add_argument("--rebuild", action="store_true",
+                        help="hapus koleksi lama lalu bangun ulang dari nol (wajib setelah logika "
+                             "parsing/chunking berubah); mencakup --force")
     parser.add_argument("--limit", type=int, default=None, help="batasi jumlah chunk (uji)")
     args = parser.parse_args()
 
@@ -154,8 +175,8 @@ def main() -> None:
     print(f"{len(articles)} artikel -> {len(chunks)} chunk")
     print(truncation_report(chunks), "\n")
 
-    collection = get_collection()
-    ingest(chunks, collection, force=args.force)
+    collection = reset_collection() if args.rebuild else get_collection()
+    ingest(chunks, collection, force=args.force or args.rebuild)
 
     stored_ids = set(collection.get(include=[])["ids"])
     stale = stored_ids - {c["id"] for c in build_chunks(articles, make_token_counter())}
