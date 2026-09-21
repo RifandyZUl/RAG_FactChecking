@@ -32,6 +32,7 @@ from test_retrieval import NEGATIVE_QUERIES, QUERIES
 LOG_PATH = PROJECT_ROOT / "data" / "llm_calls.log"
 HOAX_TARGET = "36214"  # artikel vaksin HPV bikin impoten (tetangga dekat kasus H1)
 VAKSIN_FLU_MARK = "vaksin flu"
+MAX_CONSECUTIVE_API_FAILURES = 2  # setelah ini evaluasi berhenti agar anggaran tidak terbakar
 
 
 def unsupported_tokens(ans: Answer, context: str) -> list[str]:
@@ -193,6 +194,7 @@ def main() -> int:
         )
 
     aborted = ""
+    consecutive_api_failures = 0
     for claim, expected, kind in todo:
         i = cases.index((claim, expected, kind)) + 1
         ans = gen.answer(claim)
@@ -248,6 +250,15 @@ def main() -> int:
         }
         append_record(out_path, record)  # langsung ke disk: hasil tak hilang bila proses mati
         results.append(record)
+
+        # Pemutus: galat pemanggilan beruntun (bukan pelanggaran format) hampir pasti
+        # masalah di sisi server/kuota; melanjutkan hanya membakar anggaran harian.
+        api_failed = ans.verdict == "gagal" and bool(ans.error) and ans.parse_failures == 0
+        consecutive_api_failures = consecutive_api_failures + 1 if api_failed else 0
+        if consecutive_api_failures >= MAX_CONSECUTIVE_API_FAILURES:
+            aborted = (f"{consecutive_api_failures} kueri beruntun gagal di pemanggilan API "
+                       f"(terakhir: {ans.error[:200]})")
+            break
 
     if aborted:
         print(f"\nEvaluasi dihentikan: {aborted}\nHasil sejauh ini tersimpan di {out_path}; "
