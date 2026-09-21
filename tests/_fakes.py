@@ -88,7 +88,7 @@ def llm_json(**kw) -> str:
 class FakeHTTPError(Exception):
     """Meniru GenAiError: status_code, body, headers, message."""
 
-    def __init__(self, status: int, body: str = "", message: str = "galat", headers=None) -> None:
+    def __init__(self, status: int, body: str | dict = "", message: str = "galat", headers=None) -> None:
         super().__init__(message)
         self.status_code, self.body, self.message = status, body, message
         self.headers = headers or {}
@@ -114,15 +114,20 @@ class FakeInteractions:
         return item
 
 
-def make_gemini(script: list):
+def attach_fake_client(provider, interactions) -> None:
+    """Pasang klien palsu pada penyedia (menggantikan genai.Client; hanya `.interactions` yang dipakai)."""
     from types import SimpleNamespace
 
+    setattr(provider, "_client", SimpleNamespace(interactions=interactions))
+
+
+def make_gemini(script: list):
     from llm import GeminiProvider
 
     key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
     p = GeminiProvider(api_key=key, min_interval_s=0, proactive=False)
     fake = FakeInteractions(script)
-    p._client = SimpleNamespace(interactions=fake)
+    attach_fake_client(p, fake)
     return p, fake, key
 
 

@@ -3,7 +3,8 @@
 
 from pathlib import Path
 
-from _fakes import FakeHTTPError, FakeInteraction, FakeInteractions, make_gemini, quota_body
+from _fakes import (FakeHTTPError, FakeInteraction, FakeInteractions, attach_fake_client, make_gemini,
+                    quota_body)
 
 
 def test_gemini_provider_error_handling(monkeypatch) -> None:
@@ -165,8 +166,6 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
 
 def test_provider_proactive_budget(monkeypatch) -> None:
     import tempfile
-    from types import SimpleNamespace
-
     import llm.gemini as lp
     from llm import GeminiProvider, LLMConfigError, LLMQuotaExhaustedError
     from llm.ledger import DailyLedger
@@ -182,7 +181,7 @@ def test_provider_proactive_budget(monkeypatch) -> None:
         body = quota_body("GenerateRequestsPerMinutePerProjectPerModel-FreeTier", "1s")
         fake = FakeInteractions([FakeHTTPError(429, body), FakeInteraction("a"),
                                   FakeInteraction("b"), FakeInteraction("c")])
-        p._client = SimpleNamespace(interactions=fake)
+        attach_fake_client(p, fake)
         assert p.generate("s", "u") == "a"
         assert ledger.used_today() == 2 and len(fake.calls) == 2
         assert p.generate("s", "u") == "b"
