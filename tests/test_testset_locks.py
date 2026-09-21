@@ -42,6 +42,14 @@ def test_meta_preregisters_metric_thresholds_and_limitations() -> None:
     assert meta["ambang"]["H1"]["terdukung"] == "<= 1 dari 20" and meta["ambang"]["H1"]["gugur"] == ">= 3 dari 20"
     assert meta["ambang"]["H3"]["gugur"].startswith(">= 5 kesalahan dari 50")
     assert any("satu anotator" in k.lower() for k in meta["keterbatasan"])
+    # dua label terpisah dan dua jenis kesalahan yang dipisah, ditulis sebelum data
+    fmt = meta["format_butir"]
+    assert "expected_retrieval_article" in fmt["kolom"] and "expected_verdict" in fmt["kolom"]
+    assert "batas" in fmt["kolom"] and "kekhususan" in fmt["kolom"]
+    err = ev["jenis_kesalahan"]
+    assert set(err["dipisah"]) == {"kecocokan_palsu", "penolakan_palsu", "artikel_salah"}
+    assert "Wilson" in err["interval"] and "batas dan non-batas" in err["himpunan"]
+    assert any("kecocokan palsu" in x and "penolakan palsu" in x for x in ev["laporan_wajib"])
     c = meta["komposisi_rancangan"]
     assert c["positif"] + c["negatif_sulit"] + c["negatif_mudah"] == c["total"] == 50
     assert sum(c["alokasi_positif_label"].values()) == 20 == sum(c["alokasi_positif_sel"].values())
