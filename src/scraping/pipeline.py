@@ -36,6 +36,12 @@ def scrape_article(
     return parse_article(html, url), from_network
 
 
+def write_articles(articles: list[dict], out: Path) -> None:
+    """Tulis daftar artikel ke JSON (mode teks: di Windows berakhir baris CRLF; jangan diubah)."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def main(
     max_articles: int = 150,
     out_path: str | Path | None = None,
@@ -68,8 +74,7 @@ def main(
 
     # Bawaan dijangkar ke root proyek (paths.ARTICLES_PATH), bukan direktori kerja.
     out = Path(out_path) if out_path is not None else ARTICLES_PATH
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_articles(articles, out)
 
     print(f"\nSelesai. {len(articles)} artikel tersimpan di {out}")
 
