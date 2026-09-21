@@ -176,7 +176,7 @@ class GeminiProvider(LLMProvider):
                         waited, self.limits.rpm, self.limits.tpm)
         self.ledger.add(1)  # dihitung sebelum dikirim: hasil akhir permintaan tak dijamin terlihat
 
-    def _create(self, system_prompt: str, user_prompt: str, json_schema: dict | None) -> Any:
+    def _create(self, system_prompt: str, user_prompt: str, json_schema: dict[str, Any] | None) -> Any:
         kwargs: dict[str, Any] = {
             "model": self.model,
             "input": user_prompt,
@@ -201,7 +201,7 @@ class GeminiProvider(LLMProvider):
         self,
         system_prompt: str,
         user_prompt: str,
-        json_schema: dict | None = None,
+        json_schema: dict[str, Any] | None = None,
     ) -> str:
         t_start = time.monotonic()
         rate_limited = 0

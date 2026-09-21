@@ -2,19 +2,41 @@
 """
 
 from pathlib import Path
+from typing import Any
 
-from _fakes import (FakeHTTPError, FakeInteraction, FakeInteractions, attach_fake_client, make_gemini,
-                    quota_body)
+import httpx
+import pytest
+from _fakes import (
+    FakeHTTPError,
+    FakeInteraction,
+    FakeInteractions,
+    attach_client,
+    attach_fake_client,
+    make_gemini,
+    quota_body,
+)
 
 
-def test_gemini_provider_error_handling(monkeypatch) -> None:
+def no_sleep(_seconds: float) -> None:
+    """Pengganti time.sleep: jangan benar-benar menunggu."""
+
+
+def no_env(_path: Any = None) -> None:
+    """Pengganti load_env: .env asli tidak boleh ikut terbaca."""
+
+
+def test_gemini_provider_error_handling(monkeypatch: pytest.MonkeyPatch) -> None:
     import llm
     import llm.gemini as lp
     from llm import LLMConfigError, LLMError
     from llm.secrets import redact
 
     slept: list[float] = []
-    monkeypatch.setattr(lp.time, "sleep", lambda s: slept.append(s))  # jangan benar-benar menunggu
+
+    def record_sleep(seconds: float) -> None:
+        slept.append(seconds)
+
+    monkeypatch.setattr(lp.time, "sleep", record_sleep)  # jangan benar-benar menunggu
 
     # 429 dengan retryDelay -> menunggu sesuai saran, lalu sukses; token dicatat
     body = '{"error": {"details": [{"retryDelay": "3s"}]}}'
@@ -52,7 +74,8 @@ def test_gemini_provider_error_handling(monkeypatch) -> None:
     assert p.records[-1].structured_mode == "teks"
 
     # 401: tidak di-retry, kunci tidak bocor ke pesan galat
-    p, fake, key = make_gemini([FakeHTTPError(401, message=f"API key {'AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234'} tidak valid")])
+    fake_key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
+    p, fake, key = make_gemini([FakeHTTPError(401, message=f"API key {fake_key} tidak valid")])
     try:
         p.generate("s", "u")
         raise AssertionError("seharusnya LLMError")
@@ -72,7 +95,7 @@ def test_gemini_provider_error_handling(monkeypatch) -> None:
     assert "AIzaSy" not in redact("x AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ012345 y")
     # .env asli (kini berisi kunci) tidak boleh ikut terbaca oleh uji ini
     old = lp.os.environ.pop("GEMINI_API_KEY", None)
-    monkeypatch.setattr(lp, "load_env", lambda path=None: None)
+    monkeypatch.setattr(lp, "load_env", no_env)
     try:
         lp.GeminiProvider(api_key="")
         raise AssertionError("seharusnya LLMConfigError")
@@ -88,24 +111,25 @@ def test_gemini_provider_error_handling(monkeypatch) -> None:
         pass
 
 
-def test_provider_with_real_sdk_errors(monkeypatch) -> None:
+def test_provider_with_real_sdk_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Galat SDK ASLI (transport palsu, tanpa jaringan): membuktikan (1) retry internal SDK
     mati sehingga satu percobaan = satu permintaan, (2) 429 harian tidak di-retry,
     (3) 429 per menit di-retry maksimal 3 kali, (4) saran server terbaca dari galat nyata
     (body berupa dict, header di err.response), bukan dari fake berbentuk lain.
     """
-    import httpx
     from google import genai
     from google.genai import types
 
     import llm.gemini as lp
     from llm import LLMError, LLMQuotaExhaustedError
 
-    monkeypatch.setattr(lp.time, "sleep", lambda s: None)  # jangan menunggu sungguhan
+    monkeypatch.setattr(lp.time, "sleep", no_sleep)  # jangan menunggu sungguhan
 
-    def provider_for(status: int, body: dict, headers: dict) -> tuple[lp.GeminiProvider, list]:
-        calls: list = []
+    def provider_for(
+        status: int, body: dict[str, Any], headers: dict[str, str]
+    ) -> tuple[lp.GeminiProvider, list[httpx.Request]]:
+        calls: list[httpx.Request] = []
 
         def handler(req: httpx.Request) -> httpx.Response:
             calls.append(req)
@@ -114,9 +138,10 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
         p = lp.GeminiProvider(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234", min_interval_s=0,
                              proactive=False)
         hx = httpx.Client(transport=httpx.MockTransport(handler))
-        p._client = genai.Client(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234",
-                                 http_options=types.HttpOptions(httpx_client=hx))
-        assert lp.disable_sdk_retry(p._client), "retry internal SDK harus bisa dimatikan"
+        client = genai.Client(api_key="AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234",
+                              http_options=types.HttpOptions(httpx_client=hx))
+        attach_client(p, client)
+        assert lp.disable_sdk_retry(client), "retry internal SDK harus bisa dimatikan"
         return p, calls
 
     # harian: satu permintaan saja, jenis kuota habis
@@ -164,15 +189,16 @@ def test_provider_with_real_sdk_errors(monkeypatch) -> None:
     assert len(calls) == 4 and "tidak_diketahui" in p.records[-1].error
 
 
-def test_provider_proactive_budget(monkeypatch) -> None:
+def test_provider_proactive_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     import tempfile
+
     import llm.gemini as lp
     from llm import GeminiProvider, LLMConfigError, LLMQuotaExhaustedError
     from llm.ledger import DailyLedger
     from llm.limits import ModelLimits
 
     key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
-    monkeypatch.setattr(lp.time, "sleep", lambda s: None)
+    monkeypatch.setattr(lp.time, "sleep", no_sleep)
     with tempfile.TemporaryDirectory() as d:
         ledger = DailyLedger("gemini-3.8-flash", Path(d) / "l.json")
         p = GeminiProvider(api_key=key, model="gemini-3.8-flash", min_interval_s=0,
