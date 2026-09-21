@@ -714,9 +714,20 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
   asap" diubah dari positif (target 36729) menjadi **negatif sulit dengan `kekhususan=umum`**. **Perubahan ini
   dilakukan SETELAH melihat keluaran model** (yang menolaknya 5 dari 5 kali dengan alasan "terlalu umum"), dengan
   dasar pedoman yang berjangkar pada KIA (tindakan inti "melaporkan ke PBB" tidak ada pada klaim pengguna; uji dua
-  arah dan uji Kesimpulan gagal). **Hanya berlaku untuk set pengembangan**, bukan bukti mutu. Kode
-  `evaluation/retrieval_eval.py` masih mendaftarkannya sebagai positif (untuk uji keterjangkauan retrieval), jadi
-  ringkasan `generation_eval` menghitungnya sebagai salah; abaikan hitungan itu.
+  arah dan uji Kesimpulan gagal). **Hanya berlaku untuk set pengembangan**, bukan bukti mutu.
+  Kode kini memisahkan **dua label** per kueri (`evaluation/devset.py`): `expected_retrieval_article` (artikel yang
+  seharusnya terjangkau retrieval, untuk Recall@3) dan `expected_verdict` (`ditemukan` | `belum_ditemukan`,
+  keputusan akhir yang seharusnya). Kueri 3: `expected_retrieval_article=36729`, `expected_verdict=belum_ditemukan`,
+  `kekhususan=umum`. Format butir set uji v1 memakai struktur dua label yang sama.
+- **Kueri 2 = `kekhususan=batas`** (keputusan pemilik proyek): "orang tua" ambigu terhadap "lansia" (lebih sering
+  berarti ayah-ibu) dan **tidak diputuskan secara umum**, karena menetapkannya untuk seluruh set uji sama dengan
+  merevisi pedoman yang terkunci. Butir serupa di set uji v1 diputuskan **per butir lewat uji Kesimpulan**. Butir
+  batas dilaporkan terpisah dan tidak masuk hitungan utama (ringkasan `generation_eval` kini memisahkannya).
+- **Dua jenis kesalahan dilaporkan terpisah** (`evaluation/metrics.py`, dipra-registrasi di `v1.meta.json`):
+  **kecocokan palsu** (expected `belum_ditemukan` dijawab ditemukan), **penolakan palsu** (expected `ditemukan`
+  dijawab belum ditemukan), dan **artikel salah**, masing-masing dengan interval Wilson 95%, terpisah untuk butir batas
+  dan non-batas. Alasannya: prompt sistem yang lebih ketat cenderung menggeser kesalahan dari kecocokan palsu ke
+  penolakan palsu, dan akurasi total saja menyembunyikan pergeseran itu.
 - **Pemeriksaan regresi setelah perubahan prompt** (10 kueri set pengembangan, satu run, `gemini-3.5-flash-lite`;
   **hanya pemeriksaan regresi, tidak boleh dikutip sebagai bukti mutu**): keputusan berbeda pada **1 dari 10**
   dibanding modus 5 run sebelum perubahan. Kueri 2 ("ada link pendaftaran bantuan buat orang tua, itu beneran?")
@@ -724,8 +735,9 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
   Itu persis kasus perbatasan yang ditandai pedoman (★ untuk 36737). Sembilan kueri lain identik (kueri 3 tetap
   ditolak; 0 pelanggaran format, 0 URL di luar metadata, 0 galat 429). Token masuk naik sekitar 700 per panggilan
   (prompt ~4,6 ribu karakter, sebelumnya ~2 ribu). Tidak ada perubahan setelan atau prompt berdasarkan hasil ini.
-  Ringkasan `generation_eval` menyebut "H3 GUGUR (keliru 2/10)": itu hitungan mekanis dengan label lama kueri 3,
-  bukan status H3.
+  Ringkasan `generation_eval` saat itu menyebut "H3 GUGUR (keliru 2/10)": itu hitungan mekanis dengan label lama
+  kueri 3 dan tidak memisahkan butir batas; sudah diperbaiki (lihat pemisahan dua label di atas). Dengan label baru,
+  satu-satunya selisih adalah kueri 2 (butir batas), sehingga pada butir non-batas tidak ada kesalahan.
 
 ### Catatan untuk tahap evaluasi (RAGAS)
 

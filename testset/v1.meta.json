@@ -82,8 +82,19 @@
       "Recall@3 retrieval terpisah dari akurasi generator (butir tidak disaring berdasarkan hasil sistem)",
       "analisis per pasangan minimal, termasuk jumlah pasangan yang DUA-DUANYA benar (ukuran paling langsung untuk H1)",
       "kesepakatan antar-run",
-      "satu run per kondisi tidak dipakai sebagai bukti mutu"
-    ]
+      "satu run per kondisi tidak dipakai sebagai bukti mutu",
+      "jenis kesalahan dipisah (kecocokan palsu, penolakan palsu, artikel salah), masing-masing dengan interval Wilson 95%, terpisah untuk butir batas dan non-batas; akurasi total saja tidak cukup"
+    ],
+    "jenis_kesalahan": {
+      "dipisah": {
+        "kecocokan_palsu": "expected_verdict=belum_ditemukan dijawab ditemukan (klaim yang tak ada dianggap ada)",
+        "penolakan_palsu": "expected_verdict=ditemukan dijawab belum ditemukan (klaim yang ada dilewatkan)",
+        "artikel_salah": "expected_verdict=ditemukan, dijawab ditemukan tetapi artikel lain"
+      },
+      "interval": "masing-masing dengan interval Wilson 95%",
+      "himpunan": "dilaporkan terpisah untuk butir batas dan non-batas, serta semua",
+      "alasan": "Prompt sistem yang lebih ketat cenderung menggeser kesalahan dari kecocokan palsu ke penolakan palsu; akurasi total saja menyembunyikan pergeseran itu. Implementasi: src/evaluation/metrics.py."
+    }
   },
   "ambang": {
     "H1": {
@@ -107,5 +118,31 @@
     "Kueri set pengembangan (10) tidak masuk set uji; label kueri 3 diubah dari positif ke negatif sulit (kekhususan=umum) setelah melihat keluaran model, hanya untuk set pengembangan."
   ],
   "butir": null,
-  "sha256_butir": null
+  "sha256_butir": null,
+  "format_butir": {
+    "label_ganda": "Dua label terpisah per butir: expected_retrieval_article (artikel yang seharusnya TERJANGKAU retrieval, untuk Recall@3) dan expected_verdict (ditemukan | belum_ditemukan, keputusan akhir yang seharusnya diberikan generator). expected_verdict=ditemukan berarti artikel yang dipilih harus expected_retrieval_article. Klaim yang lebih umum daripada artikelnya: expected_retrieval_article terisi, expected_verdict=belum_ditemukan.",
+    "kolom": [
+      "id",
+      "klaim",
+      "tipe",
+      "expected_retrieval_article",
+      "expected_verdict",
+      "expected_label",
+      "kekhususan",
+      "batas",
+      "klaim_inti",
+      "gaya_bahasa",
+      "sumber",
+      "url_asal",
+      "tetangga_article_id",
+      "pasangan_id",
+      "tinjauan",
+      "alasan_tinjauan",
+      "teks_asli_model",
+      "model_pembuat",
+      "overlap_narasi",
+      "catatan"
+    ],
+    "batas": "kekhususan=batas dilaporkan terpisah dan tidak masuk hitungan utama"
+  }
 }
