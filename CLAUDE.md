@@ -120,8 +120,8 @@ pernah menimbulkan konflik `protobuf`.
 
 ```powershell
 python -m venv .venv                          # sekali saja
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe src\test_parser.py       # contoh menjalankan
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest
+.\.venv\Scripts\python.exe -m pytest                # uji offline di tests/ (tanpa jaringan/API)
 .\.venv\Scripts\Activate.ps1                        # atau aktifkan dulu
 ```
 
@@ -131,7 +131,13 @@ Paket di `src/` (mis. `scraping`) dijalankan dari **root proyek** dengan
 ```powershell
 $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m scraping     # menggantikan `python src\scraper.py`
+.\.venv\Scripts\python.exe -m evaluation.generation_eval --check-budget   # skrip evaluasi LIVE
 ```
+
+Skrip evaluasi (`evaluation.generation_eval`, `retrieval_eval`, `gemma_json_check`,
+`probe_quota`) sengaja **tidak** berawalan `test_`: pytest hanya mengumpulkan
+`tests/` (lihat `pytest.ini`) dan tidak pernah memanggil LLM. Uji `tests/`
+memakai objek palsu dan aman dijalankan kapan saja.
 
 `requirements.txt` mengunci versi (`torch==2.14.0`, build CPU dari PyPI).
 torch harus >= 2.6 agar `transformers` 5.x mau memuat
@@ -174,8 +180,6 @@ RAG_FactChecking/
 │   │   ├── discovery.py  #   pengumpulan URL dari halaman daftar
 │   │   ├── parser.py     #   parsing HTML artikel -> dict terstruktur
 │   │   └── pipeline.py   #   orkestrasi + CLI (python -m scraping)
-│   ├── test_parser.py    # Uji parsing/retry/penyaringan dengan HTML nyata
-│   ├── fixtures/         # HTML nyata untuk uji (di-commit)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
@@ -184,13 +188,21 @@ RAG_FactChecking/
 │   │   ├── gemini.py, gemini_errors.py      # GeminiProvider; penafsiran galat HTTP Gemini
 │   │   └── limits.py, throttle.py, ledger.py # angka kuota; jendela geser RPM/TPM; buku besar + anggaran
 │   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur
-│   ├── test_generation.py # Evaluasi live 5 positif + 5 negatif (butuh .env)
-│   └── test_retrieval.py # Verifikasi retrieval pada kueri sehari-hari
+│   └── evaluation/       # Evaluasi & diagnostik LIVE (bukan uji otomatis)
+│       ├── generation_eval.py  #   evaluasi generasi (--check-budget, --compare)
+│       ├── retrieval_eval.py   #   verifikasi retrieval pada kueri sehari-hari
+│       ├── gemma_json_check.py #   uji format JSON Gemma 4
+│       ├── probe_quota.py      #   probe tunggal ke server (1 permintaan)
+│       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
+├── tests/                # Uji offline (pytest), satu berkas per modul
+│   ├── fixtures/         #   HTML nyata untuk uji (di-commit)
+│   └── _fakes.py         #   objek palsu bersama (bukan uji)
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
 │   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)
 │   └── chroma/           # Basis vektor ChromaDB (tidak di-commit)
-├── requirements.txt
+├── requirements.txt, requirements-dev.txt   # dependensi; + pytest
+├── pytest.ini            # testpaths = tests, pythonpath = src
 └── CLAUDE.md
 ```
 
@@ -202,8 +214,8 @@ RAG_FactChecking/
 - Nama variabel dan fungsi: **Inggris**
 - Sertakan *type hint* pada tanda tangan fungsi
 - Tangani galat secara eksplisit; jangan menelan *exception* diam-diam
-- Setiap perubahan pada logika parsing wajib diikuti menjalankan
-  `src/test_parser.py`
+- Setiap perubahan pada logika parsing wajib diikuti menjalankan `pytest`
+  (khususnya `tests/test_parser.py`, `test_links.py`, `test_client.py`)
 
 ---
 
@@ -242,7 +254,7 @@ bukan hanya hasil akhirnya.
 > pengukuran ulang, bukan sebagai kesimpulan.**
 
 Hasil pengujian pertama terhadap 450 chunk (150 artikel), memakai 5 kueri
-berbahasa sehari-hari (`src/test_retrieval.py`). **Sampelnya baru 5
+berbahasa sehari-hari (`src/evaluation/retrieval_eval.py`). **Sampelnya baru 5
 kueri**: cukup untuk sanity check dan menemukan masalah, bukan evaluasi
 statistik.
 
@@ -277,7 +289,7 @@ artikel benar 0,6922. Skor artikel benar berkisar 0,567 sampai 0,692,
 sedangkan tetangga yang salah bisa mencapai 0,688.
 
 Uji kueri negatif (5 klaim yang tidak ada di basis data; ketiadaan
-kata kunci diperiksa otomatis di `test_retrieval.py`) menambah bukti.
+kata kunci diperiksa otomatis di `evaluation/retrieval_eval.py`) menambah bukti.
 Skor artikel teratas tiap kueri negatif: 0,5204 (kebijakan subsidi, gas
 melon), **0,6508** (vaksin flu bikin mandul; tetangga dekat artikel vaksin
 HPV bikin impoten), 0,4825 (gempa megathrust), 0,4813 (daun sirsak), 0,5037
@@ -341,7 +353,7 @@ mencegahnya; yang efektif adalah variabel lingkungan
 ## Lapisan Generasi Jawaban (Versi 1)
 
 Kode: `src/llm/` (abstraksi penyedia), `src/generator.py`
-(alur klaim -> retrieval 3 artikel -> LLM -> jawaban), `src/test_generation.py`
+(alur klaim -> retrieval 3 artikel -> LLM -> jawaban), `src/evaluation/generation_eval.py`
 (evaluasi live 5 positif + 5 negatif). Kunci API dibaca dari `.env`
 (`GEMINI_API_KEY`; contoh di `.env.example`) dan tidak pernah dicetak:
 semua log dan pesan galat melewati `redact()`.
@@ -385,7 +397,7 @@ berubah dan retry internal kembali aktif. Uji lama memakai galat palsu
 berbentuk lain (body `str`, header di `err.headers`), sehingga tidak
 menangkap bahwa saran server tidak pernah terbaca.
 
-`test_generation.py` menulis hasil ke `data/generation_eval_<model>.jsonl` per
+`evaluation/generation_eval.py` menulis hasil ke `data/generation_eval_<model>.jsonl` per
 kueri, dapat dilanjutkan (kueri yang sudah punya hasil dilewati; `--force` untuk
 mengulang), dan berhenti bila kuota harian habis. Opsi: `--model ID`,
 `--check-budget` (hanya laporan anggaran, tanpa panggilan LLM), dan
@@ -410,7 +422,7 @@ Studio, padahal angka itu puncak historis, bukan pemakaian hari berjalan, jadi
 tidak sah sebagai nilai awal; entri keliru itu sudah dihapus. Nilai awal hanya
 boleh berasal dari hitungan yang dapat ditelusuri (mis. log panggilan kita
 sendiri); bila pemakaian hari itu tidak diketahui, buktinya adalah probe tunggal
-(`src/probe_quota.py`, 1 permintaan), bukan dashboard.
+(`src/evaluation/probe_quota.py`, 1 permintaan), bukan dashboard.
 
 ### Model dan kuota (diverifikasi dari dokumentasi resmi pada 2026-09-20)
 
@@ -440,7 +452,7 @@ sendiri); bila pemakaian hari itu tidak diketahui, buktinya adalah probe tunggal
   ini**: angka 21/20 RPD dan 7/5 RPM menunjukkan bahwa batas pernah
   terlampaui, tetapi tidak menunjukkan kapan, oleh apa, atau apakah kuota hari
   ini sudah habis/direset. Untuk itu satu-satunya bukti adalah probe tunggal
-  (`src/probe_quota.py`). (Buku besar lokal sempat di-seed 21 dari angka ini;
+  (`src/evaluation/probe_quota.py`). (Buku besar lokal sempat di-seed 21 dari angka ini;
   itu keliru, karena puncak bukan pemakaian hari itu.) Nama di AI Studio
   ("gemma-4-26b", "gemma-4-31b") dipetakan ke ID API di atas; pemetaan itu
   asumsi.
@@ -542,7 +554,7 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   buruk dari Flash Lite.** `--compare` dipertahankan hanya sebagai alat
   informasi.
 - **H4** (Gemma 4 dapat menjadi model juri RAGAS): **belum diuji sebagai
-  juri**. Uji format JSON (`src/test_gemma_json.py`, `gemma-4-31b-it`,
+  juri**. Uji format JSON (`src/evaluation/gemma_json_check.py`, `gemma-4-31b-it`,
   thinking `minimal`, 3 prompt x 2 mode, 2026-09-21): 6/6 panggilan berhasil;
   mode skema server berfungsi (dokumentasi tidak menyebutnya) dan
   mengembalikan JSON murni 3/3 dengan bentuk sesuai 3/3; mode teks
@@ -660,7 +672,7 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   connection error, sehingga tidak satu pun retry terpicu (hanya satu
   `ConnectionError` yang di-retry, pada pengambilan ulang satu artikel
   sesudahnya). Selebihnya jalur ini hanya diuji dengan session palsu di
-  `src/test_parser.py`. Server juga pernah membalas 200 OK dengan halaman
+  `tests/` (`test_client.py`). Server juga pernah membalas 200 OK dengan halaman
   galat ("Terjadi kesalahan saat mengambil data"); kasus ini ditangani
   validasi HTML sebelum caching, yang juga baru diuji dengan fixture.
 - Embedding dibatasi ke **512 token** (`MAX_SEQ_LENGTH` di

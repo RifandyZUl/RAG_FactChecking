@@ -6,7 +6,7 @@ panggilan bertema-kecil berhasil. `classify_429` dan uji offline memakai bentuk
 galat Gemini yang umum; probe ini membuktikan (atau menyangkal) bentuk itu pada
 akun ini. Permintaan dicatat di buku besar harian seperti panggilan lain.
 
-Pemakaian: python src/probe_quota.py [--model ID]
+Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.probe_quota [--model ID]
 """
 
 import argparse

@@ -20,7 +20,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from paths import ARTICLES_PATH, PROJECT_ROOT  # noqa: F401 (PROJECT_ROOT diekspor ulang)
+from paths import ARTICLES_PATH
 
 
 SECTIONS: tuple[str, ...] = ("narasi", "penjelasan", "kesimpulan")
