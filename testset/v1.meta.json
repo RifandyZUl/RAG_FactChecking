@@ -1,0 +1,111 @@
+{
+  "set_uji_versi": "v1",
+  "status": "PRA-REGISTRASI: butir belum dibuat. Bagian ini ditulis SEBELUM data dibuat dan tidak boleh disesuaikan setelah hasil keluar. Dilengkapi (hash butir, jumlah per sel) saat pembekuan.",
+  "dipraregistrasi_pada": "2026-09-21",
+  "pedoman_anotasi": {
+    "berkas": "testset/ANNOTATION_GUIDE.md",
+    "versi": "1.0",
+    "sha256_ternormalisasi": "e3b4aab47092bf3c3a83d3a6e9182061a82e3a8d81ca136606c9a45c497d1efc",
+    "aturan": "dikunci; kasus tak tercakup dicatat di testset/kasus_terbuka.md dan diputuskan dengan aturan terdekat, pedoman tidak direvisi selama pembuatan"
+  },
+  "prompt_sistem": {
+    "sha256_ternormalisasi": "e801ad48548546fa232467d40edd57239dff6d71de8bae71e9392216eba5b6f8",
+    "cakupan_hash": "SYSTEM_PROMPT + RESPONSE_SCHEMA (src/generator.py)",
+    "catatan": "Prompt diselaraskan dengan pedoman sebelum pembekuan (commit 37fcac9). Setelah set uji dibekukan, prompt dan logika generator tidak boleh diubah berdasarkan hasilnya; bila perlu diubah, dibuat set uji baru (tests/test_testset_locks.py gagal bila hash ini tidak cocok)."
+  },
+  "komposisi_rancangan": {
+    "total": 50,
+    "positif": 20,
+    "negatif_sulit": 20,
+    "negatif_mudah": 10,
+    "alokasi_positif_label": {
+      "SALAH": 10,
+      "PENIPUAN": 8,
+      "PARODI": 2
+    },
+    "alokasi_positif_sel": {
+      "Politik-SALAH": 6,
+      "Politik-PARODI": 2,
+      "Bantuan-PENIPUAN": 3,
+      "Lowongan-PENIPUAN": 3,
+      "Kesehatan-SALAH": 2,
+      "Bencana-SALAH": 2,
+      "Hadiah-PENIPUAN": 1,
+      "Bisnis-PENIPUAN": 1
+    },
+    "minimal_positif_dari_artikel_tanpa_references": 2,
+    "gaya_bahasa": [
+      "formal",
+      "percakapan",
+      "wa_berantai",
+      "salah_ketik"
+    ],
+    "pasangan_minimal": "sekitar separuh negatif sulit berpasangan dengan sebuah positif pada artikel jangkar yang sama",
+    "subtipe_negatif_sulit": [
+      "pola sama entitas beda",
+      "entitas sama klaim beda",
+      "topik sama angka/waktu beda"
+    ]
+  },
+  "pengecualian_artikel": {
+    "artikel": [
+      "36730",
+      "36737",
+      "36729",
+      "36738",
+      "36731",
+      "36214"
+    ],
+    "alasan": "artikel target 5 kueri positif pengembangan dan artikel inti H1; dipakai sebagai contoh di pedoman dan prompt"
+  },
+  "sumber_butir": {
+    "nilai": [
+      "buatan_model",
+      "buatan_manusia",
+      "teks_nyata"
+    ],
+    "teks_nyata": "negatif dari arsip TurnBackHoax di luar 150 artikel (setiap kandidat dicek terhadap 150 artikel; yang ternyata sama dipindah menjadi positif) dan positif dari situs cek fakta lain; wajib mencantumkan URL asal dan data pribadi dibersihkan",
+    "buatan_model": "Gemma 4 (gemma-4-31b-it) hanya membaca Narasi; setiap butir ditinjau manusia"
+  },
+  "evaluasi": {
+    "model_generator": "gemini-3.5-flash-lite",
+    "thinking_level": "medium",
+    "jumlah_run": 3,
+    "metrik_utama": "keputusan modus dari 3 run (verdict + article_id), dihitung per butir",
+    "kesepakatan_antar_run": "dilaporkan per nilai kolom kekhususan",
+    "seed": "tidak dipakai; determinisme tidak dijamin (efek seed belum diverifikasi)",
+    "setelan_sampling": "tidak diatur (default server); hanya thinking_level dan max_output_tokens",
+    "interval_kepercayaan": "Wilson 95% secara konsisten di seluruh laporan",
+    "laporan_wajib": [
+      "akurasi per tipe dan per kekhususan (total dan tanpa butir batas)",
+      "akurasi terpisah per sumber (buatan_model vs teks_nyata)",
+      "Recall@3 retrieval terpisah dari akurasi generator (butir tidak disaring berdasarkan hasil sistem)",
+      "analisis per pasangan minimal, termasuk jumlah pasangan yang DUA-DUANYA benar (ukuran paling langsung untuk H1)",
+      "kesepakatan antar-run",
+      "satu run per kondisi tidak dipakai sebagai bukti mutu"
+    ]
+  },
+  "ambang": {
+    "H1": {
+      "definisi": "LLM membedakan klaim identik dari klaim bertetangga topik",
+      "ukuran": "negatif sulit yang dijawab 'ditemukan' (kecocokan palsu) pada keputusan modus, dari 20",
+      "terdukung": "<= 1 dari 20",
+      "tidak_konklusif": "2 dari 20",
+      "gugur": ">= 3 dari 20"
+    },
+    "H3": {
+      "definisi": "model kelas Flash cukup untuk tugas ini, dinilai terhadap ground truth (bukan terhadap model lain)",
+      "gugur": ">= 5 kesalahan dari 50 pada keputusan modus, atau pelanggaran format >= 2",
+      "catatan": "10 kueri set pengembangan bukan bukti mutu"
+    }
+  },
+  "keterbatasan": [
+    "Satu anotator manusia: kesepakatan antar-anotator tidak terukur; hanya konsistensi dalam-anotator (10 butir acak setelah satu minggu).",
+    "Pedoman ditulis setelah melihat keluaran model pada set pengembangan (risiko rasionalisasi); dikunci sebelum butir dibuat.",
+    "50 butir hanya mendeteksi kegagalan yang jelas: batas bawah Wilson 95% bila semua benar adalah 0,84 (n=20) dan 0,89 (n=30).",
+    "Cakupan waktu artikel sempit (Agustus-September 2026) dan hanya 150 artikel terbaru.",
+    "Kueri set pengembangan (10) tidak masuk set uji; label kueri 3 diubah dari positif ke negatif sulit (kekhususan=umum) setelah melihat keluaran model, hanya untuk set pengembangan."
+  ],
+  "butir": null,
+  "sha256_butir": null
+}
