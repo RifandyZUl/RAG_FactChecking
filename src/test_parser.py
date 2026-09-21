@@ -348,7 +348,7 @@ def llm_json(**kw) -> str:
 
 def test_generator_logic() -> None:
     from generator import AnswerGenerator, allowed_urls, find_urls, render
-    from llm_provider import LLMError
+    from llm import LLMError
 
     hits = [make_hit("100", "SALAH"), make_hit("200", "PARODI"), make_hit("300", "PENIPUAN", refs=[])]
     retrieve = lambda claim, k: hits[:k]  # noqa: E731
@@ -450,7 +450,7 @@ class _FakeInteractions:
 def make_gemini(script: list):
     from types import SimpleNamespace
 
-    from llm_provider import GeminiProvider
+    from llm import GeminiProvider
 
     key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
     p = GeminiProvider(api_key=key, min_interval_s=0, proactive=False)
@@ -460,8 +460,10 @@ def make_gemini(script: list):
 
 
 def test_gemini_provider_error_handling() -> None:
-    import llm_provider as lp
-    from llm_provider import LLMConfigError, LLMError, redact
+    import llm
+    import llm.gemini as lp
+    from llm import LLMConfigError, LLMError
+    from llm.secrets import redact
 
     slept: list[float] = []
     lp.time.sleep = lambda s: slept.append(s)  # jangan benar-benar menunggu
@@ -533,7 +535,7 @@ def test_gemini_provider_error_handling() -> None:
         if old is not None:
             lp.os.environ["GEMINI_API_KEY"] = old
     try:
-        lp.get_provider("tidak-ada")
+        llm.get_provider("tidak-ada")
         raise AssertionError("seharusnya LLMConfigError")
     except LLMConfigError:
         pass
@@ -558,8 +560,8 @@ def test_provider_with_real_sdk_errors() -> None:
     from google import genai
     from google.genai import types
 
-    import llm_provider as lp
-    from llm_provider import LLMError, LLMQuotaExhaustedError
+    import llm.gemini as lp
+    from llm import LLMError, LLMQuotaExhaustedError
 
     lp.time.sleep = lambda s: None  # jangan menunggu sungguhan
 
@@ -657,7 +659,8 @@ def test_eval_resume_and_incremental() -> None:
 
 
 def test_rate_limiter_sliding_window() -> None:
-    from rate_limit import MARGIN_S, ModelLimits, RateLimiter
+    from llm.limits import ModelLimits
+    from llm.throttle import MARGIN_S, RateLimiter
 
     now = [0.0]
     sleeps: list[float] = []
@@ -700,7 +703,8 @@ def test_daily_ledger_and_budget() -> None:
     import tempfile
     from datetime import datetime, timezone
 
-    from rate_limit import DailyLedger, ModelLimits, plan_budget
+    from llm.ledger import DailyLedger, plan_budget
+    from llm.limits import ModelLimits
 
     def at(*a):
         return lambda: datetime(*a, tzinfo=timezone.utc)
@@ -742,9 +746,10 @@ def test_provider_proactive_budget() -> None:
     import tempfile
     from types import SimpleNamespace
 
-    import llm_provider as lp
-    from llm_provider import GeminiProvider, LLMConfigError, LLMQuotaExhaustedError
-    from rate_limit import DailyLedger, ModelLimits
+    import llm.gemini as lp
+    from llm import GeminiProvider, LLMConfigError, LLMQuotaExhaustedError
+    from llm.ledger import DailyLedger
+    from llm.limits import ModelLimits
 
     key = "AIzaSyFAKEKEYFAKEKEYFAKEKEYFAKEKEY1234"
     lp.time.sleep = lambda s: None

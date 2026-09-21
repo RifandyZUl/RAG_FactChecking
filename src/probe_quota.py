@@ -14,9 +14,9 @@ import json
 import sys
 import time
 
-from llm_provider import LLMConfigError, LLMQuotaExhaustedError, classify_429, get_provider
-from llm_provider import _error_payload, _hinted_delay_s
-from rate_limit import estimate_tokens
+from llm import LLMConfigError, LLMQuotaExhaustedError, get_provider
+from llm.gemini_errors import classify_429, error_payload, hinted_delay_s
+from llm.limits import estimate_tokens
 
 PROMPT = "Balas dengan satu kata: siap"
 
@@ -63,11 +63,11 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001 - dilaporkan apa adanya, bukan ditelan
         print(f"GALAT setelah {time.monotonic() - t0:.1f}s: {type(e).__name__} "
               f"status={getattr(e, 'status_code', None)}")
-        payload = _error_payload(e)
+        payload = error_payload(e)
         if getattr(e, "status_code", None) == 429:
             print("klasifikasi 429 :", classify_429(e))
             print("quotaId/metric  :", quota_ids(payload) or "(tidak ada pada isi galat)")
-            print("saran tunggu    :", _hinted_delay_s(e))
+            print("saran tunggu    :", hinted_delay_s(e))
         print("isi galat (disamarkan):")
         print(p._safe(json.dumps(payload, ensure_ascii=False, indent=1, default=str))[:1500])
         return 1

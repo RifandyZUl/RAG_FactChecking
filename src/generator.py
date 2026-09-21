@@ -21,7 +21,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from llm_provider import CallRecord, LLMError, LLMProvider, LLMQuotaExhaustedError
+from llm import CallRecord, LLMError, LLMProvider, LLMQuotaExhaustedError
 from retriever import ArticleHit
 
 TOP_K = 3
