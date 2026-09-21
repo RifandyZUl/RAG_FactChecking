@@ -7,7 +7,7 @@ tervalidasi terhadap HTML nyata (lihat tests/).
 
 import re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 from scraping.links import filter_references, unique_urls
 
@@ -48,30 +48,65 @@ SECTION_KEYS = {
 }
 
 
+# Tag blok: satu blok = satu baris teks pada seksi. Tag yang boleh menjadi penanda seksi
+# (blok + strong/b) sama seperti sebelumnya; strong/b di dalam paragraf hanyalah teks inline.
+_BLOCK_TAGS = ("p", "ul", "ol", "div", "h2", "h3")
+_MARKER_TAGS = _BLOCK_TAGS + ("strong", "b")
+
+
 def extract_sections(container) -> dict[str, str]:
     """
     Pecah isi artikel menjadi seksi berdasarkan penanda <strong>/<b>.
 
-    Struktur artikel TurnBackHoax: **Narasi** ... **Penjelasan** ...
-    **Kesimpulan** ... **Hasil Periksa Fakta** ... **Referensi**
+    Struktur artikel TurnBackHoax: **Narasi** ... **Penjelasan** ... **Kesimpulan** ...
+    **Hasil Periksa Fakta** ... **Referensi**
+
+    Pohon HTML ditelusuri SEKALI, berurutan: tiap simpul teks masuk tepat satu blok, dan
+    blok pembungkus (mis. <div> yang membungkus <p>) tidak mengambil ulang teks anaknya.
+    (Versi sebelumnya memakai find_all pada tag bersarang sehingga induk dan anak sama-sama
+    mencatat teks yang sama: Narasi dan Penjelasan terduplikasi pada 150 dari 150 artikel.)
+    Penanda seksi yang bersarang di dalam blok lain (mis. Penjelasan/Kesimpulan yang terselip
+    di dalam <p>, seperti pada artikel 36590 dan 36483) tetap dikenali: teks sebelum penanda
+    tetap milik seksi sebelumnya.
     """
     sections: dict[str, list[str]] = {}
     current: str | None = None
+    buffer: list[str] = []
 
-    for el in container.find_all(["p", "ul", "ol", "div", "h2", "h3", "strong", "b"]):
-        text = el.get_text(" ", strip=True)
-        if not text:
-            continue
+    def flush() -> None:
+        if buffer and current:
+            sections[current].append(" ".join(buffer))
+        buffer.clear()
 
-        key = SECTION_KEYS.get(text.lower().rstrip(":").strip())
-        if key and len(text) < 40:
-            current = key
-            sections.setdefault(current, [])
-            continue
+    def walk(node) -> None:
+        nonlocal current
+        for child in node.children:
+            if isinstance(child, Tag):
+                if child.name in _MARKER_TAGS:
+                    text = child.get_text(" ", strip=True)
+                    key = SECTION_KEYS.get(text.lower().rstrip(":").strip())
+                    if key and len(text) < 40:
+                        flush()
+                        current = key
+                        sections.setdefault(current, [])
+                        continue
+                if child.name in _BLOCK_TAGS:
+                    flush()
+                    walk(child)
+                    flush()
+                elif child.find(_MARKER_TAGS):  # inline yang memuat blok/penanda bersarang
+                    walk(child)
+                else:
+                    text = child.get_text(" ", strip=True)
+                    if text:
+                        buffer.append(text)
+            elif type(child) is NavigableString:  # bukan Comment/Script/dsb.
+                text = str(child).strip()
+                if text:
+                    buffer.append(text)
 
-        if current:
-            sections[current].append(text)
-
+    walk(container)
+    flush()
     return {k: "\n".join(v).strip() for k, v in sections.items() if v}
 
 
