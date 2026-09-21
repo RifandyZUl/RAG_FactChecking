@@ -749,9 +749,13 @@ ketiga diperlakukan sebagai data, bukan instruksi.
 - **Kepatuhan situs:** `turnbackhoax.id/robots.txt` mengizinkan semua (`Disallow:` kosong). **Kompas dan Tempo
   melarang agen Claude secara eksplisit** di robots.txt (`Disallow: /` untuk anthropic-ai, ClaudeBot, Claude-User,
   Claude-Web, Claude-SearchBot, dll.) dan **Komdigi membalas 403** pada klien otomatis. Ketiganya TIDAK diakses
-  langsung (tanpa menyamar sebagai browser). Untuk situs cek fakta lain hanya dipakai **judul dan URL dari hasil
-  pencarian web** (bukan isi artikel, tidak ada halaman yang diambil), dan keputusan memakainya diserahkan pemilik
-  proyek.
+  langsung (tanpa menyamar sebagai browser). **Keputusan pemilik proyek: judul dan URL hasil pencarian dari
+  Kompas, Tempo, dan Komdigi juga TIDAK dipakai** (situs menolak agen AI, set uji akan diterbitkan publik, dan
+  independensi judulnya rendah). Tidak ada judul atau URL dari situs-situs itu yang tersimpan di repositori atau
+  `data/candidates/`. Positif dari situs cek fakta lain hanya dari situs yang `robots.txt`-nya tidak membatasi agen
+  Claude; positif lintas situs otomatis yang tidak ada dilepas dan dicatat di `v1.meta.json`. Positif tulisan manusia:
+  pemilik proyek menulis klaim setelah membaca artikel sebagai manusia (sumber `manusia`, URL sebagai asal-usul),
+  dengan topik singkat sebagai pemandu, sehingga independensinya tidak penuh.
 - **Arsip TurnBackHoax:** 100 artikel (10 halaman daftar tersebar, 2024-2026) di luar 150 artikel; disimpan teks
   Narasi + URL. 69 memuat blok kutipan pesan yang bersih (>= 25 karakter); 66 tanpa penanda data pribadi pada
   teks klaim (3 memuat URL yang harus dibersihkan). **Tidak ada satu pun yang klaimnya sama dengan artikel basis
@@ -760,9 +764,12 @@ ketiga diperlakukan sebagai data, bukan instruksi.
   sulit "pola sama, entitas beda", mis. "Lowongan Kerja SPX Express" vs "Puskesmas"), dan 16 dengan skor retrieval
   < 0,60 (calon negatif mudah). **Kelas otomatis tidak dapat dipercaya**: 20 kandidat ditandai
   "kemungkinan_sama" ternyata keluarga tautan penipuan dengan entitas berbeda, bukan klaim yang sama.
-- **Situs cek fakta lain (hasil pencarian, 10 artikel basis diuji):** kecocokan jelas 4, ambigu (keluarga/varian atau
-  tahun berbeda) 3, tidak ada 3. Judul lintas situs mirip dengan judul basis data (kemiripan karakter 0,61-0,94),
-  sehingga rumusannya tidak sepenuhnya independen.
+- **Uji awal lintas situs (dilepas):** dari 10 artikel basis yang dicoba lewat pencarian, kecocokan jelas 4, ambigu
+  3, tidak ada 3, dan judulnya mirip judul basis data (kemiripan karakter 0,61-0,94): independensi rendah. Hasil itu
+  tidak dipakai dan tidak disimpan.
+- **Kelas usulan otomatis** penyaring disimpan di berkas terpisah (`archive_screen_class.jsonl`) dan tidak
+  ditampilkan pada berkas tinjauan (bias anchoring); setelah tinjauan selesai dibandingkan dan kesepakatannya
+  dilaporkan sebagai keandalan penyaring.
 - **Data pribadi:** nama akun hanya pada kalimat pembuka Narasi (bukan pada teks klaim yang dikutip), jadi
   butir memakai teks klaim yang dikutip, bukan seluruh Narasi.
 
