@@ -14,16 +14,11 @@ from pathlib import Path
 
 import requests
 
-import scraper
-from scraper import (
-    blocked_reason,
-    discover_article_urls,
-    fetch_html,
-    is_valid_article_html,
-    is_valid_list_html,
-    normalize_url,
-    parse_article,
-)
+import scraping.client as scraping_client
+from scraping.client import fetch_html
+from scraping.discovery import discover_article_urls, is_valid_list_html
+from scraping.links import blocked_reason, normalize_url
+from scraping.parser import is_valid_article_html, parse_article
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -181,7 +176,7 @@ class FakeSession:
         self.calls = 0
 
     def get(self, url: str, timeout: float) -> FakeResponse:
-        assert timeout == scraper.TIMEOUT, "timeout eksplisit 45 dtk wajib dipakai"
+        assert timeout == scraping_client.TIMEOUT, "timeout eksplisit 45 dtk wajib dipakai"
         self.calls += 1
         item = self.script.pop(0) if len(self.script) > 1 else self.script[0]
         if isinstance(item, Exception):
@@ -215,7 +210,7 @@ def test_fetch_retries_error_page_and_skips_cache() -> None:
     """Halaman galat 200 di-retry, dan tidak pernah ditulis ke cache."""
     error_html = read_fixture("error_page.html")
     good_html = read_fixture("36738.html")
-    scraper.time.sleep = lambda s: None  # jangan benar-benar menunggu backoff
+    scraping_client.time.sleep = lambda s: None  # jangan benar-benar menunggu backoff
 
     with tempfile.TemporaryDirectory() as tmp:
         cache = Path(tmp) / "1.html"
@@ -231,7 +226,7 @@ def test_fetch_retries_error_page_and_skips_cache() -> None:
         cache2 = Path(tmp) / "2.html"
         sess = FakeSession([FakeResponse(error_html)])
         html, _ = fetch_html("u", sess, cache2, validate=is_valid_article_html)
-        assert html is None and sess.calls == scraper.MAX_RETRIES + 1
+        assert html is None and sess.calls == scraping_client.MAX_RETRIES + 1
         assert not cache2.exists(), "halaman galat ter-cache"
 
         # cache lama yang rusak diabaikan dan diambil ulang
@@ -250,7 +245,7 @@ def test_fetch_retries_error_page_and_skips_cache() -> None:
 
 def test_fetch_retry_policy() -> None:
     """Retry hanya untuk timeout/koneksi; 404 tidak di-retry."""
-    scraper.time.sleep = lambda s: None
+    scraping_client.time.sleep = lambda s: None
     sess = FakeSession([requests.ReadTimeout("t"), requests.ConnectionError("c"),
                         FakeResponse("<html>ok</html>")])
     html, _ = fetch_html("u", sess)
@@ -258,7 +253,7 @@ def test_fetch_retry_policy() -> None:
 
     sess = FakeSession([requests.ConnectionError("c")])
     html, _ = fetch_html("u", sess)
-    assert html is None and sess.calls == scraper.MAX_RETRIES + 1
+    assert html is None and sess.calls == scraping_client.MAX_RETRIES + 1
 
     sess = FakeSession([FakeResponse("nope", status=404)])
     html, _ = fetch_html("u", sess)
@@ -267,7 +262,7 @@ def test_fetch_retry_policy() -> None:
 
 def test_discover_not_fooled_by_error_page() -> None:
     """Halaman daftar galat di tengah paginasi di-retry, bukan dianggap akhir."""
-    scraper.time.sleep = lambda s: None
+    scraping_client.time.sleep = lambda s: None
     error_html = read_fixture("error_page.html")
     sess = FakeSession([
         FakeResponse(fake_list_page(1000)),   # halaman 1
@@ -283,7 +278,7 @@ def test_discover_not_fooled_by_error_page() -> None:
     # eksplisit (fetch_html sudah mencoba 1 + MAX_RETRIES kali)
     sess = FakeSession([FakeResponse(error_html)])
     assert discover_article_urls(sess, max_articles=20) == []
-    assert sess.calls == scraper.MAX_RETRIES + 1
+    assert sess.calls == scraping_client.MAX_RETRIES + 1
 
     # Halaman daftar asli menghasilkan 10 URL
     sess = FakeSession([FakeResponse(read_fixture("list_page.html"))])

@@ -125,6 +125,14 @@ python -m venv .venv                          # sekali saja
 .\.venv\Scripts\Activate.ps1                        # atau aktifkan dulu
 ```
 
+Paket di `src/` (mis. `scraping`) dijalankan dari **root proyek** dengan
+`PYTHONPATH=src`, sehingga jalur relatif tetap berbasis root:
+
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m scraping     # menggantikan `python src\scraper.py`
+```
+
 `requirements.txt` mengunci versi (`torch==2.14.0`, build CPU dari PyPI).
 torch harus >= 2.6 agar `transformers` 5.x mau memuat
 `pytorch_model.bin` bge-m3 (CVE-2025-32434).
@@ -159,7 +167,13 @@ Ketentuan yang berlaku:
 ```
 RAG_FactChecking/
 ├── src/
-│   ├── scraper.py        # Pengambilan & parsing artikel TurnBackHoax
+│   ├── paths.py          # Jalur proyek terpusat (root, data/, cache, articles.json)
+│   ├── scraping/         # Pengambilan & parsing artikel TurnBackHoax
+│   │   ├── links.py      #   normalisasi URL + daftar domain diblokir (Aturan #1)
+│   │   ├── client.py     #   sesi HTTP, timeout/retry, cache HTML
+│   │   ├── discovery.py  #   pengumpulan URL dari halaman daftar
+│   │   ├── parser.py     #   parsing HTML artikel -> dict terstruktur
+│   │   └── pipeline.py   #   orkestrasi + CLI (python -m scraping)
 │   ├── test_parser.py    # Uji parsing/retry/penyaringan dengan HTML nyata
 │   ├── fixtures/         # HTML nyata untuk uji (di-commit)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
