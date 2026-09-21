@@ -626,6 +626,23 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
     dibedakan. Dihentikan (lihat di atas); `data/generation_eval_gemini-3.8-flash.jsonl`
     hanya memuat 1 kueri valid dan tidak dipakai.
   - Pemutus baru: evaluasi berhenti setelah 2 kueri beruntun gagal di API.
+- **Ulangan diagnostik 2026-09-21** (`evaluation.repeat_eval`; murni diagnostik, tidak boleh dipakai
+  untuk menyetel apa pun): 10 kueri set pengembangan x 5 run = 50 panggilan `gemini-3.5-flash-lite`
+  (thinking medium) pada data diperbaiki. **Keputusan (verdict + artikel) identik pada semua 5 run
+  untuk 10 dari 10 kueri** (0 gagal, 0 pelanggaran format); kueri 3 ditolak 5 dari 5 kali dengan
+  alasan yang sama ("klaim pengguna hanya menyatakan kemarahan Malaysia soal asap secara umum,
+  sedangkan artikel membahas klaim spesifik pelaporan ke PBB"). Yang bervariasi hanya redaksi
+  alasan. Kandidat retrieval sama di semua run. Jadi selisih kueri 3 antara proses lama (diterima) dan
+  proses baru (ditolak) kemungkinan besar efek data, bukan variasi acak; ini belum terbukti karena data
+  lama tidak dapat dijalankan ulang. Batas atas 95% laju pembalikan keputusan (0 dari 50): ~6%, hanya
+  untuk jenis kueri yang jelas; kueri batas belum terwakili.
+  **Setelan sampling generator** (tidak diubah): `generation_config` hanya berisi `thinking_level`
+  (medium) dan `max_output_tokens` (8192); temperature, top-p, top-k, dan seed TIDAK diatur, jadi
+  default server. Dokumentasi Gemini 3 (https://ai.google.dev/gemini-api/docs/gemini-3): default
+  temperature 1,0 dan "sangat disarankan" tidak diubah; menurunkannya dapat menyebabkan looping atau
+  penurunan mutu pada tugas penalaran. Field `generation_config` klien Interactions terpasang
+  (google-genai 2.24) tidak memuat temperature/top_p/top_k; ada `seed` (tidak dipakai; apakah server
+  menghormatinya belum diverifikasi).
 - Sampel evaluasi hanya 5 positif dan 5 negatif dan berstatus set
   pengembangan: indikasi, bukan bukti statistik.
 
@@ -723,6 +740,21 @@ sebanding dengan angka 5 kueri di riwayat. (2) Pada data baru, kriteria 4 evalua
 menandai `36730.` pada kueri 1: LLM menyebut id artikel di kolom alasan; itu penanda heuristik,
 bukan klaim tak berdasar. (3) Selisih kueri 3 berasal dari satu proses per kondisi; ulangan
 akan memisahkan variasi acak dari efek data (belum dilakukan).
+
+---
+
+## Daftar Pekerjaan Sebelum Portofolio
+
+Tidak mendesak dan tidak memengaruhi evaluasi, tetapi harus beres sebelum repositori ditampilkan:
+IDE akan menampilkan garis merah pada siapa pun yang membukanya.
+
+- **22 galat tipe pyright (mode standar) di `tests/`** (per 2026-09-21): `test_generator.py` 11 (mis.
+  `ScriptedProvider` bukan turunan `LLMProvider`), `test_client.py` 7, `test_discovery.py` 3,
+  `test_reparse.py` 1. Periksa dengan `npx pyright tests` (atau Pylance). `test_gemini.py` dan
+  `_fakes.py` sudah bersih (pyright standar dan strict, mypy, ruff).
+- **Gaya kode:** `ruff check` masih menandai urutan impor di `src/llm/limits.py` (I001).
+- **Konfigurasi alat statis** (saran, belum dikerjakan): satu `pyproject.toml` untuk pyright/ruff agar
+  IDE dan CI konsisten, termasuk jalur `src` dan `tests`.
 
 ---
 
