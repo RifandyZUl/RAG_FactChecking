@@ -24,8 +24,8 @@ from pathlib import Path
 from chunker import PROJECT_ROOT, load_articles
 from generator import MAX_FORMAT_RETRIES, Answer, AnswerGenerator, allowed_urls, find_urls, render
 from ingest import get_collection, load_model
-from llm_provider import LLMConfigError, get_provider
-from rate_limit import plan_budget
+from llm import LLMConfigError, get_provider
+from llm.ledger import plan_budget
 from retriever import retrieve
 from test_retrieval import NEGATIVE_QUERIES, QUERIES
 

@@ -179,7 +179,10 @@ RAG_FactChecking/
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
-│   ├── llm_provider.py   # Abstraksi penyedia LLM (Gemini) + retry/backoff
+│   ├── llm/              # Abstraksi penyedia LLM (Gemini), retry, throttling, kuota
+│   │   ├── errors.py, base.py, secrets.py   # galat; LLMProvider + CallRecord; .env + samarkan kunci
+│   │   ├── gemini.py, gemini_errors.py      # GeminiProvider; penafsiran galat HTTP Gemini
+│   │   └── limits.py, throttle.py, ledger.py # angka kuota; jendela geser RPM/TPM; buku besar + anggaran
 │   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur
 │   ├── test_generation.py # Evaluasi live 5 positif + 5 negatif (butuh .env)
 │   └── test_retrieval.py # Verifikasi retrieval pada kueri sehari-hari
@@ -337,7 +340,7 @@ mencegahnya; yang efektif adalah variabel lingkungan
 
 ## Lapisan Generasi Jawaban (Versi 1)
 
-Kode: `src/llm_provider.py` (abstraksi penyedia), `src/generator.py`
+Kode: `src/llm/` (abstraksi penyedia), `src/generator.py`
 (alur klaim -> retrieval 3 artikel -> LLM -> jawaban), `src/test_generation.py`
 (evaluasi live 5 positif + 5 negatif). Kunci API dibaca dari `.env`
 (`GEMINI_API_KEY`; contoh di `.env.example`) dan tidak pernah dicetak:
@@ -390,7 +393,7 @@ mengulang), dan berhenti bila kuota harian habis. Opsi: `--model ID`,
 panggilan LLM; hanya informasi kesetaraan keputusan dan BUKAN kriteria H3,
 lihat "Hipotesis dan status").
 
-**Throttling proaktif dan anggaran harian** (`src/rate_limit.py`): batas
+**Throttling proaktif dan anggaran harian** (`src/llm/limits.py`, `throttle.py`, `ledger.py`): batas
 RPM/TPM/RPD per model dibaca dari `DEFAULT_LIMITS` (dapat ditimpa `LLM_RPM`,
 `LLM_TPM`, `LLM_RPD`). Jendela geser 60 dtk menjaga RPM dan TPM tidak pernah
 tersentuh (setiap percobaan, termasuk retry, melewatinya); retry 429 tinggal
