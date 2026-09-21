@@ -9,7 +9,7 @@ from pathlib import Path
 
 import requests
 
-from paths import RAW_HTML_DIR
+from paths import ARTICLES_PATH, RAW_HTML_DIR
 from scraping.client import DELAY, fetch_html, make_session
 from scraping.discovery import discover_article_urls
 from scraping.parser import is_valid_article_html, parse_article
@@ -38,7 +38,7 @@ def scrape_article(
 
 def main(
     max_articles: int = 150,
-    out_path: str = "data/articles.json",
+    out_path: str | Path | None = None,
     force_refresh: bool = False,
 ) -> None:
     session = make_session()
@@ -66,7 +66,8 @@ def main(
         if from_network:  # jeda hanya perlu bila server benar-benar dipanggil
             time.sleep(DELAY)
 
-    out = Path(out_path)
+    # Bawaan dijangkar ke root proyek (paths.ARTICLES_PATH), bukan direktori kerja.
+    out = Path(out_path) if out_path is not None else ARTICLES_PATH
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
 
