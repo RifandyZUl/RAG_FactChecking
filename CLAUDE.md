@@ -262,21 +262,26 @@ bukan hanya hasil akhirnya.
 
 ## Temuan Ingestion dan Retrieval (Versi 1)
 
-> **PERINGATAN: angka di bagian ini, di "Hipotesis dan status", dan di
-> "Keterbatasan" yang bertanda `[DIUKUR PADA DATA CACAT]` diukur pada teks
-> Narasi/Penjelasan yang terduplikasi (150 dari 150 artikel; lihat "Masalah
-> terbuka"), yaitu embedding, statistik token, pemotongan 512 token, seksi
-> pemenang retrieval, skor kemiripan, dan konteks yang dikirim ke LLM. Semua
-> itu TIDAK SAH sebagai temuan sampai diukur ulang setelah perbaikan duplikasi
-> dan pengindeksan ulang. Perlakukan sebagai indikasi awal yang menunggu
-> pengukuran ulang, bukan sebagai kesimpulan.**
+> **CATATAN (2026-09-21): seluruh angka bertanda `[DIUKUR ULANG 2026-09-21]` semula diukur
+> pada teks Narasi/Penjelasan yang terduplikasi (150 dari 150 artikel). Duplikasi itu sudah
+> diperbaiki (`extract_sections`), `articles.json` di-parse ulang dari cache, indeks vektor
+> dibangun ulang dari nol dan diverifikasi segar (`evaluation.index_check`), lalu semuanya
+> diukur ulang. Angka lama dan baru ada berdampingan di "Pengukuran ulang setelah perbaikan
+> duplikasi" (di bawah), dengan penanda mana temuan yang bertahan dan mana yang berubah.**
+> Angka lama yang masih tertulis di teks tiap bagian dipertahankan sebagai riwayat.
 
 Hasil pengujian pertama terhadap 450 chunk (150 artikel), memakai 5 kueri
 berbahasa sehari-hari (`src/evaluation/retrieval_eval.py`). **Sampelnya baru 5
 kueri**: cukup untuk sanity check dan menemukan masalah, bukan evaluasi
 statistik.
 
-### Penjelasan menang atas Narasi [DIUKUR PADA DATA CACAT]
+### Penjelasan menang atas Narasi [DIUKUR ULANG 2026-09-21] — BERTAHAN (arah), angka berubah
+
+Diukur ulang pada 10 kueri (bukan 5): chunk Penjelasan tetap paling sering menang.
+Peringkat satu: Penjelasan 7, Narasi 2, Kesimpulan 1 (data lama pada 10 kueri yang sama:
+6/2/2). Seluruh top-5 chunk (50 hasil): Penjelasan 22, Kesimpulan 14, Narasi 14 (lama:
+20/12/18). Angka di paragraf berikut (5 kueri) adalah riwayat pengukuran pertama; jangan
+dibandingkan langsung dengan angka 10 kueri.
 
 Asumsi awal bahwa klaim pengguna paling cocok dengan chunk Narasi
 **tidak terbukti**. Pada peringkat satu, chunk Penjelasan menang pada 3
@@ -295,11 +300,15 @@ satu artikel bisa mengisi beberapa peringkat teratas. Jawaban tetap
 diambil dari chunk Kesimpulan artikel pemenang, dan tautan dari metadata
 (Aturan Wajib #3).
 
-### Skor kemiripan berdaya pisah rendah [DIUKUR PADA DATA CACAT]
+### Skor kemiripan berdaya pisah rendah [DIUKUR ULANG 2026-09-21] — BERTAHAN, angka berubah sedikit
 
-Semua skor di bagian ini (termasuk 0,6508 pada kasus "vaksin flu bikin
-mandul") berasal dari embedding teks terduplikasi; angkanya dapat berubah
-setelah pengukuran ulang, dan kesimpulan tentang daya pisah skor belum sah.
+Semua skor di paragraf berikut berasal dari embedding teks terduplikasi (riwayat). Diukur
+ulang pada data diperbaiki: skor kasus "vaksin flu bikin mandul" **0,6508 -> 0,6671**
+(artikel teratas tetap 36214); positif terendah 0,5669 -> 0,5739; negatif tertinggi
+0,6508 -> 0,6671; celah (positif terendah dikurangi negatif tertinggi) -0,0839 ->
+-0,0932. Tiga dari lima skor positif tetap di bawah skor kasus vaksin flu. **Kesimpulan bahwa
+skor kemiripan tidak dapat memisahkan klaim yang ada dari yang tidak ada bertahan** (semua
+skor naik tipis; urutannya hampir tidak berubah: artikel teratas sama pada 9 dari 10 kueri).
 
 Pada level artikel: kueri 2 memberi artikel benar 0,6227 dan artikel lain
 0,6213 (selisih ≈ 0,001); kueri 5 memberi artikel lain 0,6877 melawan
@@ -545,10 +554,11 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   bertetangga topik; gugur bila pada "vaksin flu bikin mandul" LLM
   merujuk artikel 36214): **dukungan awal pada `gemini-3.5-flash-lite` untuk
   satu kasus inti** (kueri itu dijawab tidak ditemukan; alasan: berbeda dari
-  artikel vaksin HPV dan cacar air) [DIUKUR PADA DATA CACAT]: kandidat retrieval (skor 0,6508)
-  dan konteks yang dibaca LLM berasal dari data terduplikasi, sehingga
-  dukungan ini menunggu pengukuran ulang. **Belum konklusif sampai diuji pada
-  set uji** (satu kasus, pada set pengembangan); jangan digeneralisasi.
+  artikel vaksin HPV dan cacar air) [DIUKUR ULANG 2026-09-21] — **BERTAHAN**: pada data diperbaiki
+  (skor retrieval 0,6671, kandidat 36214, 36577, 36053) LLM kembali menjawab tidak
+  ditemukan dan alasannya sama (vaksin flu berbeda dari vaksin HPV, cacar air, dan
+  vaksinasi-autisme). **Belum konklusif sampai diuji pada set uji** (satu kasus, pada set
+  pengembangan); jangan digeneralisasi.
 - **H3** (model kelas Flash cukup untuk tugas ini; gugur bila format terstruktur
   dilanggar berulang atau keliru pada >= 2 dari 10 kueri). **Kriteria dinilai
   terhadap ground truth (label yang ditetapkan manusia), bukan terhadap model
@@ -556,9 +566,13 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   keputusannya sama dengan 3.8 Flash"); itu **kesalahan desain hipotesis**:
   kesetaraan dengan model pembanding bukan kebenaran (kesalahan yang sama tampak
   "setara"), dan hasilnya bergantung pada ketersediaan layanan pembanding.
-  Status pada 10 kueri [DIUKUR PADA DATA CACAT]: **terdukung terhadap ground truth** (Flash
-  Lite 5/5 positif dan 5/5 negatif benar, 0 pelanggaran format; diukur pada
-  konteks terduplikasi, menunggu pengukuran ulang), **dengan catatan bahwa
+  Status pada 10 kueri [DIUKUR ULANG 2026-09-21] — **BERUBAH sedikit**: pada data lama 10/10 benar; pada
+  data diperbaiki **9/10 benar** (positif 4/5, negatif 5/5, 0 pelanggaran format). Kueri 3
+  ("malaysia marah ke indonesia soal asap", skor retrieval 0,5739, rumusan paling samar)
+  kini dijawab "tidak ditemukan"; sebelumnya benar (36729), dan 3.8 Flash juga menolaknya
+  pada data lama. **Penyebabnya tidak dapat dipastikan**: satu proses per kondisi, jadi
+  variasi acak LLM tidak terpisah dari efek data. Satu kesalahan dari 10 masih di bawah
+  ambang H3 (gugur bila >= 2), tetap **terdukung terhadap ground truth**, **dengan catatan bahwa
   10 kueri itu adalah set pengembangan yang sudah dipakai berulang** (menyusun
   uji retrieval, uji generasi, dan keputusan desain), sehingga **tidak sah
   sebagai bukti mutu**. Bukti mutu hanya dari set uji yang dibekukan (lihat
@@ -590,9 +604,9 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
   ditetapkan (jangan ubah dua variabel sekaligus). Selama ini semua hasil
   Gemini memakai `thinking_level=medium` eksplisit, bukan bawaan Flash Lite
   (`minimal`).
-- **Hasil live 2026-09-21** (bukan evaluasi statistik; 10 kueri) [DIUKUR PADA DATA CACAT]:
-  konteks yang dikirim ke LLM dan kandidat retrieval berasal dari teks
-  terduplikasi; menunggu jalankan ulang setelah perbaikan dan pengindeksan ulang.
+- **Hasil live 2026-09-21** (bukan evaluasi statistik; 10 kueri) [DIUKUR ULANG 2026-09-21]: bagian di
+  bawah ini adalah hasil pada data LAMA (terduplikasi); hasil pada data diperbaiki ada di
+  "Pengukuran ulang setelah perbaikan duplikasi".
   - `gemini-3.5-flash-lite` (thinking medium): 10/10 selesai tanpa 429/503,
     positif 5/5 (artikel dan label benar), negatif 5/5 "tidak ditemukan",
     0 pelanggaran format, 0 URL di luar metadata, latensi rata-rata 6,9 dtk.
@@ -618,8 +632,10 @@ tanggal, Narasi, Kesimpulan, rujukan; Penjelasan tidak dikirim.
 ### Perencanaan kapasitas (evaluasi 50 kueri)
 
 Perkiraan, bukan pengukuran; angka kuota per 2026-09-21. Perkiraan token
-per panggilan (2,2-2,6K masuk untuk generator; basis perkiraan RAGAS) [DIUKUR PADA DATA CACAT]:
-konteks terduplikasi membuatnya membengkak; ukur ulang setelah perbaikan.
+per panggilan (generator) [DIUKUR ULANG 2026-09-21]: 2,2-3,6K token masuk pada data lama -> 1,7-2,1K pada
+data diperbaiki (terukur pada 10 kueri; sekitar 20-40% lebih kecil). Perkiraan RAGAS di
+bawah dibuat dari angka lama dan belum dihitung ulang (RAGAS belum dipasang); anggap terlalu
+besar.
 
 - **Generator Flash Lite** (RPD 500, RPM 15): 50 panggilan (terburuk 100 dengan
   percobaan ulang format) = **1 hari**, >= 3,4 menit menurut RPM (terukur:
@@ -657,18 +673,56 @@ Model juri sebaiknya **berbeda** dari model generator agar penilaian tidak
 bias terhadap keluarannya sendiri. Abstraksi penyedia membuat ini mudah:
 cukup instansiasi penyedia kedua dengan `LLM_MODEL` lain.
 
-### Masalah terbuka (belum diperbaiki, menunggu persetujuan)
+### Duplikasi teks seksi (TERSELESAIKAN 2026-09-21)
 
-Ditemukan saat menyusun generator: teks **Narasi dan Penjelasan di
-`articles.json` terduplikasi** pada 150 dari 150 artikel (panjang JSON /
-panjang teks seksi HTML asli: median 2,00; Kesimpulan 1,00). Penyebabnya
-`extract_sections()` mengiterasi elemen bersarang (induk `div` dan anak
-`p`/`strong`) sehingga isinya tercatat dua kali. Artikel 36590 juga tidak
-punya seksi Penjelasan terpisah di HTML, sehingga bagian Penjelasan ikut
-masuk Narasi; 36603 dan 36483 menunjukkan awal Kesimpulan di Narasi/Penjelasan.
-Dampak: statistik token dan pemotongan 512 token, embedding, dan angka
-"Penjelasan menang atas Narasi" dihitung pada teks yang terduplikasi dan
-perlu diukur ulang setelah perbaikan.
+Ditemukan saat menyusun generator: teks **Narasi dan Penjelasan di `articles.json`
+terduplikasi** pada 150 dari 150 artikel (panjang JSON / panjang teks seksi HTML asli:
+median 2,00; Kesimpulan 1,00). Penyebabnya `extract_sections()` mengiterasi elemen bersarang
+(induk `div` dan anak `p`/`strong`) sehingga isinya tercatat dua kali.
+
+Perbaikan (commit `b29d91c`): pohon HTML ditelusuri sekali secara berurutan, bukan membuang
+duplikat sesudahnya. Artikel 36590 (Penjelasan bersarang di dalam Narasi) dan 36483 (Kesimpulan
+bersarang di dalam Penjelasan) kini terpisah benar; 36603 diuji sebagai regresi (seksinya
+memang normal setelah duplikasi hilang). Uji `tests/test_parser.py` kini gagal bila rasio
+panjang hasil parse terhadap teks HTML asli melebihi 1,1 (atau di bawah 0,9). Hasil pada 150
+artikel: rasio Narasi/Penjelasan median 1,00 (maks 1,00); 148 dari 150 artikel dalam 0,5% dari
+1,0 (dua sisanya, 36590 dan 36483, wajar karena seksi HTML-nya memuat seksi bersarang);
+Kesimpulan, `references`, dan kolom lain tidak berubah. `articles.json` di-parse ulang dari
+cache (`python -m scraping.reparse`), indeks dibangun ulang dengan `ingest.py --rebuild` dan
+diverifikasi segar (`evaluation.index_check`: id, teks, metadata identik; vektor sampel di-embed
+ulang, kosinus 1,000000). Retriever kini membaca teks baru (panjang Narasi ~50% dari sebelumnya,
+sama dengan `articles.json`).
+
+### Pengukuran ulang setelah perbaikan duplikasi (2026-09-21)
+
+Data lama = `articles.json` dan indeks sebelum perbaikan; data baru = sesudah perbaikan dan
+`--rebuild`. Kolom terakhir menandai apakah temuan **bertahan** atau **berubah**.
+
+| Ukuran | Lama | Baru | Temuan |
+| --- | --- | --- | --- |
+| Rasio panjang seksi (parse / HTML asli), median Narasi | 2,00 (1,62-2,29) | 1,00 (0,41-1,00) | berubah (cacat hilang) |
+| idem, Penjelasan | 2,00 (1,62-2,74) | 1,00 (0,83-1,00) | berubah (cacat hilang) |
+| idem, Kesimpulan | 1,00 | 1,00 | bertahan |
+| Artikel dengan rasio > 1,1 | 150 (Narasi), 149 (Penjelasan) | 0 | berubah |
+| Token median Narasi / Penjelasan / Kesimpulan | 270 / 450 / 61 | 137 / 225 / 61 | berubah (Kesimpulan bertahan) |
+| Token p90 Narasi / Penjelasan | 454 / 807 | 228 / 369 | berubah |
+| Token maks Narasi / Penjelasan | 1442 / 1187 | 422 / 573 | berubah |
+| Chunk terpotong 512 token (Narasi / Penjelasan / Kesimpulan) | 11 / 58 / 0 (69 dari 450, 15,3%) | 0 / 3 / 0 (3 dari 450, 0,7%) | berubah |
+| Seksi pemenang, top-1 chunk, 10 kueri (P / N / K) | 6 / 2 / 2 | 7 / 2 / 1 | bertahan (Penjelasan tetap teratas) |
+| Seksi pemenang, top-5 chunk, 50 hasil (P / N / K) | 20 / 18 / 12 | 22 / 14 / 14 | bertahan (arah) |
+| Artikel top-1 sama dengan sebelumnya | - | 9 dari 10 kueri | bertahan |
+| Skor kasus vaksin flu (artikel teratas 36214) | 0,6508 | 0,6671 | bertahan (tetap di atas 3 dari 5 positif) |
+| Positif terendah / negatif tertinggi | 0,5669 / 0,6508 | 0,5739 / 0,6671 | bertahan (skor tak memisahkan) |
+| Flash Lite, 10 kueri (benar terhadap ground truth) | 10/10 | 9/10 (kueri 3 kini "tidak ditemukan") | berubah (penyebab tak terpastikan) |
+| Flash Lite, kasus vaksin flu | tidak ditemukan | tidak ditemukan | bertahan |
+| Flash Lite, token masuk per panggilan | 2,2-3,6K | 1,7-2,1K | berubah |
+| Flash Lite, pelanggaran format / URL di luar metadata / 429 | 0 / 0 / 0 | 0 / 0 / 0 | bertahan |
+
+Catatan: (1) "Seksi pemenang" pada 10 kueri (5 positif dan 5 negatif, set pengembangan) tidak
+sebanding dengan angka 5 kueri di riwayat. (2) Pada data baru, kriteria 4 evaluasi generasi
+menandai `36730.` pada kueri 1: LLM menyebut id artikel di kolom alasan; itu penanda heuristik,
+bukan klaim tak berdasar. (3) Selisih kueri 3 berasal dari satu proses per kondisi; ulangan
+akan memisahkan variasi acak dari efek data (belum dilakukan).
 
 ---
 
@@ -698,13 +752,14 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   hanya berCPU dengan RAM bebas ~2,5 GB, sehingga batas pendek menekan
   memori dan waktu embedding; dan target pencocokan utama adalah seksi
   Narasi (median 270 token) yang mayoritas muat utuh. Terukur pada 450
-  chunk (150 artikel) [DIUKUR PADA DATA CACAT]: Narasi terpotong 11/150 (7,3%), Penjelasan
-  58/150 (38,7%), Kesimpulan 0/150; median token dan angka pemotongan dihitung
-  pada teks terduplikasi (Narasi/Penjelasan tercatat ~2x) sehingga terlalu besar,
-  dan alasan "mayoritas muat utuh" perlu diperiksa ulang. Chunk terpotong ditandai `truncated` pada
+  chunk (150 artikel) [DIUKUR ULANG 2026-09-21] — **BERUBAH**: pada data lama Narasi terpotong 11/150
+  (7,3%), Penjelasan 58/150 (38,7%), Kesimpulan 0/150 (median Narasi 270 token); pada data
+  diperbaiki Narasi **0/150**, Penjelasan **3/150 (2,0%)**, Kesimpulan 0/150 (median Narasi
+  137, Penjelasan 225, Kesimpulan 61 token). Angka lama menghitung teks ~2x; alasan
+  "mayoritas Narasi muat utuh" justru makin kuat. Chunk terpotong ditandai `truncated` pada
   metadata untuk audit. Bagian ekor Narasi/Penjelasan yang terpotong tidak
   ikut terindeks; keputusan ini perlu ditinjau ulang di Versi 2 (mengubah
-  batas berarti embedding ulang semua chunk: `python src/ingest.py --force`).
+  batas berarti embedding ulang semua chunk: `python src/ingest.py --rebuild`).
 - Penyaringan `references` bersifat konservatif dan berbasis domain:
   semua tautan ke media sosial (Instagram, Facebook, TikTok, X/Twitter,
   Threads, YouTube), arsip, dan hosting gambar dibuang, tanpa membedakan
