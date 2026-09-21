@@ -26,7 +26,11 @@ Proyek dibangun bertahap dalam dua versi:
   kemiripan, generasi jawaban. Berfungsi sebagai *baseline* pembanding.
 - **Versi 2 — Corrective RAG (belum dimulai).** Menambahkan node penilai
   relevansi dokumen, penulis ulang kueri, dan penilaian kredibilitas
-  sumber.
+  sumber. **Kandidat fitur (dicatat, belum diputuskan):** verdict ketiga
+  "artikel terkait" untuk klaim yang lebih umum daripada artikel (mis. "Malaysia
+  marah soal asap" vs artikel "Malaysia Laporkan Indonesia ke PBB"). Di Versi 1
+  klaim seperti itu menghasilkan "belum ditemukan" (Aturan Wajib #4); sengaja
+  tidak ditambahkan sebelum set uji v1 dibekukan.
 
 Tahap saat ini: lapisan generasi jawaban (`src/generator.py`) sudah ditulis,
 lolos uji offline, dan dijalankan live pada 10 kueri pengembangan
@@ -671,18 +675,57 @@ besar.
 - **Skenario realistis:** Flash Lite + juri Gemma = 1 hari. RAGAS belum
   dipasang; menunggu set uji selesai.
 
-### Set uji Versi 1 (dalam perancangan; menunggu persetujuan pemilik proyek)
+### Set uji Versi 1 (pedoman dikunci; butir belum dibuat)
 
-Set uji 50 kueri untuk bukti mutu, terpisah dari 10 kueri pengembangan.
-Prinsip yang sudah ditetapkan pemilik proyek: 10 kueri pengembangan tidak boleh
-masuk; setelah set uji dibekukan, prompt sistem dan logika generator tidak
-boleh diubah berdasarkan hasilnya (bila perlu diubah, dibuat set uji baru);
-komposisi mencakup positif, negatif sulit (tetangga topik, seperti "vaksin flu
-bikin mandul"), dan negatif mudah; sebaran positif mengikuti label dan
-kategori 150 artikel; ragam gaya bahasa (formal, percakapan, pesan berantai
-WhatsApp, salah ketik); setiap butir ditinjau manual oleh pemilik proyek;
-disimpan sebagai berkas bernomor versi dan di-commit. Rancangan rinci
-(komposisi, prosedur, kuota) menunggu persetujuan; datanya belum dibuat.
+Set uji 50 kueri untuk bukti mutu, terpisah dari 10 kueri pengembangan. Prinsip yang ditetapkan pemilik proyek:
+10 kueri pengembangan tidak boleh masuk; setelah set uji dibekukan, prompt sistem dan logika generator tidak boleh
+diubah berdasarkan hasilnya (bila perlu diubah, dibuat set uji baru); komposisi 20 positif + 20 negatif sulit + 10
+negatif mudah (tetangga topik seperti "vaksin flu bikin mandul" lebih penting daripada negatif mudah); sebaran
+positif mengikuti label dan kategori 150 artikel (dengan PARODI di-oversample); ragam gaya bahasa; setiap butir
+ditinjau manual; enam artikel dikecualikan sebagai target (36730, 36737, 36729, 36738, 36731, 36214); sumber butir:
+buatan model (Gemma 4 dari Narasi), buatan manusia, dan teks nyata (negatif dari arsip TurnBackHoax di luar 150
+artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dibersihkan).
+
+- **Pedoman anotasi** `testset/ANNOTATION_GUIDE.md` **v1.0, DIKUNCI 2026-09-21** (commit `2500013`, tag
+  `annotation-guide-v1.0`), sebelum satu butir pun dibuat. Definisi "klaim sama": klaim inti artikel (KIA = judul;
+  123 dari 150 artikel mengutipnya di Kesimpulan) dengan unsur inti (subjek, tindakan, objek pembeda), uji dua arah
+  dan uji Kesimpulan, serta aturan kasus khusus (lebih umum, lebih spesifik, sebagian, sinonim, pertanyaan, ambigu).
+  `tests/test_testset_locks.py` gagal bila pedoman atau prompt/skema berubah diam-diam. **Aturan: pedoman tidak
+  boleh direvisi selama pembuatan set uji v1**; kasus tak tercakup dicatat di `testset/kasus_terbuka.md` dan
+  diputuskan dengan aturan terdekat.
+- **Pra-registrasi** `testset/v1.meta.json` (ditulis sebelum data): metrik utama = **keputusan modus dari 3 run**;
+  kesepakatan antar-run dilaporkan per nilai `kekhususan`; **seed tidak dipakai sebagai jaminan determinisme**
+  (efeknya belum diverifikasi); interval Wilson 95% di seluruh laporan; ambang H1 (negatif sulit "ditemukan"
+  pada keputusan modus: <= 1 dari 20 terdukung, 2 tidak konklusif, >= 3 gugur) dan H3 (>= 5 kesalahan dari 50 atau
+  pelanggaran format >= 2 gugur); laporan wajib: akurasi per tipe/kekhususan/sumber (buatan model vs teks nyata),
+  Recall@3 retrieval terpisah, analisis per pasangan minimal termasuk jumlah pasangan yang DUA-DUANYA benar (ukuran
+  paling langsung untuk H1).
+- **Keterbatasan:** pelabelan dilakukan **satu anotator manusia**, sehingga kesepakatan antar-anotator tidak
+  terukur (hanya konsistensi dalam-anotator: 10 butir acak dianotasi ulang setelah satu minggu). Pedoman ditulis
+  setelah melihat keluaran model pada set pengembangan (risiko rasionalisasi; dibatasi oleh jangkar KIA yang sudah
+  ada dan pengunciannya sebelum butir dibuat).
+- **Prompt sistem diselaraskan dengan pedoman sebelum pembekuan** (commit `37fcac9`; keputusan pemilik proyek).
+  Definisi resmi "klaim sama" kini tertulis di dalam sistem: bahan pembanding utama adalah KIA (Judul) dan unsur
+  inti, Narasi hanya rujukan pendukung; uji dua arah, uji Kesimpulan, dan aturan kasus khusus; contoh baru
+  (tingkat kekhususan) hanya dari enam artikel yang dikecualikan dan tanpa memakai teks 10 kueri pengembangan
+  (diuji `tests/test_prompt.py`). Tidak ada verdict ketiga. Skema tetap empat bidang (deskripsi `klaim_sama`
+  disesuaikan).
+- **Pelabelan ulang kueri 3 pada set pengembangan** (disetujui pemilik proyek): "malaysia marah ke indonesia soal
+  asap" diubah dari positif (target 36729) menjadi **negatif sulit dengan `kekhususan=umum`**. **Perubahan ini
+  dilakukan SETELAH melihat keluaran model** (yang menolaknya 5 dari 5 kali dengan alasan "terlalu umum"), dengan
+  dasar pedoman yang berjangkar pada KIA (tindakan inti "melaporkan ke PBB" tidak ada pada klaim pengguna; uji dua
+  arah dan uji Kesimpulan gagal). **Hanya berlaku untuk set pengembangan**, bukan bukti mutu. Kode
+  `evaluation/retrieval_eval.py` masih mendaftarkannya sebagai positif (untuk uji keterjangkauan retrieval), jadi
+  ringkasan `generation_eval` menghitungnya sebagai salah; abaikan hitungan itu.
+- **Pemeriksaan regresi setelah perubahan prompt** (10 kueri set pengembangan, satu run, `gemini-3.5-flash-lite`;
+  **hanya pemeriksaan regresi, tidak boleh dikutip sebagai bukti mutu**): keputusan berbeda pada **1 dari 10**
+  dibanding modus 5 run sebelum perubahan. Kueri 2 ("ada link pendaftaran bantuan buat orang tua, itu beneran?")
+  yang 5/5 ke 36737 kini "tidak ditemukan", dengan alasan "'orang tua' lebih umum, tidak menyebut 'lansia'".
+  Itu persis kasus perbatasan yang ditandai pedoman (★ untuk 36737). Sembilan kueri lain identik (kueri 3 tetap
+  ditolak; 0 pelanggaran format, 0 URL di luar metadata, 0 galat 429). Token masuk naik sekitar 700 per panggilan
+  (prompt ~4,6 ribu karakter, sebelumnya ~2 ribu). Tidak ada perubahan setelan atau prompt berdasarkan hasil ini.
+  Ringkasan `generation_eval` menyebut "H3 GUGUR (keliru 2/10)": itu hitungan mekanis dengan label lama kueri 3,
+  bukan status H3.
 
 ### Catatan untuk tahap evaluasi (RAGAS)
 
