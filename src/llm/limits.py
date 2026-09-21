@@ -49,7 +49,7 @@ def limits_for(model: str) -> ModelLimits | None:
     env = {k: os.environ.get(f"LLM_{k.upper()}") for k in ("rpm", "tpm", "rpd")}
     if base is None and not all(env.values()):
         return None
-    vals = {k: int(env[k]) if env[k] else getattr(base, k) for k in ("rpm", "tpm", "rpd")}
+    vals = {k: int(raw) if (raw := env[k]) else getattr(base, k) for k in ("rpm", "tpm", "rpd")}
     return ModelLimits(**vals)
 
 

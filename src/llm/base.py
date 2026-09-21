@@ -7,6 +7,7 @@ Pipeline hanya bergantung pada `LLMProvider.generate`; penyedia dipilih lewat ko
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger("llm")
 
@@ -42,7 +43,7 @@ class LLMProvider(ABC):
         self,
         system_prompt: str,
         user_prompt: str,
-        json_schema: dict | None = None,
+        json_schema: dict[str, Any] | None = None,
     ) -> str:
         """
         Kirim prompt dan kembalikan teks keluaran model.
