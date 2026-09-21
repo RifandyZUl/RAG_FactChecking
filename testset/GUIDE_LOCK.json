@@ -1,0 +1,7 @@
+{
+  "berkas": "testset/ANNOTATION_GUIDE.md",
+  "versi": "1.0",
+  "dikunci": "2026-09-21",
+  "sha256_ternormalisasi": "e3b4aab47092bf3c3a83d3a6e9182061a82e3a8d81ca136606c9a45c497d1efc",
+  "catatan": "Hash dihitung atas teks dengan akhir baris dinormalkan ke LF. Mengubah pedoman berarti versi baru (set uji baru); jangan hanya memperbarui hash ini."
+}
