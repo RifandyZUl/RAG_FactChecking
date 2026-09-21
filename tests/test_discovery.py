@@ -21,10 +21,10 @@ def test_discover_not_fooled_by_error_page(monkeypatch) -> None:
     assert sess.calls == 4
 
     # Galat sejak halaman 1 dan tak kunjung sah -> hasil kosong dengan pesan
-    # eksplisit (fetch_html sudah mencoba 1 + MAX_RETRIES kali)
+    # eksplisit (fetch_html sudah mencoba 1 + 3 retry = 4 kali)
     sess = FakeSession([FakeResponse(error_html)])
     assert discover_article_urls(sess, max_articles=20) == []
-    assert sess.calls == scraping_client.MAX_RETRIES + 1
+    assert sess.calls == 4
 
     # Halaman daftar asli menghasilkan 10 URL
     sess = FakeSession([FakeResponse(read_fixture("list_page.html"))])

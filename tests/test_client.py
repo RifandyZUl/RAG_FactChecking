@@ -28,11 +28,11 @@ def test_fetch_retries_error_page_and_skips_cache(monkeypatch) -> None:
         assert html == good_html and net and sess.calls == 3
         assert cache.read_text(encoding="utf-8") == good_html
 
-        # galat terus -> menyerah setelah 1 + MAX_RETRIES percobaan, cache TIDAK dibuat
+        # galat terus -> menyerah setelah 1 + 3 retry = 4 percobaan, cache TIDAK dibuat
         cache2 = Path(tmp) / "2.html"
         sess = FakeSession([FakeResponse(error_html)])
         html, _ = fetch_html("u", sess, cache2, validate=is_valid_article_html)
-        assert html is None and sess.calls == scraping_client.MAX_RETRIES + 1
+        assert html is None and sess.calls == 4
         assert not cache2.exists(), "halaman galat ter-cache"
 
         # cache lama yang rusak diabaikan dan diambil ulang
@@ -59,7 +59,7 @@ def test_fetch_retry_policy(monkeypatch) -> None:
 
     sess = FakeSession([requests.ConnectionError("c")])
     html, _ = fetch_html("u", sess)
-    assert html is None and sess.calls == scraping_client.MAX_RETRIES + 1
+    assert html is None and sess.calls == 4, "1 percobaan awal + 3 retry"
 
     sess = FakeSession([FakeResponse("nope", status=404)])
     html, _ = fetch_html("u", sess)

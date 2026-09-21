@@ -4,7 +4,7 @@
 
 def test_rate_limiter_sliding_window() -> None:
     from llm.limits import ModelLimits
-    from llm.throttle import MARGIN_S, RateLimiter
+    from llm.throttle import RateLimiter
 
     now = [0.0]
     sleeps: list[float] = []
@@ -22,7 +22,7 @@ def test_rate_limiter_sliding_window() -> None:
     for t in stamps:
         in_window = [x for x in stamps if t - 60 < x <= t]
         assert len(in_window) <= 5, f"jendela 60 dtk berisi {len(in_window)} permintaan"
-    assert sleeps and abs(sleeps[0] - (60 + MARGIN_S)) < 1e-6, "permintaan ke-6 menunggu ~60 dtk"
+    assert sleeps and abs(sleeps[0] - 60.5) < 1e-6, "permintaan ke-6 menunggu 60 dtk + margin 0,5 dtk"
 
     # TPM: dua prompt 600 token tak muat dalam 1000 token/menit -> yang kedua menunggu
     now[0], sleeps[:] = 0.0, []
