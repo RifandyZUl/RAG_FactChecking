@@ -61,11 +61,13 @@
   "sumber_butir": {
     "nilai": [
       "buatan_model",
-      "buatan_manusia",
+      "manusia",
       "teks_nyata"
     ],
-    "teks_nyata": "negatif dari arsip TurnBackHoax di luar 150 artikel (setiap kandidat dicek terhadap 150 artikel; yang ternyata sama dipindah menjadi positif) dan positif dari situs cek fakta lain; wajib mencantumkan URL asal dan data pribadi dibersihkan",
-    "buatan_model": "Gemma 4 (gemma-4-31b-it) hanya membaca Narasi; setiap butir ditinjau manusia"
+    "teks_nyata": "negatif dari arsip TurnBackHoax di luar 150 artikel (setiap kandidat dicek terhadap 150 artikel; yang ternyata sama dipindah menjadi positif); yang disimpan hanya teks klaim yang dikutip dan URL asal; data pribadi dibersihkan",
+    "manusia": "klaim positif tulisan pemilik proyek setelah membaca artikel situs cek fakta lain (Kompas atau Tempo) sebagai manusia; tidak ada teks situs yang disalin; yang disimpan hanya klaim tulisan pemilik dan URL sebagai asal-usul. PENULIS KLAIM MENGETAHUI TOPIK SASARAN (diberi topik singkat <= 5 kata dari artikel basis data), sehingga independensinya tidak penuh.",
+    "buatan_model": "Gemma 4 (gemma-4-31b-it), hanya membaca Narasi (tanpa Kesimpulan); setiap butir ditinjau manusia",
+    "lintas_situs_otomatis": "DILEPAS untuk Kompas, Tempo, dan Komdigi: robots.txt Kompas dan Tempo melarang agen Claude secara eksplisit dan Komdigi membalas 403 pada klien otomatis; judul/URL hasil pencarian dari situs-situs itu TIDAK dipakai (keputusan pemilik proyek: situs menolak agen AI, set uji akan diterbitkan publik, independensi judul rendah). Tidak ada judul atau URL dari situs-situs itu yang tersimpan di repositori atau data/candidates/. Situs lain hanya bila robots.txt tidak membatasi agen Claude, dengan akses sopan (jeda, timeout, cache)."
   },
   "evaluasi": {
     "model_generator": "gemini-3.5-flash-lite",
@@ -83,7 +85,9 @@
       "analisis per pasangan minimal, termasuk jumlah pasangan yang DUA-DUANYA benar (ukuran paling langsung untuk H1)",
       "kesepakatan antar-run",
       "satu run per kondisi tidak dipakai sebagai bukti mutu",
-      "jenis kesalahan dipisah (kecocokan palsu, penolakan palsu, artikel salah), masing-masing dengan interval Wilson 95%, terpisah untuk butir batas dan non-batas; akurasi total saja tidak cukup"
+      "jenis kesalahan dipisah (kecocokan palsu, penolakan palsu, artikel salah), masing-masing dengan interval Wilson 95%, terpisah untuk butir batas dan non-batas; akurasi total saja tidak cukup",
+      "tabel silang tipe x sumber x subtipe (jumlah butir, jenis kesalahan, dan Wilson 95% per sel yang cukup besar)",
+      "setiap perbandingan antar-jenis kesalahan disertai catatan confound sumber"
     ],
     "jenis_kesalahan": {
       "dipisah": {
@@ -94,6 +98,10 @@
       "interval": "masing-masing dengan interval Wilson 95%",
       "himpunan": "dilaporkan terpisah untuk butir batas dan non-batas, serta semua",
       "alasan": "Prompt sistem yang lebih ketat cenderung menggeser kesalahan dari kecocokan palsu ke penolakan palsu; akurasi total saja menyembunyikan pergeseran itu. Implementasi: src/evaluation/metrics.py."
+    },
+    "confound_sumber": {
+      "masalah": "Jenis butir tumpang tindih dengan sumber: negatif dominan teks nyata, positif dominan sintetis (dan subtipe negatif sulit 2 dan 3 hanya buatan model). Perbandingan kecocokan palsu vs penolakan palsu tidak dapat dipisahkan dari efek sumber.",
+      "aturan_pelaporan": "Setiap perbandingan antar-jenis kesalahan WAJIB disertai catatan confound sumber, dan laporan wajib memuat tabel silang tipe x sumber x subtipe (jumlah butir dan kesalahan per sel)."
     }
   },
   "ambang": {
@@ -115,7 +123,10 @@
     "Pedoman ditulis setelah melihat keluaran model pada set pengembangan (risiko rasionalisasi); dikunci sebelum butir dibuat.",
     "50 butir hanya mendeteksi kegagalan yang jelas: batas bawah Wilson 95% bila semua benar adalah 0,84 (n=20) dan 0,89 (n=30).",
     "Cakupan waktu artikel sempit (Agustus-September 2026) dan hanya 150 artikel terbaru.",
-    "Kueri set pengembangan (10) tidak masuk set uji; label kueri 3 diubah dari positif ke negatif sulit (kekhususan=umum) setelah melihat keluaran model, hanya untuk set pengembangan."
+    "Kueri set pengembangan (10) tidak masuk set uji; label kueri 3 diubah dari positif ke negatif sulit (kekhususan=umum) setelah melihat keluaran model, hanya untuk set pengembangan.",
+    "Penulis klaim positif manusia mengetahui topik sasaran (diberi topik singkat dari artikel basis data): independensinya tidak penuh.",
+    "Jenis butir tumpang tindih dengan sumber (confound): negatif dominan teks nyata, positif dominan sintetis; subtipe negatif sulit 2 dan 3 hanya buatan model.",
+    "Positif lintas situs otomatis dari Kompas, Tempo, dan Komdigi dilepas karena situs-situs itu menolak agen AI atau memblokir klien otomatis."
   ],
   "butir": null,
   "sha256_butir": null,
@@ -144,5 +155,39 @@
       "catatan"
     ],
     "batas": "kekhususan=batas dilaporkan terpisah dan tidak masuk hitungan utama"
+  },
+  "komposisi_sumber_rancangan": {
+    "prinsip": "Pertahankan ketiga subtipe negatif sulit dengan proporsi rancangan (7/7/6). Usahakan setiap TIPE butir memuat kedua sumber (buatan_model dan teks_nyata/manusia); bila tidak mungkin, dicatat.",
+    "positif": {
+      "total": 20,
+      "manusia": "5-8 (dari topik yang diberikan)",
+      "buatan_model": "sisanya"
+    },
+    "negatif_sulit": {
+      "total": 20,
+      "pola_sama_entitas_beda": {
+        "total": 7,
+        "teks_nyata": 5,
+        "buatan_model": 2
+      },
+      "entitas_sama_klaim_beda": {
+        "total": 7,
+        "buatan_model": 7
+      },
+      "angka_waktu_beda": {
+        "total": 6,
+        "buatan_model": 6
+      }
+    },
+    "negatif_mudah": {
+      "total": 10,
+      "teks_nyata": 5,
+      "buatan_model": 5
+    },
+    "catatan": "Subtipe 2 dan 3 hanya buatan model karena arsip hampir hanya memuat subtipe 1; itu menjadikan subtipe sepenuhnya tumpang tindih dengan sumber pada dua subtipe tersebut."
+  },
+  "penyaring_otomatis": {
+    "kelas_usulan": "disimpan di berkas terpisah (data/candidates/archive_screen_class.jsonl) dan TIDAK ditampilkan di berkas tinjauan, karena menampilkannya (meski sebagai petunjuk) menimbulkan bias anchoring",
+    "evaluasi": "setelah tinjauan pemilik proyek selesai, kelas usulan dibandingkan dengan keputusan tinjauan dan tingkat kesepakatan dilaporkan sebagai ukuran keandalan penyaring otomatis"
   }
 }

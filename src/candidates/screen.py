@@ -22,6 +22,7 @@ from paths import DATA_DIR
 
 IN_PATH = DATA_DIR / "candidates" / "archive.jsonl"
 OUT_PATH = DATA_DIR / "candidates" / "archive_screened.jsonl"
+CLASS_PATH = DATA_DIR / "candidates" / "archive_screen_class.jsonl"
 
 TITLE_SAME = 0.60  # kemiripan judul ke atas dianggap kemungkinan sama
 SCORE_SAME = 0.80  # skor retrieval Narasi->chunk ke atas dianggap kemungkinan sama
@@ -72,10 +73,15 @@ def screen_one(cand: dict[str, Any], db_titles: dict[str, str], hits: list[Any])
     out.update({
         "klaim_kandidat": claim_candidate(cand["narasi"]),
         "pii": pii_flags(cand["narasi"]),
-        "judul_mirip_id": best_id, "judul_mirip_skor": round(best_sim, 3),
-        "retrieval_top3": [{"id": h.article_id, "skor": round(h.score, 4), "judul": h.title[:70]} for h in hits],
-        "kelas_usulan": propose_class(best_sim, top_score),
+        "tetangga_article_id": hits[0].article_id if hits else None,
     })
+    # Kelas usulan dan skor disimpan di berkas TERPISAH dan tidak ditampilkan pada berkas tinjauan (bias anchoring);
+    # setelah tinjauan manusia selesai, keduanya dibandingkan dan tingkat kesepakatan dilaporkan.
+    out["_penyaring"] = {
+        "article_id": cand["article_id"], "kelas_usulan": propose_class(best_sim, top_score),
+        "judul_mirip_id": best_id, "judul_mirip_skor": round(best_sim, 3),
+        "retrieval_top3": [{"id": h.article_id, "skor": round(h.score, 4)} for h in hits],
+    }
     return out
 
 
@@ -83,6 +89,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--in", dest="inp", type=Path, default=IN_PATH)
     ap.add_argument("--out", type=Path, default=OUT_PATH)
+    ap.add_argument("--out-class", type=Path, default=CLASS_PATH, help="berkas terpisah untuk kelas usulan otomatis")
     args = ap.parse_args()
 
     from chunker import load_articles
@@ -97,11 +104,13 @@ def main() -> int:
         hits = retrieve(c["narasi"], model, coll, top_k=3)
         rows.append(screen_one(c, db_titles, hits))
     args.out.parent.mkdir(parents=True, exist_ok=True)
+    classes = [r.pop("_penyaring") for r in rows]
     args.out.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+    args.out_class.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in classes) + "\n", encoding="utf-8")
     from collections import Counter
 
-    print(f"{len(rows)} kandidat disaring -> {args.out}")
-    print("kelas usulan:", dict(Counter(r["kelas_usulan"] for r in rows)))
+    print(f"{len(rows)} kandidat disaring -> {args.out} (tanpa kelas usulan); kelas terpisah -> {args.out_class}")
+    print("kelas usulan:", dict(Counter(c["kelas_usulan"] for c in classes)))
     print("penanda data pribadi:", dict(Counter(f for r in rows for f in r["pii"])))
     return 0
 

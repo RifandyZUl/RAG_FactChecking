@@ -50,6 +50,19 @@ def test_meta_preregisters_metric_thresholds_and_limitations() -> None:
     assert set(err["dipisah"]) == {"kecocokan_palsu", "penolakan_palsu", "artikel_salah"}
     assert "Wilson" in err["interval"] and "batas dan non-batas" in err["himpunan"]
     assert any("kecocokan palsu" in x and "penolakan palsu" in x for x in ev["laporan_wajib"])
+    # keputusan sumber dan confound (ditulis sebelum data)
+    src = meta["sumber_butir"]
+    assert set(src["nilai"]) == {"buatan_model", "manusia", "teks_nyata"}
+    assert "MENGETAHUI TOPIK SASARAN" in src["manusia"] and "independensinya tidak penuh" in src["manusia"]
+    assert "DILEPAS" in src["lintas_situs_otomatis"] and "TIDAK dipakai" in src["lintas_situs_otomatis"]
+    cs = meta["komposisi_sumber_rancangan"]
+    neg = cs["negatif_sulit"]
+    assert neg["pola_sama_entitas_beda"]["total"] + neg["entitas_sama_klaim_beda"]["total"] + neg["angka_waktu_beda"]["total"] == 20
+    assert "tumpang tindih" in ev["confound_sumber"]["masalah"] and "WAJIB" in ev["confound_sumber"]["aturan_pelaporan"]
+    assert any("tabel silang" in x for x in ev["laporan_wajib"])
+    assert "TIDAK ditampilkan" in meta["penyaring_otomatis"]["kelas_usulan"]
+    assert "kesepakatan" in meta["penyaring_otomatis"]["evaluasi"]
+    assert any("mengetahui topik sasaran" in k for k in meta["keterbatasan"])
     c = meta["komposisi_rancangan"]
     assert c["positif"] + c["negatif_sulit"] + c["negatif_mudah"] == c["total"] == 50
     assert sum(c["alokasi_positif_label"].values()) == 20 == sum(c["alokasi_positif_sel"].values())
