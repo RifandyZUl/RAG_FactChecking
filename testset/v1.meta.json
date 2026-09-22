@@ -67,7 +67,8 @@
     "teks_nyata": "negatif dari arsip TurnBackHoax di luar 150 artikel (setiap kandidat dicek terhadap 150 artikel; yang ternyata sama dipindah menjadi positif); yang disimpan hanya teks klaim yang dikutip dan URL asal; data pribadi dibersihkan",
     "manusia": "klaim positif tulisan pemilik proyek setelah membaca artikel situs cek fakta lain (Kompas atau Tempo) sebagai manusia; tidak ada teks situs yang disalin; yang disimpan hanya klaim tulisan pemilik dan URL sebagai asal-usul. PENULIS KLAIM MENGETAHUI TOPIK SASARAN (diberi topik singkat <= 5 kata dari artikel basis data), sehingga independensinya tidak penuh.",
     "buatan_model": "Gemma 4 (gemma-4-31b-it), hanya membaca Narasi (tanpa Kesimpulan); setiap butir ditinjau manusia",
-    "lintas_situs_otomatis": "DILEPAS untuk Kompas, Tempo, dan Komdigi: robots.txt Kompas dan Tempo melarang agen Claude secara eksplisit dan Komdigi membalas 403 pada klien otomatis; judul/URL hasil pencarian dari situs-situs itu TIDAK dipakai (keputusan pemilik proyek: situs menolak agen AI, set uji akan diterbitkan publik, independensi judul rendah). Tidak ada judul atau URL dari situs-situs itu yang tersimpan di repositori atau data/candidates/. Situs lain hanya bila robots.txt tidak membatasi agen Claude, dengan akses sopan (jeda, timeout, cache)."
+    "lintas_situs_otomatis": "DILEPAS untuk Kompas, Tempo, dan Komdigi: robots.txt Kompas dan Tempo melarang agen Claude secara eksplisit dan Komdigi membalas 403 pada klien otomatis; judul/URL hasil pencarian dari situs-situs itu TIDAK dipakai (keputusan pemilik proyek: situs menolak agen AI, set uji akan diterbitkan publik, independensi judul rendah). DILEPAS juga untuk cekfakta.com (keputusan pemilik proyek, 2026-09-22): halaman /about situs itu menyatakan proyek ini 'diinisiasi MAFINDO (Masyarakat Anti Fitnah Indonesia)' -- organisasi yang sama yang menerbitkan turnbackhoax.id, sumber basis data kita -- sehingga kandidat dari sana berisiko tidak independen dari basis data, bukan hanya berisiko rendah independensinya. Listingnya juga dirender lewat JavaScript (tidak statis). Tidak ada judul atau URL dari keempat situs itu yang tersimpan di repositori atau data/candidates/. Situs lain hanya bila robots.txt tidak membatasi agen Claude, dengan akses sopan (jeda, timeout, cache).",
+    "liputan6": "DIPAKAI (keputusan pemilik proyek, 2026-09-22): Liputan6 Cek Fakta, IFCN-certified sejak 2018, independen dari MAFINDO meski menyebut diri 'bagian dari inisiatif cekfakta.com' (halaman /cek-fakta/read tentang kanal: 'Kerja sama dengan pihak manapun, tak akan mempengaruhi independensi kami'). robots.txt liputan6.com mengizinkan /cek-fakta (tidak ada aturan khusus agen AI). Dikumpulkan src/candidates/crosssite.py: 20 kandidat kasus tunggal (judul berawalan 'Cek Fakta:'; 55 artikel ringkasan 'Deretan/Kumpulan/Ragam Hoaks...' dikecualikan karena tidak memuat satu pesan hoaks yang jelas). Yang disimpan hanya kutipan pesan yang beredar dan URL (data/candidates/liputan6.jsonl); kemiripan judul terhadap 150 judul basis data di berkas kelas terpisah (data/candidates/liputan6_screen_class.jsonl, ambang independensi rendah 0,85, sesuai instruksi pemilik proyek -- BEDA dari ambang default candidates/screen.py yang 0,60 untuk arsip TurnBackHoax). Hasil: 0 dari 20 kandidat independensi rendah (kemiripan judul maksimum 0,65). KETERBATASAN: paginasi /cek-fakta memakai JavaScript sisi klien (?page=2 terbukti mengembalikan HTML identik dengan ?page=1); pengumpulan hanya dari tiga endpoint statis (/cek-fakta, /cek-fakta/indeks, /cek-fakta/indeks/terpopuler), sehingga hanya puluhan kandidat, bukan ratusan -- cakupan lebih luas perlu endpoint AJAX yang belum diselidiki."
   },
   "evaluasi": {
     "model_generator": "gemini-3.5-flash-lite",
@@ -126,7 +127,8 @@
     "Kueri set pengembangan (10) tidak masuk set uji; label kueri 3 diubah dari positif ke negatif sulit (kekhususan=umum) setelah melihat keluaran model, hanya untuk set pengembangan.",
     "Penulis klaim positif manusia mengetahui topik sasaran (diberi topik singkat dari artikel basis data): independensinya tidak penuh.",
     "Jenis butir tumpang tindih dengan sumber (confound): negatif dominan teks nyata, positif dominan sintetis; subtipe negatif sulit 2 dan 3 hanya buatan model.",
-    "Positif lintas situs otomatis dari Kompas, Tempo, dan Komdigi dilepas karena situs-situs itu menolak agen AI atau memblokir klien otomatis."
+    "Positif lintas situs otomatis dari Kompas, Tempo, dan Komdigi dilepas karena situs-situs itu menolak agen AI atau memblokir klien otomatis; cekfakta.com juga dilepas karena diinisiasi MAFINDO, penerbit turnbackhoax.id.",
+    "Koreksi independensi (2026-09-22): Gemma (pembuat butir buatan_model, kandidat juri H4) bukan 'keluarga berbeda' dari Gemini (generator gemini-3.5-flash-lite), melainkan model berbeda dari pengembang yang sama (Google, riset yang berkaitan). Pemisahan pembuat butir/generator/juri hanya mengurangi, bukan menghilangkan, risiko bias bersama."
   ],
   "butir": null,
   "sha256_butir": null,
@@ -189,5 +191,14 @@
   "penyaring_otomatis": {
     "kelas_usulan": "disimpan di berkas terpisah (data/candidates/archive_screen_class.jsonl) dan TIDAK ditampilkan di berkas tinjauan, karena menampilkannya (meski sebagai petunjuk) menimbulkan bias anchoring",
     "evaluasi": "setelah tinjauan pemilik proyek selesai, kelas usulan dibandingkan dengan keputusan tinjauan dan tingkat kesepakatan dilaporkan sebagai ukuran keandalan penyaring otomatis"
+  },
+  "sampling_arsip_tinjauan": {
+    "keputusan_pemilik_proyek": "2026-09-22: dari populasi kandidat arsip TurnBackHoax subtipe pola-sama-entitas-beda (kelas usulan tetangga+kemungkinan_sama, 95 kandidat), diambil sampel acak berbenih tetap, BUKAN dipilih berdasarkan skor retrieval atau penilaian apa pun; kandidat kemungkinan_sama yang masuk sampel tetap ditinjau dengan status sama seperti kandidat lain (tidak diistimewakan atau dikeluarkan).",
+    "seed": 20260922,
+    "populasi": 95,
+    "n_sampel": 10,
+    "alasan_ukuran": "sekitar dua kali jumlah slot yang dibutuhkan (5 slot teks_nyata untuk subtipe pola-sama-entitas-beda, lihat komposisi_sumber_rancangan)",
+    "metode": "random.Random(seed).sample(populasi, n_sampel) atas daftar article_id gabungan tetangga+kemungkinan_sama, urutan populasi dari archive_screen_class.jsonl",
+    "hasil": "testset/archive_sample_v1.json (hanya article_id, tidak memuat judul/isi)"
   }
 }

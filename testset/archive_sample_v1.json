@@ -1,0 +1,18 @@
+{
+  "seed": 20260922,
+  "populasi": 95,
+  "n_sampel": 10,
+  "metode": "random.Random(seed).sample, tanpa mempertimbangkan skor retrieval/judul atau penilaian apa pun",
+  "sampel_article_id": [
+    "23531",
+    "23544",
+    "26646",
+    "28638",
+    "30085",
+    "30089",
+    "32490",
+    "35310",
+    "35833",
+    "35850"
+  ]
+}
