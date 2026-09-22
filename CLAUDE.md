@@ -779,6 +779,15 @@ Model juri sebaiknya **berbeda** dari model generator agar penilaian tidak
 bias terhadap keluarannya sendiri. Abstraksi penyedia membuat ini mudah:
 cukup instansiasi penyedia kedua dengan `LLM_MODEL` lain.
 
+**Koreksi independensi (2026-09-22):** Gemma dan Gemini bukan "keluarga
+berbeda" dari generator, melainkan **model berbeda dari pengembang yang
+sama** — keduanya dikembangkan Google dari riset yang berkaitan. Pemisahan
+pembuat butir (Gemma), generator (Gemini Flash Lite), dan juri (kandidat:
+Gemma) hanya **mengurangi**, bukan menghilangkan, risiko bias bersama (mis.
+kecenderungan gaya jawaban atau kesalahan sistematis yang sama-sama
+diwariskan dari data/RLHF Google). Berlaku juga untuk H4 di atas dan
+untuk pembuat butir buatan_model di set uji v1.
+
 ### Duplikasi teks seksi (TERSELESAIKAN 2026-09-21)
 
 Ditemukan saat menyusun generator: teks **Narasi dan Penjelasan di `articles.json`
