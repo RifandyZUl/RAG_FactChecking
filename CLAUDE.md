@@ -10,14 +10,29 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-09-22)*
+*(2026-09-23)*
 
-- **Tahap berjalan:** menyusun KANDIDAT set uji v1 sumber `buatan_model` (Gemma).
-  `src/candidates/gemma_generate.py` sudah ditulis dan diuji offline (81/81 lolos di seluruh
-  `tests/`). **Semua syarat terpenuhi 2026-09-22** (label emas selesai, keputusan 36700
-  opsi (b) diambil, tabel silang disetujui pemilik proyek) -- generasi Gemma SUNGGUHAN
-  diotorisasi dan segera dijalankan untuk 20 slot (`jatah_gemma_final_setelah_tinjauan_2026-09-22`
-  pada `v1.meta.json`, status `"SEMUA SYARAT TERPENUHI"`).
+- **Generasi Gemma SUNGGUHAN SELESAI** (2026-09-22 malam - 2026-09-23): 20 permintaan
+  dijalankan sesuai jatah final (positif 7, negatif_angka_waktu 6, negatif_entitas_sama 2,
+  negatif_mudah 5) -> 60 kandidat, **58 lolos pemeriksaan otomatis**, ditulis ke
+  `data/candidates/gemma_candidates.jsonl`. Berkas tinjauan untuk pemilik proyek sudah dibuat:
+  `data/candidates/tinjauan_tahap3_gemma.csv` (58 baris, TANPA kolom kelas usulan otomatis,
+  sesuai permintaan) -- **menunggu tinjauan manusia sebelum bisa masuk set uji** (Aturan Wajib #5).
+- **Bug ditemukan dan diperbaiki saat generasi berjalan**: pemeriksaan kemiripan judul
+  (`run_checks`) semula membandingkan kandidat `negatif_angka_waktu`/`negatif_entitas_sama`
+  terhadap SEMUA 150 judul TERMASUK judul artikel target kandidat itu sendiri -- padahal
+  kandidat subtipe ini SEHARUSNYA mirip judul targetnya (itu maksud subtipenya: KIA sama, satu
+  unsur diubah), sehingga 10 dari 18 kandidat `negatif_angka_waktu` batch pertama salah
+  ditandai gagal. Diperbaiki (`target_article` kini dikecualikan dari perbandingan) dan
+  DINILAI ULANG tanpa panggilan API baru (teks kandidat tidak berubah); ke-10 baris berbalik
+  jadi lolos, ditandai `catatan_perbaikan_bug_2026-09-22` di jsonl. Batch
+  `negatif_entitas_sama` (baru ditambahkan, lihat di bawah) dan sisanya sudah pakai kode yang
+  benar sejak awal.
+- **Slot `negatif_entitas_sama` ditambahkan ke `gemma_generate.py`**: skrip semula HANYA
+  punya 3 slot (positif/negatif_angka_waktu/negatif_mudah), berdasarkan asumsi lama bahwa
+  subtipe entitas_sama_klaim_beda tidak butuh Gemma -- asumsi itu sudah dikoreksi duluan
+  (lihat `koreksi_asumsi_subtipe_entitas_sama_klaim_beda` di `v1.meta.json`) tapi skrip belum
+  diperbarui. Ditambahkan sebelum generasi dijalankan, diuji offline dulu.
 - **Label emas final** (2026-09-22, Aturan Wajib #5 + `kebijakan_label_emas_2026-09-22`):
   seluruh label tahap 1/2/tambahan adalah tinjauan pemilik proyek sendiri. Berkas draf ChatGPT
   (`tinjauan_hoaks_tahap1_revisi.xlsx`, creator `openpyxl`) sudah DIHAPUS pemilik proyek;
@@ -27,21 +42,20 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
   diasumsikan ditulis sendiri.
 - **36700 diputuskan opsi (b):** menggantikan 36596 di sel Politik-SALAH (manusia-topik7 tetap
   butir batas terpisah, tetangga=36596). `testset/targets_v1.json` sudah diperbarui (juga
-  36521->36019 dan 36564->36282, penukaran Liputan6 yang sama-sama terpicu). Jatah positif
-  Gemma: **7 pasti** (36387, 36120, 36111, 36191, 36166, 36388, 36062).
-- **Belum di-commit (per 2026-09-22, akan di-commit terpisah sebelum generasi dijalankan):**
-  - `testset/v1.meta.json`, `testset/targets_v1.json` -- label emas final, keputusan 36700,
-    jatah Gemma terkunci (20 slot pasti).
-  - `CLAUDE.md` -- Aturan Wajib #5 (revisi kata-kata final) dan bagian Status Terkini ini.
-  - `src/candidates/gemma_generate.py`, `tests/test_gemma_generate.py` -- siap, teruji offline.
-  - `src/llm/base.py`, `src/llm/gemini.py`, `tests/test_gemini.py`, `tests/_fakes.py` --
-    metadata versi model (`LLMProvider.model_version_info`), berlaku untuk provider mana pun
-    (generator dan juri nanti, bukan hanya `gemma_generate.py`).
-  - (`data/candidates/keputusan_tahap1.jsonl`, `keputusan_tahap2.jsonl`, `human_claims.jsonl`
-    juga diperbarui, tapi `data/candidates/` tidak di-commit -- lihat `.gitignore`.)
-- **Sudah:** 32 commit lama (hingga `22eda9c`) di-push ke `origin/main` pada 2026-09-22,
-  setelah diverifikasi `.env` tidak ter-track dan tidak ada kunci API asli di riwayat commit
-  (hanya kunci palsu `AIzaSyFAKEKEY...` di fixture uji).
+  36521->36019 dan 36564->36282, penukaran Liputan6 yang sama-sama terpicu).
+- **Menunggu keputusan pemilik proyek:** tinjauan 58 kandidat Gemma di
+  `data/candidates/tinjauan_tahap3_gemma.csv` (kolom `keputusan`/`label_saya`/`alasan_saya`
+  kosong, isi manual seperti tahap 1/2). Setelah itu: gabungkan seluruh butir final (manusia +
+  liputan6 + arsip + Gemma) menjadi 50 butir set uji v1 dan bekukan (`butir`/`sha256_butir` di
+  `v1.meta.json` masih `null`).
+- **Belum di-commit:**
+  - `testset/v1.meta.json` -- catatan hasil generasi & perbaikan bug (bagian ini).
+  - `src/candidates/gemma_generate.py`, `tests/test_gemma_generate.py` -- perbaikan bug +
+    slot baru + uji baru.
+  - (`data/candidates/*.jsonl`, `tinjauan_tahap3_gemma.csv` juga baru/diperbarui, tapi
+    `data/candidates/` tidak di-commit -- lihat `.gitignore`.)
+- **Sudah di-commit & push:** 32 commit lama (hingga `22eda9c`) + 3 commit label emas/generator
+  (hingga `922d4e6`), semua di `origin/main` per 2026-09-22, `.env` terverifikasi tidak ter-track.
 
 ---
 

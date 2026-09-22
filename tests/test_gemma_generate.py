@@ -10,6 +10,7 @@ from _fakes import ScriptedProvider
 from candidates.gemma_generate import (
     assert_reviewed_before_testset,
     build_prompt_negatif_angka_waktu,
+    build_prompt_negatif_entitas_sama,
     build_prompt_negatif_mudah,
     build_prompt_positif,
     copies_ngram,
@@ -92,6 +93,25 @@ def test_run_checks_negatif_flags_high_title_similarity() -> None:
     assert passed_checks("negatif_mudah", checks) is False
 
 
+def test_run_checks_negatif_excludes_own_target_article_from_title_similarity() -> None:
+    """
+    Kandidat angka_waktu_beda/entitas_sama SEHARUSNYA mirip judul artikel targetnya sendiri
+    (itu maksud subtipenya); tanpa target_article, ini salah ditandai gagal (bug nyata
+    2026-09-22, lihat run_checks docstring).
+    """
+    checks_without_exclusion = run_checks(
+        "negatif_angka_waktu", "Ojol Dilarang Beli Pertalite", None, DB_TITLES, GUIDE_TEXT,
+    )
+    assert checks_without_exclusion["title_sim_flag"] is True  # cocok dgn 36001, tanpa pengecualian
+
+    checks_with_exclusion = run_checks(
+        "negatif_angka_waktu", "Ojol Dilarang Beli Pertalite", None, DB_TITLES, GUIDE_TEXT,
+        target_article="36001",
+    )
+    assert checks_with_exclusion["title_sim_id"] != "36001"
+    assert checks_with_exclusion["title_sim_flag"] is False  # 36002 (HPV) jauh lebih rendah
+
+
 def test_run_checks_negatif_passes_dissimilar_claim() -> None:
     checks = run_checks("negatif_angka_waktu", "kucing tetangga hilang sejak kemarin sore",
                          None, DB_TITLES, GUIDE_TEXT)
@@ -116,6 +136,9 @@ def test_build_prompts_mention_constraints() -> None:
 
     system3, _ = build_prompt_negatif_mudah(["Politik", "Kesehatan"])
     assert "Politik" in system3 and "Kesehatan" in system3
+
+    system4, user4 = build_prompt_negatif_entitas_sama("KIA contoh", "Narasi contoh")
+    assert "entitas" in system4 and "KIA contoh" in user4
 
 
 ARTICLES = {
@@ -161,6 +184,17 @@ def test_generate_for_job_includes_model_version_metadata() -> None:
     assert rows[0]["versi"]["model_id"] == "gemma-4-test"
     assert "tanggal" in rows[0]["versi"]
     assert rows[0]["versi"]["sumber_versi"] in ("metadata_respons_api", "sdk_terpasang")
+
+
+def test_generate_for_job_negatif_entitas_sama_no_real_api_call() -> None:
+    provider = ScriptedProvider(['{"klaim": ["ojol katanya sekarang dilarang naik motor listrik", '
+                                  '"ojol dilarang parkir di minimarket katanya", "bener ga ojol dilarang ngetem"]}'])
+    provider.model = "gemma-4-test"
+    rows = generate_for_job(provider, "negatif_entitas_sama", "36001", ARTICLES, DB_TITLES, GUIDE_TEXT)
+    assert len(rows) == 3
+    assert all(r["sumber"] == "buatan_model" for r in rows)
+    assert all("title_sim_flag" in r["pemeriksaan"] for r in rows)
+    assert provider.prompts == [provider.prompts[0]]  # satu panggilan saja dikirim
 
 
 def test_generate_for_job_format_failure_still_has_version_metadata() -> None:
