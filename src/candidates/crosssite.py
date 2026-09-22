@@ -51,7 +51,8 @@ CLASS_PATH = DATA_DIR / "candidates" / "liputan6_screen_class.jsonl"
 
 TITLE_INDEPENDENSI_RENDAH = 0.85  # ambang yang diminta pemilik proyek untuk kandidat lintas situs
 
-QUOTE_RE = re.compile(r"[“\"]([^”\"]{15,700})[”\"]")
+QUOTE_CHARS = "“”\""
+MIN_QUOTE_LEN = 15
 
 
 def is_individual_article(title: str) -> bool:
@@ -86,12 +87,50 @@ def discover_candidates(session: requests.Session) -> dict[str, tuple[str, str]]
     return found
 
 
+def split_quote_spans(text: str) -> list[str]:
+    """
+    Pasangkan tanda kutip secara BERURUTAN berdasarkan posisi (bukan regex kelas karakter
+    `[".."]`), lalu kembalikan isi tiap pasangan dalam urutan dokumen.
+
+    Alasan: artikel Liputan6 memakai tanda kutip lurus (") untuk pembuka MAUPUN penutup, dan
+    sering memuat lebih dari satu kutipan berurutan (mis. kutipan video/transkrip utama, lalu
+    "Akun itu menambahkan narasi: ..."). Regex `["]([^"]+)["]` tidak bisa membedakan kutipan
+    ke-1 menutup dari kutipan ke-2 membuka, sehingga bisa salah memasangkan penutup kutipan
+    pertama dengan pembuka kutipan kedua -- teks NARASI WARTAWAN di antara keduanya lalu ikut
+    tertangkap seolah-olah kutipan (bug nyata, lihat data/candidates_cache/liputan6/8293157.html:
+    "Unggahan menyertakan keterangan sebagai berikut: " sempat tertangkap sebagai "kutipan").
+
+    Pemasangan memakai jendela geser (GREEDY, bukan pasangan indeks genap-ganjil tetap): tiap
+    tanda kutip dicoba dipasangkan dengan tanda kutip BERIKUTNYA; bila hasilnya lebih pendek dari
+    MIN_QUOTE_LEN, tanda kutip itu dianggap kutipan ganda/salah ketik pada unggahan asli (mis.
+    '"Prabowo sebut "kalau bisa...buat negara"', ada tanda kutip berlebih sebelum "kalau") dan
+    DIBUANG, lalu pencarian dilanjutkan dari tanda kutip berikutnya -- BUKAN meloncat dua indeks
+    sekaligus. Pasangan indeks tetap (ke-1&2, ke-3&4, ...) pernah dicoba dan GAGAL pada kasus di
+    atas: jumlah tanda kutip ganjil (5) membuat seluruh pasangan bergeser, sehingga narasi
+    wartawan "Akun itu menambahkan narasi: " ikut tertangkap sebagai kutipan kedua.
+    """
+    positions = [i for i, ch in enumerate(text) if ch in QUOTE_CHARS]
+    spans = []
+    i = 0
+    while i < len(positions) - 1:
+        start, end = positions[i], positions[i + 1]
+        span = text[start + 1:end].strip()
+        if len(span) >= MIN_QUOTE_LEN:
+            spans.append(span)
+            i += 2  # lanjut setelah pasangan yang diterima
+        else:
+            i += 1  # pasangan terlalu pendek; coba lagi dari tanda kutip berikutnya
+    return spans
+
+
 def extract_claim(soup: BeautifulSoup) -> str | None:
     """
     Ambil pesan hoaks yang dikutip dari isi artikel (halaman/bagian pertama saja, sebelum
     boilerplate 'Tentang Cek Fakta Liputan6.com'), bukan rumusan wartawan. Mengembalikan kutipan
-    terpanjang di antara yang ditemukan (pesan yang beredar biasanya lebih panjang daripada
-    kutipan pendek dari judul unggahan lain).
+    PERTAMA yang cukup panjang (>= MIN_QUOTE_LEN), karena artikel Liputan6 secara konsisten
+    memuat pesan/video yang menjadi inti klaim SEBELUM kutipan tambahan lain (mis. "Akun itu
+    menambahkan narasi: ..."). Kutipan yang sangat pendek (pecahan kalimat akibat tanda kutip
+    ganda/salah ketik pada unggahan asli, mis. '"Prabowo sebut "kalau bisa...') dilewati.
     """
     page1 = soup.select_one('div.article-content-body__item-page[data-page="1"]')
     if page1 is None:
@@ -99,10 +138,10 @@ def extract_claim(soup: BeautifulSoup) -> str | None:
     for ad in page1.select('[id*="advertisement" i], [class*="advertisement" i], [id*="gpt-ad" i]'):
         ad.decompose()
     text = page1.get_text(" ", strip=True)
-    quotes = QUOTE_RE.findall(text)
-    if not quotes:
-        return None
-    return max(quotes, key=len).strip()
+    for span in split_quote_spans(text):
+        if len(span) >= MIN_QUOTE_LEN:
+            return span
+    return None
 
 
 def pii_flags(text: str) -> list[str]:
