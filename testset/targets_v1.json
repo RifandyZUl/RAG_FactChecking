@@ -17,10 +17,10 @@
   "sel": {
     "Politik-SALAH": [
       "36213",
-      "36521",
+      "36019",
       "36357",
       "36477",
-      "36596",
+      "36700",
       "36387"
     ],
     "Politik-PARODI": [
@@ -46,7 +46,7 @@
       "36388"
     ],
     "Hadiah-PENIPUAN": [
-      "36564"
+      "36282"
     ],
     "Bisnis-PENIPUAN": [
       "36062"
@@ -54,10 +54,10 @@
   },
   "target": [
     "36213",
-    "36521",
+    "36019",
     "36357",
     "36477",
-    "36596",
+    "36700",
     "36387",
     "36120",
     "36111",
@@ -71,14 +71,17 @@
     "36573",
     "36610",
     "36388",
-    "36564",
+    "36282",
     "36062"
   ],
   "jumlah_tanpa_references": 3,
   "penyimpangan_2026-09-22": {
-    "catatan": "Tiga id diganti karena audit kebocoran teks terhadap ANNOTATION_GUIDE.md dan prompt sistem (bukan karena ketersediaan atau skor apa pun). Rincian alasan dan waktu di testset/v1.meta.json.penyimpangan_praregistrasi. Sampel acak berbenih (seed 20260921) TIDAK diulang; penggantian ini manual, di luar proses acak.",
+    "catatan": "Enam id diganti. Tiga pertama karena audit kebocoran teks terhadap ANNOTATION_GUIDE.md dan prompt sistem; tiga berikutnya (ditambahkan setelah label emas & keputusan 36700, lihat testset/v1.meta.json) karena hasil tinjauan kandidat teks_nyata/manusia menggantikan target Gemma yang belum terisi. Tidak satu pun karena ketersediaan atau skor retrieval. Rincian alasan dan waktu di testset/v1.meta.json.penyimpangan_praregistrasi_2026-09-22. Sampel acak berbenih (seed 20260921) TIDAK diulang; penggantian ini manual, di luar proses acak.",
     "36655_ke_36610": "Bencana-SALAH, juga anggota 'wajib'. Kandidat lama (Malaysia + karhutla) berbagi entitas dengan contoh andalan pedoman (36729, Malaysia Laporkan Indonesia ke PBB soal Karhutla, artikel dikecualikan).",
     "36212_ke_36573": "Kesehatan-SALAH. Kandidat lama (Vaksin HPV Sebabkan HIV) muncul verbatim sebagai contoh TIDAK SAMA di pedoman ('vaksin HPV sebabkan HIV', baris 36214).",
-    "36286_ke_36166": "Bantuan-PENIPUAN. Kandidat lama (Bantuan Beras dari Pemerintah) berparafrase dekat dengan contoh TIDAK SAMA di pedoman ('link daftar bantuan beras 30 kg', baris 36737)."
+    "36286_ke_36166": "Bantuan-PENIPUAN. Kandidat lama (Bantuan Beras dari Pemerintah) berparafrase dekat dengan contoh TIDAK SAMA di pedoman ('link daftar bantuan beras 30 kg', baris 36737).",
+    "36521_ke_36019": "Politik-SALAH. Kandidat cadangan 'Anggaran pemerintah untuk karhutla' dikeluarkan karena liputan6-8292010 (teks nyata independen, label emas=sama) mengisi slot ini lewat penukaran_bersyarat_liputan6.",
+    "36564_ke_36282": "Hadiah-PENIPUAN. liputan6-8293099 direvisi batas->sama pada label emas; mengisi slot ini lewat penukaran_bersyarat_liputan6, Gemma tidak perlu mengerjakan sel ini.",
+    "36596_ke_36700": "Politik-SALAH. manusia-topik7 (pasangan 36596) berlabel batas, dilaporkan terpisah bukan positif; liputan6-8292176 (teks nyata independen, label sama) mengisi slot ini. Keputusan pemilik proyek 2026-09-22 (opsi b pada temuan_baru_36700)."
   }
 }
