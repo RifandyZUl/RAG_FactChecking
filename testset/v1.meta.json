@@ -374,7 +374,13 @@
       "target_artikel_gemma": ["36387", "36120", "36111", "36191", "36166", "36388", "36062"],
       "catatan_target": "36120 dan 36111 (Politik-PARODI) tidak pernah dicoba lewat manusia/liputan6/arsip; tidak ada kandidat teks_nyata untuk sel ini. Lowongan-PENIPUAN (36331/36545/36048, 3 target) dan Kesehatan-SALAH (36606/36573, 2 target) TIDAK muncul di sini karena SUDAH penuh dari manusia+liputan6 (0 Gemma)."
     },
-    "negatif_sulit_entitas_sama_klaim_beda": {"jumlah": 2, "catatan": "koreksi dari rencana semula (0) -- lihat koreksi_asumsi_subtipe_entitas_sama_klaim_beda; tidak terpengaruh revisi label emas (liputan6-8293099/8293949 bukan anggota subtipe ini). TIDAK ada target artikel pra-ditentukan untuk 2 slot ini -- Gemma memilih dari sisa 150 artikel non-dikecualikan, dikoreksi manusia saat tinjauan."},
+    "negatif_sulit_entitas_sama_klaim_beda": {
+      "jumlah": 2,
+      "catatan": "koreksi dari rencana semula (0) -- lihat koreksi_asumsi_subtipe_entitas_sama_klaim_beda; tidak terpengaruh revisi label emas (liputan6-8293099/8293949 bukan anggota subtipe ini).",
+      "gap_kode_ditemukan_2026-09-22": "src/candidates/gemma_generate.py SEMULA tidak punya slot untuk subtipe ini (ditulis saat asumsi lama -- 0 dibutuhkan Gemma -- masih berlaku). Ditambahkan slot 'negatif_entitas_sama' (build_prompt_negatif_entitas_sama, commit terpisah) sebelum generasi dijalankan, diuji offline (25/25 lolos di test_gemma_generate.py).",
+      "target_artikel_gemma": ["36191", "36700"],
+      "metode_pemilihan_target": "TIDAK ADA target pra-registrasi untuk subtipe ini -- keputusan Claude 2026-09-22, dicatat agar dapat ditinjau/dikoreksi pemilik proyek: dipilih 36191 dan 36700 karena keduanya JUGA target positif Gemma (Bantuan-PENIPUAN dan Politik-SALAH), sehingga hasilnya membentuk pasangan minimal (anchor artikel sama, satu kandidat positif dan satu kandidat negatif entitas-sama) -- selaras dengan analisis per pasangan minimal yang diwajibkan di bagian evaluasi (ukuran paling langsung untuk H1)."
+    },
     "negatif_sulit_angka_waktu_beda": {
       "jumlah": 6,
       "catatan": "Tidak berubah, selalu buatan_model sesuai rancangan (subtipe ini SELURUHNYA satu sumber -- lihat catatan_confound_subtipe di bawah).",
@@ -387,5 +393,17 @@
     "catatan_confound_subtipe": "negatif_sulit_angka_waktu_beda 100% buatan_model (rancangan asli, bukan konsekuensi tinjauan) -- efek SUMBER dan efek SUBTIPE tidak dapat dipisahkan pada sel ini; disetujui pemilik proyek 2026-09-22 sebagai keterbatasan yang diterima, sama seperti confound serupa pada entitas_sama_klaim_beda (buatan_model dominan) yang sudah dicatat di komposisi_sumber_rancangan.",
     "tabel_silang_disetujui_2026-09-22": true,
     "status": "SEMUA SYARAT TERPENUHI -- generasi Gemma sungguhan diotorisasi pemilik proyek 2026-09-22."
+  },
+  "hasil_generasi_gemma_2026-09-22": {
+    "ringkasan": "20 permintaan dijalankan sesuai jatah final (positif 7, negatif_angka_waktu 6, negatif_entitas_sama 2, negatif_mudah 5) -> 60 kandidat (3/permintaan), 58 lolos pemeriksaan otomatis, 2 gagal (positif 36387 dan 36120, masing-masing 1 kandidat, ditandai gagal karena leak_flag/copies_narasi_ngram -- lihat data/candidates/gemma_candidates.jsonl untuk rincian). Hasil per slot: positif 19/21 lolos, negatif_angka_waktu 18/18, negatif_entitas_sama 6/6, negatif_mudah 15/15.",
+    "berkas_kandidat": "data/candidates/gemma_candidates.jsonl (60 baris, termasuk yang gagal, untuk jejak audit)",
+    "berkas_tinjauan": "data/candidates/tinjauan_tahap3_gemma.csv (58 baris lolos, kolom sama dengan tinjauan_tahap1/2.csv, TANPA kelas usulan otomatis sesuai permintaan pemilik proyek -- write_review_csv() tidak pernah menambahkan kolom semacam itu). Menunggu tinjauan manusia (Aturan Wajib #5) sebelum bisa masuk set uji.",
+    "bug_ditemukan_dan_diperbaiki": {
+      "temuan": "run_checks() untuk subtipe negatif_angka_waktu/negatif_entitas_sama membandingkan kandidat terhadap SEMUA 150 judul, TERMASUK judul artikel target kandidat itu sendiri. Untuk subtipe ini kandidat SEHARUSNYA mirip judul targetnya (KIA sama, satu unsur diubah) -- akibatnya 10 dari 18 kandidat negatif_angka_waktu batch pertama salah ditandai gagal (false positive title_sim_flag terhadap judul artikel targetnya sendiri).",
+      "perbaikan": "run_checks() kini menerima target_article dan mengecualikannya dari daftar judul pembanding. Diuji offline (test_run_checks_negatif_excludes_own_target_article_from_title_similarity) sebelum dipakai pada batch berikutnya (negatif_entitas_sama, negatif_mudah).",
+      "penilaian_ulang_tanpa_panggilan_api_baru": "10 baris negatif_angka_waktu yang sudah digenerate sebelum perbaikan dinilai ulang in-place memakai run_checks() yang sudah benar, atas TEKS YANG SAMA (tidak ada panggilan API baru) -- semua 10 berbalik dari gagal ke lolos. Pemeriksaan lama disimpan di field pemeriksaan_lama_sebelum_perbaikan_bug pada tiap baris untuk jejak audit; ditandai catatan_perbaikan_bug_2026-09-22.",
+      "cakupan": "Hanya memengaruhi negatif_angka_waktu dan negatif_entitas_sama (keduanya berbasis target_article). positif memakai copies_narasi_ngram (tidak terpengaruh); negatif_mudah tidak punya target_article (tidak terpengaruh)."
+    },
+    "catatan_kualitas_negatif_mudah": "Beberapa kandidat negatif_mudah cukup absurd (mis. 'kucing mata-mata planet Mars', 'bulan terbuat dari keju') dibanding hoaks realistis. Ini sesuai desain (negatif mudah = topik jauh, tidak perlu meniru gaya hoaks nyata) tapi berbeda gaya dari negatif sulit/positif -- perlu penilaian pemilik proyek saat tinjauan apakah gaya ini diterima atau sebagian perlu diedit/ditolak."
   }
 }

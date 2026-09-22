@@ -1,6 +1,7 @@
 """
 Hasilkan kandidat butir set uji v1 dari Gemma (sumber buatan_model): positif, negatif sulit
-subtipe "angka atau waktu beda", dan negatif mudah.
+subtipe "angka atau waktu beda", negatif sulit subtipe "entitas sama klaim beda", dan negatif
+mudah.
 
 LIVE saat dijalankan langsung sebagai skrip (memanggil API Gemma, mengonsumsi kuota harian).
 Logika inti -- pembangun prompt, pemeriksa larangan salin >= 4 kata dari Narasi, pemeriksa
@@ -25,6 +26,7 @@ Pemakaian (dari root proyek):
   PYTHONPATH=src python -m candidates.gemma_generate --check-budget
   PYTHONPATH=src python -m candidates.gemma_generate --slot positif --target 36120 36111
   PYTHONPATH=src python -m candidates.gemma_generate --slot negatif_angka_waktu --target 36xxx
+  PYTHONPATH=src python -m candidates.gemma_generate --slot negatif_entitas_sama --target 36xxx
   PYTHONPATH=src python -m candidates.gemma_generate --slot negatif_mudah --n-negatif-mudah 5
 """
 
@@ -51,7 +53,7 @@ MIN_COPY_NGRAM = 4  # larangan salin >= 4 kata berurutan dari Narasi (slot posit
 MIN_LEAK_NGRAM = 6  # audit kebocoran: >= 6 kata berurutan sama dengan pedoman/prompt dianggap bocor
 TITLE_SIMILARITY_FLAG = 0.85  # sama seperti ambang kandidat lintas situs (crosssite.py)
 
-SLOTS = ("positif", "negatif_angka_waktu", "negatif_mudah")
+SLOTS = ("positif", "negatif_angka_waktu", "negatif_entitas_sama", "negatif_mudah")
 
 REVIEW_CSV_COLUMNS = [
     "id", "klaim", "url_sumber", "catatan_sumber", "keputusan (setuju/tolak/edit)",
@@ -121,6 +123,21 @@ def build_prompt_negatif_angka_waktu(kia: str, narasi: str) -> tuple[str, str]:
     return system, user
 
 
+def build_prompt_negatif_entitas_sama(kia: str, narasi: str) -> tuple[str, str]:
+    system = (
+        "Kamu menulis klaim berbahasa Indonesia sehari-hari untuk set uji NEGATIF sistem pemeriksa "
+        "fakta, subtipe 'entitas sama, klaim beda'. Ambil klaim inti (KIA) berikut, PERTAHANKAN "
+        "entitas/aktor utamanya (nama orang, lembaga, atau tempat yang sama), tetapi UBAH tindakan "
+        "atau proposisi spesifiknya sehingga menjadi klaim yang SECARA FAKTUAL BERBEDA -- bukan "
+        "sinonim, dan BUKAN sekadar mengubah angka atau keterangan waktu (itu subtipe lain), "
+        "melainkan tindakan/peristiwa lain tentang entitas yang sama, yang tidak akan dijawab sama "
+        "oleh Kesimpulan artikel aslinya. Balas HANYA JSON tanpa teks lain: "
+        f'{{"klaim": ["...", "...", "..."]}} berisi tepat {N_PER_SLOT} variasi klaim.'
+    )
+    user = f"Klaim inti (KIA): {kia}\nKonteks Narasi:\n{narasi}"
+    return system, user
+
+
 def build_prompt_negatif_mudah(avoid_categories: list[str]) -> tuple[str, str]:
     avoid = "; ".join(avoid_categories) if avoid_categories else "(tidak ada)"
     system = (
@@ -156,18 +173,27 @@ def parse_klaim_list(raw: str) -> list[str] | None:
 
 
 def run_checks(
-    slot: str, text: str, narasi: str | None, db_titles: dict[str, str], reference_text: str
+    slot: str, text: str, narasi: str | None, db_titles: dict[str, str], reference_text: str,
+    target_article: str | None = None,
 ) -> dict[str, Any]:
     """
     Pemeriksaan otomatis per kandidat. positif: larangan salin Narasi. negatif_*: kemiripan
-    terhadap 150 judul basis data (agar tidak kebetulan cocok dengan artikel lain). Semua slot:
+    terhadap 150 judul basis data (agar tidak kebetulan cocok dengan ARTIKEL LAIN). Semua slot:
     audit kebocoran terhadap pedoman/prompt.
+
+    `target_article`, bila diisi, DIKELUARKAN dari perbandingan judul: untuk subtipe berbasis KIA
+    artikel target (negatif_angka_waktu, negatif_entitas_sama), kandidat SEHARUSNYA mirip judul
+    artikel targetnya sendiri (itu maksud subtipenya -- KIA yang sama, satu unsur diubah); tanpa
+    pengecualian ini pemeriksaan salah menandai kandidat yang justru benar sebagai gagal.
     """
     checks: dict[str, Any] = {"leak_flag": leak_flag(text, reference_text)}
     if slot == "positif":
         checks["copies_narasi_ngram"] = narasi is not None and copies_ngram(text, narasi, MIN_COPY_NGRAM)
     else:
-        best_id, best_sim = title_similarity(text, db_titles)
+        compare_titles = db_titles
+        if target_article is not None and target_article in db_titles:
+            compare_titles = {aid: t for aid, t in db_titles.items() if aid != target_article}
+        best_id, best_sim = title_similarity(text, compare_titles)
         checks["title_sim_max"] = round(best_sim, 3)
         checks["title_sim_id"] = best_id
         checks["title_sim_flag"] = best_sim >= TITLE_SIMILARITY_FLAG
@@ -256,6 +282,9 @@ def generate_for_job(
     elif slot == "negatif_angka_waktu":
         kia = articles[target_article]["title"]
         system, user = build_prompt_negatif_angka_waktu(kia, articles[target_article]["narasi"])
+    elif slot == "negatif_entitas_sama":
+        kia = articles[target_article]["title"]
+        system, user = build_prompt_negatif_entitas_sama(kia, articles[target_article]["narasi"])
     elif slot == "negatif_mudah":
         avoid = sorted({a["category"] for a in articles.values()})
         system, user = build_prompt_negatif_mudah(avoid)
@@ -278,7 +307,7 @@ def generate_for_job(
 
     out = []
     for text in klaim_list[:N_PER_SLOT]:
-        checks = run_checks(slot, text, narasi, db_titles, reference_text)
+        checks = run_checks(slot, text, narasi, db_titles, reference_text, target_article)
         out.append({
             "slot": slot, "target_article": target_article, "klaim": text,
             "model": provider.model, "versi": versi,
@@ -305,7 +334,7 @@ def main() -> int:
     args = ap.parse_args()
 
     jobs: list[tuple[str, str | None]] = []
-    if args.slot in ("positif", "negatif_angka_waktu"):
+    if args.slot in ("positif", "negatif_angka_waktu", "negatif_entitas_sama"):
         jobs = [(args.slot, aid) for aid in args.target]
     elif args.slot == "negatif_mudah":
         jobs = [("negatif_mudah", None) for _ in range(args.n_negatif_mudah)]
