@@ -7,6 +7,7 @@ Pipeline hanya bergantung pada `LLMProvider.generate`; penyedia dipilih lewat ko
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 logger = logging.getLogger("llm")
@@ -27,6 +28,7 @@ class CallRecord:
     structured_mode: str = "teks"  # "schema" bila skema JSON diteruskan ke server
     error: str = ""  # hanya jenis dan status galat, sudah disamarkan
     rate_limited: int = 0  # jumlah galat 429 yang dialami
+    model_version: str | None = None  # versi/checkpoint dari metadata respons API, bila API mengungkapnya
 
 
 class LLMProvider(ABC):
@@ -34,9 +36,40 @@ class LLMProvider(ABC):
 
     name: str = "abstrak"
     model: str = ""
+    sdk_version: str = ""  # diisi subclass (mis. versi paket SDK terpasang); "" bila tidak dilacak
 
     def __init__(self) -> None:
         self.records: list[CallRecord] = []
+
+    def model_version_info(self) -> dict[str, Any]:
+        """
+        Metadata versi model untuk jejak audit (mis. metadata kandidat set uji).
+
+        Diutamakan versi checkpoint dari metadata respons API panggilan sukses terakhir
+        (`CallRecord.model_version`), bila penyedia mengisinya. Provider Gemini lewat
+        Interactions API (google-genai 2.24) TIDAK mengisinya -- lihat
+        `.venv/Lib/site-packages/google/genai/_gaos/types/interactions/model.py`: field
+        `model` pada respons hanya berisi ID model (literal union), tanpa versi checkpoint.
+        Bila tidak tersedia, dicatat versi SDK terpasang + ID model + tanggal sebagai
+        pengganti, dengan catatan eksplisit bahwa ini BUKAN versi checkpoint model.
+        """
+        last_ok = next((r for r in reversed(self.records) if r.ok), None)
+        api_version = last_ok.model_version if last_ok else None
+        info: dict[str, Any] = {
+            "model_id": self.model,
+            "tanggal": datetime.now(timezone.utc).date().isoformat(),
+        }
+        if api_version:
+            info["model_version"] = api_version
+            info["sumber_versi"] = "metadata_respons_api"
+        else:
+            info["sdk_version"] = self.sdk_version or "tidak diketahui"
+            info["sumber_versi"] = "sdk_terpasang"
+            info["catatan"] = (
+                "API tidak mengungkap versi checkpoint model pada respons; versi SDK "
+                "dicatat sebagai pengganti, BUKAN versi checkpoint model itu sendiri."
+            )
+        return info
 
     @abstractmethod
     def generate(

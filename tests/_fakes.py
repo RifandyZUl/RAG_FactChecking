@@ -55,6 +55,9 @@ def read_fixture(name: str) -> str:
 class ScriptedProvider:
     """Penyedia palsu untuk uji generator: mengembalikan keluaran berurutan."""
 
+    model = ""
+    sdk_version = "scripted-test"
+
     def __init__(self, outputs: list[Any]) -> None:
         self.outputs = list(outputs)
         self.records: list[Any] = []
@@ -66,6 +69,16 @@ class ScriptedProvider:
         if isinstance(item, Exception):
             raise item
         return item
+
+    def model_version_info(self) -> dict[str, Any]:
+        """Sama seperti `LLMProvider.model_version_info`, tanpa panggilan API sungguhan."""
+        return {
+            "model_id": self.model,
+            "tanggal": "2026-01-01",
+            "sdk_version": self.sdk_version,
+            "sumber_versi": "sdk_terpasang",
+            "catatan": "ScriptedProvider palsu: tidak ada metadata respons API sungguhan.",
+        }
 
 
 def make_hit(aid: str, label: str = "SALAH", refs: list[str] | None = None) -> "ArticleHit":
