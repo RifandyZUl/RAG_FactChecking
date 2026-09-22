@@ -139,6 +139,7 @@ class GeminiProvider(LLMProvider):
 
         from google import genai  # impor malas: tidak wajib untuk uji offline
 
+        self.sdk_version = getattr(genai, "__version__", "tidak diketahui")
         self._client = genai.Client(api_key=self._api_key)
         self.sdk_retry_disabled = disable_sdk_retry(self._client)
 
@@ -288,6 +289,7 @@ class GeminiProvider(LLMProvider):
                 output_tokens=getattr(usage, "total_output_tokens", None),
                 thought_tokens=getattr(usage, "total_thought_tokens", None),
                 structured_mode=mode, rate_limited=rate_limited,
+                model_version=getattr(interaction, "model_version", None),
             )
             if self.limiter is not None:
                 self.limiter.settle(rec.input_tokens)  # token nyata menggantikan perkiraan

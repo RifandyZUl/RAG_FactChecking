@@ -231,3 +231,38 @@ def test_provider_proactive_budget(monkeypatch: pytest.MonkeyPatch) -> None:
             assert ok, f"{model}/{level} seharusnya ditolak"
         except LLMConfigError:
             assert not ok, f"{model}/{level} seharusnya diterima"
+
+
+def test_model_version_info_falls_back_to_sdk_version_when_api_omits_it() -> None:
+    """
+    Respons Interactions API asli (dan FakeInteraction, yang meniru bentuknya) tidak punya
+    field versi checkpoint -- lihat model_version_info() di src/llm/base.py. Fallback harus
+    memakai versi SDK terpasang dan menyertakan catatan eksplisit.
+    """
+    p, _fake, _key = make_gemini([FakeInteraction("ok")])
+    assert p.generate("s", "u") == "ok"
+    info = p.model_version_info()
+    assert info["model_id"] == p.model
+    assert info["sumber_versi"] == "sdk_terpasang"
+    assert info["sdk_version"] and info["sdk_version"] != "tidak diketahui"
+    assert "checkpoint" in info["catatan"]
+    assert "model_version" not in info
+
+
+def test_model_version_info_uses_api_metadata_when_present() -> None:
+    """Bila suatu saat API mengisi versi checkpoint pada respons, itu yang harus dipakai."""
+    interaction = FakeInteraction("ok")
+    interaction.model_version = "models/gemma-4-31b-it-001"
+    p, _fake, _key = make_gemini([interaction])
+    assert p.generate("s", "u") == "ok"
+    info = p.model_version_info()
+    assert info["model_version"] == "models/gemma-4-31b-it-001"
+    assert info["sumber_versi"] == "metadata_respons_api"
+    assert "sdk_version" not in info
+
+
+def test_model_version_info_before_any_call_falls_back() -> None:
+    """Sebelum ada panggilan sukses, tidak ada CallRecord untuk dibaca -> fallback SDK juga."""
+    p, _fake, _key = make_gemini([FakeInteraction("ok")])
+    info = p.model_version_info()
+    assert info["sumber_versi"] == "sdk_terpasang"
