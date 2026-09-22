@@ -237,13 +237,16 @@
     }
   },
   "penyimpangan_praregistrasi_2026-09-22": {
-    "catatan": "Dicatat SEBELUM sistem dijalankan pada butir mana pun, sesuai aturan pra-registrasi. targets_v1.json dipilih semula lewat sampel acak berstrata berbenih (seed 20260921); ketiga penggantian di bawah BUKAN acak dan BUKAN didorong ketersediaan -- didorong temuan kebocoran teks pada audit hari ini.",
+    "catatan": "Dicatat SEBELUM sistem dijalankan pada butir mana pun, sesuai aturan pra-registrasi. targets_v1.json dipilih semula lewat sampel acak berstrata berbenih (seed 20260921). Tiga penggantian pertama di bawah didorong temuan kebocoran teks pada audit; tiga penggantian berikutnya (ditambahkan setelah label emas & keputusan 36700 selesai) didorong hasil tinjauan kandidat teks_nyata/manusia yang lebih independen daripada Gemma -- keduanya BUKAN acak, tetapi jenis pemicunya berbeda (dibedakan pada field 'pemicu').",
     "perubahan": [
-      {"artikel_lama": "36655", "artikel_baru": "36610", "sel": "Bencana-SALAH (wajib)", "alasan": "kebocoran entitas Malaysia+karhutla", "waktu": "2026-09-22"},
-      {"artikel_lama": "36212", "artikel_baru": "36573", "sel": "Kesehatan-SALAH", "alasan": "kebocoran verbatim contoh pedoman", "waktu": "2026-09-22"},
-      {"artikel_lama": "36286", "artikel_baru": "36166", "sel": "Bantuan-PENIPUAN", "alasan": "kebocoran parafrase contoh pedoman", "waktu": "2026-09-22"}
+      {"artikel_lama": "36655", "artikel_baru": "36610", "sel": "Bencana-SALAH (wajib)", "alasan": "kebocoran entitas Malaysia+karhutla", "pemicu": "audit_kebocoran", "waktu": "2026-09-22"},
+      {"artikel_lama": "36212", "artikel_baru": "36573", "sel": "Kesehatan-SALAH", "alasan": "kebocoran verbatim contoh pedoman", "pemicu": "audit_kebocoran", "waktu": "2026-09-22"},
+      {"artikel_lama": "36286", "artikel_baru": "36166", "sel": "Bantuan-PENIPUAN", "alasan": "kebocoran parafrase contoh pedoman", "pemicu": "audit_kebocoran", "waktu": "2026-09-22"},
+      {"artikel_lama": "36521", "artikel_baru": "36019", "sel": "Politik-SALAH", "alasan": "liputan6-8292010 dilabeli sama (label emas); penukaran_bersyarat_liputan6 terpicu", "pemicu": "tinjauan_kandidat_teks_nyata", "waktu": "2026-09-22"},
+      {"artikel_lama": "36564", "artikel_baru": "36282", "sel": "Hadiah-PENIPUAN", "alasan": "liputan6-8293099 direvisi batas->sama (label emas); penukaran_bersyarat_liputan6 terpicu", "pemicu": "tinjauan_kandidat_teks_nyata", "waktu": "2026-09-22"},
+      {"artikel_lama": "36596", "artikel_baru": "36700", "sel": "Politik-SALAH", "alasan": "manusia-topik7 (pasangan 36596) berlabel batas -> dilaporkan terpisah, bukan positif; liputan6-8292176 (label sama, teks nyata independen) mengisi slot sebagai gantinya. Keputusan pemilik proyek 2026-09-22 (opsi b), lihat temuan_baru_36700_di_luar_20_target_terpilih.", "pemicu": "tinjauan_kandidat_teks_nyata", "waktu": "2026-09-22"}
     ],
-    "belum_berubah_bersyarat": "36019 (Politik-SALAH) dan 36282 (Hadiah-PENIPUAN) BELUM ditambahkan ke targets_v1.json karena bersyarat pada hasil tinjauan; lihat penukaran_bersyarat_liputan6."
+    "catatan_36387": "36387 (Politik-SALAH, topik8) TIDAK diganti -- tetap target, dikerjakan Gemma. Berbeda dari 36596: tidak ada kandidat teks_nyata/liputan6 yang mengisi slotnya."
   },
   "prosedur_klaim_manusia_2026-09-22": {
     "sumber": "Klaim ditulis pemilik proyek berdasarkan artikel cek fakta NON-MAFINDO yang dibaca sebagai manusia: Kompas atau Tempo SAJA. Liputan6 Cek Fakta SENGAJA TIDAK dipakai sebagai sumber bacaan klaim manusia, agar sumber manusia dan sumber liputan6 (otomatis) tidak tumpang tindih/saling menduplikasi cakupan.",
@@ -258,5 +261,131 @@
     "alasan_ukuran": "sekitar dua kali jumlah slot yang dibutuhkan (5 slot teks_nyata untuk subtipe pola-sama-entitas-beda, lihat komposisi_sumber_rancangan)",
     "metode": "random.Random(seed).sample(populasi, n_sampel) atas daftar article_id gabungan tetangga+kemungkinan_sama, urutan populasi dari archive_screen_class.jsonl",
     "hasil": "testset/archive_sample_v1.json (hanya article_id, tidak memuat judul/isi)"
+  },
+  "klaim_manusia_hasil_2026-09-22": {
+    "ringkasan": "11 klaim diserahkan (satu per topik final). Disimpan di data/candidates/human_claims.jsonl (baris 2-12; baris 1 = klaim 'komen Hadir' dari sesi sebelumnya). Usulan pencocokan per pedoman di data/candidates/human_claims_screen_class.jsonl.",
+    "penyimpangan_sumber_mafindo": {
+      "temuan": "4 dari 11 klaim (topik 2, 5, 9, 11) ternyata bersumber dari situs terafiliasi MAFINDO (cekfakta.com atau turnbackhoax.id sendiri), bukan Kompas/Tempo seperti prosedur semula. VERIFIKASI nomor artikel sumber vs target: keempatnya IDENTIK dengan article_id target (cekfakta.com/focus/36610==target 36610; cekfakta.com/focus/36357==target 36357; turnbackhoax.id/articles/36331-...==target 36331; turnbackhoax.id/articles/36048-...==target 36048) -- pemilik proyek membaca artikel sasaran itu sendiri (via cermin MAFINDO), bukan liputan independen.",
+      "keputusan": "TIDAK dibuang. Diberi kategori_sumber tersendiri 'manusia_dari_sumber_mafindo' (lihat human_claims.jsonl), TIDAK dihitung sebagai klaim manusia independen dalam komposisi_sumber_rancangan.manusia.",
+      "alasan": "Slot ini seharusnya jatuh ke Gemma (buatan_model), yang juga membaca Narasi basis data secara langsung. Klaim manusia yang bersumber dari cermin MAFINDO atas artikel yang sama TIDAK LEBIH tidak-independen dibanding alternatif itu (Gemma), sehingga tetap punya nilai sebagai butir (paragfrase gaya manusia dari Narasi), hanya labelnya tidak boleh diklaim sebagai 'manusia independen'.",
+      "topik_terdampak": ["Tsunami akibat erupsi Krakatau (36610)", "BGN pasok makanan rumah sakit (36357)", "Lowongan kerja Japfa (36331)", "Lowongan kerja Indogrosir (36048)"]
+    },
+    "penyimpangan_sumber_topik_4": {
+      "temuan": "Topik 4 (Kematian santri terkait MBG, target 36573) bersumber dari abcnews.co.id, situs berita umum, BUKAN situs cek fakta khusus seperti Kompas/Tempo.",
+      "keputusan": "Dicatat sebagai penyimpangan kecil dari prosedur (situs berita umum, bukan desk cek fakta khusus); klaim tetap dipakai, kategori_sumber tetap 'sumber_eksternal' (bukan MAFINDO, independensi tidak terancam oleh afiliasi penerbit)."
+    },
+    "temuan_topik_7_bank_dunia": {
+      "klaim": "menyebut Indonesia 'termiskin nomor 2 di dunia setelah Zimbabwe'",
+      "target_narasi": "36596 hanya menyebut Indonesia 'termiskin TERTINGGI di dunia' (implikasi ke-1) dengan angka kemiskinan 64,2%; TIDAK menyebut peringkat 'ke-2' maupun negara pembanding 'Zimbabwe' di manapun pada Narasi.",
+      "verifikasi_pedoman": "Uji dua arah GAGAL pada objek pembeda (peringkat spesifik + negara pembanding berbeda dari Narasi manapun di 36596); sumber artikel (Tempo, Januari 2026) juga di luar rentang waktu basis data (Agustus-September 2026), mengindikasikan kemungkinan gelombang hoaks 'Indonesia termiskin di dunia' yang berbeda dari yang terekam di 36596.",
+      "usulan": "TIDAK SAMA (kekhususan=batas). Direkomendasikan direklasifikasi: bukan positif untuk 36596, melainkan negatif sulit sumber manusia subtipe entitas_sama_klaim_beda (entitas sama: Bank Dunia+Indonesia+kemiskinan; klaim spesifik berbeda: peringkat+negara pembanding).",
+      "konsekuensi_jika_disetujui": "Target 36596 (Politik-SALAH) TIDAK terisi klaim manusia ini; kembali ke jatah Gemma. Menunggu keputusan pemilik proyek pada berkas tinjauan tahap kedua."
+    },
+    "verifikasi_independensi": "0 dari 11 klaim di atas ambang 0,85 (metode difflib.SequenceMatcher klaim vs 150 judul db; skor tertinggi 0,44). Rincian per klaim di human_claims_screen_class.jsonl."
+  },
+  "jatah_gemma_final_2026-09-22": {
+    "keputusan_pemilik_proyek": "Teks nyata diutamakan di atas buatan_model bila kuota subtipe sudah terpenuhi dari teks nyata. Gemma HANYA mengerjakan: (1) negatif sulit subtipe angka_waktu_beda: 6, (2) negatif mudah: 5 (buatan_model, sesuai rancangan; 5 teks_nyata sudah terpisah dari arsip kelas jauh), (3) positif: sisa slot setelah tinjauan pemilik proyek atas kandidat bersyarat (Liputan6 8292010/8293099, topik 7 Bank Dunia) diketahui.",
+    "subtipe_entitas_sama_klaim_beda_TIDAK_dikerjakan_gemma": "Subtipe ini sudah memiliki 10 kandidat teks_nyata (9 dari Liputan6 + 1 klaim manusia 'komen Hadir'), melebihi target rancangan (7). Gemma tidak diminta membuat subtipe ini.",
+    "subtipe_pola_sama_entitas_beda_TIDAK_dikerjakan_gemma": "Sama halnya: 10 kandidat teks_nyata sudah disampel dari arsip TurnBackHoax (testset/archive_sample_v1.json, seed 20260922) untuk target 7 (lihat rekonsiliasi_sampel_arsip di bawah), sehingga populasi teks_nyata (95 kandidat tersedia) dinilai cukup dan Gemma tidak perlu mengisi subtipe ini.",
+    "syarat_lebih_dari_satu_sumber_per_tipe": "Positif: sumber manusia + manusia_dari_sumber_mafindo + liputan6 (+ buatan_model untuk sisa). Negatif sulit pola_sama_entitas_beda: teks_nyata arsip saja saat ini -- BELUM memenuhi syarat >1 sumber untuk subtipe ini secara spesifik (dicatat sebagai keterbatasan, bukan dilanggar diam-diam: rancangan komposisi_sumber_rancangan memang mengizinkan subtipe murni satu sumber bila populasi teks_nyata mencukupi). Negatif sulit entitas_sama_klaim_beda: sudah 2 sumber (liputan6 + manusia). Negatif sulit angka_waktu_beda: buatan_model saja (sesuai rancangan asli, subtipe ini memang hanya buatan_model). Negatif mudah: teks_nyata (arsip) + buatan_model (Gemma), 2 sumber."
+  },
+  "batas_ulang_subtipe_jika_lebih_dari_target_2026-09-22": {
+    "aturan": "Bila setelah tinjauan pemilik proyek jumlah kandidat yang lolos (label='sama' untuk positif, atau label='tidak_sama' yang mengonfirmasi negatif sulit) pada satu subtipe MELEBIHI target rancangan (7 untuk pola_sama_entitas_beda dan entitas_sama_klaim_beda), pilih sejumlah target dengan SAMPEL ACAK BERBENIH atas daftar kandidat yang lolos -- BUKAN berdasarkan preferensi, skor retrieval, atau urutan apa pun.",
+    "seed": 20260924,
+    "metode": "random.Random(seed).sample(daftar_id_lolos_terurut, target) -- daftar diurutkan (mis. berdasarkan id) sebelum disampel agar hasil reproducible",
+    "berlaku_untuk": ["negatif_sulit.entitas_sama_klaim_beda (target 7, dari 10 kandidat: 9 liputan6 + 1 manusia)", "negatif_sulit.pola_sama_entitas_beda (target 7, dari hingga 10 kandidat arsip bila semua lolos tinjauan)"],
+    "dicatat_sebelum_hasil_tinjauan_diketahui": true
+  },
+  "rekonsiliasi_sampel_arsip_pola_sama_entitas_beda_2026-09-22": {
+    "pertanyaan": "Posisi 10 kandidat sampel arsip (testset/archive_sample_v1.json) dalam hitungan negatif sulit -- apakah dihitung, dan bagaimana subtipe pola_sama_entitas_beda mencapai target 7?",
+    "jawaban": "10 kandidat itu BELUM dihitung sebagai negatif sulit final -- statusnya PENDING di data/candidates/tinjauan_tahap1.csv, menunggu label pemilik proyek (sama/tidak_sama/batas). Hanya yang dilabeli 'tidak_sama' (mengonfirmasi bukan klaim yang sama, sehingga sah jadi negatif sulit) yang dihitung. Subtipe pola_sama_entitas_beda mencapai target 7 SELURUHNYA dari teks_nyata (arsip): sampel 10 = ~2x target 7 agar ada ruang bila sebagian ternyata gagal tinjauan (dilabeli 'sama' -> jadi kandidat positif, atau 'batas' -> tidak dihitung di angka utama). Bila setelah tinjauan yang lolos < 7, populasi arsip masih punya 85 kandidat tersisa (95 - 10 sampel) untuk sampel susulan berbenih; bila lolos > 7, berlaku batas_ulang_subtipe_jika_lebih_dari_target di atas. Gemma TIDAK mengerjakan subtipe ini (lihat jatah_gemma_final)."
+  },
+  "kebijakan_label_emas_2026-09-22": {
+    "kebijakan": "Label emas: seluruh label set uji v1 ditentukan oleh pemilik proyek sendiri, tanpa bantuan AI pada KEPUTUSAN akhir. Label awal tahap 1 dan tahap 2 SEMPAT dibuat/didraf ChatGPT (OpenAI), lalu SELURUHNYA diganti dengan label pemilik proyek; label ChatGPT tidak dipakai sebagai kunci jawaban set uji. Ditegaskan ulang oleh pemilik proyek 2026-09-22: label final tahap 1, tahap 2, dan berkas tambahan adalah hasil peninjauan pemilik proyek sendiri sepenuhnya. Lihat juga Aturan Wajib #5 di CLAUDE.md.",
+    "identifikasi_berkas_draf_chatgpt": "data/candidates/tinjauan_hoaks_tahap1_revisi.xlsx -- docProps/core.xml mencatat creator='openpyxl' (dibuat oleh kode, bukan diketik di Excel), dibuat 2026-09-22T08:40 UTC, ~7 jam sebelum tahap2.xlsx dan tinjauan_label_emas_tahap1_tambahan.xlsx (creator='Lenovo Ideapad 5', dibuat 15:43-15:46 UTC hari sama). Sheet catatan_audit pada berkas itu memuat catatan yang berciri proses AI ('Tidak ditemukan di file percakapan/library yang dapat diakses', 'Beberapa URL sumber dibuka langsung'), bukan catatan tinjauan manusia. Berkas ini adalah draf ChatGPT tahap 1; label FINAL (setelah revisi pemilik proyek) ada di data/candidates/keputusan_tahap1.jsonl dan di sini, BUKAN di berkas xlsx tersebut (xlsx tidak diperbarui ulang).",
+    "berkas_draf_dihapus_2026-09-22": "data/candidates/tinjauan_hoaks_tahap1_revisi.xlsx DIHAPUS oleh pemilik proyek (data/candidates/ tidak di-commit, jadi ini bukan operasi git). Catatan riwayat di atas (identifikasi_berkas_draf_chatgpt) DIPERTAHANKAN sebagai jejak audit meski berkasnya sudah tidak ada -- ini konsekuensi langsung: kesepakatan_dengan_label_chatgpt di bawah tidak lagi bisa dihitung karena berkas pembandingnya sudah tidak ada.",
+    "kesepakatan_dengan_label_chatgpt": "TIDAK DIHITUNG (keputusan final 2026-09-22): berkas pembanding draf ChatGPT (tinjauan_hoaks_tahap1_revisi.xlsx) sudah dihapus pemilik proyek sebelum persentase kesepakatan sempat dihitung. Dua perbedaan yang SEMPAT teramati sebelum berkas dihapus tercatat di revisi_label_setelah_pembandingan_dengan_draf_chatgpt_2026-09-22 di bawah, tetapi itu bukan kesepakatan menyeluruh (hanya 2 dari 29 baris tahap 1 yang diketahui berbeda; 27 baris lain tidak diverifikasi ulang butir-demi-butir terhadap draf sebelum dihapus).",
+    "revisi_label_setelah_pembandingan_dengan_draf_chatgpt_2026-09-22": {
+      "liputan6-8293099": {"semula": "batas", "revisi": "sama", "target_pasangan": "36282", "dampak": "memicu penukaran_bersyarat_liputan6 (36282 menggantikan 36564 di sel Hadiah-PENIPUAN); lihat jatah_gemma_final_setelah_tinjauan_2026-09-22."},
+      "liputan6-8293949": {"semula": "tidak_sama", "revisi": "batas", "target_pasangan": "36042", "dampak": "dikeluarkan dari populasi subtipe pola_sama_entitas_beda (semula terpilih di 7); populasi disampel ulang (9 kandidat, seed 20260924, metode sama) -- lihat pembatasan_ke_target_dieksekusi.pola_sama_entitas_beda di atas."},
+      "catatan_kualitas_data": "Pada kedua baris (dan juga liputan6-8291177/8294487, label tidak berubah), kolom 'Alasan' pada berkas tinjauan yang diterima TIDAK diperbarui mengikuti revisi label -- penjelasan revisi yang sebenarnya ada di kolom 'artikel_basis_data_pasangan'. keputusan_tahap1.jsonl memakai penjelasan dari kolom pasangan (yang konsisten dengan label final), bukan kolom Alasan (yang berisi teks lama); dicatat di sini sebagai kejanggalan data, bukan disembunyikan."
+    },
+    "butir_dilabeli_setelah_membaca_pendapat_claude_2026-09-22": {
+      "daftar": ["arsip-23531", "liputan6-8292176", "liputan6-8292010", "liputan6-8293949", "liputan6-8293099", "liputan6-8295963", "liputan6-8289643", "manusia-topik1", "manusia-topik7", "manusia-topik8", "komen Hadir"],
+      "catatan": "Pemilik proyek melabeli butir-butir ini SETELAH membaca pendapat Claude pada percakapan terpisah (bukan draf ChatGPT); label akhir tetap keputusan pemilik proyek, tetapi mungkin terpengaruh pendapat itu. Dicatat sebagai keterbatasan independensi tambahan pada label emas, terpisah dari isu draf ChatGPT."
+    },
+    "kategori_sumber_klaim_tahap2_2026-09-22": {
+      "kategori": ["manusia", "manusia_dibantu_llm_openai", "buatan_llm_openai", "tidak_ingat"],
+      "aturan": "manusia = klaim ditulis sendiri; manusia_dibantu_llm_openai = draf ChatGPT lalu diubah pemilik proyek; buatan_llm_openai = klaim sepenuhnya dari ChatGPT; tidak_ingat = pemilik proyek tidak ingat asal klaim, dicatat sebagai ketidakpastian, BUKAN diasumsikan manusia. Kategori manusia_dari_sumber_mafindo (lihat klaim_manusia_hasil_2026-09-22) tetap berlaku sebagai atribut TAMBAHAN yang independen dari kategori ini (satu klaim topik 2/5/9/11 bisa punya kategori sumber-teks di atas SEKALIGUS atribut manusia_dari_sumber_mafindo).",
+      "asal_teks_per_topik": "DIJAWAB 2026-09-22: pemilik proyek TIDAK INGAT siapa/apa yang menulis teks klaim untuk seluruh 11 klaim tahap 2 (jawaban tunggal berlaku untuk semua topik, bukan per topik). data/candidates/human_claims.jsonl sudah diberi field asal_teks_kategori='tidak_ingat' pada seluruh 11 entri topik 1-11, TIDAK diasumsikan 'manusia'. Ini keterbatasan independensi tambahan pada 11 klaim tahap 2, terpisah dari isu draf ChatGPT untuk LABEL (yang sudah selesai lewat label emas)."
+    }
+  },
+
+  "hasil_tinjauan_tahap_1_dan_2_2026-09-22": {
+    "ringkasan": "Tahap 1 (29 kandidat: 10 arsip + 19 Liputan6): SEMULA 23 tidak_sama, 3 sama, 3 batas; SETELAH revisi label emas 2026-09-22 (lihat kebijakan_label_emas_2026-09-22): 22 tidak_sama, 4 sama, 3 batas (liputan6-8293099 batas->sama, liputan6-8293949 tidak_sama->batas; total tetap 29). Tahap 2 (11 klaim manusia): 9 sama, 2 batas (tidak berubah pada revisi label emas). Keputusan lengkap per butir di data/candidates/keputusan_tahap1.jsonl dan keputusan_tahap2.jsonl (sumber kebenaran, sudah diperbarui sesuai label emas; tinjauan_tahap1.csv/xlsx sempat terkunci/dibuka pemilik proyek saat ditulis dan TIDAK diperbarui ulang setelah revisi -- keputusan final hanya ada di jsonl dan di sini).",
+    "butir_batas_dilaporkan_terpisah_tidak_dihitung": [
+      "liputan6-8289643 (36109, CPNS)", "liputan6-8293949 (36042, PKH ibu hamil -- SETELAH revisi, semula tidak_sama)", "liputan6-8295963 (36518, bantuan pejabat)",
+      "manusia-topik7 (36596, Bank Dunia peringkat)", "manusia-topik8 (36387, keluar World Bank+IMF)"
+    ],
+    "kesepakatan_usulan_otomatis_vs_label_final": {
+      "liputan6": "14/16 setuju (88%, di luar 3 butir batas). 2 beda: liputan6-8291177 (usulan Claude SAMA, label pemilik tidak_sama -- lihat klarifikasi_pasangan_minimal) dan liputan6-8292176 (usulan Claude TIDAK_SAMA, label pemilik SAMA -- pemilik proyek menilai Kesimpulan 36700 tetap menjawab klaim pembakaran fasilitas MBG/SPPG di NTB meski nama fasilitas berbeda, penilaian yang masuk akal per uji Kesimpulan).",
+      "klaim_manusia": "9/9 setuju (100%, di luar 2 butir batas topik7 dan topik8).",
+      "arsip": "9 kandidat berkelas otomatis 'tetangga' -> seluruhnya dilabeli tidak_sama (konsisten dengan desain kelas, bukan prediksi sama/tidak_sama formal). 1 kandidat berkelas 'kemungkinan_sama' (arsip-35850) -> dilabeli tidak_sama oleh pemilik proyek (kelas otomatis KELIRU pada satu-satunya sampel kelas ini; presisi kemungkinan_sama pada sampel ini 0/1)."
+    },
+    "klarifikasi_pasangan_minimal_8291177_8294487": {
+      "pertanyaan_pemilik_proyek": "Laporan sebelumnya menyebut salah satu dari pasangan (8291177/8294487) cocok dengan basis data, tapi pemilik proyek melabeli keduanya tidak_sama dengan 36191.",
+      "penjelasan": "Usulan SAMA untuk liputan6-8291177 (36191) DIDASARKAN PADA JUDUL ARTIKEL LIPUTAN6 ('Video Menkeu Purbaya Bagikan Bantuan Dana Hibah'), yang TIDAK ditampilkan di kolom klaim berkas tinjauan (hanya ada di data/candidates/liputan6_screen_class.jsonl, bukan berkas tinjauan) -- justru untuk mencegah bias anchoring. Kolom klaim yang dilihat pemilik proyek berisi templat generik tanpa nama pejabat ('Pengumuman untuk masyarakat Indonesia. Mohon segera daftarkan diri...'), sehingga TIDAK ADA dasar tekstual untuk mengaitkannya dengan Purbaya/36191 secara spesifik. Label tidak_sama pemilik proyek karena itu LEBIH KETAT dan LEBIH BENAR menurut prosedur (menilai dari teks klaim yang tersedia, bukan metadata tersembunyi) dibanding usulan Claude. Catatan ini sudah ditandai sebagai keterbatasan kualitas saat usulan pertama kali dibuat (data/candidates/liputan6_screen_class.jsonl, field alasan liputan6-8291177: 'peninjau perlu membuka URL asli untuk verifikasi'). TIDAK ADA label yang diubah."
+    },
+    "penukaran_bersyarat_diterapkan": {
+      "liputan6-8292010_ke_36019": "TERPICU (label=sama). 36019 mengisi slot Politik-SALAH yang ditinggalkan topik cadangan 'Anggaran pemerintah untuk karhutla' (36521).",
+      "liputan6-8293099_ke_36282": "TERPICU SETELAH REVISI LABEL EMAS 2026-09-22 (label semula batas, direvisi menjadi sama -- lihat kebijakan_label_emas_2026-09-22.revisi_label_setelah_pembandingan_dengan_draf_chatgpt_2026-09-22). 36282 menggantikan 36564 di sel Hadiah-PENIPUAN; 36564 tidak dipakai, Gemma tidak perlu mengerjakan sel ini."
+    },
+    "temuan_baru_36700_di_luar_20_target_terpilih": {
+      "temuan": "liputan6-8292176 (label=sama) berpasangan dengan 36700, yang kategorinya Politik-SALAH -- BUKAN salah satu dari 6 id Politik-SALAH yang dipra-registrasi (36213/36521-36019/36357/36477/36596/36387). Sel Politik-SALAH sudah punya 4 kandidat pasti (36213, 36019, 36357, 36477) + 2 slot pending Gemma (36596, 36387, keduanya berstatus batas dari klaim manusia).",
+      "keputusan_2026-09-22": "OPSI (b) DIPUTUSKAN oleh pemilik proyek: 36700 (via liputan6-8292176, teks nyata independen Liputan6) MENGGANTIKAN 36596 di sel Politik-SALAH. Rasional pemilik proyek: label batas pada manusia-topik7 berarti klaim itu dilaporkan TERPISAH sebagai butir batas (bukan menjadi positif untuk 36596), sehingga slot positif untuk 36596 tetap kosong dan perlu diisi kandidat lain -- 36700 mengisinya. 36596 SENDIRI dikeluarkan dari daftar target positif (bukan lagi tugas Gemma). Klaim manusia-topik7 TETAP disimpan sebagai butir batas dengan tetangga_article_id=36596 (bukan dibuang), lihat kategori_sumber_klaim_tahap2_2026-09-22 dan data/candidates/keputusan_tahap2.jsonl. 36387 (topik8, juga batas) TIDAK terpengaruh keputusan ini -- tetap tugas Gemma, tidak ada kandidat teks nyata untuk menggantikannya.",
+      "dicatat_sebagai_penyimpangan_praregistrasi": "Ya, lihat penyimpangan_praregistrasi_2026-09-22 (entri 36596_ke_36700) dan testset/targets_v1.json.penyimpangan_2026-09-22.",
+      "dampak_jatah_gemma": "Positif Gemma turun 1 (dari 8 jadi 7 pada skenario opsi-b): Politik-SALAH kini hanya perlu 1 (36387), bukan 1 atau 2 (36596 dan/atau 36387)."
+    },
+    "koreksi_asumsi_subtipe_entitas_sama_klaim_beda": {
+      "asumsi_lama_2026-09-22_sore": "Subtipe ini diasumsikan sudah punya 10 kandidat teks_nyata (9 usulan Liputan6 + 1 manusia) melebihi target 7, sehingga Gemma dikecualikan dari subtipe ini.",
+      "hasil_tinjauan_sebenarnya": "Setelah label final, HANYA 5 kandidat yang benar-benar masuk subtipe ini (arsip-26646, arsip-30089, liputan6-8295794, liputan6-8295817, manusia 'komen Hadir') -- 8 dari 9 usulan Liputan6 semula untuk subtipe ini ternyata dilabeli 'sama' (bukan negatif), 'batas', atau lebih tepat masuk subtipe pola_sama_entitas_beda setelah ditinjau ulang (video pejabat cairkan dana hibah/bantuan adalah pola berulang, bukan satu entitas tunggal berklaim beda).",
+      "koreksi": "Asumsi lama SALAH. Gemma tetap perlu mengerjakan subtipe ini: kekurangan 2 (target 7 - 5 terkonfirmasi). Lihat jatah_gemma_final_setelah_tinjauan."
+    },
+    "pembatasan_ke_target_dieksekusi": {
+      "pola_sama_entitas_beda": {
+        "populasi_lolos": 9, "target": 7, "seed": 20260924,
+        "dipilih": ["arsip-35310", "arsip-35850", "liputan6-8289615", "liputan6-8289822", "liputan6-8291177", "liputan6-8293157", "liputan6-8294487"],
+        "cadangan_disisihkan": ["liputan6-8292077", "liputan6-8293783"],
+        "catatan": "DISAMPEL ULANG 2026-09-22 setelah liputan6-8293949 direvisi dari tidak_sama menjadi batas (lihat kebijakan_label_emas_2026-09-22) -- populasi turun dari 10 ke 9, arsip-35850 (semula cadangan) kini terpilih. Metode identik (random.Random(20260924).sample(daftar_id_terurut, 7) atas populasi 9, BUKAN 'dipilih lama dikurangi 8293949 ditambah cadangan berikutnya'); direproduksi dan diverifikasi dengan kode (hasil sample() atas populasi 10 asli juga diverifikasi cocok persis dengan seleksi 7+3 yang tercatat sebelum revisi ini). liputan6-8293783 (perlu edit: tautan phishing diganti '[tautan]') dan liputan6-8289822 keduanya masuk populasi; 8289822 terpilih, 8293783 tetap cadangan -- bila 7 terpilih dipakai apa adanya, penyuntingan tautan 8293783 tidak diperlukan lagi kecuali dipakai dari cadangan."
+      },
+      "negatif_mudah_teks_nyata": {
+        "populasi_lolos": 9, "target": 5, "seed": 20260924,
+        "dipilih": ["arsip-23531", "arsip-28638", "arsip-32490", "liputan6-8291155", "liputan6-8296316"],
+        "cadangan_disisihkan": ["arsip-23544", "arsip-30085", "arsip-35833", "liputan6-8293491"],
+        "catatan": "5 kandidat arsip kelas 'jauh' tambahan (data/candidates/tinjauan_tahap1_tambahan_jauh.csv) TIDAK PERLU ditinjau lagi -- populasi teks_nyata sudah melebihi target dari batch yang sudah ditinjau."
+      }
+    }
+  },
+  "jatah_gemma_final_setelah_tinjauan_2026-09-22": {
+    "diperbarui": "2026-09-22, DIKUNCI setelah keputusan final pemilik proyek: revisi label emas (liputan6-8293099 batas->sama, mengisi Hadiah-PENIPUAN lewat 36282) dan keputusan 36700 opsi (b) (36700 menggantikan 36596 di Politik-SALAH). Jatah positif Gemma turun dari 8-9 (perhitungan sebelumnya) menjadi TEPAT 7.",
+    "positif": {
+      "jumlah": 7,
+      "rincian": {"Politik-SALAH": "1 (36387)", "Politik-PARODI": "2 (36120, 36111)", "Bantuan-PENIPUAN": "2 (36191, 36166)", "Bencana-SALAH": "1 (36388)", "Hadiah-PENIPUAN": "0 (36564 tidak dipakai; sel terisi 36282 lewat liputan6-8293099)", "Bisnis-PENIPUAN": "1 (36062)"},
+      "target_artikel_gemma": ["36387", "36120", "36111", "36191", "36166", "36388", "36062"],
+      "catatan_target": "36120 dan 36111 (Politik-PARODI) tidak pernah dicoba lewat manusia/liputan6/arsip; tidak ada kandidat teks_nyata untuk sel ini. Lowongan-PENIPUAN (36331/36545/36048, 3 target) dan Kesehatan-SALAH (36606/36573, 2 target) TIDAK muncul di sini karena SUDAH penuh dari manusia+liputan6 (0 Gemma)."
+    },
+    "negatif_sulit_entitas_sama_klaim_beda": {"jumlah": 2, "catatan": "koreksi dari rencana semula (0) -- lihat koreksi_asumsi_subtipe_entitas_sama_klaim_beda; tidak terpengaruh revisi label emas (liputan6-8293099/8293949 bukan anggota subtipe ini). TIDAK ada target artikel pra-ditentukan untuk 2 slot ini -- Gemma memilih dari sisa 150 artikel non-dikecualikan, dikoreksi manusia saat tinjauan."},
+    "negatif_sulit_angka_waktu_beda": {
+      "jumlah": 6,
+      "catatan": "Tidak berubah, selalu buatan_model sesuai rancangan (subtipe ini SELURUHNYA satu sumber -- lihat catatan_confound_subtipe di bawah).",
+      "target_artikel_gemma_2026-09-22": ["36477", "36388", "36157", "36545", "36282", "36120"],
+      "metode_pemilihan_target": "TIDAK ADA daftar target pra-registrasi untuk subtipe ini (komposisi_sumber_rancangan hanya menetapkan jumlah=6, buatan_model=6, tanpa artikel spesifik) -- keputusan Claude 2026-09-22, BUKAN instruksi eksplisit pemilik proyek, dicatat di sini agar dapat ditinjau/dikoreksi: dipilih dari 21 artikel target positif (20 pra-registrasi + 36700 pengganti 36596) yang KIA/judulnya memuat angka atau keterangan waktu eksplisit, agar hasil Gemma membentuk pasangan minimal dengan artikel jangkar yang sama (36477: '35% PPh21'; 36388: 'magnitudo 7,7'; 36157 & 36545: tahun '2026'; 36282: 'HUT ke-81'; 36120: 'tiap bulan', satu-satunya tanpa digit eksplisit -- keterangan waktu berulang, dipakai untuk melengkapi ke 6 karena hanya 5 artikel lain punya angka eksplisit di judul). Pemilik proyek dapat mengganti daftar ini sebelum generasi dijalankan bila tidak setuju dengan pilihan artikel."
+    },
+    "negatif_sulit_pola_sama_entitas_beda": {"jumlah": 0, "catatan": "tetap 0 -- populasi teks_nyata (disampel ulang jadi 9 setelah revisi liputan6-8293949) masih mencukupi target 7 tanpa Gemma; lihat pembatasan_ke_target_dieksekusi.pola_sama_entitas_beda."},
+    "negatif_mudah": {"jumlah": 5, "catatan": "tidak berubah, sesuai rancangan (5 teks_nyata + 5 buatan_model); tidak terpengaruh revisi label emas. Tidak perlu target artikel (topik bebas, dipandu daftar kategori yang dihindari)."},
+    "total": 20,
+    "catatan_confound_subtipe": "negatif_sulit_angka_waktu_beda 100% buatan_model (rancangan asli, bukan konsekuensi tinjauan) -- efek SUMBER dan efek SUBTIPE tidak dapat dipisahkan pada sel ini; disetujui pemilik proyek 2026-09-22 sebagai keterbatasan yang diterima, sama seperti confound serupa pada entitas_sama_klaim_beda (buatan_model dominan) yang sudah dicatat di komposisi_sumber_rancangan.",
+    "tabel_silang_disetujui_2026-09-22": true,
+    "status": "SEMUA SYARAT TERPENUHI -- generasi Gemma sungguhan diotorisasi pemilik proyek 2026-09-22."
   }
 }

@@ -5,6 +5,46 @@ mengerjakan tugas apa pun di repositori ini.
 
 ---
 
+## Status Terkini
+
+**Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
+sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
+
+*(2026-09-22)*
+
+- **Tahap berjalan:** menyusun KANDIDAT set uji v1 sumber `buatan_model` (Gemma).
+  `src/candidates/gemma_generate.py` sudah ditulis dan diuji offline (81/81 lolos di seluruh
+  `tests/`). **Semua syarat terpenuhi 2026-09-22** (label emas selesai, keputusan 36700
+  opsi (b) diambil, tabel silang disetujui pemilik proyek) -- generasi Gemma SUNGGUHAN
+  diotorisasi dan segera dijalankan untuk 20 slot (`jatah_gemma_final_setelah_tinjauan_2026-09-22`
+  pada `v1.meta.json`, status `"SEMUA SYARAT TERPENUHI"`).
+- **Label emas final** (2026-09-22, Aturan Wajib #5 + `kebijakan_label_emas_2026-09-22`):
+  seluruh label tahap 1/2/tambahan adalah tinjauan pemilik proyek sendiri. Berkas draf ChatGPT
+  (`tinjauan_hoaks_tahap1_revisi.xlsx`, creator `openpyxl`) sudah DIHAPUS pemilik proyek;
+  catatan riwayatnya dipertahankan di `v1.meta.json`. Kesepakatan dengan draf ChatGPT TIDAK
+  DIHITUNG (berkas pembanding sudah tidak ada). Asal teks klaim tahap 2: pemilik proyek
+  **tidak ingat** (dicatat di `human_claims.jsonl`, field `asal_teks_kategori`), bukan
+  diasumsikan ditulis sendiri.
+- **36700 diputuskan opsi (b):** menggantikan 36596 di sel Politik-SALAH (manusia-topik7 tetap
+  butir batas terpisah, tetangga=36596). `testset/targets_v1.json` sudah diperbarui (juga
+  36521->36019 dan 36564->36282, penukaran Liputan6 yang sama-sama terpicu). Jatah positif
+  Gemma: **7 pasti** (36387, 36120, 36111, 36191, 36166, 36388, 36062).
+- **Belum di-commit (per 2026-09-22, akan di-commit terpisah sebelum generasi dijalankan):**
+  - `testset/v1.meta.json`, `testset/targets_v1.json` -- label emas final, keputusan 36700,
+    jatah Gemma terkunci (20 slot pasti).
+  - `CLAUDE.md` -- Aturan Wajib #5 (revisi kata-kata final) dan bagian Status Terkini ini.
+  - `src/candidates/gemma_generate.py`, `tests/test_gemma_generate.py` -- siap, teruji offline.
+  - `src/llm/base.py`, `src/llm/gemini.py`, `tests/test_gemini.py`, `tests/_fakes.py` --
+    metadata versi model (`LLMProvider.model_version_info`), berlaku untuk provider mana pun
+    (generator dan juri nanti, bukan hanya `gemma_generate.py`).
+  - (`data/candidates/keputusan_tahap1.jsonl`, `keputusan_tahap2.jsonl`, `human_claims.jsonl`
+    juga diperbarui, tapi `data/candidates/` tidak di-commit -- lihat `.gitignore`.)
+- **Sudah:** 32 commit lama (hingga `22eda9c`) di-push ke `origin/main` pada 2026-09-22,
+  setelah diverifikasi `.env` tidak ter-track dan tidak ada kunci API asli di riwayat commit
+  (hanya kunci palsu `AIzaSyFAKEKEY...` di fixture uji).
+
+---
+
 ## Ringkasan Proyek
 
 Sistem RAG (Retrieval-Augmented Generation) untuk verifikasi klaim
@@ -104,6 +144,28 @@ Prompt sistem harus menegaskan bahwa LLM hanya boleh menjawab
 berdasarkan potongan dokumen yang diberikan. Bila tidak ada dokumen yang
 cukup relevan, jawaban yang benar adalah menyatakan klaim tersebut belum
 ditemukan dalam basis data — bukan memaksakan kesimpulan.
+
+### 5. Label emas set uji: tinjauan manusia wajib, label final selalu manusia
+
+Setiap kandidat yang akan masuk set uji — termasuk kandidat buatan Gemma —
+**wajib** melalui tinjauan pemilik proyek sendiri sebelum dipakai sebagai
+butir set uji. **Label final selalu ditetapkan manusia** (pemilik proyek),
+tidak pernah oleh AI. Bila draf AI (ChatGPT, Gemma, Claude, atau lainnya)
+dipakai pada tahap mana pun — draf awal label, draf teks klaim, atau
+pendapat yang dibaca sebelum memutuskan — **penggunaannya wajib dicatat**
+secara eksplisit (model/alat, tahap, dan sejauh mana dipakai), sekalipun
+draf itu sendiri kemudian tidak disimpan.
+
+Alasan: kejadian 2026-09-22 — sebuah berkas draf label tahap 1 yang
+dihasilkan `openpyxl` (bukan diketik manusia di Excel) sempat berisiko
+dianggap sebagai label emas karena nama berkasnya mirip dengan berkas
+label emas yang sebenarnya. Berkas draf itu sudah dihapus pemilik proyek
+setelah label final ditetapkan (`data/candidates/` tidak di-commit, jadi
+ini bukan operasi git); **catatan riwayat kejadian ini dipertahankan**
+di `kebijakan_label_emas_2026-09-22` pada `testset/v1.meta.json` meski
+berkasnya sudah tidak ada — termasuk cara mendeteksi kejadian serupa
+(periksa `docProps/core.xml` suatu `.xlsx`: creator `openpyxl` atau nama
+aplikasi lain berarti dihasilkan kode, bukan diketik manusia).
 
 ---
 
