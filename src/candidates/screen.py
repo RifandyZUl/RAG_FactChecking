@@ -45,14 +45,90 @@ def pii_flags(text: str) -> list[str]:
     return flags
 
 
+QUOTE_CHARS = "“”\""
+MIN_QUOTE_LEN = 25
+NARASI_WORD_RE = re.compile(r"narasi\b", re.IGNORECASE)
+_LEADING_ARCHIVE_TAG_RE = re.compile(r"^\s*\[\s*arsip\s*\]\s*", re.IGNORECASE)
+_LEADING_CUE_PHRASE_RE = re.compile(r"^(?:sebagai berikut|lengkapnya)\s*", re.IGNORECASE)
+
+
+def _strip_leading_cue(rest: str) -> str:
+    """
+    Buang sisa penanda "[arsip]" dan/atau "sebagai berikut"/"lengkapnya" di awal teks setelah
+    kata "narasi", lalu tanda baca (titik dua/titik) dan spasi. Dilakukan bertahap (bukan satu
+    regex gabungan): pola gabungan `[^\\w]*(?:\\[arsip\\])?...` pernah gagal karena `[^\\w]*`
+    yang rakus sudah memakan karakter "[" sebelum alternatif "[arsip]" sempat mencoba mencocokkan.
+    """
+    rest = rest.lstrip()
+    rest = _LEADING_ARCHIVE_TAG_RE.sub("", rest)
+    rest = _LEADING_CUE_PHRASE_RE.sub("", rest.lstrip())
+    return rest.lstrip(" \t:.–—\n")
+TRAILING_METRICS_RE = re.compile(r"\n\s*Hingga\s+\w+", re.IGNORECASE)  # "Hingga Senin (.../..), unggahan..."
+
+
+def _split_quote_spans(text: str) -> list[str]:
+    """
+    Sama seperti candidates.crosssite.split_quote_spans (lihat penjelasan di sana): memasangkan
+    tanda kutip berurutan dengan jendela geser, BUKAN regex kelas karakter `[".."]`, karena
+    pasangan indeks tetap salah saat jumlah tanda kutip ganjil (kutipan ganda/salah ketik pada
+    unggahan asli). Diduplikasi (bukan diimpor) agar ambang panjang kutipan arsip (25) tidak
+    ikut berubah mengikuti ambang Liputan6 (15).
+    """
+    positions = [i for i, ch in enumerate(text) if ch in QUOTE_CHARS]
+    spans = []
+    i = 0
+    while i < len(positions) - 1:
+        start, end = positions[i], positions[i + 1]
+        span = text[start + 1:end].strip()
+        if len(span) >= MIN_QUOTE_LEN:
+            spans.append(span)
+            i += 2
+        else:
+            i += 1
+    return spans
+
+
 def claim_candidate(narasi: str) -> str:
     """
-    Usulan teks klaim dari Narasi: blok kutipan pertama yang cukup panjang (isi pesan hoaks yang beredar);
-    bila tak ada, kalimat pertama. Hanya usulan untuk peninjauan.
+    Usulan teks klaim dari Narasi: dicari HANYA pada teks setelah kata "narasi" PERTAMA (isi
+    pesan hoaks yang beredar), baik dikutip tanda kutip maupun tidak. Artikel TurnBackHoax memakai
+    kedua pola: '...dengan narasi: "<kutipan>"' MAUPUN '...berikut narasi lengkapnya:\\n<teks tanpa
+    kutip>', dengan tanda baca setelah "narasi" yang tidak seragam (titik dua, titik, atau
+    langsung baris baru) -- karena itu dicari lewat KATA "narasi", bukan tanda baca sesudahnya.
+
+    Membatasi pencarian ke SETELAH kata "narasi" (bukan seluruh teks) penting: kalimat pembuka
+    sering memuat kutipan lain yang tidak berkaitan (mis. nama akun dalam tanda kutip, "Akun
+    Facebook 'pureblood.id' ... mengunggah narasi ...") SEBELUM kata "narasi"; memasangkan tanda
+    kutip pada seluruh teks bisa salah menangkap kutipan nama akun itu. Dipakai kemunculan
+    PERTAMA (bukan terakhir): kutipan panjang kadang memuat kata "narasi" lagi di tengah isinya
+    sendiri (mis. "...Dalam narasi yang beredar luas, Trump disebut...", atau kalimat penutup
+    "konten dengan narasi serupa dibagikan oleh akun lain..."); memakai kemunculan terakhir pernah
+    memotong ke tengah kutipan asli atau melompat ke kalimat tidak berkaitan (bug nyata pada
+    30061, 31689 saat pertama diperbaiki -- lihat tests/test_screen.py).
+
+    Bug lama: hanya menangani pola berkutip (regex kelas karakter, dengan kerentanan pasangan yang
+    sama seperti candidates.crosssite -- lihat commit perbaikan ekstraktor Liputan6). Pola TANPA
+    kutip (tidak jarang di arsip) jatuh ke fallback kalimat pertama, yang selalu menangkap kalimat
+    pembuka ("Akun X pada [tanggal] mengunggah...") alih-alih pesan yang beredar (bug nyata pada
+    32490, 35310, 35850 -- lihat tests/test_screen.py).
+
+    Bila tak ada kata "narasi" sama sekali, fallback ke kalimat pertama seperti semula.
     """
-    quoted = re.findall(r"[“\"]([^”\"]{25,600})[”\"]", narasi)
-    if quoted:
-        return quoted[0].strip()
+    words = list(NARASI_WORD_RE.finditer(narasi))
+    if words:
+        rest = narasi[words[0].end():]
+        spans = _split_quote_spans(rest)
+        if spans:
+            return spans[0]
+        rest = _strip_leading_cue(rest)
+        m = TRAILING_METRICS_RE.search(rest)
+        end = m.start() if m else len(rest)
+        para_break = rest.find("\n\n")
+        if para_break != -1 and para_break < end:
+            end = para_break
+        candidate = rest[:end].strip()
+        if len(candidate) >= MIN_QUOTE_LEN:
+            return candidate[:600]
     first = re.split(r"(?<=[.!?])\s+", narasi.strip())[0]
     return first[:300]
 
