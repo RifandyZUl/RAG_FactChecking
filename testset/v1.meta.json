@@ -192,6 +192,59 @@
     "kelas_usulan": "disimpan di berkas terpisah (data/candidates/archive_screen_class.jsonl) dan TIDAK ditampilkan di berkas tinjauan, karena menampilkannya (meski sebagai petunjuk) menimbulkan bias anchoring",
     "evaluasi": "setelah tinjauan pemilik proyek selesai, kelas usulan dibandingkan dengan keputusan tinjauan dan tingkat kesepakatan dilaporkan sebagai ukuran keandalan penyaring otomatis"
   },
+  "audit_kebocoran_2026-09-22": {
+    "cakupan": "Seluruh teks testset/ANNOTATION_GUIDE.md dan SYSTEM_PROMPT di src/generator.py (bukan seluruh CLAUDE.md), diperiksa terhadap setiap target positif (topik, usulan Liputan6, jatah Gemma). Target dikeluarkan bila klaim/entitas/kutipannya muncul di salah satu dokumen itu.",
+    "dikeluarkan": [
+      {"artikel": "36212", "judul_pemicu": "frasa contoh pedoman 'vaksin HPV sebabkan HIV' (baris contoh 36214) cocok verbatim dengan klaim inti 36212", "sel": "Kesehatan-SALAH", "pengganti": "36573"},
+      {"artikel": "36655", "judul_pemicu": "entitas Malaysia+karhutla sama dengan contoh andalan pedoman 36729 (Malaysia Laporkan Indonesia ke PBB soal Karhutla, dikecualikan)", "sel": "Bencana-SALAH, juga 'wajib'", "pengganti": "36610"},
+      {"artikel": "36286", "judul_pemicu": "parafrase dekat dengan contoh TIDAK SAMA pedoman 'link daftar bantuan beras 30 kg' (baris contoh 36737)", "sel": "Bantuan-PENIPUAN", "pengganti": "36166"},
+      {"artikel": "36479", "judul_pemicu": "hampir verbatim dengan contoh TIDAK SAMA pedoman 'cek kesehatan gratis itu agenda plandemi' (baris contoh 36731); TIDAK PERNAH masuk targets_v1.json, dicatat sebagai peringatan agar tidak dipakai Gemma nanti", "sel": "Kesehatan-SALAH (bukan target aktif)", "pengganti": "tidak berlaku"}
+    ],
+    "ditinjau_dipertahankan": [
+      {"artikel": "36521", "alasan": "kata 'karhutla' muncul generik di pedoman (2 tempat), TAPI tanpa entitas Malaysia/PBB yang menjadi ciri contoh andalan; risiko dinilai rendah, dipertahankan sebagai topik terpisah setelah pemecahan topik Karhutla."},
+      {"artikel": "36157", "alasan": "tema 'bantuan/subsidi pemerintah' umum tidak spesifik cocok dengan frasa pedoman manapun; dipertahankan, hanya frasa topik dipertajam (lihat audit ambiguitas)."}
+    ],
+    "bersih": "13 target lain (36213,36357,36477,36596,36387,36331,36545,36048,36191,36019,36282,36606,36120,36111,36388,36564,36062,36166,36573,36610 -- termasuk pengganti) tidak ditemukan tumpang tindih klaim/entitas/kutipan dengan pedoman atau prompt.",
+    "catatan_metodologi": "Pencarian manual berbasis kata kunci entitas (nama, angka, istilah khas) per target terhadap kedua dokumen; bukan pencarian otomatis lengkap. Istilah generik (mis. 'bansos', 'pajak', 'lowongan') TIDAK dihitung sebagai kebocoran sendirian -- hanya kombinasi entitas spesifik atau parafrase dekat."
+  },
+  "audit_ambiguitas_topik_2026-09-22": {
+    "aturan": "setiap topik harus menunjuk TEPAT SATU artikel basis data; topik yang bisa dicocokkan lebih dari satu artikel dipertajam (<=5 kata) atau diganti",
+    "temuan": [
+      {"topik": "Kasus ijazah Jokowi", "masalah": "2 artikel db bertema ijazah Jokowi + Rektor UGM (36213 ditangkap, 36101 mundur)", "tindakan": "dipertajam jadi 'Rektor UGM ditangkap soal ijazah' agar mengarah ke 36213 spesifik"},
+      {"topik": "Bantuan subsidi pemerintah 2026", "masalah": "puluhan artikel db bertema bantuan/subsidi pemerintah generik; frasa lama berisiko cocok >1 artikel tanpa unsur pembeda", "tindakan": "dipertajam jadi 'Subsidi BBM LPG dan pangan' (ciri pembeda 36157: banyak jenis subsidi sekaligus)"},
+      {"topik": "Karhutla Sumatra 2026", "masalah": "menunjuk 2 artikel sekaligus (36655 Bencana-SALAH, 36521 Politik-SALAH) -- melanggar aturan satu topik satu artikel", "tindakan": "dipecah jadi 2 topik terpisah; 36655 juga diganti karena kebocoran (lihat audit_kebocoran)"},
+      {"topik": "Bank Dunia dan Indonesia", "masalah": "menunjuk 2 artikel sekaligus (36596, 36387), keduanya Politik-SALAH tapi klaim berbeda", "tindakan": "dipecah jadi 2 topik terpisah"},
+      {"topik": "5 topik lain (BGN, PPh21, Japfa, sekolah kedinasan, Indogrosir)", "masalah": "diperiksa (pencarian judul per kata kunci entitas) -- masing-masing hanya cocok 1 artikel db", "tindakan": "tidak diubah"}
+    ]
+  },
+  "rekonsiliasi_jumlah_topik_2026-09-22": {
+    "penyebab_selisih": "Laporan sebelumnya (2026-09-22, sesi sore) menyebut 10 topik tapi tabel strata menghitung 12 slot terisi lewat topik. Sebabnya: 2 dari 10 topik (Karhutla, Bank Dunia) masing-masing menunjuk 2 artikel sekaligus, melanggar aturan satu-topik-satu-artikel yang belum ditegakkan saat itu (10 topik x rata-rata 1,2 artikel/topik = 12 slot).",
+    "perbaikan": "Setiap topik kini menunjuk tepat 1 artikel. Topik yang tadinya menunjuk 2 artikel dipecah jadi 2 topik (menambah jumlah topik dari 10 ke 12), lalu 1 topik Politik-SALAH (36521) dikeluarkan lagi sebagai cadangan penukaran liputan6-8292010 (lihat penukaran_bersyarat_liputan6), menyisakan 11 topik final.",
+    "aturan_ke_depan": "Pemilik proyek menulis SATU klaim per topik untuk seluruh 11 topik final. Topik yang tidak ditulis: slotnya kembali ke jatah Gemma (tidak menunggu atau dipaksakan)."
+  },
+  "penukaran_bersyarat_liputan6_2026-09-22": {
+    "prinsip": "Kandidat Liputan6 diutamakan dibanding topik manusia dan Gemma karena satu-satunya sumber independen dari kita. Kedua penukaran berikut bersyarat pada label tinjauan pemilik proyek (kolom label_saya di berkas tinjauan), DITETAPKAN SEBELUM tinjauan berlangsung.",
+    "liputan6-8292010_ke_36019": {
+      "sel": "Politik-SALAH (sudah 6/6 terisi topik)",
+      "topik_cadangan_dikeluarkan_sekarang": "'Anggaran pemerintah untuk karhutla' (target 36521) -- dikeluarkan dari daftar topik final SEKARANG, sebelum hasil tinjauan diketahui",
+      "bila_label_sama": "36019 mengisi slot Politik-SALAH yang ditinggalkan topik cadangan",
+      "bila_label_tidak_sama": "slot Politik-SALAH itu diisi Gemma; topik cadangan TIDAK dikembalikan ke daftar (pemilik proyek sudah melewati tahap penulisan klaim saat hasil tinjauan diketahui)"
+    },
+    "liputan6-8293099_ke_36282": {
+      "sel": "Hadiah-PENIPUAN (target Gemma semula: 36564)",
+      "bila_label_sama": "36282 menggantikan 36564 sebagai target sel ini; 36564 tidak dipakai",
+      "bila_label_tidak_sama": "36564 tetap target, dikerjakan Gemma seperti rencana semula"
+    }
+  },
+  "penyimpangan_praregistrasi_2026-09-22": {
+    "catatan": "Dicatat SEBELUM sistem dijalankan pada butir mana pun, sesuai aturan pra-registrasi. targets_v1.json dipilih semula lewat sampel acak berstrata berbenih (seed 20260921); ketiga penggantian di bawah BUKAN acak dan BUKAN didorong ketersediaan -- didorong temuan kebocoran teks pada audit hari ini.",
+    "perubahan": [
+      {"artikel_lama": "36655", "artikel_baru": "36610", "sel": "Bencana-SALAH (wajib)", "alasan": "kebocoran entitas Malaysia+karhutla", "waktu": "2026-09-22"},
+      {"artikel_lama": "36212", "artikel_baru": "36573", "sel": "Kesehatan-SALAH", "alasan": "kebocoran verbatim contoh pedoman", "waktu": "2026-09-22"},
+      {"artikel_lama": "36286", "artikel_baru": "36166", "sel": "Bantuan-PENIPUAN", "alasan": "kebocoran parafrase contoh pedoman", "waktu": "2026-09-22"}
+    ],
+    "belum_berubah_bersyarat": "36019 (Politik-SALAH) dan 36282 (Hadiah-PENIPUAN) BELUM ditambahkan ke targets_v1.json karena bersyarat pada hasil tinjauan; lihat penukaran_bersyarat_liputan6."
+  },
   "sampling_arsip_tinjauan": {
     "keputusan_pemilik_proyek": "2026-09-22: dari populasi kandidat arsip TurnBackHoax subtipe pola-sama-entitas-beda (kelas usulan tetangga+kemungkinan_sama, 95 kandidat), diambil sampel acak berbenih tetap, BUKAN dipilih berdasarkan skor retrieval atau penilaian apa pun; kandidat kemungkinan_sama yang masuk sampel tetap ditinjau dengan status sama seperti kandidat lain (tidak diistimewakan atau dikeluarkan).",
     "seed": 20260922,

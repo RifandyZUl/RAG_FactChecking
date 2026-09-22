@@ -10,7 +10,7 @@
   ],
   "wajib": [
     "36213",
-    "36655",
+    "36610",
     "36157",
     "36606"
   ],
@@ -30,7 +30,7 @@
     "Bantuan-PENIPUAN": [
       "36157",
       "36191",
-      "36286"
+      "36166"
     ],
     "Lowongan-PENIPUAN": [
       "36331",
@@ -39,10 +39,10 @@
     ],
     "Kesehatan-SALAH": [
       "36606",
-      "36212"
+      "36573"
     ],
     "Bencana-SALAH": [
-      "36655",
+      "36610",
       "36388"
     ],
     "Hadiah-PENIPUAN": [
@@ -63,16 +63,22 @@
     "36111",
     "36157",
     "36191",
-    "36286",
+    "36166",
     "36331",
     "36545",
     "36048",
     "36606",
-    "36212",
-    "36655",
+    "36573",
+    "36610",
     "36388",
     "36564",
     "36062"
   ],
-  "jumlah_tanpa_references": 3
+  "jumlah_tanpa_references": 3,
+  "penyimpangan_2026-09-22": {
+    "catatan": "Tiga id diganti karena audit kebocoran teks terhadap ANNOTATION_GUIDE.md dan prompt sistem (bukan karena ketersediaan atau skor apa pun). Rincian alasan dan waktu di testset/v1.meta.json.penyimpangan_praregistrasi. Sampel acak berbenih (seed 20260921) TIDAK diulang; penggantian ini manual, di luar proses acak.",
+    "36655_ke_36610": "Bencana-SALAH, juga anggota 'wajib'. Kandidat lama (Malaysia + karhutla) berbagi entitas dengan contoh andalan pedoman (36729, Malaysia Laporkan Indonesia ke PBB soal Karhutla, artikel dikecualikan).",
+    "36212_ke_36573": "Kesehatan-SALAH. Kandidat lama (Vaksin HPV Sebabkan HIV) muncul verbatim sebagai contoh TIDAK SAMA di pedoman ('vaksin HPV sebabkan HIV', baris 36214).",
+    "36286_ke_36166": "Bantuan-PENIPUAN. Kandidat lama (Bantuan Beras dari Pemerintah) berparafrase dekat dengan contoh TIDAK SAMA di pedoman ('link daftar bantuan beras 30 kg', baris 36737)."
+  }
 }
