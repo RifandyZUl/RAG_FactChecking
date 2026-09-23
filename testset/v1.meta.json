@@ -131,13 +131,14 @@
     "Koreksi independensi (2026-09-22): Gemma (pembuat butir buatan_model, kandidat juri H4) bukan 'keluarga berbeda' dari Gemini (generator gemini-3.5-flash-lite), melainkan model berbeda dari pengembang yang sama (Google, riset yang berkaitan). Pemisahan pembuat butir/generator/juri hanya mengurangi, bukan menghilangkan, risiko bias bersama."
   ],
   "butir": "testset/v1.jsonl (54 baris: 50 butir utama + 4 butir batas, disimpan terpisah dari berkas ini -- lihat hasil_penyusunan_testset_v1_2026-09-23 untuk rincian)",
-  "sha256_butir": "9a072123413693bd31c1e452e9dd23d6edff283098b857e35172fafd785f58be",
+  "sha256_butir": "4aeef3c955a75196480febc6d620ea427ca2c12b813c6ee4b3330977f8c884f4",
   "format_butir": {
     "label_ganda": "Dua label terpisah per butir: expected_retrieval_article (artikel yang seharusnya TERJANGKAU retrieval, untuk Recall@3) dan expected_verdict (ditemukan | belum_ditemukan, keputusan akhir yang seharusnya diberikan generator). expected_verdict=ditemukan berarti artikel yang dipilih harus expected_retrieval_article. Klaim yang lebih umum daripada artikelnya: expected_retrieval_article terisi, expected_verdict=belum_ditemukan.",
     "kolom": [
       "id",
       "klaim",
       "tipe",
+      "subtipe",
       "expected_retrieval_article",
       "expected_verdict",
       "expected_label",
@@ -156,7 +157,8 @@
       "overlap_narasi",
       "catatan"
     ],
-    "batas": "kekhususan=batas dilaporkan terpisah dan tidak masuk hitungan utama"
+    "batas": "kekhususan=batas dilaporkan terpisah dan tidak masuk hitungan utama",
+    "koreksi_kolom_subtipe_2026-09-23": "Kolom 'subtipe' TIDAK ADA pada daftar kolom pra-registrasi asli (2026-09-21), padahal evaluasi.laporan_wajib mewajibkan 'tabel silang tipe x sumber x subtipe' -- tanpa kolom ini, butir negatif_sulit tidak dapat dibedakan pola_sama_entitas_beda/entitas_sama_klaim_beda/angka_waktu_beda dari berkas butir saja. Ditambahkan sebelum pembekuan (ditemukan saat menghitung pasangan minimal per subtipe, 2026-09-23); testset/v1.jsonl ditulis ulang dengan kolom ini, sha256_butir diperbarui. Bukan perubahan nilai/keputusan apa pun yang sudah dipra-registrasi -- hanya melengkapi struktur data agar mendukung laporan yang memang sudah diwajibkan sejak awal."
   },
   "komposisi_sumber_rancangan": {
     "prinsip": "Pertahankan ketiga subtipe negatif sulit dengan proporsi rancangan (7/7/6). Usahakan setiap TIPE butir memuat kedua sumber (buatan_model dan teks_nyata/manusia); bila tidak mungkin, dicatat.",
@@ -490,10 +492,51 @@
       "negatif_mudah": {"jumlah": 10, "per_sumber": {"teks_nyata": 7, "liputan6": 3}, "catatan": "PENYIMPANGAN PRA-REGISTRASI: rancangan asli 5 teks_nyata + 5 buatan_model; jadi 10 teks_nyata (arsip+liputan6) + 0 buatan_model karena SELURUH 15 kandidat Gemma ditolak pemilik proyek (tidak menyerupai hoaks nyata, lihat hasil_tinjauan_tahap_3_gemma_2026-09-23). Konsekuensi: efek sumber dan efek tipe butir tidak dapat dipisahkan pada seluruh sel negatif_mudah (bukan hanya sebagian, seperti confound subtipe lain)."},
       "batas": {"jumlah": 4, "per_sumber": {"liputan6": 2, "sumber_eksternal": 2}, "tidak_masuk_metrik_utama": true}
     },
-    "pasangan_minimal": {
-      "jumlah_butir_negatif/batas_berpasangan_dengan_positif_pada_anchor_sama": 12,
-      "jumlah_artikel_jangkar_dipakai_lebih_dari_satu_butir": 31,
-      "catatan": "Dihitung otomatis: setiap artikel yang menjadi expected_retrieval_article untuk >= 1 butir positif DAN >= 1 butir negatif_sulit/batas dianggap satu pasangan minimal. Termasuk kasus tak terduga: 36191 (Bank Indonesia dana hibah) menjadi tetangga bagi 4 butir negatif_sulit berbeda (pola_sama_entitas_beda x2, entitas_sama_klaim_beda x1, DAN positifnya sendiri) -- pola hoaks 'dana hibah' ini ternyata sangat berulang di sumber teks_nyata/Liputan6, bukan kesalahan penyusunan."
+    "pasangan_minimal_2026-09-23": {
+      "koreksi_laporan_sebelumnya": "Laporan sebelumnya (hari yang sama) menyebut '12 butir, 31 artikel jangkar' -- angka itu SALAH: dihitung dari seluruh artikel target yang dipakai di mana pun (termasuk yang hanya dipakai 1 kali), bukan yang dipakai bersama, dan mencampur butir batas ke dalam hitungan negatif. Diperbaiki di sini dengan definisi tepat sesuai instruksi pemilik proyek 2026-09-23.",
+      "definisi": "Pasangan minimal SAH = satu butir negatif_sulit (BUKAN batas) yang expected_retrieval_article-nya SAMA dengan expected_retrieval_article sebuah butir positif. Dihitung per butir negatif_sulit (satu artikel jangkar dengan beberapa negatif_sulit menghasilkan beberapa pasangan).",
+      "hasil": {
+        "total_negatif_sulit_berpasangan": 11,
+        "total_negatif_sulit": 20,
+        "proporsi": "11/20 = 55% -- SEKITAR separuh sesuai target rancangan (bukan 'jauh di bawah separuh'), tidak diflag sebagai masalah.",
+        "sebaran_per_subtipe": {
+          "pola_sama_entitas_beda": {"berpasangan": 2, "total": 7, "catatan": "Rendah (29%) -- kandidat teks_nyata/Liputan6 subtipe ini dipilih dari populasi arsip independen (nearest-neighbor retrieval alami), TIDAK sengaja diarahkan ke 20 artikel target positif."},
+          "entitas_sama_klaim_beda": {"berpasangan": 3, "total": 7, "catatan": "Sedang (43%) -- 2 dari 2 kandidat buatan_model (Gemma) sengaja ditarget ke artikel positif (36191, 36700) untuk pasangan minimal; kandidat teks_nyata/manusia lainnya tidak."},
+          "angka_waktu_beda": {"berpasangan": 6, "total": 6, "catatan": "100% -- SELURUH target subtipe ini sengaja dipilih dari 20 artikel target positif (keputusan desain Claude saat generasi Gemma, lihat jatah_gemma_final_setelah_tinjauan_2026-09-22), jadi pasangannya taken by construction, bukan kebetulan."}
+        },
+        "daftar_pasangan": [
+          {"artikel": "36120", "negatif_sulit": "v1-040", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36157", "negatif_sulit": "v1-037", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36191", "negatif_sulit": "v1-025", "subtipe": "pola_sama_entitas_beda"},
+          {"artikel": "36191", "negatif_sulit": "v1-027", "subtipe": "pola_sama_entitas_beda"},
+          {"artikel": "36191", "negatif_sulit": "v1-033", "subtipe": "entitas_sama_klaim_beda"},
+          {"artikel": "36213", "negatif_sulit": "v1-028", "subtipe": "entitas_sama_klaim_beda"},
+          {"artikel": "36282", "negatif_sulit": "v1-039", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36388", "negatif_sulit": "v1-036", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36477", "negatif_sulit": "v1-035", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36545", "negatif_sulit": "v1-038", "subtipe": "angka_waktu_beda"},
+          {"artikel": "36700", "negatif_sulit": "v1-034", "subtipe": "entitas_sama_klaim_beda"}
+        ]
+      },
+      "penggunaan_dalam_rencana_analisis": "Analisis 'per pasangan minimal' pada evaluasi.laporan_wajib WAJIB memakai daftar_pasangan di atas sebagai populasi pasangan (11 pasangan): untuk tiap pasangan, catat apakah generator benar pada KEDUA butir (positif dan negatif_sulit pasangannya) -- ukuran paling langsung untuk H1. Subtipe pola_sama_entitas_beda punya cakupan pasangan paling rendah (2/7); interpretasi H1 pada subtipe itu sebagian besar bergantung pada butir TANPA pasangan minimal, jadi laporan wajib menyatakan ini secara eksplisit, bukan menggabung ketiga subtipe seolah tercakup merata."
+    },
+    "ketergantungan_antar_butir_2026-09-23": {
+      "temuan": "11 artikel basis data menjadi expected_retrieval_article/tetangga_article_id untuk LEBIH DARI SATU butir (24 dari 54 butir total, 44%, berada pada salah satu dari 11 artikel jangkar bersama ini).",
+      "PERINGATAN_INDEPENDENSI": "Butir-butir yang berbagi artikel jangkar TIDAK SALING INDEPENDEN: kegagalan retrieval pada SATU artikel (mis. karena bahasa klaim ambigu, embedding tidak menangkap kemiripan, atau indeks basi) dapat MENJATUHKAN BEBERAPA BUTIR SEKALIGUS -- bukan kegagalan acak yang independen antar butir. Interval Wilson 95% yang diasumsikan i.i.d. per butir akan TERLALU SEMPIT (overconfident) bila dihitung seolah 54 butir saling independen. Laporan evaluasi WAJIB menyebutkan ini secara eksplisit saat menafsirkan jumlah kesalahan, terutama bila kesalahan terkonsentrasi pada satu atau beberapa artikel jangkar (pola kegagalan sistemik, bukan acak).",
+      "artikel_dipakai_lebih_dari_satu_butir": [
+        {"artikel": "36191", "jumlah_butir": 4, "butir": ["v1-010 (positif)", "v1-025 (negatif_sulit/pola_sama_entitas_beda)", "v1-027 (negatif_sulit/pola_sama_entitas_beda)", "v1-033 (negatif_sulit/entitas_sama_klaim_beda)"]},
+        {"artikel": "36213", "jumlah_butir": 2, "butir": ["v1-001 (positif)", "v1-028 (negatif_sulit/entitas_sama_klaim_beda)"]},
+        {"artikel": "36477", "jumlah_butir": 2, "butir": ["v1-004 (positif)", "v1-035 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36700", "jumlah_butir": 2, "butir": ["v1-005 (positif)", "v1-034 (negatif_sulit/entitas_sama_klaim_beda)"]},
+        {"artikel": "36387", "jumlah_butir": 2, "butir": ["v1-006 (positif)", "v1-054 (batas)"]},
+        {"artikel": "36120", "jumlah_butir": 2, "butir": ["v1-007 (positif)", "v1-040 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36157", "jumlah_butir": 2, "butir": ["v1-009 (positif)", "v1-037 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36545", "jumlah_butir": 2, "butir": ["v1-013 (positif)", "v1-038 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36388", "jumlah_butir": 2, "butir": ["v1-018 (positif)", "v1-036 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36282", "jumlah_butir": 2, "butir": ["v1-019 (positif)", "v1-039 (negatif_sulit/angka_waktu_beda)"]},
+        {"artikel": "36216", "jumlah_butir": 2, "butir": ["v1-030 (negatif_sulit/entitas_sama_klaim_beda)", "v1-031 (negatif_sulit/entitas_sama_klaim_beda)"], "catatan": "satu-satunya klaster TANPA butir positif -- dua kandidat Liputan6 independen (tuduhan korupsi Jokowi lewat dua narator berbeda) kebetulan sama-sama bertetangga dengan 36216."}
+      ],
+      "metode": "Dihitung otomatis dari testset/v1.jsonl (expected_retrieval_article), skrip yang sama dengan pasangan_minimal_2026-09-23."
     },
     "berkas": "testset/v1.jsonl (54 baris, kolom sesuai format_butir.kolom), sha256_butir dicatat di atas.",
     "generator_versi_saat_disusun": {
