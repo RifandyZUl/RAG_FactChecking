@@ -15,10 +15,12 @@ BUKAN langsung masuk set uji: setiap baris memuat metadata (nama model, versi --
 respons API bila tersedia, jika tidak versi SDK terpasang + catatan, lihat
 `LLMProvider.model_version_info` -- tanggal, dan nama prompt pembuat) dan hasil pemeriksaan
 otomatis (`lolos_pemeriksaan_otomatis`). Kandidat yang gagal pemeriksaan (kebocoran teks, salin
->= 4 kata dari Narasi, atau kebetulan sangat mirip judul artikel lain) TETAP ditulis ke
-gemma_candidates.jsonl (bukan dihapus diam-diam) tapi ditandai gagal, untuk jejak audit --
-KEDUANYA ditegakkan lewat kode, bukan hanya konvensi: `reviewable_rows`/`write_review_csv`
-memastikan kandidat gagal tidak pernah keluar ke berkas tinjauan manusia, dan
+>= 4 kata dari Narasi, kebetulan sangat mirip judul artikel lain, atau memuat penanda data
+pribadi -- `pii_flags()`, sama seperti candidates/screen.py, ditambahkan 2026-09-23 setelah
+kandidat berisi nomor telepon berpola nomor Indonesia lolos tak tertandai ke tinjauan tahap 3)
+TETAP ditulis ke gemma_candidates.jsonl (bukan dihapus diam-diam) tapi ditandai gagal, untuk
+jejak audit -- KEDUANYA ditegakkan lewat kode, bukan hanya konvensi: `reviewable_rows`/
+`write_review_csv` memastikan kandidat gagal tidak pernah keluar ke berkas tinjauan manusia, dan
 `assert_reviewed_before_testset` menolak kandidat gagal sebagai butir set uji (lihat
 tests/test_gemma_generate.py untuk uji yang menegakkan keduanya).
 
@@ -38,6 +40,8 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from candidates.screen import pii_flags
 
 from chunker import load_articles
 from generator import SYSTEM_PROMPT
@@ -186,7 +190,7 @@ def run_checks(
     artikel targetnya sendiri (itu maksud subtipenya -- KIA yang sama, satu unsur diubah); tanpa
     pengecualian ini pemeriksaan salah menandai kandidat yang justru benar sebagai gagal.
     """
-    checks: dict[str, Any] = {"leak_flag": leak_flag(text, reference_text)}
+    checks: dict[str, Any] = {"leak_flag": leak_flag(text, reference_text), "pii_flags": pii_flags(text)}
     if slot == "positif":
         checks["copies_narasi_ngram"] = narasi is not None and copies_ngram(text, narasi, MIN_COPY_NGRAM)
     else:
@@ -201,7 +205,7 @@ def run_checks(
 
 
 def passed_checks(slot: str, checks: dict[str, Any]) -> bool:
-    if checks.get("leak_flag"):
+    if checks.get("leak_flag") or checks.get("pii_flags"):
         return False
     if slot == "positif":
         return not checks.get("copies_narasi_ngram", False)
@@ -259,6 +263,24 @@ def assert_reviewed_before_testset(candidate: dict[str, Any]) -> None:
             f"tidak boleh masuk set uji: slot={candidate.get('slot')!r} "
             f"target={candidate.get('target_article')!r} klaim={candidate.get('klaim')!r}"
         )
+
+
+def assert_no_pii(klaim: str, item_id: str = "") -> None:
+    """
+    Pengaman umum (BUKAN khusus kandidat Gemma) sebelum teks apa pun -- dari sumber mana pun
+    (manusia, teks_nyata, liputan6, buatan_model) -- masuk sebagai butir set uji final. Dipakai
+    saat menyusun testset/v1.jsonl dari SELURUH sumber, bukan hanya alur candidates.gemma_generate.
+
+    Diperkenalkan 2026-09-23 setelah kandidat gemma-positif-36191-8 (nomor WA berpola nomor
+    Indonesia asli) sempat lolos ke tinjauan tahap 3 tak tertandai -- lihat pii_flags di
+    candidates/screen.py dan run_checks di modul ini. KETERBATASAN: pii_flags() tidak menangkap
+    handle platform tanpa '@' (mis. "TikTok dana.hibh") -- kasus semacam itu masih bergantung
+    pada tinjauan manusia, bukan pemeriksaan otomatis ini.
+    """
+    flags = pii_flags(klaim)
+    if flags:
+        raise ValueError(f"butir mengandung penanda data pribadi {flags} tidak boleh masuk set uji: "
+                          f"id={item_id!r} klaim={klaim!r}")
 
 
 def generate_for_job(

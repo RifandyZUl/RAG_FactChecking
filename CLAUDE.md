@@ -12,37 +12,39 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-09-23)*
 
-- **Tinjauan tahap 3 (58 kandidat Gemma) SELESAI** oleh pemilik proyek. Keputusan lengkap di
-  `data/candidates/keputusan_tahap3_gemma.jsonl` (sumber kebenaran). Hasil: semua 15 sel
-  target-artikel (positif 7, negatif_angka_waktu 6, negatif_entitas_sama 2) SURPLUS -> direduksi
-  ke 1 butir/artikel lewat sampel acak berbenih (seed 20260924, sama seperti tahap 1); hasil
-  lengkap di `v1.meta.json.hasil_tinjauan_tahap_3_gemma_2026-09-23`. **negatif_mudah: 0 dari 15
-  disetujui** (semua ditolak, dinilai terlalu absurd) -- shortfall 5 dari 5, menunggu keputusan
-  pemilik proyek (isi dari 6 cadangan arsip teks_nyata yang sudah disetujui, atau generasi ulang
-  Gemma dengan instruksi lebih ketat).
-- **4 hal menunggu keputusan pemilik proyek sebelum testset/v1.jsonl disusun:**
-  1. Cara isi kekurangan negatif_mudah (lihat di atas).
-  2. 2 kandidat positif terpilih mengandung isu mirip-PII yang TIDAK PERNAH diperiksa otomatis
-     (gemma_generate.py tidak menjalankan pii_flags() sama sekali -- gap desain): nomor WA di
-     `gemma-positif-36191-8`, handle TikTok fiktif di `gemma-positif-36191-10` (pemenang sampel
-     untuk sel 36191).
-  3. `gemma-negatif_angka_waktu-36120-37` berlabel 'sama' dengan alasan yang menurut Claude
-     berpotensi tidak sesuai pedoman (menambah tahun yang sama sekali tidak ada di judul asli,
-     bukan sekadar 'detail tambahan') -- diflag, TIDAK diubah sepihak.
-  4. Nasib 3 kandidat yang direklasifikasi dari negatif_angka_waktu ke 'sama' oleh pemilik
-     proyek (36388-24, 36157-27, 36120-37): dibuang, atau digabung ke pool positif artikel yang
-     sama (rekomendasi: dibuang, ketiga artikel sudah surplus positif tanpa ini).
+- **`testset/v1.jsonl` DISUSUN** (54 baris: 50 butir utama + 4 butir batas). SHA-256 dicatat di
+  `v1.meta.json.sha256_butir`, diverifikasi cocok dengan berkas oleh
+  `tests/test_testset_locks.py::test_v1_jsonl_matches_recorded_hash_and_composition`. Komposisi:
+  positif 20 (SALAH 10/PENIPUAN 8/PARODI 2, persis sesuai pra-registrasi), negatif_sulit 20
+  (pola_sama_entitas_beda 7, entitas_sama_klaim_beda 7, angka_waktu_beda 6), negatif_mudah 10.
+  **Audit final (skrip, bukan manual) pada seluruh 54 butir: 0 kebocoran teks, 0 PII, 0 artikel
+  dikecualikan terpakai, 0 artikel sasaran positif dipakai lebih dari sekali.** Rincian lengkap
+  (termasuk tabel silang tipe x subtipe x sumber) di `v1.meta.json.hasil_penyusunan_testset_v1_2026-09-23`.
+  **MENUNGGU PERSETUJUAN pemilik proyek** sebelum tag `testset-v1` dan penguncian sidik jari generator.
+- **Temuan baru saat audit final**: `liputan6-8289615` (pemenang subtipe pola_sama_entitas_beda)
+  ternyata berpasangan dengan 36737 -- salah satu dari 6 artikel dikecualikan. Dikeluarkan,
+  populasi disampel ulang (seed 20260924 sama) -- lihat `penyimpangan_baru_ditemukan_saat_penyusunan_2026-09-23`
+  di `v1.meta.json`. Pemenang baru termasuk `liputan6-8293783`, yang tautan phishing-nya diredaksi
+  jadi `[tautan]` sebelum dipakai (sesuai keputusan tinjauan tahap 1: edit).
+- **Gap PII diperbaiki**: `pii_flags()` (dari `candidates/screen.py`) kini dijalankan untuk SEMUA
+  slot di `run_checks()` (gemma_generate.py), dan `assert_no_pii()` baru (fungsi umum, bukan
+  khusus Gemma) menegakkan bahwa butir apa pun (dari sumber mana pun) yang mengandung penanda
+  PII tidak bisa masuk set uji -- diuji offline. **Keterbatasan diketahui**: regex-nya tidak
+  menangkap handle platform tanpa `@` (mis. "TikTok dana.hibh") -- kasus itu (36191-10) hanya
+  tertangkap lewat tinjauan manusia, bukan otomatis; dicatat di `v1.meta.json`.
+- **negatif_mudah**: penyimpangan pra-registrasi -- 10 teks_nyata + 0 buatan_model (bukan 5+5)
+  karena seluruh 15 kandidat Gemma ditolak pemilik proyek (terlalu absurd, tidak menyerupai
+  hoaks nyata). Dicatat sebagai confound sumber/tipe pada seluruh sel itu.
 - **Label emas final** (2026-09-22, Aturan Wajib #5): seluruh label tahap 1/2/3/tambahan adalah
-  tinjauan pemilik proyek sendiri. Berkas draf ChatGPT sudah dihapus pemilik proyek; riwayatnya
-  dipertahankan di `v1.meta.json`. Asal teks klaim tahap 2: **tidak ingat** (dicatat, bukan
+  tinjauan pemilik proyek sendiri. Asal teks klaim tahap 2: **tidak ingat** (dicatat, bukan
   diasumsikan ditulis sendiri).
 - **36700 diputuskan opsi (b):** menggantikan 36596 di sel Politik-SALAH. `testset/targets_v1.json`
   sudah diperbarui (juga 36521->36019 dan 36564->36282).
-- **Belum di-commit:** `testset/v1.meta.json` (hasil tinjauan tahap 3, sampel acak berbenih,
-  temuan PII/pedoman) dan bagian Status Terkini ini. (`data/candidates/keputusan_tahap3_gemma.jsonl`
-  juga baru, tapi `data/candidates/` tidak di-commit.)
-- **Sudah di-commit & push:** 32 commit lama + 4 commit label emas/generator/hasil generasi
-  (hingga `7617265`), semua di `origin/main` per 2026-09-22/23, `.env` terverifikasi tidak ter-track.
+- **Belum di-commit:** semua perubahan hari ini (`testset/v1.jsonl` baru, `testset/v1.meta.json`,
+  `src/candidates/gemma_generate.py`, `tests/test_gemma_generate.py`, `tests/test_testset_locks.py`,
+  bagian Status Terkini ini) -- akan di-commit setelah pemilik proyek menyetujui laporan ini.
+- **Sudah di-commit & push (sebelum hari ini):** 32 commit lama + 4 commit label emas/generator/
+  hasil generasi (hingga `7617265`), semua di `origin/main`, `.env` terverifikasi tidak ter-track.
 
 ---
 
