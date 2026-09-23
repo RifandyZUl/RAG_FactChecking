@@ -162,7 +162,7 @@ def test_main_runs_all_pairs_and_writes_results(tmp_path, monkeypatch: pytest.Mo
     provider = ScriptedProvider([out_ok])
     provider.model = "gemma-test-main"
     _patch_pipeline(monkeypatch, provider)
-    monkeypatch.setattr(sys, "argv", ["testset_eval"])
+    monkeypatch.setattr(sys, "argv", ["testset_eval", "--run", "1"])
 
     rc = te.main()
     assert rc == 0
@@ -181,7 +181,7 @@ def test_main_resumes_and_skips_done_pairs(tmp_path, monkeypatch: pytest.MonkeyP
     provider = ScriptedProvider([out_ok])
     provider.model = "gemma-test-resume"
     _patch_pipeline(monkeypatch, provider)
-    monkeypatch.setattr(sys, "argv", ["testset_eval"])
+    monkeypatch.setattr(sys, "argv", ["testset_eval", "--run", "1"])
 
     out_file = te.out_path(provider.model)
     out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -220,3 +220,47 @@ def test_main_check_budget_makes_no_calls(tmp_path, monkeypatch: pytest.MonkeyPa
     rc = te.main()
     assert rc == 0
     assert provider.prompts == []  # tidak ada panggilan .generate()
+
+
+def test_run_flag_restricts_to_single_run(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """--run N membatasi cakupan ke run N saja -- dipakai untuk melapor per run sebagai
+    proses terpisah (instruksi pemilik proyek 2026-09-23)."""
+    _write_mini_v1(tmp_path, monkeypatch)
+    out_ok = llm_json(artikel_terpilih="100", klaim_sama=True, alasan="a", klarifikasi="k")
+    provider = ScriptedProvider([out_ok])
+    provider.model = "gemma-test-run2"
+    _patch_pipeline(monkeypatch, provider)
+    monkeypatch.setattr(sys, "argv", ["testset_eval", "--run", "2"])
+
+    rc = te.main()
+    assert rc == 0
+    out_file = te.out_path(provider.model)
+    lines = [json.loads(x) for x in out_file.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert {r["run"] for r in lines} == {2}
+    assert {(r["run"], r["idx"]) for r in lines} == {(2, 0), (2, 1)}
+
+
+def test_circuit_breaker_stops_after_two_consecutive_unanswered(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """2 butir berturut-turut tak_terjawab menghentikan proses (instruksi pemilik proyek
+    2026-09-23: jangan diteruskan sampai kuota habis)."""
+    v1_file = tmp_path / "v1.jsonl"
+    three_cases = MINI_CASES + [
+        {"id": "v1-003", "klaim": "klaim tiga", "tipe": "negatif_mudah", "subtipe": None,
+         "expected_retrieval_article": None, "expected_verdict": "belum_ditemukan", "expected_label": None,
+         "kekhususan": "jauh", "batas": False},
+    ]
+    v1_file.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in three_cases) + "\n", encoding="utf-8")
+    monkeypatch.setattr(te, "V1_PATH", v1_file)
+    monkeypatch.setattr(te, "DATA_DIR", tmp_path)
+
+    provider = ScriptedProvider([LLMError("persistent")])  # SEMUA percobaan gagal -> tiap butir tak_terjawab
+    provider.model = "gemma-test-circuit"
+    _patch_pipeline(monkeypatch, provider)
+    monkeypatch.setattr(sys, "argv", ["testset_eval", "--run", "1"])
+
+    rc = te.main()
+    assert rc == 3
+    out_file = te.out_path(provider.model)
+    lines = [json.loads(x) for x in out_file.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert len(lines) == 2  # berhenti setelah 2 tak_terjawab beruntun, butir ke-3 TIDAK dicoba
+    assert all(r["status"] == "tak_terjawab" for r in lines)
