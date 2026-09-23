@@ -2,11 +2,14 @@
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
+import pytest
 from generator import RESPONSE_SCHEMA, SYSTEM_PROMPT
 
 TESTSET = Path(__file__).resolve().parent.parent / "testset"
+ROOT = TESTSET.parent
 
 
 def _norm_sha(text: str) -> str:
@@ -88,3 +91,50 @@ def test_v1_jsonl_matches_recorded_hash_and_composition() -> None:
     assert sum(1 for r in rows if r["tipe"] == "positif") == c["positif"]
     assert sum(1 for r in rows if r["tipe"] == "negatif_sulit") == c["negatif_sulit"]
     assert sum(1 for r in rows if r["tipe"] == "negatif_mudah") == c["negatif_mudah"]
+
+
+def test_generator_fingerprint_matches_frozen_lock() -> None:
+    """
+    Sidik jari generator v1 (prompt+skema, seluruh generator.py, model, thinking_level bawaan)
+    dikunci di v1.meta.json.sidik_jari_generator_v1 saat pembekuan. Hasil evaluasi TIDAK SAH
+    disebut "untuk v1" bila salah satu berubah sejak pembekuan -- uji ini menolak (gagal) bila
+    itu terjadi, dijalankan otomatis sebagai bagian test suite biasa (bukan hanya sebelum
+    evaluasi). Skrip evaluasi (belum ditulis) wajib menjalankan pemeriksaan setara sebelum
+    menandai hasil sebagai valid untuk v1.
+    """
+    meta = json.loads((TESTSET / "v1.meta.json").read_text(encoding="utf-8"))
+    if "sidik_jari_generator_v1" not in meta:
+        pytest.skip("belum dibekukan")
+    lock = meta["sidik_jari_generator_v1"]
+
+    prompt_sha = _norm_sha(SYSTEM_PROMPT + "\n--skema--\n" + json.dumps(RESPONSE_SCHEMA, sort_keys=True, ensure_ascii=False))
+    assert lock["sha256_prompt_sistem_dan_skema"] == prompt_sha, (
+        "prompt sistem/skema berubah sejak pembekuan testset-v1: hasil evaluasi tidak sah untuk v1"
+    )
+
+    generator_src = (ROOT / "src" / "generator.py").read_text(encoding="utf-8")
+    assert lock["sha256_generator_py"] == _norm_sha(generator_src), (
+        "src/generator.py berubah sejak pembekuan testset-v1 (di luar SYSTEM_PROMPT/RESPONSE_SCHEMA "
+        "yang sudah dicek terpisah): hasil evaluasi tidak sah untuk v1"
+    )
+
+    from llm.gemini import DEFAULT_GEMINI_MODEL
+
+    assert lock["model"] == DEFAULT_GEMINI_MODEL, "model bawaan generator berubah sejak pembekuan testset-v1"
+    assert lock["thinking_level"] == "medium", (
+        "thinking_level terkunci di v1.meta.json bukan 'medium' -- periksa apakah ini sengaja "
+        "(bawaan GeminiProvider saat ini juga 'medium', lihat src/llm/gemini.py)"
+    )
+
+
+def test_v1_jsonl_unchanged_since_tag() -> None:
+    """testset/v1.jsonl tidak boleh berubah setelah tag testset-v1 diberikan -- dibandingkan
+    byte-demi-byte dengan isi persis pada tag itu, bukan hanya hash yang tercatat di v1.meta.json
+    (yang bisa saja ikut diubah bersamaan)."""
+    tag_check = subprocess.run(["git", "tag", "-l", "testset-v1"], cwd=ROOT, capture_output=True, text=True)
+    if "testset-v1" not in tag_check.stdout.split():
+        pytest.skip("tag testset-v1 belum dibuat")
+    tagged = subprocess.run(["git", "show", "testset-v1:testset/v1.jsonl"], cwd=ROOT,
+                             capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    current = (TESTSET / "v1.jsonl").read_text(encoding="utf-8")
+    assert current == tagged, "testset/v1.jsonl berbeda dari isi yang dibekukan pada tag testset-v1"

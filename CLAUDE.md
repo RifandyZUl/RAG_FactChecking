@@ -12,39 +12,44 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-09-23)*
 
-- **`testset/v1.jsonl` DISUSUN** (54 baris: 50 butir utama + 4 butir batas). SHA-256 dicatat di
-  `v1.meta.json.sha256_butir`, diverifikasi cocok dengan berkas oleh
-  `tests/test_testset_locks.py::test_v1_jsonl_matches_recorded_hash_and_composition`. Komposisi:
-  positif 20 (SALAH 10/PENIPUAN 8/PARODI 2, persis sesuai pra-registrasi), negatif_sulit 20
-  (pola_sama_entitas_beda 7, entitas_sama_klaim_beda 7, angka_waktu_beda 6), negatif_mudah 10.
-  **Audit final (skrip, bukan manual) pada seluruh 54 butir: 0 kebocoran teks, 0 PII, 0 artikel
-  dikecualikan terpakai, 0 artikel sasaran positif dipakai lebih dari sekali.** Rincian lengkap
-  (termasuk tabel silang tipe x subtipe x sumber) di `v1.meta.json.hasil_penyusunan_testset_v1_2026-09-23`.
-  **MENUNGGU PERSETUJUAN pemilik proyek** sebelum tag `testset-v1` dan penguncian sidik jari generator.
-- **Temuan baru saat audit final**: `liputan6-8289615` (pemenang subtipe pola_sama_entitas_beda)
-  ternyata berpasangan dengan 36737 -- salah satu dari 6 artikel dikecualikan. Dikeluarkan,
-  populasi disampel ulang (seed 20260924 sama) -- lihat `penyimpangan_baru_ditemukan_saat_penyusunan_2026-09-23`
-  di `v1.meta.json`. Pemenang baru termasuk `liputan6-8293783`, yang tautan phishing-nya diredaksi
-  jadi `[tautan]` sebelum dipakai (sesuai keputusan tinjauan tahap 1: edit).
-- **Gap PII diperbaiki**: `pii_flags()` (dari `candidates/screen.py`) kini dijalankan untuk SEMUA
-  slot di `run_checks()` (gemma_generate.py), dan `assert_no_pii()` baru (fungsi umum, bukan
-  khusus Gemma) menegakkan bahwa butir apa pun (dari sumber mana pun) yang mengandung penanda
-  PII tidak bisa masuk set uji -- diuji offline. **Keterbatasan diketahui**: regex-nya tidak
-  menangkap handle platform tanpa `@` (mis. "TikTok dana.hibh") -- kasus itu (36191-10) hanya
-  tertangkap lewat tinjauan manusia, bukan otomatis; dicatat di `v1.meta.json`.
+- **SET UJI V1 BEKU.** Tag git `testset-v1` dibuat pada commit yang menulis `testset/v1.jsonl`
+  final (54 baris: 50 butir utama + 4 batas). Sidik jari generator dikunci di
+  `v1.meta.json.sidik_jari_generator_v1`: sha256 prompt sistem+skema, sha256 SELURUH
+  `src/generator.py`, model (`gemini-3.5-flash-lite`), thinking_level (`medium`).
+  `tests/test_testset_locks.py::test_generator_fingerprint_matches_frozen_lock` menolak
+  (gagal) bila salah satunya berubah; `::test_v1_jsonl_unchanged_since_tag` menolak bila
+  `testset/v1.jsonl` berbeda dari isi persis pada tag. **Evaluasi BELUM dijalankan.**
+- **Audit final (skrip, bukan manual) pada seluruh 54 butir, sebelum beku**: 0 kebocoran teks,
+  0 PII, 0 artikel dikecualikan terpakai, 0 artikel sasaran positif dipakai lebih dari sekali.
+  Komposisi positif persis pra-registrasi (SALAH 10/PENIPUAN 8/PARODI 2). Rincian di
+  `v1.meta.json.hasil_penyusunan_testset_v1_2026-09-23`.
+- **Pasangan minimal (ukuran utama H1)**: 11 dari 20 negatif_sulit berpasangan dengan positif
+  pada anchor sama (`v1.meta.json.pasangan_minimal_2026-09-23`) -- TAPI 6 dari 11 pasangan itu
+  berasal dari subtipe angka_waktu_beda yang 100% dikonstruksi (Gemma sengaja ditarget ke
+  artikel yang sudah punya positif), bukan kebetulan alami. **Laporan evaluasi wajib memisahkan
+  hasil pasangan minimal per subtipe**, tidak menggabung jadi satu angka -- lihat
+  `batas_tafsir_2026-09-23` di blok yang sama. Klaster 36216 (2 butir negatif_sulit tanpa
+  positif pendamping) dikecualikan dari analisis pasangan minimal.
+- **Ketergantungan antar-butir**: 11 artikel dipakai >1 butir (24/54 butir, 44%) -- butir yang
+  berbagi anchor TIDAK saling independen; interval Wilson yang diasumsikan i.i.d. akan
+  overconfident. Wajib disebutkan saat menafsirkan evaluasi (`v1.meta.json.ketergantungan_antar_butir_2026-09-23`).
+  Ini pertimbangan STATISTIK evaluasi, terpisah dari batas kekhususan=batas (4 butir, tak masuk metrik utama).
+- **Gap PII diperbaiki** sebelum beku: `pii_flags()` kini jalan di semua slot Gemma;
+  `assert_no_pii()` umum (bukan khusus Gemma) menegakkan larangan PII untuk butir set uji dari
+  sumber mana pun. Keterbatasan diketahui: regex tidak menangkap handle tanpa `@` (mis. "TikTok
+  dana.hibh") -- kasus `36191-10` hanya tertangkap lewat tinjauan manusia.
 - **negatif_mudah**: penyimpangan pra-registrasi -- 10 teks_nyata + 0 buatan_model (bukan 5+5)
-  karena seluruh 15 kandidat Gemma ditolak pemilik proyek (terlalu absurd, tidak menyerupai
-  hoaks nyata). Dicatat sebagai confound sumber/tipe pada seluruh sel itu.
-- **Label emas final** (2026-09-22, Aturan Wajib #5): seluruh label tahap 1/2/3/tambahan adalah
-  tinjauan pemilik proyek sendiri. Asal teks klaim tahap 2: **tidak ingat** (dicatat, bukan
-  diasumsikan ditulis sendiri).
-- **36700 diputuskan opsi (b):** menggantikan 36596 di sel Politik-SALAH. `testset/targets_v1.json`
-  sudah diperbarui (juga 36521->36019 dan 36564->36282).
-- **Belum di-commit:** semua perubahan hari ini (`testset/v1.jsonl` baru, `testset/v1.meta.json`,
-  `src/candidates/gemma_generate.py`, `tests/test_gemma_generate.py`, `tests/test_testset_locks.py`,
-  bagian Status Terkini ini) -- akan di-commit setelah pemilik proyek menyetujui laporan ini.
-- **Sudah di-commit & push (sebelum hari ini):** 32 commit lama + 4 commit label emas/generator/
-  hasil generasi (hingga `7617265`), semua di `origin/main`, `.env` terverifikasi tidak ter-track.
+  karena seluruh 15 kandidat Gemma ditolak pemilik proyek (terlalu absurd).
+- **Kolom `subtipe` ditambahkan** ke `format_butir.kolom` (hilang dari pra-registrasi asli) --
+  diverifikasi programatik (bukan diklaim) bahwa penambahan ini murni struktural, 0 nilai butir
+  lain berubah; sha256_butir sebelum/sesudah dicatat di `v1.meta.json`.
+- **Label emas final** (Aturan Wajib #5), **36700 opsi (b)** diterapkan di `targets_v1.json` --
+  lihat riwayat lengkap di `v1.meta.json` bila memulihkan sesi dan butuh detail.
+- **Langkah berikutnya**: rencana eksekusi evaluasi (jumlah panggilan, perkiraan kuota Flash
+  Lite untuk 3 run, perkiraan durasi, penanganan bila terputus) akan dilaporkan untuk
+  persetujuan pemilik proyek SEBELUM evaluasi dijalankan.
+- **Sudah di-commit & push:** semua pekerjaan hingga pembekuan hari ini, tag `testset-v1` di
+  `origin`. `.env` terverifikasi tidak ter-track sepanjang sesi.
 
 ---
 
