@@ -1,0 +1,570 @@
+{
+ "n_butir_v1jsonl": 54,
+ "n_non_batas": 50,
+ "n_batas": 4,
+ "A_akurasi_non_batas": {
+  "n_total_butir": 50,
+  "n_dengan_modus": 50,
+  "n_tanpa_modus": 0,
+  "benar": 48,
+  "wilson95": [
+   0.8654,
+   0.989
+  ],
+  "id_tanpa_modus": []
+ },
+ "A_akurasi_batas": {
+  "n_total_butir": 4,
+  "n_dengan_modus": 4,
+  "n_tanpa_modus": 0,
+  "benar": 3,
+  "wilson95": [
+   0.3006,
+   0.9544
+  ],
+  "id_tanpa_modus": []
+ },
+ "A_kesepakatan_per_kekhususan": {
+  "spesifik": {
+   "bulat": 35,
+   "mayoritas": 5
+  },
+  "jauh": {
+   "bulat": 10
+  },
+  "batas": {
+   "bulat": 3,
+   "mayoritas": 1
+  }
+ },
+ "A_jenis_kesalahan_non_batas": {
+  "kecocokan_palsu": {
+   "k": 1,
+   "n": 30,
+   "wilson95": [
+    0.0059,
+    0.1667
+   ],
+   "id_butir": [
+    "v1-036"
+   ]
+  },
+  "penolakan_palsu": {
+   "k": 1,
+   "n": 20,
+   "wilson95": [
+    0.0089,
+    0.2361
+   ],
+   "id_butir": [
+    "v1-020"
+   ]
+  },
+  "artikel_salah": {
+   "k": 0,
+   "n": 20,
+   "wilson95": [
+    0.0,
+    0.1611
+   ],
+   "id_butir": []
+  }
+ },
+ "A_jenis_kesalahan_batas": {
+  "kecocokan_palsu": {
+   "k": 1,
+   "n": 4,
+   "wilson95": [
+    0.0456,
+    0.6994
+   ],
+   "id_butir": [
+    "v1-053"
+   ]
+  },
+  "penolakan_palsu": {
+   "k": 0,
+   "n": 0,
+   "wilson95": [
+    0.0,
+    1.0
+   ],
+   "id_butir": []
+  },
+  "artikel_salah": {
+   "k": 0,
+   "n": 0,
+   "wilson95": [
+    0.0,
+    1.0
+   ],
+   "id_butir": []
+  }
+ },
+ "A_recall_at_3_non_batas": {
+  "k": 36,
+  "n": 40,
+  "wilson95": [
+   0.7695,
+   0.9604
+  ],
+  "run_tidak_konsisten": []
+ },
+ "A_recall_at_3_batas": {
+  "k": 4,
+  "n": 4,
+  "wilson95": [
+   0.5101,
+   1.0
+  ],
+  "run_tidak_konsisten": []
+ },
+ "A_akurasi_per_sumber": {
+  "sumber_eksternal": {
+   "n_total_butir": 5,
+   "n_dengan_modus": 5,
+   "n_tanpa_modus": 0,
+   "benar": 5,
+   "wilson95": [
+    0.5655,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "liputan6": {
+   "n_total_butir": 14,
+   "n_dengan_modus": 14,
+   "n_tanpa_modus": 0,
+   "benar": 14,
+   "wilson95": [
+    0.7847,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "manusia_dari_sumber_mafindo": {
+   "n_total_butir": 4,
+   "n_dengan_modus": 4,
+   "n_tanpa_modus": 0,
+   "benar": 4,
+   "wilson95": [
+    0.5101,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "buatan_model": {
+   "n_total_butir": 15,
+   "n_dengan_modus": 15,
+   "n_tanpa_modus": 0,
+   "benar": 13,
+   "wilson95": [
+    0.6212,
+    0.9626
+   ],
+   "id_tanpa_modus": []
+  },
+  "teks_nyata": {
+   "n_total_butir": 11,
+   "n_dengan_modus": 11,
+   "n_tanpa_modus": 0,
+   "benar": 11,
+   "wilson95": [
+    0.7412,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "manusia": {
+   "n_total_butir": 1,
+   "n_dengan_modus": 1,
+   "n_tanpa_modus": 0,
+   "benar": 1,
+   "wilson95": [
+    0.2065,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  }
+ },
+ "A_akurasi_per_tipe": {
+  "positif": {
+   "n_total_butir": 20,
+   "n_dengan_modus": 20,
+   "n_tanpa_modus": 0,
+   "benar": 19,
+   "wilson95": [
+    0.7639,
+    0.9911
+   ],
+   "id_tanpa_modus": []
+  },
+  "negatif_sulit": {
+   "n_total_butir": 20,
+   "n_dengan_modus": 20,
+   "n_tanpa_modus": 0,
+   "benar": 19,
+   "wilson95": [
+    0.7639,
+    0.9911
+   ],
+   "id_tanpa_modus": []
+  },
+  "negatif_mudah": {
+   "n_total_butir": 10,
+   "n_dengan_modus": 10,
+   "n_tanpa_modus": 0,
+   "benar": 10,
+   "wilson95": [
+    0.7225,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "batas": {
+   "n_total_butir": 4,
+   "n_dengan_modus": 4,
+   "n_tanpa_modus": 0,
+   "benar": 3,
+   "wilson95": [
+    0.3006,
+    0.9544
+   ],
+   "id_tanpa_modus": []
+  }
+ },
+ "A_akurasi_per_subtipe": {
+  "pola_sama_entitas_beda": {
+   "n_total_butir": 7,
+   "n_dengan_modus": 7,
+   "n_tanpa_modus": 0,
+   "benar": 7,
+   "wilson95": [
+    0.6457,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "entitas_sama_klaim_beda": {
+   "n_total_butir": 7,
+   "n_dengan_modus": 7,
+   "n_tanpa_modus": 0,
+   "benar": 7,
+   "wilson95": [
+    0.6457,
+    1.0
+   ],
+   "id_tanpa_modus": []
+  },
+  "angka_waktu_beda": {
+   "n_total_butir": 6,
+   "n_dengan_modus": 6,
+   "n_tanpa_modus": 0,
+   "benar": 5,
+   "wilson95": [
+    0.4365,
+    0.9699
+   ],
+   "id_tanpa_modus": []
+  }
+ },
+ "A_pasangan_minimal_per_subtipe": {
+  "angka_waktu_beda": {
+   "pasangan": [
+    {
+     "artikel": "36120",
+     "positif": "v1-007",
+     "negatif_sulit": "v1-040",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36157",
+     "positif": "v1-009",
+     "negatif_sulit": "v1-037",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36282",
+     "positif": "v1-019",
+     "negatif_sulit": "v1-039",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36388",
+     "positif": "v1-018",
+     "negatif_sulit": "v1-036",
+     "positif_benar": true,
+     "negatif_sulit_benar": false,
+     "kedua_benar": false
+    },
+    {
+     "artikel": "36477",
+     "positif": "v1-004",
+     "negatif_sulit": "v1-035",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36545",
+     "positif": "v1-013",
+     "negatif_sulit": "v1-038",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    }
+   ],
+   "kedua_benar": 5,
+   "n": 6
+  },
+  "pola_sama_entitas_beda": {
+   "pasangan": [
+    {
+     "artikel": "36191",
+     "positif": "v1-010",
+     "negatif_sulit": "v1-025",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36191",
+     "positif": "v1-010",
+     "negatif_sulit": "v1-027",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    }
+   ],
+   "kedua_benar": 2,
+   "n": 2
+  },
+  "entitas_sama_klaim_beda": {
+   "pasangan": [
+    {
+     "artikel": "36191",
+     "positif": "v1-010",
+     "negatif_sulit": "v1-033",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36213",
+     "positif": "v1-001",
+     "negatif_sulit": "v1-028",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    },
+    {
+     "artikel": "36700",
+     "positif": "v1-005",
+     "negatif_sulit": "v1-034",
+     "positif_benar": true,
+     "negatif_sulit_benar": true,
+     "kedua_benar": true
+    }
+   ],
+   "kedua_benar": 3,
+   "n": 3
+  }
+ },
+ "A_H1": {
+  "kecocokan_palsu": 1,
+  "n_negatif_sulit": 20,
+  "status": "TERDUKUNG (1/20 <= 1, ambang: <= 1 dari 20)"
+ },
+ "A_H3": {
+  "n_kesalahan": 2,
+  "n_butir": 50,
+  "n_pelanggaran_format": 0,
+  "status": "TERDUKUNG pada sampel ini (kesalahan 2/50, pelanggaran format 0)"
+ },
+ "B_disagreements": [
+  {
+   "id": "v1-010",
+   "klaim": "Menkeu Purbaya Yudhi Sadewa bagi-bagi bantuan modal usaha 500jt, tapi harus setor 30% buat masjid sama fakir miskin",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "ditemukan",
+     "article_id": "36191",
+     "alasan": "Klaim pengguna mengenai pembagian bantuan dana oleh Menkeu Purbaya Yudhi Sadewa sesuai dengan pembahasan hoaks pada artikel."
+    },
+    {
+     "run": 2,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna mengenai Menkeu Purbaya Yudhi Sadewa yang membagikan bantuan modal usaha 500 juta dengan syarat setor 30% memiliki subjek dan detail tindakan/objek yang berbeda dengan klaim inti (Judul) dari artikel-artikel kandidat yang tersedia."
+    },
+    {
+     "run": 3,
+     "verdict": "ditemukan",
+     "article_id": "36191",
+     "alasan": "Klaim pengguna mengenai pembagian bantuan oleh Menkeu Purbaya Yudhi Sadewa dengan syarat setoran adalah isi konten hoaks yang dibahas secara spesifik dalam artikel tersebut."
+    }
+   ]
+  },
+  {
+   "id": "v1-040",
+   "klaim": "Prabowo : Wanita Hamil Wajib Bayar Pajak Tiap Tahun",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "ditemukan",
+     "article_id": "36120",
+     "alasan": "Klaim pengguna merujuk pada hoaks yang sama mengenai pernyataan Prabowo terkait pajak bagi wanita hamil, di mana perbedaan kata 'tiap tahun' dan 'tiap bulan' merupakan variasi penyebutan narasi."
+    },
+    {
+     "run": 2,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan 'tiap tahun', sedangkan klaim inti artikel kandidat menyatakan 'tiap bulan', sehingga terdapat perbedaan pada unsur kondisi waktu atau frekuensi."
+    },
+    {
+     "run": 3,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan 'tiap tahun', sedangkan klaim inti artikel kandidat menyebutkan 'tiap bulan', sehingga terdapat perbedaan pada unsur kondisi waktu atau frekuensi."
+    }
+   ]
+  },
+  {
+   "id": "v1-039",
+   "klaim": "Undian Berhadiah BRI Sambut HUT ke-80 RI",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan HUT ke-80 RI, sedangkan artikel kandidat membahas undian berhadiah BRI dalam rangka HUT ke-81 RI sehingga terdapat perbedaan pada objek atau tahun peristiwa."
+    },
+    {
+     "run": 2,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna mengenai HUT ke-80 RI berbeda secara spesifik dengan klaim pada artikel kandidat yang menyebutkan HUT ke-81 RI."
+    },
+    {
+     "run": 3,
+     "verdict": "ditemukan",
+     "article_id": "36282",
+     "alasan": "Klaim pengguna sama dengan artikel terpilih karena membahas penipuan undian berhadiah yang mengatasnamakan Bank BRI dalam rangka HUT RI, dengan sedikit perbedaan pada angka tahun perayaan yang merupakan variasi perifer dari modus penipuan yang sama."
+    }
+   ]
+  },
+  {
+   "id": "v1-006",
+   "klaim": "Indonesia udah resmi cabut dari World Bank sama IMF katanya",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan keluarnya Indonesia dari World Bank dan IMF secara bersamaan, sedangkan klaim inti artikel kandidat (ID 36387) hanya membahas keanggotaan World Bank saja."
+    },
+    {
+     "run": 2,
+     "verdict": "ditemukan",
+     "article_id": "36387",
+     "alasan": "Klaim pengguna mengenai keluarnya Indonesia dari World Bank dan IMF sesuai dengan klaim inti artikel tentang keluarnya Indonesia dari keanggotaan World Bank."
+    },
+    {
+     "run": 3,
+     "verdict": "ditemukan",
+     "article_id": "36387",
+     "alasan": "Klaim pengguna yang menyatakan Indonesia keluar dari World Bank dan IMF merujuk pada hoaks yang sama dengan yang dibahas di dalam artikel."
+    }
+   ]
+  },
+  {
+   "id": "v1-036",
+   "klaim": "Video Gedung Ambruk saat Gempa Magnitudo 8,2 Guncang Lepas Pantai Flores",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "ditemukan",
+     "article_id": "36388",
+     "alasan": "Klaim pengguna merujuk pada peristiwa dan video yang sama mengenai gedung ambruk akibat gempa di Flores, di mana perbedaan angka magnitudo merupakan variasi penyebaran narasi disinformasi."
+    },
+    {
+     "run": 2,
+     "verdict": "ditemukan",
+     "article_id": "36388",
+     "alasan": "Klaim pengguna sama dengan artikel kandidat mengenai video narasi gedung ambruk saat gempa di lepas pantai Flores, dengan sedikit perbedaan variasi angka magnitudo."
+    },
+    {
+     "run": 3,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan magnitudo gempa yang berbeda (8,2) dibandingkan dengan klaim inti artikel kandidat (7,7), sehingga mengubah unsur kondisi spesifik dari peristiwa tersebut."
+    }
+   ]
+  },
+  {
+   "id": "v1-053",
+   "klaim": "katanya berdasarkan data Bank Dunia, Indonesia jadi negara termiskin nomor 2 di dunia setelah Zimbabwe karena jumlah penduduk miskinnya sangat banyak",
+   "kesepakatan": "mayoritas",
+   "per_run": [
+    {
+     "run": 1,
+     "verdict": "tidak_ditemukan",
+     "article_id": null,
+     "alasan": "Klaim pengguna menyebutkan Indonesia sebagai negara termiskin nomor 2 setelah Zimbabwe, sedangkan artikel kandidat berkaitan dengan klaim Indonesia sebagai negara berkembang termiskin di dunia."
+    },
+    {
+     "run": 2,
+     "verdict": "ditemukan",
+     "article_id": "36596",
+     "alasan": "Klaim pengguna dan artikel sama-sama membahas klaim bahwa data Bank Dunia menunjukkan Indonesia sebagai negara termiskin."
+    },
+    {
+     "run": 3,
+     "verdict": "ditemukan",
+     "article_id": "36596",
+     "alasan": "Klaim pengguna dan judul artikel sama-sama mengacu pada narasi hoaks bahwa Bank Dunia menyatakan Indonesia sebagai negara termiskin."
+    }
+   ]
+  }
+ ],
+ "B_format_violations": {
+  "total": 0,
+  "per_butir": {}
+ },
+ "B_urls_outside_metadata": {
+  "total": 0,
+  "per_butir": {}
+ },
+ "B_latency_tokens_per_run": {
+  "1": {
+   "latensi_rata2_s": 10.09,
+   "token_masuk_rata2": 2516.4,
+   "token_keluar_rata2": 87.1,
+   "n_butir": 54
+  },
+  "2": {
+   "latensi_rata2_s": 15.28,
+   "token_masuk_rata2": 2516.4,
+   "token_keluar_rata2": 87.6,
+   "n_butir": 54
+  },
+  "3": {
+   "latensi_rata2_s": 18.49,
+   "token_masuk_rata2": 2516.4,
+   "token_keluar_rata2": 88.6,
+   "n_butir": 54
+  }
+ }
+}

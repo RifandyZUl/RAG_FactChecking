@@ -1,0 +1,119 @@
+CAVEAT WAJIB (baca sebelum menafsirkan angka di atas):
+
+1. KETERGANTUNGAN ARTIKEL JANGKAR: 11 artikel dipakai lebih dari satu butir (24/54 butir, 44%
+   dari seluruh set uji). Butir yang berbagi artikel jangkar TIDAK saling independen -- satu
+   kegagalan retrieval pada artikel itu dapat menjatuhkan beberapa butir sekaligus. Interval
+   Wilson 95% di atas mengasumsikan butir saling bebas (i.i.d.) dan akan TERLALU PERCAYA DIRI
+   (interval lebih sempit dari yang sebenarnya) bila asumsi itu dilanggar.
+
+2. PASANGAN MINIMAL SUBTIPE "ANGKA ATAU WAKTU BEDA" ADALAH HASIL KONSTRUKSI, BUKAN PENGAMATAN:
+   seluruh 6 pasangan minimal subtipe ini sengaja diarahkan ke artikel yang sudah punya butir
+   positif (keputusan desain saat generasi Gemma), bukan kebetulan yang muncul dari populasi
+   independen. Kesimpulan H1 dari analisis pasangan minimal keseluruhan (bukan per subtipe)
+   bertumpu terutama pada subtipe ini.
+
+3. CONFOUND SUMBER: subtipe "angka atau waktu beda" 100% buatan_model (Gemma); "negatif mudah"
+   0% buatan_model (seluruh 15 kandidat Gemma ditolak pemilik proyek, digantikan teks_nyata).
+   Pada kedua sel ini, efek SUMBER dan efek TIPE/SUBTIPE BUTIR tidak dapat dipisahkan -- akurasi
+   tinggi/rendah pada sel itu bisa jadi mencerminkan kualitas sumber, bukan kesulitan subtipe.
+
+4. UKURAN SAMPEL: 50 butir non-batas (dari mana pun metriknya dihitung) HANYA MENDETEKSI
+   KEGAGALAN YANG JELAS. Batas bawah Wilson 95% bila SEMUA benar hanya ~0,84 (n=20) dan ~0,89
+   (n=30) -- angka di atas TIDAK MENDUKUNG klaim akurasi di atas 95%, betapa pun tingginya
+   proporsi benar yang teramati.
+
+==============================================================================
+RINGKASAN METRIK SET UJI V1
+==============================================================================
+
+A.3 Akurasi NON-BATAS (metrik utama): 48/50 Wilson95 [0.865; 0.989] | tanpa modus: 0 []
+A.3 Akurasi BATAS (terpisah, bukan metrik utama): 3/4 Wilson95 [0.301; 0.954] | tanpa modus: 0 []
+
+A.2 Kesepakatan antar-run per kekhususan:
+  spesifik: {'bulat': 35, 'mayoritas': 5}
+  jauh: {'bulat': 10}
+  batas: {'bulat': 3, 'mayoritas': 1}
+
+A.4 Jenis kesalahan NON-BATAS:
+  kecocokan_palsu: 1/30 Wilson95 [0.006; 0.167] ['v1-036']
+  penolakan_palsu: 1/20 Wilson95 [0.009; 0.236] ['v1-020']
+  artikel_salah: 0/20 Wilson95 [0.000; 0.161] []
+A.4 Jenis kesalahan BATAS:
+  kecocokan_palsu: 1/4 Wilson95 [0.046; 0.699] ['v1-053']
+  penolakan_palsu: 0/0 Wilson95 [0.000; 1.000] []
+  artikel_salah: 0/0 Wilson95 [0.000; 1.000] []
+
+A.5 Recall@3 NON-BATAS: 36/40 Wilson95 [0.769; 0.960]
+A.5 Recall@3 BATAS: 4/4 Wilson95 [0.510; 1.000]
+
+A.6 Akurasi per sumber:
+  sumber_eksternal: 5/5 Wilson95 [0.566; 1.000]
+  liputan6: 14/14 Wilson95 [0.785; 1.000]
+  manusia_dari_sumber_mafindo: 4/4 Wilson95 [0.510; 1.000]
+  buatan_model: 13/15 Wilson95 [0.621; 0.963]
+  teks_nyata: 11/11 Wilson95 [0.741; 1.000]
+  manusia: 1/1 Wilson95 [0.206; 1.000]
+A.6 Akurasi per tipe:
+  positif: 19/20 Wilson95 [0.764; 0.991]
+  negatif_sulit: 19/20 Wilson95 [0.764; 0.991]
+  negatif_mudah: 10/10 Wilson95 [0.723; 1.000]
+  batas: 3/4 Wilson95 [0.301; 0.954]
+A.6 Akurasi per subtipe:
+  pola_sama_entitas_beda: 7/7 Wilson95 [0.646; 1.000]
+  entitas_sama_klaim_beda: 7/7 Wilson95 [0.646; 1.000]
+  angka_waktu_beda: 5/6 Wilson95 [0.436; 0.970]
+
+A.7 Pasangan minimal per subtipe (kedua butir benar / total pasangan):
+  angka_waktu_beda: 5/6
+    artikel 36120: positif=v1-007(True) negatif_sulit=v1-040(True) kedua_benar=True
+    artikel 36157: positif=v1-009(True) negatif_sulit=v1-037(True) kedua_benar=True
+    artikel 36282: positif=v1-019(True) negatif_sulit=v1-039(True) kedua_benar=True
+    artikel 36388: positif=v1-018(True) negatif_sulit=v1-036(False) kedua_benar=False
+    artikel 36477: positif=v1-004(True) negatif_sulit=v1-035(True) kedua_benar=True
+    artikel 36545: positif=v1-013(True) negatif_sulit=v1-038(True) kedua_benar=True
+  pola_sama_entitas_beda: 2/2
+    artikel 36191: positif=v1-010(True) negatif_sulit=v1-025(True) kedua_benar=True
+    artikel 36191: positif=v1-010(True) negatif_sulit=v1-027(True) kedua_benar=True
+  entitas_sama_klaim_beda: 3/3
+    artikel 36191: positif=v1-010(True) negatif_sulit=v1-033(True) kedua_benar=True
+    artikel 36213: positif=v1-001(True) negatif_sulit=v1-028(True) kedua_benar=True
+    artikel 36700: positif=v1-005(True) negatif_sulit=v1-034(True) kedua_benar=True
+
+A.8 Status H1: TERDUKUNG (1/20 <= 1, ambang: <= 1 dari 20)
+A.8 Status H3: TERDUKUNG pada sampel ini (kesalahan 2/50, pelanggaran format 0)
+
+B.1 Butir tidak bulat antar-run (6):
+  v1-010 (mayoritas): 'Menkeu Purbaya Yudhi Sadewa bagi-bagi bantuan modal usaha 50'
+    run 1: ditemukan 36191 -- 'Klaim pengguna mengenai pembagian bantuan dana oleh Menkeu Purbaya Yudhi Sadewa sesuai dengan pembah'
+    run 2: tidak_ditemukan  -- 'Klaim pengguna mengenai Menkeu Purbaya Yudhi Sadewa yang membagikan bantuan modal usaha 500 juta den'
+    run 3: ditemukan 36191 -- 'Klaim pengguna mengenai pembagian bantuan oleh Menkeu Purbaya Yudhi Sadewa dengan syarat setoran ada'
+  v1-040 (mayoritas): 'Prabowo : Wanita Hamil Wajib Bayar Pajak Tiap Tahun'
+    run 1: ditemukan 36120 -- 'Klaim pengguna merujuk pada hoaks yang sama mengenai pernyataan Prabowo terkait pajak bagi wanita ha'
+    run 2: tidak_ditemukan  -- "Klaim pengguna menyebutkan 'tiap tahun', sedangkan klaim inti artikel kandidat menyatakan 'tiap bula"
+    run 3: tidak_ditemukan  -- "Klaim pengguna menyebutkan 'tiap tahun', sedangkan klaim inti artikel kandidat menyebutkan 'tiap bul"
+  v1-039 (mayoritas): 'Undian Berhadiah BRI Sambut HUT ke-80 RI'
+    run 1: tidak_ditemukan  -- 'Klaim pengguna menyebutkan HUT ke-80 RI, sedangkan artikel kandidat membahas undian berhadiah BRI da'
+    run 2: tidak_ditemukan  -- 'Klaim pengguna mengenai HUT ke-80 RI berbeda secara spesifik dengan klaim pada artikel kandidat yang'
+    run 3: ditemukan 36282 -- 'Klaim pengguna sama dengan artikel terpilih karena membahas penipuan undian berhadiah yang mengatasn'
+  v1-006 (mayoritas): 'Indonesia udah resmi cabut dari World Bank sama IMF katanya'
+    run 1: tidak_ditemukan  -- 'Klaim pengguna menyebutkan keluarnya Indonesia dari World Bank dan IMF secara bersamaan, sedangkan k'
+    run 2: ditemukan 36387 -- 'Klaim pengguna mengenai keluarnya Indonesia dari World Bank dan IMF sesuai dengan klaim inti artikel'
+    run 3: ditemukan 36387 -- 'Klaim pengguna yang menyatakan Indonesia keluar dari World Bank dan IMF merujuk pada hoaks yang sama'
+  v1-036 (mayoritas): 'Video Gedung Ambruk saat Gempa Magnitudo 8,2 Guncang Lepas P'
+    run 1: ditemukan 36388 -- 'Klaim pengguna merujuk pada peristiwa dan video yang sama mengenai gedung ambruk akibat gempa di Flo'
+    run 2: ditemukan 36388 -- 'Klaim pengguna sama dengan artikel kandidat mengenai video narasi gedung ambruk saat gempa di lepas '
+    run 3: tidak_ditemukan  -- 'Klaim pengguna menyebutkan magnitudo gempa yang berbeda (8,2) dibandingkan dengan klaim inti artikel'
+  v1-053 (mayoritas): 'katanya berdasarkan data Bank Dunia, Indonesia jadi negara t'
+    run 1: tidak_ditemukan  -- 'Klaim pengguna menyebutkan Indonesia sebagai negara termiskin nomor 2 setelah Zimbabwe, sedangkan ar'
+    run 2: ditemukan 36596 -- 'Klaim pengguna dan artikel sama-sama membahas klaim bahwa data Bank Dunia menunjukkan Indonesia seba'
+    run 3: ditemukan 36596 -- 'Klaim pengguna dan judul artikel sama-sama mengacu pada narasi hoaks bahwa Bank Dunia menyatakan Ind'
+
+B.3 Pelanggaran format: total=0 per_butir={}
+B.3 URL di luar metadata: total=0 per_butir={}
+
+B.4 Latensi & token rata-rata per run:
+  run 1: latensi=10.09s token_masuk=2516.4 token_keluar=87.1 (n=54)
+  run 2: latensi=15.28s token_masuk=2516.4 token_keluar=87.6 (n=54)
+  run 3: latensi=18.49s token_masuk=2516.4 token_keluar=88.6 (n=54)
+
+Laporan JSON lengkap: testset\v1_analysis.json
