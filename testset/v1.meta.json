@@ -405,5 +405,62 @@
       "cakupan": "Hanya memengaruhi negatif_angka_waktu dan negatif_entitas_sama (keduanya berbasis target_article). positif memakai copies_narasi_ngram (tidak terpengaruh); negatif_mudah tidak punya target_article (tidak terpengaruh)."
     },
     "catatan_kualitas_negatif_mudah": "Beberapa kandidat negatif_mudah cukup absurd (mis. 'kucing mata-mata planet Mars', 'bulan terbuat dari keju') dibanding hoaks realistis. Ini sesuai desain (negatif mudah = topik jauh, tidak perlu meniru gaya hoaks nyata) tapi berbeda gaya dari negatif sulit/positif -- perlu penilaian pemilik proyek saat tinjauan apakah gaya ini diterima atau sebagian perlu diedit/ditolak."
+  },
+  "hasil_tinjauan_tahap_3_gemma_2026-09-23": {
+    "ringkasan": "Seluruh 58 kandidat lolos pemeriksaan otomatis ditinjau pemilik proyek. Keputusan lengkap per butir di data/candidates/keputusan_tahap3_gemma.jsonl (sumber kebenaran). 15 dari 15 sel target-artikel (positif 7 + negatif_angka_waktu 6 + negatif_entitas_sama 2) SURPLUS (>=2 kandidat lolos per artikel, target 1/artikel) -- semua diselesaikan lewat sampel acak berbenih. negatif_mudah: 0 dari 15 kandidat disetujui (seluruhnya Tolak/Batas) -- SHORTFALL total, target 5.",
+    "3_kandidat_direklasifikasi_dari_negatif_ke_sama_oleh_pemilik_proyek": {
+      "daftar": ["gemma-negatif_angka_waktu-36388-24", "gemma-negatif_angka_waktu-36157-27", "gemma-negatif_angka_waktu-36120-37"],
+      "penjelasan": "Ketiganya dibuat untuk job negatif_angka_waktu (targetnya: ubah angka/waktu jadi proposisi beda) tapi pemilik proyek menilai perubahannya TIDAK mengubah inti klaim (mis. 36388-24 hanya menambah tanggal, tetap magnitudo 7,7 yang sama) sehingga dilabeli 'Sama', bukan 'Tidak Sama'. Dikeluarkan dari populasi negatif_angka_waktu untuk artikel itu (tidak dihitung sebagai negatif sulit).",
+      "belum_diputuskan": "Apakah ketiganya (yang berlabel 'sama') digabung ke pool POSITIF artikel yang sama (36388/36157/36120), atau dibuang begitu saja. Ketiga artikel itu sudah surplus di jalur positifnya sendiri (2-4 kandidat sama per artikel) tanpa perlu tambahan ini -- REKOMENDASI: dibuang saja (tidak digabung), tapi menunggu keputusan pemilik proyek, bukan diputuskan sepihak.",
+      "catatan_kualitas_generator": "Ketiga kejadian ini (3 dari 18, 17%) sama-sama hanya MENAMBAH tanggal/tahun tanpa mengubah angka yang jadi inti klaim (magnitudo, tahun subsidi, frekuensi bayar) -- pola kegagalan yang konsisten pada build_prompt_negatif_angka_waktu, layak dipertimbangkan saat menulis pedoman prompt versi berikutnya."
+    },
+    "kasus_batas_pedoman_perlu_dicek": {
+      "gemma-negatif_angka_waktu-36120-37": "Berlabel 'Sama' dengan alasan 'perubahan tahun menjadi 2028 merupakan detail waktu tambahan' -- TAPI judul asli 36120 ('Wanita Hamil Wajib Bayar Pajak Tiap Bulan') SAMA SEKALI TIDAK menyebut tahun apa pun, jadi '2028' bukan sekadar detail tambahan yang konsisten, melainkan proposisi baru yang tidak ada di artikel asli. Ini mirip kasus 'lebih spesifik' di ANNOTATION_GUIDE.md (spesifik tanpa kontradiksi = sama) TAPI beda dari dua kasus lain di atas (yang memang mempertahankan angka asli persis). Diflag untuk pemilik proyek cek ulang, TIDAK diubah sepihak."
+    },
+    "kandidat_mengandung_pii_seperti_belum_diperiksa_otomatis": {
+      "temuan": "gemma_generate.py TIDAK PERNAH menjalankan pii_flags() (fungsi yang sudah ada di candidates/screen.py untuk kandidat arsip/Liputan6) pada kandidat Gemma -- gap desain, bukan disengaja.",
+      "butir_terdampak": [
+        {"id": "gemma-positif-36191-8", "isi": "nomor telepon berpola WA Indonesia (0859-6345-11291) di teks klaim", "keputusan_pemilik_proyek": "Setuju/Sama (belum menyinggung isu PII)"},
+        {"id": "gemma-positif-36191-10", "isi": "rujukan akun TikTok fiktif (dana.hibh) di teks klaim -- INI juga pemenang sampel acak berbenih untuk sel positif 36191", "keputusan_pemilik_proyek": "Setuju/Sama (belum menyinggung isu PII)"}
+      ],
+      "menunggu_keputusan": "Nomor/handle ini kemungkinan besar fiktif (buatan Gemma, bukan data pribadi asli), TAPI berbentuk seperti nomor/akun asli dan set uji akan diterbitkan publik. Pilihan: (a) terima apa adanya (fiktif, bukan PII asli), (b) edit (redaksi jadi placeholder mis. '[nomor]'/'[akun]', sama seperti liputan6-8293783 dulu), atau (c) tolak, pakai cadangan (untuk 36191-10: cadangan hasil sampel adalah 36191-8 -- yang JUGA punya isu ini -- lalu 36191-9, yang bersih)."
+    },
+    "sampel_acak_berbenih_reduksi_ke_1_per_artikel_2026-09-23": {
+      "aturan": "Setiap artikel target hanya butuh TEPAT 1 butir final (positif atau negatif sulit). Semua 15 sel artikel surplus (>=2 kandidat lolos per artikel) direduksi ke 1 dengan random.Random(20260924).sample(daftar_id_lolos_terurut, 1) -- metode dan seed SAMA dengan batas_ulang_subtipe_jika_lebih_dari_target_2026-09-22, diterapkan sekarang pada granularitas per-artikel (bukan per-subtipe) karena situasinya sama: kandidat lolos melebihi kebutuhan.",
+      "catatan_pola": "Untuk seed ini, draw pertama pada populasi kecil (2-3 kandidat) SELALU jatuh ke indeks 0 (item ter-awal setelah diurutkan berdasarkan id) -- diverifikasi bukan bug: random.Random(20260924).sample([0,1],1)==[0] dan random.Random(20260924).sample([0,1,2],1)==[0]. Ini kebetulan properti seed ini pada ukuran populasi kecil, BUKAN preferensi manual; siapa pun dapat menjalankan ulang kode yang sama dan mendapat hasil identik.",
+      "hasil": {
+        "positif": {
+          "36387": {"terpilih": "gemma-positif-36387-1", "cadangan": ["gemma-positif-36387-2"]},
+          "36120": {"terpilih": "gemma-positif-36120-3", "cadangan": ["gemma-positif-36120-4"]},
+          "36111": {"terpilih": "gemma-positif-36111-5", "cadangan": ["gemma-positif-36111-6", "gemma-positif-36111-7"]},
+          "36191": {"terpilih": "gemma-positif-36191-10", "cadangan": ["gemma-positif-36191-8", "gemma-positif-36191-9"], "catatan": "terpilih mengandung isu PII-seperti, lihat kandidat_mengandung_pii_seperti_belum_diperiksa_otomatis"},
+          "36166": {"terpilih": "gemma-positif-36166-11", "cadangan": ["gemma-positif-36166-12", "gemma-positif-36166-13"]},
+          "36388": {"terpilih": "gemma-positif-36388-14", "cadangan": ["gemma-positif-36388-15", "gemma-positif-36388-16"]},
+          "36062": {"terpilih": "gemma-positif-36062-17", "cadangan": ["gemma-positif-36062-18", "gemma-positif-36062-19"]}
+        },
+        "negatif_angka_waktu": {
+          "36477": {"terpilih": "gemma-negatif_angka_waktu-36477-20", "cadangan": ["gemma-negatif_angka_waktu-36477-21", "gemma-negatif_angka_waktu-36477-22"]},
+          "36388": {"terpilih": "gemma-negatif_angka_waktu-36388-23", "cadangan": ["gemma-negatif_angka_waktu-36388-25"], "dikeluarkan_dari_populasi": ["gemma-negatif_angka_waktu-36388-24 (label=sama)"]},
+          "36157": {"terpilih": "gemma-negatif_angka_waktu-36157-26", "cadangan": ["gemma-negatif_angka_waktu-36157-28"], "dikeluarkan_dari_populasi": ["gemma-negatif_angka_waktu-36157-27 (label=sama)"]},
+          "36545": {"terpilih": "gemma-negatif_angka_waktu-36545-29", "cadangan": ["gemma-negatif_angka_waktu-36545-30", "gemma-negatif_angka_waktu-36545-31"]},
+          "36282": {"terpilih": "gemma-negatif_angka_waktu-36282-32", "cadangan": ["gemma-negatif_angka_waktu-36282-33", "gemma-negatif_angka_waktu-36282-34"]},
+          "36120": {"terpilih": "gemma-negatif_angka_waktu-36120-35", "cadangan": ["gemma-negatif_angka_waktu-36120-36"], "dikeluarkan_dari_populasi": ["gemma-negatif_angka_waktu-36120-37 (label=sama)"]}
+        },
+        "negatif_entitas_sama": {
+          "36191": {"terpilih": "gemma-negatif_entitas_sama-36191-38", "cadangan": ["gemma-negatif_entitas_sama-36191-39", "gemma-negatif_entitas_sama-36191-40"]},
+          "36700": {"terpilih": "gemma-negatif_entitas_sama-36700-41", "cadangan": ["gemma-negatif_entitas_sama-36700-42", "gemma-negatif_entitas_sama-36700-43"]}
+        }
+      }
+    },
+    "negatif_mudah_shortfall_2026-09-23": {
+      "temuan": "0 dari 15 kandidat negatif_mudah buatan_model disetujui (semua Tolak/Batas) -- pemilik proyek menilai seluruhnya terlalu absurd/tidak menyerupai hoaks nyata untuk dipakai sebagai butir set uji, konsisten dengan catatan_kualitas_negatif_mudah di atas. Kekurangan: 5 dari 5 (100%).",
+      "opsi_tersedia": {
+        "a_arsip_teks_nyata": "6 kandidat arsip TurnBackHoax kelas 'jauh' SUDAH DITINJAU dan disetujui (tidak_sama/setuju) tapi belum dipakai: arsip-23544, arsip-30085, arsip-35833, liputan6-8293491 (cadangan dari negatif_mudah_teks_nyata, lihat pembatasan_ke_target_dieksekusi) + arsip-26669, arsip-26671 (dari tinjauan_tahap1_tambahan_jauh.csv). 6 kandidat >= 5 dibutuhkan -- CUKUP untuk mengisi seluruh kekurangan TANPA panggilan API baru.",
+        "b_generasi_ulang_gemma": "Ulangi build_prompt_negatif_mudah dengan instruksi lebih ketat (mis. eksplisit 'klaim harus menyerupai hoaks yang benar-benar beredar -- bansos/lowongan/bencana/politik palsu, BUKAN mitos/trivia/urban legend absurd') -- BELUM DIJALANKAN, menunggu persetujuan pemilik proyek."
+      },
+      "rekomendasi": "Opsi (a) -- 6 kandidat siap pakai, sudah melalui tinjauan manusia sebelumnya, tidak perlu panggilan API baru atau risiko kualitas berulang. Opsi (b) hanya relevan bila pemilik proyek tetap ingin proporsi 5 teks_nyata + 5 buatan_model tercapai persis (bukan 10 teks_nyata + 0 buatan_model).",
+      "menunggu_keputusan_pemilik_proyek": true
+    },
+    "status": "MENUNGGU KEPUTUSAN: PII (36191-8/36191-10), kasus batas 36120-37, nasib 3 kandidat direklasifikasi (36388-24/36157-27/36120-37), dan metode pengisian negatif_mudah. testset/v1.jsonl BELUM disusun -- menunggu seluruh sel terisi sesuai instruksi pemilik proyek."
   }
 }
