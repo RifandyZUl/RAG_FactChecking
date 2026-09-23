@@ -12,56 +12,27 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-09-23)*
 
-- **SET UJI V1 BEKU.** Tag git `testset-v1` dibuat pada commit yang menulis `testset/v1.jsonl`
-  final (54 baris: 50 butir utama + 4 batas). Sidik jari generator dikunci di
-  `v1.meta.json.sidik_jari_generator_v1`: sha256 prompt sistem+skema, sha256 SELURUH
-  `src/generator.py`, model (`gemini-3.5-flash-lite`), thinking_level (`medium`).
-  `tests/test_testset_locks.py::test_generator_fingerprint_matches_frozen_lock` menolak
-  (gagal) bila salah satunya berubah; `::test_v1_jsonl_unchanged_since_tag` menolak bila
-  `testset/v1.jsonl` berbeda dari isi persis pada tag. **Evaluasi BELUM dijalankan.**
-- **Audit final (skrip, bukan manual) pada seluruh 54 butir, sebelum beku**: 0 kebocoran teks,
-  0 PII, 0 artikel dikecualikan terpakai, 0 artikel sasaran positif dipakai lebih dari sekali.
-  Komposisi positif persis pra-registrasi (SALAH 10/PENIPUAN 8/PARODI 2). Rincian di
-  `v1.meta.json.hasil_penyusunan_testset_v1_2026-09-23`.
-- **Pasangan minimal (ukuran utama H1)**: 11 dari 20 negatif_sulit berpasangan dengan positif
-  pada anchor sama (`v1.meta.json.pasangan_minimal_2026-09-23`) -- TAPI 6 dari 11 pasangan itu
-  berasal dari subtipe angka_waktu_beda yang 100% dikonstruksi (Gemma sengaja ditarget ke
-  artikel yang sudah punya positif), bukan kebetulan alami. **Laporan evaluasi wajib memisahkan
-  hasil pasangan minimal per subtipe**, tidak menggabung jadi satu angka -- lihat
-  `batas_tafsir_2026-09-23` di blok yang sama. Klaster 36216 (2 butir negatif_sulit tanpa
-  positif pendamping) dikecualikan dari analisis pasangan minimal.
-- **Ketergantungan antar-butir**: 11 artikel dipakai >1 butir (24/54 butir, 44%) -- butir yang
-  berbagi anchor TIDAK saling independen; interval Wilson yang diasumsikan i.i.d. akan
-  overconfident. Wajib disebutkan saat menafsirkan evaluasi (`v1.meta.json.ketergantungan_antar_butir_2026-09-23`).
-  Ini pertimbangan STATISTIK evaluasi, terpisah dari batas kekhususan=batas (4 butir, tak masuk metrik utama).
-- **Gap PII diperbaiki** sebelum beku: `pii_flags()` kini jalan di semua slot Gemma;
-  `assert_no_pii()` umum (bukan khusus Gemma) menegakkan larangan PII untuk butir set uji dari
-  sumber mana pun. Keterbatasan diketahui: regex tidak menangkap handle tanpa `@` (mis. "TikTok
-  dana.hibh") -- kasus `36191-10` hanya tertangkap lewat tinjauan manusia.
-- **negatif_mudah**: penyimpangan pra-registrasi -- 10 teks_nyata + 0 buatan_model (bukan 5+5)
-  karena seluruh 15 kandidat Gemma ditolak pemilik proyek (terlalu absurd).
-- **Kolom `subtipe` ditambahkan** ke `format_butir.kolom` (hilang dari pra-registrasi asli) --
-  diverifikasi programatik (bukan diklaim) bahwa penambahan ini murni struktural, 0 nilai butir
-  lain berubah; sha256_butir sebelum/sesudah dicatat di `v1.meta.json`.
-- **Label emas final** (Aturan Wajib #5), **36700 opsi (b)** diterapkan di `targets_v1.json` --
-  lihat riwayat lengkap di `v1.meta.json` bila memulihkan sesi dan butuh detail.
-- **Rencana eksekusi evaluasi disetujui pemilik proyek** (162 panggilan baik/324 terburuk, kuota
-  cukup, ~20-40 menit). **Runner ditulis dan diuji offline, BELUM DIJALANKAN**:
-  `src/evaluation/testset_eval.py` (16 uji di `tests/test_testset_eval.py`, 0 panggilan API).
-  Fitur sesuai 5 syarat tambahan pemilik proyek: urutan diacak per run dengan benih tercatat
-  (`v1.meta.json.eksekusi_evaluasi_v1_2026-09-23.seed_urutan_butir_per_run`); jejak retrieval
-  penuh per butir (top-3 + seksi chunk pemenang + recall@3); kegagalan panggilan (429/503/
-  timeout/format) diulang di tingkat butir (maks 2x tambahan) dengan status `tak_terjawab`
-  terpisah dari jawaban salah, kuota habis menghentikan SELURUH proses; keluaran LLM mentah +
-  token + latensi + jumlah percobaan disimpan per panggilan; TIDAK ADA perhitungan metrik di
-  runner (skrip analisis terpisah, belum ditulis, akan membaca `data/testset_v1_eval_<model>.jsonl`).
-  **Menunggu persetujuan pemilik proyek sebelum evaluasi sungguhan dijalankan.**
-- **Koreksi 2026-09-23**: daftar "artefak beku" semula terlalu luas (sempat memasukkan
-  `v1.meta.json` sebagai "tidak boleh berubah sama sekali") -- diperbaiki: yang benar-benar
-  dikunci hanya `testset/v1.jsonl` dan sidik jari generator; `v1.meta.json` tetap boleh
-  bertambah catatan analisis baru selama tidak mengubah nilai yang sudah tercatat.
-- **Sudah di-commit & push:** semua pekerjaan hingga pembekuan hari ini, tag `testset-v1` di
-  `origin`. `.env` terverifikasi tidak ter-track sepanjang sesi.
+**VERSI 1 SELESAI DAN TERUKUR. Tahap berjalan: menutup Versi 1, bersiap mulai Versi 2.**
+
+- Set uji v1 beku (tag `testset-v1`, sidik jari generator dikunci di
+  `v1.meta.json.sidik_jari_generator_v1`, ditegakkan `tests/test_testset_locks.py`), dievaluasi
+  3 run x 54 butir, dianalisis (`src/evaluation/testset_eval.py` + `testset_analysis.py`, hasil
+  di `testset/v1_analysis.json`/`.txt`). **Angka utama dan status H1/H3 ada di "Status
+  Pengembangan" di atas** -- jangan diulang manual di sini, itu satu-satunya sumber ringkas.
+- Temuan untuk Versi 2 (kegagalan retrieval vs kegagalan generator, dipetakan ke komponen
+  target) ada di `testset/v1_temuan_untuk_v2.md`. Batas tafsir H1 (3 dari 4 kegagalan recall@3
+  membuat subtipe pola_sama_entitas_beda sebenarnya hanya teruji pada 17/20, bukan 20/20) ada di
+  `v1.meta.json.hasil_evaluasi_v1_2026-09-23.batas_tafsir_H1_recall_2026-09-23`.
+  `v1.jsonl`/prompt/generator TIDAK diubah oleh analisis lanjutan ini (diverifikasi tetap lolos
+  uji kunci).
+- **Riwayat penyusunan set uji v1** (label emas, keputusan 36700, gap PII, kolom `subtipe`,
+  pasangan minimal, ketergantungan antar-butir, dll.) ada lengkap di `v1.meta.json` -- tidak
+  diringkas ulang di sini karena sudah tidak berubah (bagian dari sejarah pembekuan, bukan
+  status yang sedang berjalan).
+- **Sudah di-commit & push:** seluruh pekerjaan Versi 1 hingga penutupan hari ini, termasuk tag
+  `testset-v1`, di `origin`. `.env` terverifikasi tidak ter-track sepanjang sesi.
+- **Belum dimulai:** Versi 2 (Corrective RAG) -- lihat "Status Pengembangan" di atas untuk
+  pemetaan awal temuan ke komponen, rancangan implementasi belum ada.
 
 ---
 
@@ -81,23 +52,37 @@ kelengkapan fitur.
 
 Proyek dibangun bertahap dalam dua versi:
 
-- **Versi 1 — RAG dasar (sedang dikerjakan).** Pipeline linear:
+- **Versi 1 — RAG dasar (SELESAI DAN TERUKUR, 2026-09-23).** Pipeline linear:
   scraping, chunking, embedding, penyimpanan vektor, retrieval berbasis
-  kemiripan, generasi jawaban. Berfungsi sebagai *baseline* pembanding.
-- **Versi 2 — Corrective RAG (belum dimulai).** Menambahkan node penilai
-  relevansi dokumen, penulis ulang kueri, dan penilaian kredibilitas
-  sumber. **Kandidat fitur (dicatat, belum diputuskan):** verdict ketiga
-  "artikel terkait" untuk klaim yang lebih umum daripada artikel (mis. "Malaysia
-  marah soal asap" vs artikel "Malaysia Laporkan Indonesia ke PBB"). Di Versi 1
-  klaim seperti itu menghasilkan "belum ditemukan" (Aturan Wajib #4); sengaja
-  tidak ditambahkan sebelum set uji v1 dibekukan.
-
-Tahap saat ini: lapisan generasi jawaban (`src/generator.py`) sudah ditulis,
-lolos uji offline, dan dijalankan live pada 10 kueri pengembangan
-(`gemini-3.5-flash-lite` dipilih sebagai generator Versi 1; lihat "Hipotesis
-dan status"). Berikutnya: merancang set uji 50 kueri yang terpisah dari set
-pengembangan. Modul ingestion dan scraping (150 artikel) sudah selesai, dengan
-satu masalah terbuka pada duplikasi teks seksi (lihat "Masalah terbuka").
+  kemiripan, generasi jawaban (`gemini-3.5-flash-lite`, thinking medium).
+  Dievaluasi pada set uji v1 beku (tag `testset-v1`, 54 butir: 50 utama + 4
+  batas), 3 run, 0 kegagalan panggilan. **Angka utama** (keputusan modus,
+  metrik pra-registrasi; rincian dan caveat wajib di
+  `testset/v1_analysis_report.txt` dan `v1.meta.json.hasil_evaluasi_v1_2026-09-23`):
+  - Akurasi non-batas: **48/50**, Wilson95 [0,865; 0,989].
+  - H1 (LLM membedakan klaim identik dari bertetangga topik): **TERDUKUNG**,
+    tapi lihat catatan basis-teruji di bawah.
+  - H3 (model kelas Flash cukup untuk tugas ini): **TERDUKUNG** pada sampel ini.
+  - Recall@3: 36/40 non-batas -- 3 dari 4 kegagalan recall membuat H1 pada
+    subtipe *pola_sama_entitas_beda* sebenarnya hanya teruji pada 17 dari 20
+    butir negatif sulit (kecocokan palsu 1/17, bukan hanya 1/20 basis penuh).
+  - Diagnostik penting: **seluruh** kesalahan dan ketidakbulatan antar-run
+    generator (7 butir) terjadi ketika artikel yang benar SUDAH tersedia di
+    top-3 -- kegagalan itu murni penilaian LLM, bukan retrieval.
+  - Temuan lengkap untuk rancangan Versi 2 (kegagalan retrieval vs generator,
+    dipetakan ke komponen target): `testset/v1_temuan_untuk_v2.md`.
+- **Versi 2 — Corrective RAG (BELUM DIMULAI, tahap berikutnya).** Menambahkan
+  node penilai relevansi dokumen (grader), penulis ulang kueri (query
+  rewriter), dan penilaian kredibilitas sumber -- lihat
+  `testset/v1_temuan_untuk_v2.md` untuk pemetaan temuan Versi 1 ke masing-
+  masing komponen (rewriter menargetkan 4 kegagalan retrieval, grader
+  menargetkan 7 butir kegagalan/ketidakbulatan penilaian; kredibilitas sumber
+  tidak punya temuan kuantitatif langsung dari set uji v1). **Kandidat fitur
+  (dicatat, belum diputuskan):** verdict ketiga "artikel terkait" untuk klaim
+  yang lebih umum daripada artikel (mis. "Malaysia marah soal asap" vs artikel
+  "Malaysia Laporkan Indonesia ke PBB"). Di Versi 1 klaim seperti itu
+  menghasilkan "belum ditemukan" (Aturan Wajib #4); sengaja tidak ditambahkan
+  sebelum set uji v1 dibekukan.
 
 ---
 

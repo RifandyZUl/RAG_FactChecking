@@ -592,5 +592,17 @@
       "status, jumlah_percobaan_butir, seed_run, posisi_dalam_urutan_gabungan"
     ],
     "tidak_menghitung_metrik": "Runner TIDAK menghitung akurasi/Wilson/modus/dsb -- hanya menyimpan hasil mentah ke data/testset_v1_eval_<model>.jsonl (per (run,butir), dapat dilanjutkan). Skrip analisis terpisah (belum ditulis) membaca berkas ini untuk menghitung: keputusan modus per butir, kesepakatan antar-run per kekhususan, kecocokan palsu vs penolakan palsu (Wilson 95%), akurasi per sumber, Recall@3 terpisah dari akurasi generator, dan analisis pasangan minimal per subtipe (lihat pasangan_minimal_2026-09-23)."
+  },
+  "hasil_evaluasi_v1_2026-09-23": {
+    "berkas": "data/testset_v1_eval_gemini-3.5-flash-lite.jsonl (mentah, tidak di-commit), testset/v1_analysis.json + v1_analysis_report.txt (metrik, di-commit), testset/v1_temuan_untuk_v2.md (temuan untuk rancangan Versi 2)",
+    "ringkasan": "3 run x 54 butir, 0 tak_terjawab, 0 galat 429/503. Akurasi non-batas (modus, metrik utama): 48/50 Wilson95 [0,865; 0,989]. H1 TERDUKUNG, H3 TERDUKUNG pada sampel ini. Lihat batas_tafsir_H1_recall_2026-09-23 di bawah untuk koreksi cakupan H1 yang sebenarnya teruji.",
+    "batas_tafsir_H1_recall_2026-09-23": {
+      "temuan": "Pada 3 dari 7 butir subtipe pola_sama_entitas_beda (v1-022, v1-024, v1-027), artikel tetangga (expected_retrieval_article) TIDAK masuk top-3 hasil retrieval (peringkat sebenarnya #19, #4, #4 dari 20 diperiksa -- lihat testset/v1_temuan_untuk_v2.md untuk skor lengkap). Pada ketiganya generator menjawab 'tidak_ditemukan' dengan BENAR, tetapi bukan karena berhasil membedakan klaim dari artikel tetangga -- artikel itu tidak pernah sampai ke LLM sebagai kandidat. Jawaban benar adalah KONSEKUENSI KEGAGALAN RETRIEVAL, bukan keberhasilan pembedaan klaim yang menjadi tujuan H1.",
+      "koreksi_basis_H1": "Dukungan H1 (LLM membedakan klaim identik dari klaim bertetangga topik) seharusnya dibaca dari basis 17 butir negatif sulit yang BENAR-BENAR DIUJI (20 dikurangi 3 butir yang tidak sampai diuji karena retrieval gagal), bukan basis penuh 20. v1-033 (juga gagal recall, subtipe entitas_sama_klaim_beda) TIDAK dikurangi dari basis ini -- pengecualian ini KHUSUS untuk 3 butir subtipe pola_sama_entitas_beda yang disebutkan pemilik proyek, karena instruksi eksplisit membatasi pada subtipe itu; v1-033 tetap dihitung dalam basis 20 dan 17 (tidak ada kecocokan_palsu di v1-033, jadi tidak mengubah pembilang di kedua basis manapun).",
+      "kecocokan_palsu_basis_penuh_20": {"k": 1, "n": 20, "wilson95": [0.0089, 0.2361], "catatan": "v1-036 (angka_waktu_beda), satu-satunya kecocokan_palsu di antara 20 negatif sulit."},
+      "kecocokan_palsu_basis_teruji_17": {"k": 1, "n": 17, "wilson95": [0.0105, 0.2698], "catatan": "Pembilang TIDAK berubah (v1-036 bukan salah satu dari 3 butir yang dikeluarkan); hanya penyebut yang turun dari 20 ke 17."},
+      "status_H1_kedua_basis": "TERDUKUNG pada basis mana pun (1/20 dan 1/17 sama-sama <= 1, ambang pra-registrasi 'terdukung: <= 1 dari 20'). Ambang pra-registrasi ditulis untuk n=20; penerapannya pada n=17 di sini adalah pendekatan (angka absolut <=1), BUKAN ambang baru yang dipra-registrasi ulang -- pra-registrasi ambang basis-teruji yang sebenarnya adalah pekerjaan Versi 2 (lihat testset/v1_temuan_untuk_v2.md).",
+      "cara_dilaporkan": "Laporan H1 Versi 1 selanjutnya WAJIB menyebut kedua angka (1/20 penuh, 1/17 basis teruji) berdampingan, bukan hanya salah satu."
+    }
   }
 }
