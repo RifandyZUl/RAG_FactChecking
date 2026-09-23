@@ -565,8 +565,32 @@
     "penegakan": "tests/test_testset_locks.py::test_generator_fingerprint_matches_frozen_lock menolak (gagal) bila sha256_generator_py, sha256 prompt+skema, model, atau thinking_level bawaan berbeda dari nilai terkunci di atas -- dijalankan sebagai bagian pytest biasa (tests/), jadi tercek otomatis kapan pun test suite dijalankan, termasuk sebelum evaluasi apa pun. Skrip evaluasi (belum ditulis) WAJIB memanggil pemeriksaan yang sama sebelum menandai hasil sebagai 'sah untuk v1'.",
     "artefak_beku": {
       "tag_git": "testset-v1",
-      "berkas": ["testset/v1.jsonl", "testset/v1.meta.json", "testset/ANNOTATION_GUIDE.md", "testset/GUIDE_LOCK.json", "testset/targets_v1.json"],
+      "benar_benar_tidak_boleh_berubah": ["testset/v1.jsonl (butir + label)", "src/generator.py (termasuk SYSTEM_PROMPT/RESPONSE_SCHEMA)", "model dan thinking_level bawaan (src/llm/gemini.py)"],
+      "koreksi_2026-09-23": "Daftar 'berkas beku' semula (saat pembekuan) keliru memasukkan testset/v1.meta.json, GUIDE_LOCK.json, dan targets_v1.json sebagai berkas yang 'tidak boleh berubah' -- itu terlalu luas. Yang benar-benar dikunci (ditegakkan uji) hanya v1.jsonl dan sidik jari generator, lihat benar_benar_tidak_boleh_berubah. v1.meta.json TETAP boleh (dan memang perlu) terus bertambah dengan catatan analisis/rencana baru (mis. eksekusi_evaluasi_v1_2026-09-23) SELAMA tidak mengubah nilai yang sudah tercatat (hash, komposisi, ambang, dll -- itu yang ditegakkan test_meta_preregisters_metric_thresholds_and_limitations dan test_meta_preregistration_is_consistent_with_locks). ANNOTATION_GUIDE.md/GUIDE_LOCK.json dan targets_v1.json sendiri sudah dikunci lebih dulu (2026-09-21/22) oleh mekanisme terpisah, bukan oleh tag ini.",
       "catatan": "Setelah tag testset-v1 dibuat, testset/v1.jsonl TIDAK BOLEH berubah lagi -- ditegakkan tests/test_testset_locks.py::test_v1_jsonl_unchanged_since_tag (membandingkan working tree dengan isi persis pada tag)."
     }
+  },
+  "eksekusi_evaluasi_v1_2026-09-23": {
+    "status": "runner ditulis dan diuji offline; BELUM DIJALANKAN, menunggu persetujuan pemilik proyek.",
+    "skrip": "src/evaluation/testset_eval.py (uji offline: tests/test_testset_eval.py, 16 uji, 0 panggilan API)",
+    "seed_urutan_butir_per_run": {
+      "catatan": "Benih untuk MENGACAK URUTAN 54 butir per run (bukan seed sampling generasi LLM -- lihat evaluasi.seed di atas, yang tetap 'tidak dipakai' untuk hal itu). Dicatat SEBELUM evaluasi dijalankan.",
+      "metode": "random.Random(seed).shuffle(list(range(54))) per run, tiga benih berbeda agar gangguan layanan tidak selalu menimpa butir di posisi yang sama.",
+      "run_1": 2026092301, "run_2": 2026092302, "run_3": 2026092303
+    },
+    "penanganan_kegagalan_panggilan": {
+      "prinsip": "Butir yang gagal karena galat pemanggilan (429/503/timeout/lainnya) ATAU format LLM dicatat status tersendiri dan DIULANG di tingkat butir -- TIDAK dihitung sebagai jawaban salah.",
+      "max_item_retries": 2,
+      "jeda_antar_percobaan_butir_detik": 5.0,
+      "status_akhir_butir": "selesai (verdict valid didapat) | tak_terjawab (gagal setelah 3 percobaan total, dikeluarkan dari penyebut skrip analisis, jumlahnya dilaporkan eksplisit) | kuota_habis (menghentikan SELURUH proses, bukan menandai satu butir)",
+      "sirkuit_pemutus": "3 butir tak_terjawab beruntun menghentikan proses (indikasi masalah sistemik, bukan butir tertentu)."
+    },
+    "data_disimpan_per_run_butir": [
+      "verdict, article_id, status_label, klarifikasi, alasan (hasil akhir)",
+      "retrieval_top3 (article_id+skor), retrieval_best_section_top1, recall_at_3 (dasar Recall@3 pra-registrasi)",
+      "percobaan: daftar SETIAP pemanggilan gen.answer() tingkat butir (bukan hanya yang terakhir), masing-masing dengan verdict/error/raw_outputs/calls (token masuk-keluar, latensi, jumlah percobaan format internal, versi model)",
+      "status, jumlah_percobaan_butir, seed_run, posisi_dalam_urutan_gabungan"
+    ],
+    "tidak_menghitung_metrik": "Runner TIDAK menghitung akurasi/Wilson/modus/dsb -- hanya menyimpan hasil mentah ke data/testset_v1_eval_<model>.jsonl (per (run,butir), dapat dilanjutkan). Skrip analisis terpisah (belum ditulis) membaca berkas ini untuk menghitung: keputusan modus per butir, kesepakatan antar-run per kekhususan, kecocokan palsu vs penolakan palsu (Wilson 95%), akurasi per sumber, Recall@3 terpisah dari akurasi generator, dan analisis pasangan minimal per subtipe (lihat pasangan_minimal_2026-09-23)."
   }
 }
