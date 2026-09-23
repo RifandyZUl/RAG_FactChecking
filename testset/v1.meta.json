@@ -130,8 +130,8 @@
     "Positif lintas situs otomatis dari Kompas, Tempo, dan Komdigi dilepas karena situs-situs itu menolak agen AI atau memblokir klien otomatis; cekfakta.com juga dilepas karena diinisiasi MAFINDO, penerbit turnbackhoax.id.",
     "Koreksi independensi (2026-09-22): Gemma (pembuat butir buatan_model, kandidat juri H4) bukan 'keluarga berbeda' dari Gemini (generator gemini-3.5-flash-lite), melainkan model berbeda dari pengembang yang sama (Google, riset yang berkaitan). Pemisahan pembuat butir/generator/juri hanya mengurangi, bukan menghilangkan, risiko bias bersama."
   ],
-  "butir": null,
-  "sha256_butir": null,
+  "butir": "testset/v1.jsonl (54 baris: 50 butir utama + 4 butir batas, disimpan terpisah dari berkas ini -- lihat hasil_penyusunan_testset_v1_2026-09-23 untuk rincian)",
+  "sha256_butir": "9a072123413693bd31c1e452e9dd23d6edff283098b857e35172fafd785f58be",
   "format_butir": {
     "label_ganda": "Dua label terpisah per butir: expected_retrieval_article (artikel yang seharusnya TERJANGKAU retrieval, untuk Recall@3) dan expected_verdict (ditemukan | belum_ditemukan, keputusan akhir yang seharusnya diberikan generator). expected_verdict=ditemukan berarti artikel yang dipilih harus expected_retrieval_article. Klaim yang lebih umum daripada artikelnya: expected_retrieval_article terisi, expected_verdict=belum_ditemukan.",
     "kolom": [
@@ -461,6 +461,45 @@
       "rekomendasi": "Opsi (a) -- 6 kandidat siap pakai, sudah melalui tinjauan manusia sebelumnya, tidak perlu panggilan API baru atau risiko kualitas berulang. Opsi (b) hanya relevan bila pemilik proyek tetap ingin proporsi 5 teks_nyata + 5 buatan_model tercapai persis (bukan 10 teks_nyata + 0 buatan_model).",
       "menunggu_keputusan_pemilik_proyek": true
     },
-    "status": "MENUNGGU KEPUTUSAN: PII (36191-8/36191-10), kasus batas 36120-37, nasib 3 kandidat direklasifikasi (36388-24/36157-27/36120-37), dan metode pengisian negatif_mudah. testset/v1.jsonl BELUM disusun -- menunggu seluruh sel terisi sesuai instruksi pemilik proyek."
+    "status": "SELESAI 2026-09-23 -- keempat hal diputuskan pemilik proyek (lihat hasil_penyusunan_testset_v1_2026-09-23), testset/v1.jsonl sudah disusun."
+  },
+  "hasil_penyusunan_testset_v1_2026-09-23": {
+    "keputusan_pemilik_proyek_diterapkan": {
+      "1_negatif_mudah": "Opsi (a): 6 kandidat arsip/Liputan6 kelas jauh yang sudah disetujui (arsip-23544, arsip-26669, arsip-26671, arsip-30085, arsip-35833, liputan6-8293491), disampel 5 dari 6 dengan random.Random(20260924).sample(daftar_terurut, 5) -> dipilih: arsip-23544, arsip-26669, arsip-26671, arsip-35833, liputan6-8293491; cadangan: arsip-30085.",
+      "2_pii": "gemma-positif-36191-8 dan gemma-positif-36191-10 DITOLAK (nomor telepon berpola nomor Indonesia asli, dan handle media sosial fiktif). Cadangan bersih gemma-positif-36191-9 dipakai sebagai pemenang sel 36191.",
+      "3_36120_37": "Label direvisi pemilik proyek dari sama menjadi tidak_sama (dicatat di keputusan_tahap3_gemma.jsonl, field label_semula + catatan_revisi_2026-09-23). Akibatnya populasi negatif_angka_waktu/36120 kembali ke 3 kandidat (35,36,37); disampel ulang dengan seed sama -> pemenang TIDAK BERUBAH (gemma-negatif_angka_waktu-36120-35), tidak ada kekurangan.",
+      "4_tiga_kandidat_direklasifikasi": "gemma-negatif_angka_waktu-36388-24 dan gemma-negatif_angka_waktu-36157-27 DIBUANG (tidak dipakai di subtipe manapun), sesuai rekomendasi. 36120-37 TIDAK termasuk kelompok ini lagi setelah poin #3 (levelnya bukan lagi 'sama')."
+    },
+    "penyimpangan_baru_ditemukan_saat_penyusunan_2026-09-23": {
+      "liputan6-8289615_dikeluarkan": "Ditemukan saat audit final: liputan6-8289615 (pemenang subtipe pola_sama_entitas_beda untuk pasangan 36737) memakai 36737, SALAH SATU DARI 6 ARTIKEL DIKECUALIKAN (target 5 kueri pengembangan). Dikeluarkan dari populasi; disampel ulang atas populasi 8 (random.Random(20260924).sample(...,7)) -> pemenang baru: arsip-35310, arsip-35850, liputan6-8289822, liputan6-8292077, liputan6-8293157, liputan6-8293783, liputan6-8294487 (liputan6-8291177 kini cadangan, sebelumnya terpilih). liputan6-8293783 memerlukan redaksi tautan phishing ('[tautan]') sebelum dipakai -- sudah diterapkan di testset/v1.jsonl.",
+      "catatan": "Ini alasan mengapa populasi pola_sama_entitas_beda disampel ulang DUA KALI secara total sejak label emas (pertama karena liputan6-8293949 direvisi jadi batas, kedua karena kejadian ini) -- metode dan seed selalu sama (20260924), hanya populasi yang berubah setiap kali; hasil dapat direproduksi ulang oleh siapa pun."
+    },
+    "pii_flags_ditambahkan_ke_gemma_generate": "Diterapkan (commit terpisah): pii_flags() (dari candidates/screen.py) kini dijalankan untuk SEMUA slot di run_checks(); kandidat dengan pii_flags tidak pernah lolos_pemeriksaan_otomatis. Diuji offline. KETERBATASAN diketahui: regex pii_flags() tidak menangkap handle platform tanpa '@' (mis. 'TikTok dana.hibh') -- itulah sebabnya gemma-positif-36191-10 TIDAK otomatis tertandai, hanya tertangkap lewat tinjauan manusia. Pemeriksaan PII pada 50+4 butir final testset/v1.jsonl (lihat di bawah) memakai pii_flags() yang sama, jadi hasil 0 temuan di bawah TIDAK membuktikan tidak ada rujukan platform tanpa '@' -- itu sudah dibersihkan manual sebelumnya (36191-10 diganti 36191-9), bukan oleh pemeriksaan otomatis ini.",
+    "audit_final_testset_v1_2026-09-23": {
+      "leak_kebocoran_teks": "0 dari 54 butir memuat >= 6 kata berurutan yang sama dengan ANNOTATION_GUIDE.md atau SYSTEM_PROMPT (src/generator.py) -- diperiksa dengan fungsi yang sama seperti audit kandidat Gemma (leak_flag, candidates/gemma_generate.py).",
+      "pii": "0 dari 54 butir memuat nomor telepon/email/handel/URL/nama-akun-berkutip menurut pii_flags() (lihat keterbatasan regex di atas) -- 2 kandidat yang diketahui bermasalah (36191-8, 36191-10) sudah dikeluarkan dari testset/v1.jsonl sebelum audit ini dijalankan, jadi 0 temuan mencakup exclusion manual itu, bukan hanya deteksi otomatis.",
+      "artikel_dikecualikan": "0 dari 54 butir memakai salah satu dari 6 artikel dikecualikan (36730,36737,36729,36738,36731,36214) -- SETELAH mengeluarkan liputan6-8289615 (lihat penyimpangan_baru_ditemukan_saat_penyusunan_2026-09-23).",
+      "artikel_sasaran_positif_dipakai_lebih_dari_sekali": "0 dari 20 artikel sasaran positif dipakai lebih dari sekali sebagai butir POSITIF (setiap artikel tepat 1 butir expected_verdict=ditemukan). Catatan: artikel target positif BOLEH menjadi tetangga_article_id untuk butir negatif_sulit/batas lain (itu memang desain 'pasangan minimal'); yang diverifikasi khusus adalah tidak ada duplikasi pada peran POSITIF itu sendiri.",
+      "metode_verifikasi": "Skrip Python (bukan pemeriksaan manual) menjalankan keempat pemeriksaan di atas terhadap seluruh 54 baris testset/v1.jsonl sebelum berkas ditulis; assert eksplisit mencegah penulisan bila ada temuan (lihat commit)."
+    },
+    "tabel_silang_final_tipe_x_subtipe_x_sumber": {
+      "positif": {"jumlah": 20, "per_sumber": {"buatan_model": 7, "sumber_eksternal": 5, "liputan6": 4, "manusia_dari_sumber_mafindo": 4}, "per_label": {"SALAH": 10, "PENIPUAN": 8, "PARODI": 2}},
+      "negatif_sulit_pola_sama_entitas_beda": {"jumlah": 7, "per_sumber": {"liputan6": 5, "teks_nyata": 2}},
+      "negatif_sulit_entitas_sama_klaim_beda": {"jumlah": 7, "per_sumber": {"buatan_model": 2, "liputan6": 2, "teks_nyata": 2, "manusia": 1}},
+      "negatif_sulit_angka_waktu_beda": {"jumlah": 6, "per_sumber": {"buatan_model": 6}, "catatan": "100% buatan_model (rancangan asli) -- efek sumber dan subtipe tidak dapat dipisahkan pada sel ini, lihat catatan_confound_subtipe pada jatah_gemma_final_setelah_tinjauan_2026-09-22."},
+      "negatif_mudah": {"jumlah": 10, "per_sumber": {"teks_nyata": 7, "liputan6": 3}, "catatan": "PENYIMPANGAN PRA-REGISTRASI: rancangan asli 5 teks_nyata + 5 buatan_model; jadi 10 teks_nyata (arsip+liputan6) + 0 buatan_model karena SELURUH 15 kandidat Gemma ditolak pemilik proyek (tidak menyerupai hoaks nyata, lihat hasil_tinjauan_tahap_3_gemma_2026-09-23). Konsekuensi: efek sumber dan efek tipe butir tidak dapat dipisahkan pada seluruh sel negatif_mudah (bukan hanya sebagian, seperti confound subtipe lain)."},
+      "batas": {"jumlah": 4, "per_sumber": {"liputan6": 2, "sumber_eksternal": 2}, "tidak_masuk_metrik_utama": true}
+    },
+    "pasangan_minimal": {
+      "jumlah_butir_negatif/batas_berpasangan_dengan_positif_pada_anchor_sama": 12,
+      "jumlah_artikel_jangkar_dipakai_lebih_dari_satu_butir": 31,
+      "catatan": "Dihitung otomatis: setiap artikel yang menjadi expected_retrieval_article untuk >= 1 butir positif DAN >= 1 butir negatif_sulit/batas dianggap satu pasangan minimal. Termasuk kasus tak terduga: 36191 (Bank Indonesia dana hibah) menjadi tetangga bagi 4 butir negatif_sulit berbeda (pola_sama_entitas_beda x2, entitas_sama_klaim_beda x1, DAN positifnya sendiri) -- pola hoaks 'dana hibah' ini ternyata sangat berulang di sumber teks_nyata/Liputan6, bukan kesalahan penyusunan."
+    },
+    "berkas": "testset/v1.jsonl (54 baris, kolom sesuai format_butir.kolom), sha256_butir dicatat di atas.",
+    "generator_versi_saat_disusun": {
+      "model": "gemini-3.5-flash-lite", "thinking_level": "medium",
+      "sha256_sistem_prompt_saat_ini": "SAMA dengan evaluasi.prompt_sistem.sha256_ternormalisasi di atas (tidak diubah sejak pembekuan pedoman) -- BELUM diverifikasi ulang programatik pada tahap ini, hanya diasumsikan dari tidak adanya commit yang menyentuh SYSTEM_PROMPT/RESPONSE_SCHEMA sejak 37fcac9."
+    },
+    "status": "MENUNGGU PERSETUJUAN pemilik proyek sebelum tag testset-v1 dan penguncian sidik jari generator."
   }
 }

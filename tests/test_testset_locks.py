@@ -35,7 +35,10 @@ def test_meta_preregistration_is_consistent_with_locks() -> None:
 def test_meta_preregisters_metric_thresholds_and_limitations() -> None:
     """Ambang dan metrik utama ditulis SEBELUM data dibuat (tidak boleh disesuaikan setelah hasil keluar)."""
     meta = json.loads((TESTSET / "v1.meta.json").read_text(encoding="utf-8"))
-    assert meta["butir"] is None and meta["status"].startswith("PRA-REGISTRASI")
+    assert meta["butir"] is not None and len(meta["sha256_butir"]) == 64, (
+        "testset/v1.jsonl sudah disusun (2026-09-23, disetujui pemilik proyek) -- butir dan "
+        "sha256_butir seharusnya sudah terisi, bukan lagi null seperti sebelum data dibuat."
+    )
     ev = meta["evaluasi"]
     assert ev["jumlah_run"] == 3 and "modus" in ev["metrik_utama"] and "tidak dipakai" in ev["seed"]
     assert "Wilson" in ev["interval_kepercayaan"]
@@ -66,3 +69,22 @@ def test_meta_preregisters_metric_thresholds_and_limitations() -> None:
     c = meta["komposisi_rancangan"]
     assert c["positif"] + c["negatif_sulit"] + c["negatif_mudah"] == c["total"] == 50
     assert sum(c["alokasi_positif_label"].values()) == 20 == sum(c["alokasi_positif_sel"].values())
+
+
+def test_v1_jsonl_matches_recorded_hash_and_composition() -> None:
+    """testset/v1.jsonl (bila sudah disusun) harus persis cocok dengan sha256_butir di v1.meta.json --
+    perubahan diam-diam pada berkas butir setelah dicatat di sini harus terdeteksi."""
+    meta = json.loads((TESTSET / "v1.meta.json").read_text(encoding="utf-8"))
+    if meta["butir"] is None:
+        return  # belum disusun -- lihat test_meta_preregisters_metric_thresholds_and_limitations
+    lines = (TESTSET / "v1.jsonl").read_text(encoding="utf-8").splitlines()
+    rows = [json.loads(x) for x in lines if x.strip()]
+    reserialized = "\n".join(json.dumps(r, ensure_ascii=False, sort_keys=True) for r in rows)
+    assert hashlib.sha256(reserialized.encode("utf-8")).hexdigest() == meta["sha256_butir"]
+    c = meta["komposisi_rancangan"]
+    n_batas = sum(1 for r in rows if r["batas"])
+    n_utama = len(rows) - n_batas
+    assert n_utama == c["total"] == 50
+    assert sum(1 for r in rows if r["tipe"] == "positif") == c["positif"]
+    assert sum(1 for r in rows if r["tipe"] == "negatif_sulit") == c["negatif_sulit"]
+    assert sum(1 for r in rows if r["tipe"] == "negatif_mudah") == c["negatif_mudah"]

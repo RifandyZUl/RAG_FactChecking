@@ -8,6 +8,7 @@ import pytest
 
 from _fakes import ScriptedProvider
 from candidates.gemma_generate import (
+    assert_no_pii,
     assert_reviewed_before_testset,
     build_prompt_negatif_angka_waktu,
     build_prompt_negatif_entitas_sama,
@@ -85,6 +86,19 @@ def test_run_checks_positif_passes_clean_paraphrase() -> None:
     checks = run_checks("positif", paraphrase, narasi, DB_TITLES, GUIDE_TEXT)
     assert checks["copies_narasi_ngram"] is False
     assert passed_checks("positif", checks) is True
+
+
+def test_run_checks_flags_phone_number_pii() -> None:
+    """
+    Kejadian nyata 2026-09-23: kandidat positif berisi nomor WA berpola nomor Indonesia lolos
+    tak tertandai ke tinjauan tahap 3 karena gemma_generate.py tidak pernah menjalankan
+    pii_flags() (sudah ada di candidates/screen.py). Diperbaiki: run_checks kini memanggilnya
+    untuk SEMUA slot (bukan hanya negatif).
+    """
+    text = "Ada bantuan dana hibah 500 juta, daftar lewat WA 0859-6345-11291"
+    checks = run_checks("positif", text, "Narasi apa saja", DB_TITLES, GUIDE_TEXT)
+    assert "nomor_telepon" in checks["pii_flags"]
+    assert passed_checks("positif", checks) is False
 
 
 def test_run_checks_negatif_flags_high_title_similarity() -> None:
@@ -259,3 +273,19 @@ def test_assert_reviewed_before_testset_rejects_failed_candidate() -> None:
 
 def test_assert_reviewed_before_testset_allows_passed_candidate() -> None:
     assert assert_reviewed_before_testset(PASSED_ROW) is None  # tidak melempar galat
+
+
+# -- assert_no_pii: pengaman umum untuk butir set uji dari SEMUA sumber, bukan hanya Gemma --
+
+def test_assert_no_pii_rejects_phone_number() -> None:
+    with pytest.raises(ValueError):
+        assert_no_pii("daftar lewat WA 0859-6345-11291 ya", "v1-999")
+
+
+def test_assert_no_pii_rejects_email() -> None:
+    with pytest.raises(ValueError):
+        assert_no_pii("hubungi admin@contoh.id untuk info lebih lanjut", "v1-999")
+
+
+def test_assert_no_pii_allows_clean_text() -> None:
+    assert assert_no_pii("klaim biasa tanpa data pribadi apa pun", "v1-999") is None
