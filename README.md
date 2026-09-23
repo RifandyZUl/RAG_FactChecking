@@ -152,7 +152,7 @@ kali**, dan keputusan modus dipakai sebagai metrik utama.
 
 | Hipotesis | Status |
 | --- | --- |
-| **H1** — LLM yang membaca Narasi dapat membedakan klaim identik dari klaim yang sekadar bertetangga topik | Terdukung (1/20 kecocokan palsu; ambang ≤1) |
+| **H1** — LLM yang membaca Narasi dapat membedakan klaim identik dari klaim yang sekadar bertetangga topik | Terdukung: 1/20 kecocokan palsu pada basis penuh, **1/17 pada basis benar-benar teruji** (ambang ≤1 pada keduanya) — lihat catatan di bawah |
 | **H3** — Model kelas Flash Lite cukup untuk tugas ini | Terdukung pada sampel ini (2/50 kesalahan, 0 pelanggaran format) |
 
 ### Temuan terpenting: dua mode kegagalan yang terpisah
@@ -237,36 +237,46 @@ tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
 - Python 3.11
 - Kunci API Gemini (tier gratis) pada berkas `.env`
 
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1                                  # Windows PowerShell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest
 copy .env.example .env          # lalu isi GEMINI_API_KEY
 ```
 
+> **Jangan pakai `pip install` atau `python` tanpa jalur eksplisit ke `.venv`.**
+> `Activate.ps1` mengubah `python`/`pip` di sesi PowerShell yang sama, tapi bila
+> aktivasi tidak berhasil atau sesi berbeda, perintah itu diam-diam memasang
+> paket ke Python global mesin (dipakai proyek lain juga) alih-alih ke `.venv`.
+> Jalur eksplisit `.\.venv\Scripts\python.exe -m pip ...` selalu aman terlepas
+> dari status aktivasi.
+
 ### Membangun basis pengetahuan
 
-```bash
-$env:PYTHONPATH="src"; python -m scraping          # ambil artikel → data/articles.json
-python src/ingest.py --rebuild                     # chunking + embedding → data/chroma/
-python -m evaluation.index_check                   # verifikasi indeks segar
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m scraping              # ambil artikel → data/articles.json
+.\.venv\Scripts\python.exe src\ingest.py --rebuild  # chunking + embedding → data/chroma/
+.\.venv\Scripts\python.exe -m evaluation.index_check   # verifikasi indeks segar
 ```
 
 ### Menjalankan evaluasi
 
-```bash
-python -m evaluation.testset_eval                  # 3 run pada set uji beku
-python -m evaluation.testset_analysis              # hitung metrik (tanpa panggilan API)
+```powershell
+$env:PYTHONPATH = "src"                             # wajib diatur ulang bila sesi baru
+.\.venv\Scripts\python.exe -m evaluation.testset_eval      # 3 run pada set uji beku
+.\.venv\Scripts\python.exe -m evaluation.testset_analysis  # hitung metrik (tanpa panggilan API)
 ```
 
 ### Menjalankan uji
 
-```bash
-pytest
+```powershell
+.\.venv\Scripts\python.exe -m pytest
 ```
 
-> Perintah di atas mengikuti struktur repositori saat ini; sesuaikan bila
-> struktur berubah.
+> Semua perintah di atas dijalankan dan diverifikasi langsung di PowerShell
+> (2026-09-23) dari root repositori ini. Sesuaikan bila struktur repositori
+> berubah.
 
 ---
 
@@ -282,12 +292,16 @@ src/
   ingest.py     embedding & vector store
   retriever.py  pencarian + agregasi per artikel
   generator.py  penyusunan jawaban  [terkunci sejak tag testset-v1]
+  paths.py      jalur proyek terpusat (root, data/, cache, articles.json)
 testset/
-  v1.jsonl                  set uji beku (54 butir)
-  v1.meta.json              pra-registrasi, penyimpangan, catatan analisis
-  ANNOTATION_GUIDE.md       pedoman anotasi v1.0 (terkunci)
-  v1_analysis_report.txt    laporan hasil evaluasi
-  v1_temuan_untuk_v2.md     kelemahan terukur → komponen Versi 2
+  v1.jsonl                   set uji beku (54 butir)
+  v1.meta.json               pra-registrasi, penyimpangan, catatan analisis
+  ANNOTATION_GUIDE.md        pedoman anotasi v1.0 (terkunci)
+  GUIDE_LOCK.json            hash pedoman terkunci
+  targets_v1.json            20 artikel target positif terpilih
+  v1_analysis.json           hasil evaluasi (data terstruktur)
+  v1_analysis_report.txt     hasil evaluasi (laporan terbaca)
+  v1_temuan_untuk_v2.md      kelemahan terukur → komponen Versi 2
 tests/
 ```
 
@@ -299,7 +313,7 @@ tests/
 2. Shaar, S., dkk. (2021). *Overview of the CLEF-2021 CheckThat! Lab Task 2 on Detecting Previously Fact-Checked Claims.* CEUR-WS Vol. 2936.
 3. Lewis, P., dkk. (2020). *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.* NeurIPS 2020.
 4. Gao, Y., dkk. (2023). *Retrieval-Augmented Generation for Large Language Models: A Survey.* arXiv:2312.10997.
-5. Chen, J., dkk. (2024). *BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings.* Findings of ACL 2024.
+5. Chen, J., dkk. (2024). *M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation.* Findings of ACL 2024, 2318–2335.
 6. Yan, S.-Q., dkk. (2024). *Corrective Retrieval Augmented Generation.* arXiv:2401.15884.
 
 ---
