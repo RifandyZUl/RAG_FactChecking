@@ -51,7 +51,8 @@ RUN_SEEDS = {1: 2026092301, 2: 2026092302, 3: 2026092303}
 MAX_ITEM_RETRIES = 2  # percobaan TAMBAHAN per butir bila gagal (maks 3 percobaan total)
 ITEM_RETRY_PAUSE_S = 5.0  # jeda sebelum mencoba ulang butir yang gagal (bukan retry format internal)
 TOP_K = 3
-MAX_CONSECUTIVE_UNANSWERED = 3  # setelah ini berhenti: kemungkinan besar masalah sistemik
+MAX_CONSECUTIVE_UNANSWERED = 2  # setelah ini berhenti (instruksi pemilik proyek 2026-09-23):
+# jangan diteruskan sampai kuota habis bila ada galat yang membuat 2 butir berturut-turut gagal
 
 
 def out_path(model: str) -> Path:
@@ -139,10 +140,14 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="abaikan hasil lama dan mulai ulang")
     ap.add_argument("--check-budget", action="store_true",
                     help="hanya laporkan anggaran kuota harian; tidak ada panggilan LLM")
+    ap.add_argument("--run", type=int, choices=sorted(RUN_SEEDS), default=None,
+                    help="batasi ke satu nomor run saja (bawaan: jalankan run 1-3 berurutan "
+                         "dalam satu proses); dipakai untuk melapor per run sebagai proses terpisah")
     args = ap.parse_args()
 
     cases = load_cases()
     n = len(cases)
+    run_numbers = [args.run] if args.run is not None else sorted(RUN_SEEDS)
 
     try:
         provider = get_provider(**({"model": args.model} if args.model else {}))
@@ -152,12 +157,13 @@ def main() -> int:
 
     out = out_path(provider.model)
     done = set() if args.force else load_done(out)
-    all_pairs = [(run, idx) for run in range(1, N_RUNS + 1) for idx in shuffled_order(n, RUN_SEEDS[run])]
+    all_pairs = [(run, idx) for run in run_numbers for idx in shuffled_order(n, RUN_SEEDS[run])]
     todo = [(run, idx) for run, idx in all_pairs if (run, idx) not in done]
 
     print(f"Penyedia: {provider.name} | model: {provider.model} | "
           f"thinking: {getattr(provider, 'thinking_level', '-')}")
-    print(f"Butir: {n} x {N_RUNS} run = {n * N_RUNS} total | sudah ada: {len(done)} | "
+    print(f"Butir: {n} | run diminta: {run_numbers} (dari {N_RUNS} run rancangan) | "
+          f"pasangan (run,butir) dalam cakupan ini: {len(all_pairs)} | sudah ada: {len(done)} | "
           f"akan dijalankan: {len(todo)}{' (--force)' if args.force else ''}")
 
     if provider.ledger is not None and provider.limits is not None:
