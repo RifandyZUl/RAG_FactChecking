@@ -158,7 +158,14 @@
       "catatan"
     ],
     "batas": "kekhususan=batas dilaporkan terpisah dan tidak masuk hitungan utama",
-    "koreksi_kolom_subtipe_2026-09-23": "Kolom 'subtipe' TIDAK ADA pada daftar kolom pra-registrasi asli (2026-09-21), padahal evaluasi.laporan_wajib mewajibkan 'tabel silang tipe x sumber x subtipe' -- tanpa kolom ini, butir negatif_sulit tidak dapat dibedakan pola_sama_entitas_beda/entitas_sama_klaim_beda/angka_waktu_beda dari berkas butir saja. Ditambahkan sebelum pembekuan (ditemukan saat menghitung pasangan minimal per subtipe, 2026-09-23); testset/v1.jsonl ditulis ulang dengan kolom ini, sha256_butir diperbarui. Bukan perubahan nilai/keputusan apa pun yang sudah dipra-registrasi -- hanya melengkapi struktur data agar mendukung laporan yang memang sudah diwajibkan sejak awal."
+    "koreksi_kolom_subtipe_2026-09-23": "Kolom 'subtipe' TIDAK ADA pada daftar kolom pra-registrasi asli (2026-09-21), padahal evaluasi.laporan_wajib mewajibkan 'tabel silang tipe x sumber x subtipe' -- tanpa kolom ini, butir negatif_sulit tidak dapat dibedakan pola_sama_entitas_beda/entitas_sama_klaim_beda/angka_waktu_beda dari berkas butir saja. Ditambahkan sebelum pembekuan (ditemukan saat menghitung pasangan minimal per subtipe, 2026-09-23); testset/v1.jsonl ditulis ulang dengan kolom ini, sha256_butir diperbarui. Bukan perubahan nilai/keputusan apa pun yang sudah dipra-registrasi -- hanya melengkapi struktur data agar mendukung laporan yang memang sudah diwajibkan sejak awal.",
+    "verifikasi_penambahan_kolom_subtipe_hanya_struktur_2026-09-23": {
+      "sha256_butir_sebelum": "9a072123413693bd31c1e452e9dd23d6edff283098b857e35172fafd785f58be",
+      "sha256_butir_sesudah": "4aeef3c955a75196480febc6d620ea427ca2c12b813c6ee4b3330977f8c884f4",
+      "metode_bukti": "Dibandingkan programatik: v1.jsonl versi lama diambil dari commit 4e68472 (git show 4e68472:testset/v1.jsonl), dipasangkan per baris dengan versi baru berdasarkan 'id', lalu SETIAP kolom selain 'subtipe' dibandingkan nilai persis (==) antar kedua versi untuk seluruh 54 baris.",
+      "hasil": "0 dari 54 baris punya perbedaan pada kolom mana pun selain 'subtipe'. 20 baris (persis jumlah butir negatif_sulit) mendapat nilai subtipe baru (non-null); 34 baris lain (positif/negatif_mudah/batas) tetap subtipe=null. Kedua hash BERBEDA (seperti diharapkan, karena struktur JSON per baris berubah menambah satu field), tapi seluruh 19 kolom pra-registrasi lainnya identik byte-demi-byte pada seluruh baris.",
+      "kesimpulan": "Penambahan kolom subtipe murni struktural -- tidak ada nilai butir (klaim, expected_retrieval_article, expected_verdict, label, sumber, dll.) yang berubah."
+    }
   },
   "komposisi_sumber_rancangan": {
     "prinsip": "Pertahankan ketiga subtipe negatif sulit dengan proporsi rancangan (7/7/6). Usahakan setiap TIPE butir memuat kedua sumber (buatan_model dan teks_nyata/manusia); bila tidak mungkin, dicatat.",
@@ -518,7 +525,8 @@
           {"artikel": "36700", "negatif_sulit": "v1-034", "subtipe": "entitas_sama_klaim_beda"}
         ]
       },
-      "penggunaan_dalam_rencana_analisis": "Analisis 'per pasangan minimal' pada evaluasi.laporan_wajib WAJIB memakai daftar_pasangan di atas sebagai populasi pasangan (11 pasangan): untuk tiap pasangan, catat apakah generator benar pada KEDUA butir (positif dan negatif_sulit pasangannya) -- ukuran paling langsung untuk H1. Subtipe pola_sama_entitas_beda punya cakupan pasangan paling rendah (2/7); interpretasi H1 pada subtipe itu sebagian besar bergantung pada butir TANPA pasangan minimal, jadi laporan wajib menyatakan ini secara eksplisit, bukan menggabung ketiga subtipe seolah tercakup merata."
+      "penggunaan_dalam_rencana_analisis": "Analisis 'per pasangan minimal' pada evaluasi.laporan_wajib WAJIB memakai daftar_pasangan di atas sebagai populasi pasangan (11 pasangan): untuk tiap pasangan, catat apakah generator benar pada KEDUA butir (positif dan negatif_sulit pasangannya) -- ukuran paling langsung untuk H1. Subtipe pola_sama_entitas_beda punya cakupan pasangan paling rendah (2/7); interpretasi H1 pada subtipe itu sebagian besar bergantung pada butir TANPA pasangan minimal, jadi laporan wajib menyatakan ini secara eksplisit, bukan menggabung ketiga subtipe seolah tercakup merata.",
+      "batas_tafsir_2026-09-23": "100% pasangan pada subtipe angka_waktu_beda (6/6) adalah HASIL KONSTRUKSI, bukan pengamatan -- keenam butir itu sengaja diarahkan ke artikel yang sudah punya butir positif (keputusan desain Claude saat memilih target Gemma, lihat jatah_gemma_final_setelah_tinjauan_2026-09-22.negatif_sulit_angka_waktu_beda.metode_pemilihan_target), bukan kebetulan yang muncul dari populasi independen. KONSEKUENSI: dari 11 pasangan minimal total, 6 (55%) berasal dari satu subtipe yang SELURUH butirnya buatan_model (Gemma) -- kesimpulan H1 dari analisis pasangan minimal secara keseluruhan bertumpu terutama pada performa Gemma sebagai pembuat butir, sehingga BELUM TENTU berlaku untuk kasus yang tidak dikonstruksi (pola_sama_entitas_beda, hanya 2/7 berpasangan, murni kebetulan dari sumber teks_nyata/liputan6). ATURAN WAJIB laporan evaluasi: hasil pasangan minimal HARUS disajikan terpisah per subtipe (angka_waktu_beda vs entitas_sama_klaim_beda vs pola_sama_entitas_beda), TIDAK BOLEH digabung jadi satu angka 11/20 tunggal yang menyembunyikan bahwa lebih dari separuhnya berasal dari satu subtipe yang dikonstruksi."
     },
     "ketergantungan_antar_butir_2026-09-23": {
       "temuan": "11 artikel basis data menjadi expected_retrieval_article/tetangga_article_id untuk LEBIH DARI SATU butir (24 dari 54 butir total, 44%, berada pada salah satu dari 11 artikel jangkar bersama ini).",
@@ -536,6 +544,7 @@
         {"artikel": "36282", "jumlah_butir": 2, "butir": ["v1-019 (positif)", "v1-039 (negatif_sulit/angka_waktu_beda)"]},
         {"artikel": "36216", "jumlah_butir": 2, "butir": ["v1-030 (negatif_sulit/entitas_sama_klaim_beda)", "v1-031 (negatif_sulit/entitas_sama_klaim_beda)"], "catatan": "satu-satunya klaster TANPA butir positif -- dua kandidat Liputan6 independen (tuduhan korupsi Jokowi lewat dua narator berbeda) kebetulan sama-sama bertetangga dengan 36216."}
       ],
+      "klaster_36216_dikecualikan_dari_pasangan_minimal_2026-09-23": "v1-030 dan v1-031 berbagi artikel jangkar (36216) TANPA butir positif pendamping -- karena itu KEDUANYA TIDAK MASUK daftar_pasangan pada pasangan_minimal_2026-09-23 (11 pasangan) dan TIDAK BOLEH dipakai untuk analisis pasangan minimal (tidak ada butir 'benar keduanya' yang bisa dihitung tanpa positif pembanding). Keduanya tetap masuk hitungan negatif_sulit/entitas_sama_klaim_beda biasa (7 total per subtipe) dan tetap tunduk pada peringatan non-independensi di atas (kegagalan retrieval pada 36216 dapat menjatuhkan keduanya sekaligus), hanya dikecualikan dari ukuran pasangan minimal H1 secara spesifik.",
       "metode": "Dihitung otomatis dari testset/v1.jsonl (expected_retrieval_article), skrip yang sama dengan pasangan_minimal_2026-09-23."
     },
     "berkas": "testset/v1.jsonl (54 baris, kolom sesuai format_butir.kolom), sha256_butir dicatat di atas.",
@@ -543,6 +552,21 @@
       "model": "gemini-3.5-flash-lite", "thinking_level": "medium",
       "sha256_sistem_prompt_saat_ini": "SAMA dengan evaluasi.prompt_sistem.sha256_ternormalisasi di atas (tidak diubah sejak pembekuan pedoman) -- BELUM diverifikasi ulang programatik pada tahap ini, hanya diasumsikan dari tidak adanya commit yang menyentuh SYSTEM_PROMPT/RESPONSE_SCHEMA sejak 37fcac9."
     },
-    "status": "MENUNGGU PERSETUJUAN pemilik proyek sebelum tag testset-v1 dan penguncian sidik jari generator."
+    "status": "DISETUJUI pemilik proyek 2026-09-23 -- lihat sidik_jari_generator_v1 untuk pembekuan."
+  },
+  "sidik_jari_generator_v1": {
+    "dikunci_pada": "2026-09-23",
+    "sha256_prompt_sistem_dan_skema": "e801ad48548546fa232467d40edd57239dff6d71de8bae71e9392216eba5b6f8",
+    "sha256_generator_py": "e5a5ba5a72c0a3c14db37a3aee646ef5b3b7e34e036718947493955cf6df651a",
+    "cakupan_hash_generator_py": "Seluruh isi src/generator.py (normalisasi \\r\\n->\\n, UTF-8) -- mencakup SYSTEM_PROMPT dan RESPONSE_SCHEMA (sudah dihash terpisah di atas) DAN logika di luar keduanya: agregasi retrieval per artikel, validasi article_id kandidat, penyaringan URL keluaran LLM, dan penyusunan jawaban akhir. Perubahan pada logika ini tidak akan terdeteksi oleh hash prompt+skema saja.",
+    "model": "gemini-3.5-flash-lite",
+    "thinking_level": "medium",
+    "sumber_nilai_model_thinking": "DEFAULT_GEMINI_MODEL dan bawaan thinking_level='medium' di src/llm/gemini.py (dapat ditimpa LLM_MODEL/LLM_THINKING_LEVEL di .env) -- evaluasi v1 WAJIB dijalankan tanpa override environment yang mengubah keduanya, atau override harus eksplisit memakai nilai yang sama.",
+    "penegakan": "tests/test_testset_locks.py::test_generator_fingerprint_matches_frozen_lock menolak (gagal) bila sha256_generator_py, sha256 prompt+skema, model, atau thinking_level bawaan berbeda dari nilai terkunci di atas -- dijalankan sebagai bagian pytest biasa (tests/), jadi tercek otomatis kapan pun test suite dijalankan, termasuk sebelum evaluasi apa pun. Skrip evaluasi (belum ditulis) WAJIB memanggil pemeriksaan yang sama sebelum menandai hasil sebagai 'sah untuk v1'.",
+    "artefak_beku": {
+      "tag_git": "testset-v1",
+      "berkas": ["testset/v1.jsonl", "testset/v1.meta.json", "testset/ANNOTATION_GUIDE.md", "testset/GUIDE_LOCK.json", "testset/targets_v1.json"],
+      "catatan": "Setelah tag testset-v1 dibuat, testset/v1.jsonl TIDAK BOLEH berubah lagi -- ditegakkan tests/test_testset_locks.py::test_v1_jsonl_unchanged_since_tag (membandingkan working tree dengan isi persis pada tag)."
+    }
   }
 }
