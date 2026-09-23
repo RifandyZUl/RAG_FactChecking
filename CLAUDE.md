@@ -45,9 +45,21 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
   lain berubah; sha256_butir sebelum/sesudah dicatat di `v1.meta.json`.
 - **Label emas final** (Aturan Wajib #5), **36700 opsi (b)** diterapkan di `targets_v1.json` --
   lihat riwayat lengkap di `v1.meta.json` bila memulihkan sesi dan butuh detail.
-- **Langkah berikutnya**: rencana eksekusi evaluasi (jumlah panggilan, perkiraan kuota Flash
-  Lite untuk 3 run, perkiraan durasi, penanganan bila terputus) akan dilaporkan untuk
-  persetujuan pemilik proyek SEBELUM evaluasi dijalankan.
+- **Rencana eksekusi evaluasi disetujui pemilik proyek** (162 panggilan baik/324 terburuk, kuota
+  cukup, ~20-40 menit). **Runner ditulis dan diuji offline, BELUM DIJALANKAN**:
+  `src/evaluation/testset_eval.py` (16 uji di `tests/test_testset_eval.py`, 0 panggilan API).
+  Fitur sesuai 5 syarat tambahan pemilik proyek: urutan diacak per run dengan benih tercatat
+  (`v1.meta.json.eksekusi_evaluasi_v1_2026-09-23.seed_urutan_butir_per_run`); jejak retrieval
+  penuh per butir (top-3 + seksi chunk pemenang + recall@3); kegagalan panggilan (429/503/
+  timeout/format) diulang di tingkat butir (maks 2x tambahan) dengan status `tak_terjawab`
+  terpisah dari jawaban salah, kuota habis menghentikan SELURUH proses; keluaran LLM mentah +
+  token + latensi + jumlah percobaan disimpan per panggilan; TIDAK ADA perhitungan metrik di
+  runner (skrip analisis terpisah, belum ditulis, akan membaca `data/testset_v1_eval_<model>.jsonl`).
+  **Menunggu persetujuan pemilik proyek sebelum evaluasi sungguhan dijalankan.**
+- **Koreksi 2026-09-23**: daftar "artefak beku" semula terlalu luas (sempat memasukkan
+  `v1.meta.json` sebagai "tidak boleh berubah sama sekali") -- diperbaiki: yang benar-benar
+  dikunci hanya `testset/v1.jsonl` dan sidik jari generator; `v1.meta.json` tetap boleh
+  bertambah catatan analisis baru selama tidak mengubah nilai yang sudah tercatat.
 - **Sudah di-commit & push:** semua pekerjaan hingga pembekuan hari ini, tag `testset-v1` di
   `origin`. `.env` terverifikasi tidak ter-track sepanjang sesi.
 

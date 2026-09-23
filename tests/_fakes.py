@@ -55,8 +55,12 @@ def read_fixture(name: str) -> str:
 class ScriptedProvider:
     """Penyedia palsu untuk uji generator: mengembalikan keluaran berurutan."""
 
+    name = "scripted"
     model = ""
     sdk_version = "scripted-test"
+    thinking_level = "medium"
+    ledger = None  # sama seperti GeminiProvider(proactive=False): anggaran harian nonaktif
+    limits = None
 
     def __init__(self, outputs: list[Any]) -> None:
         self.outputs = list(outputs)
