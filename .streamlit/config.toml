@@ -1,0 +1,44 @@
+# Tema demo pemeriksa klaim. Satu-satunya tempat kode warna heks.
+# Pemetaan status -> nama warna ("red", "orange", ...) ada di src/presentation.py.
+
+[theme]
+# Terang dipaksa agar semantik warna status sama di semua perangkat.
+base = "light"
+
+# Aksen tunggal: biru tinta (tombol Periksa, tautan, fokus input).
+primaryColor = "#1F4E79"
+linkColor = "#1F4E79"
+
+# Skala netral.
+backgroundColor = "#FAFAF8"
+secondaryBackgroundColor = "#F0F1EE"
+textColor = "#1C1F23"
+borderColor = "#D9DBDE"
+
+# Satu keluarga huruf: IBM Plex Sans (400 isi, 600 judul/tebal).
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap"
+baseFontSize = 17
+baseFontWeight = 400
+# h1 = judul halaman (24px), h2 = status (28px, paling menonjol), h3 = subjudul (18px).
+headingFontSizes = ["24px", "28px", "18px"]
+headingFontWeights = [600, 600, 600]
+
+# Warna status (intensitas menurun): PENIPUAN > SALAH > PARODI; "belum ditemukan" netral.
+redColor = "#8F1D1D"
+redTextColor = "#8F1D1D"
+redBackgroundColor = "#FBEFEF"
+orangeColor = "#9A4A0B"
+orangeTextColor = "#9A4A0B"
+orangeBackgroundColor = "#FBF3EA"
+yellowColor = "#6E5A12"
+yellowTextColor = "#6E5A12"
+yellowBackgroundColor = "#F8F5E6"
+grayColor = "#5B6168"
+grayTextColor = "#5B6168"
+grayBackgroundColor = "#F0F1EE"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
