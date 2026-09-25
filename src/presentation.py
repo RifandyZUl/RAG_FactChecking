@@ -39,16 +39,32 @@ INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"
 SUBMIT_LABEL = "Periksa"
 EMPTY_INPUT_MESSAGE = "Tulis atau tempel pesan yang ingin dicek terlebih dahulu."
 
-# Pesan berantai nyata sering panjang; batas terlalu ketat justru memotong kasus paling
-# realistis. Teks yang melebihi batas TIDAK dipotong: pengguna diberi tahu dan tidak
-# ada pemeriksaan yang dijalankan. (Widget sengaja tanpa `max_chars`, karena widget
-# memotong teks tempelan tanpa pemberitahuan.)
-MAX_INPUT_CHARS = 5000
+# Batas masukan 1.500 karakter: wilayah yang TERUKUR bekerja pada ablasi retrieval
+# (testset/retrieval_ablation_report.txt, eksperimen 4: Recall@3 19/20 pada ~1.500 karakter,
+# runtuh ke 2/20 pada ~5.000 karakter karena klaim terdorong keluar dari 512 token embedding).
+# Batas 5.000 sebelumnya ditetapkan tanpa pengukuran. Teks yang melebihi batas TIDAK dipotong:
+# pengguna diberi tahu dan tidak ada pemeriksaan yang dijalankan. (Widget sengaja tanpa
+# `max_chars`, karena widget memotong teks tempelan tanpa pemberitahuan.)
+MAX_INPUT_CHARS = 1500
 TOO_LONG_MESSAGE = (
     "Pesan Anda {length} karakter, melebihi batas {limit} karakter, jadi belum "
     "diperiksa dan tidak ada bagian yang dipotong. Salin bagian yang memuat klaim "
     "utamanya saja, lalu periksa lagi."
 )
+
+# Peringatan pesan panjang, ditampilkan SEBELUM pemeriksaan. Ambang dalam token model embedding
+# (satuan yang sebenarnya dibatasi, 512 token). 220 token ~ 1.000 karakter: rasio terukur pada
+# teks pesan berantai sintetis eksperimen 4 ~4,5 karakter/token (335 token pada 1.500 karakter).
+# Ambang ini pilihan konservatif pemilik proyek, BUKAN titik runtuh terukur (1.500 karakter
+# masih 19/20). Bila tokenizer tidak tersedia, dipakai ambang karakter.
+LONG_CLAIM_WARN_TOKENS = 220
+LONG_CLAIM_WARN_CHARS = 1000
+LONG_CLAIM_WARNING = (
+    "Pesan Anda cukup panjang. Pesan yang terlalu panjang menurunkan ketepatan pencarian, "
+    "karena bagian di luar klaim ikut terbaca dan klaimnya bisa terlewat. Hasil paling "
+    "tepat bila Anda menyalin bagian inti klaimnya saja."
+)
+LONG_CLAIM_CONFIRM = "Tekan {button} sekali lagi untuk tetap memeriksa pesan ini apa adanya."
 
 # Indikator proses: satu baris per langkah, agar pemuatan model pertama (~67 detik
 # terukur) tidak tampak seperti aplikasi berhenti.
@@ -494,6 +510,17 @@ def validate_claim(text: str, limit: int = MAX_INPUT_CHARS) -> str | None:
     if len(stripped) > limit:
         return TOO_LONG_MESSAGE.format(length=_format_count(len(stripped)), limit=_format_count(limit))
     return None
+
+
+def is_long_claim(text: str, token_count: int | None) -> bool:
+    """
+    Apakah masukan cukup panjang untuk diberi peringatan (sebelum pemeriksaan).
+
+    Memakai hitungan token model embedding bila tersedia; bila tidak (None), ambang karakter.
+    """
+    if token_count is not None:
+        return token_count > LONG_CLAIM_WARN_TOKENS
+    return len(text.strip()) > LONG_CLAIM_WARN_CHARS
 
 
 def parse_flag(value: object) -> bool:

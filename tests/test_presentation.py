@@ -10,6 +10,10 @@ from llm import CallRecord
 from presentation import (
     EMPTY_INPUT_MESSAGE,
     FAILURE_MESSAGES,
+    LONG_CLAIM_CONFIRM,
+    LONG_CLAIM_WARN_CHARS,
+    LONG_CLAIM_WARN_TOKENS,
+    LONG_CLAIM_WARNING,
     MAX_INPUT_CHARS,
     NOT_FOUND_STYLE,
     RELATED_NOTE,
@@ -24,6 +28,7 @@ from presentation import (
     display_title,
     escape_markdown,
     failure_view,
+    is_long_claim,
     markdown_link,
     parse_flag,
     related_articles,
@@ -136,6 +141,7 @@ def test_main_copy_has_no_technical_terms() -> None:
     views = [build_view(_found(label)) for label in STATUS_STYLES] + [
         build_view(Answer(claim="x", verdict="tidak_ditemukan"))]
     texts = [v.summary for v in views] + [body for _, body in FAILURE_MESSAGES.values()]
+    texts += [LONG_CLAIM_WARNING, LONG_CLAIM_CONFIRM]
     for text in texts:
         for term in ("retrieval", "chunk", "skor", "embedding", "LLM", "API", "token"):
             assert term.lower() not in text.lower(), (term, text)
@@ -316,12 +322,13 @@ def test_not_found_without_urls_shows_no_related() -> None:
 # -- masukan dan setelan -----------------------------------------------------
 
 def test_validate_claim_limits() -> None:
-    assert MAX_INPUT_CHARS == 5000
+    # 1.500 = wilayah terukur bekerja (ablasi eksperimen 4: 19/20); 5.000 runtuh ke 2/20.
+    assert MAX_INPUT_CHARS == 1500
     assert validate_claim("   ") == EMPTY_INPUT_MESSAGE
     assert validate_claim("a" * MAX_INPUT_CHARS) is None
     message = validate_claim("a" * (MAX_INPUT_CHARS + 1))
     assert message is not None
-    assert "5.001" in message and "5.000" in message and "tidak ada bagian yang dipotong" in message
+    assert "1.501" in message and "1.500" in message and "tidak ada bagian yang dipotong" in message
 
 
 def test_validate_claim_counts_after_trimming_whitespace() -> None:
@@ -341,3 +348,24 @@ def test_query_token_diagnostics_passed_through() -> None:
     d = build_view(_found(), query_tokens=700, query_token_limit=512).diagnostics
     assert (d.query_tokens, d.query_token_limit) == (700, 512)
     assert d.related_threshold == RELATED_SCORE_THRESHOLD
+
+
+# -- peringatan pesan panjang -------------------------------------------------
+
+def test_long_claim_uses_tokens_when_available() -> None:
+    assert LONG_CLAIM_WARN_TOKENS == 220
+    assert not is_long_claim("x" * 5000, LONG_CLAIM_WARN_TOKENS)  # token diutamakan atas karakter
+    assert is_long_claim("pendek", LONG_CLAIM_WARN_TOKENS + 1)
+
+
+def test_long_claim_falls_back_to_characters() -> None:
+    assert LONG_CLAIM_WARN_CHARS == 1000
+    assert not is_long_claim("a" * LONG_CLAIM_WARN_CHARS, None)
+    assert is_long_claim("a" * (LONG_CLAIM_WARN_CHARS + 1), None)
+    assert not is_long_claim("  " + "a" * LONG_CLAIM_WARN_CHARS + "  ", None)
+
+
+def test_warning_threshold_is_below_input_limit() -> None:
+    """Peringatan harus bisa muncul untuk masukan yang masih diizinkan."""
+    assert LONG_CLAIM_WARN_CHARS < MAX_INPUT_CHARS
+    assert "inti klaim" in LONG_CLAIM_WARNING and "{button}" in LONG_CLAIM_CONFIRM
