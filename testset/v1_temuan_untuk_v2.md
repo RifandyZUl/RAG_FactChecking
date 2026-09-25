@@ -112,6 +112,26 @@ isi pertalite lagi ya?"):
 Keduanya juga merujuk "pernyataan tersebut"/"pernyataan terkait" tanpa menyebut siapa yang
 menyatakan apa, sehingga pembaca awam tidak tahu wacana mana yang diralat.
 
+**Contoh ketiga, dari pengujian demo oleh pemilik proyek (artikel 36730, tidak tersimpan di berkas
+hasil):** "Pihak berwenang memang pernah menyatakan wacana tersebut, namun belakangan telah
+meralatnya." Frasa "namun belakangan telah meralatnya" terasa kaku, dan subjek-objeknya tidak
+jelas bagi pembaca awam: tidak terbaca siapa yang meralat dan apa yang diralat. Bahasa yang lebih
+wajar misalnya "tapi pernyataan itu kemudian diralat".
+
+**Variasi antar-panggilan.** Tiga keluaran di atas berasal dari panggilan berbeda dengan prompt
+yang sama untuk artikel yang sama, dan mutu penyajiannya berbeda-beda (dua menyebut
+"menyesatkan"/"tidak benar" sebagai kesimpulan, satu tidak). Ini konsisten dengan temuan 6 dari
+54 butir set uji yang keputusannya tidak bulat antar-run (bagian 2): keluaran generator
+bervariasi antar-panggilan, bukan hanya pada keputusan tetapi juga pada gaya bahasa. Karena itu
+perbaikan gaya bahasa di Versi 2 **sebaiknya dievaluasi pada beberapa kali pemanggilan per butir,
+bukan satu kali**, misalnya dengan menilai sebaran mutu dari 3 run seperti evaluasi v1.
+
+**Sasaran Versi 2 (gaya bahasa):** tambahkan instruksi gaya bahasa pada prompt agar klarifikasi
+memakai **kalimat aktif, subjek yang jelas, dan diksi sehari-hari**. Pengaruhnya pada akurasi
+**wajib diukur ulang**, karena mengubah prompt membatalkan keabsahan baseline Versi 1 (sidik jari
+prompt dikunci di `v1.meta.json.sidik_jari_generator_v1`); pengukurannya pada set uji baru, dengan
+indeks arsip Versi 1 (`archive/v1`) agar perbedaan hasil murni karena prompt, bukan data.
+
 - **Target:** instruksi bidang `klarifikasi` pada prompt Versi 2 (mis. kalimat pendek,
   urutan fakta -> konteks, subjek eksplisit). Perubahan prompt wajib diukur pada set uji baru,
   bukan set uji v1 yang beku.
