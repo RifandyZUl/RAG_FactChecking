@@ -6,7 +6,15 @@ komponen yang disebut di tiap bagian hanya menandai target, implementasinya belu
 
 Latar (lihat CLAUDE.md, "Versi 2 — Corrective RAG"): komponen kandidat Versi 2 adalah (a) node
 **penulis ulang kueri** (query rewriter), (b) node **penilai relevansi dokumen** (grader), dan
-(c) **penilaian kredibilitas sumber**.
+(c) **penilaian kredibilitas sumber**. Pemetaan temuan ke komponen yang terbaru ada di
+**bagian 7**.
+
+> **KETERBATASAN UTAMA VERSI 1 (terukur 2026-09-25, bagian 5.2):** sistem hanya andal untuk
+> klaim di bawah **512 token pada sisi kueri**. Pada pesan panjang, klaim terdorong keluar dari
+> jendela embedding sehingga tidak ikut dicari: Recall@3 **19/20** pada ~1.500 dan ~3.000
+> karakter, runtuh ke **2/20** pada ~5.000 karakter (klaim di luar 512 token pada 18/20). Kondisi
+> pembanding klaim-di-awal-pesan tetap **19/20** pada ~5.000 karakter. Teks pengganggu sintetis,
+> hasil indikatif.
 
 ---
 
@@ -113,7 +121,8 @@ menyatakan apa, sehingga pembaca awam tidak tahu wacana mana yang diralat.
 
 ### 4.2 Klaim panjang melebihi batas token embedding (dari kode + tokenizer; frekuensi di pemakaian nyata belum diukur)
 
-Batas masukan demo dinaikkan ke 5.000 karakter (pesan berantai nyata sering panjang). Retrieval
+Batas masukan demo sempat dinaikkan ke 5.000 karakter (pesan berantai nyata sering panjang) tanpa
+pengukuran; setelah ablasi (bagian 5.2) diturunkan ke 1.500 karakter. Retrieval
 meng-embed klaim dengan batas `MAX_SEQ_LENGTH` = 512 token, sehingga **bagian klaim di atas
 ~512 token tidak ikut dicari** (LLM tetap membaca klaim utuh). Terukur dengan tokenizer bge-m3:
 satu contoh teks 5.000 karakter berbahasa Indonesia = 998 token. **Set uji v1 tidak menguji rentang ini**:
@@ -196,9 +205,14 @@ bukti untuk mengganti agregasi maksimum.
   butir, **untuk artikel yang benar Narasi-lah yang paling cocok (35/40)**, dan Narasi saja sudah
   menyamai recall seluruh seksi. Kemenangan Penjelasan pada ukuran lama kemungkinan besar terjadi
   di artikel lain (tetangga), bukan pada artikel yang benar. Ini belum diuji langsung di sini.
-- **Implikasi untuk Versi 2 (bukan keputusan):** ada kemungkinan chunk Penjelasan lebih banyak
-  memunculkan tetangga daripada membantu menemukan artikel yang benar. Hal ini perlu diukur
-  (mis. kecocokan palsu dengan/tanpa Penjelasan) sebelum memutuskan apa pun.
+- **Agenda eksperimen Versi 2 (bukan keputusan): menghapus seksi Penjelasan dari indeks.**
+  Penjelasan tidak memberi kontribusi pada retrieval (0 butir berpindah saat dihilangkan, @3
+  maupun @5). Menghapusnya akan memangkas sepertiga chunk (150 dari 450) dan mempercepat
+  ingestion. Tetapi **wajib diuji dulu** apakah kehadirannya berpengaruh pada kualitas jawaban
+  generator, lewat kandidat yang terpilih atau kecocokan palsu. Generator tidak membaca teks
+  Penjelasan (konteksnya hanya judul, label, tanggal, Narasi, Kesimpulan, rujukan), tetapi
+  Penjelasan dapat mengubah artikel mana yang masuk top-3. Dugaan bahwa Penjelasan lebih sering
+  memunculkan artikel tetangga juga belum diuji. Pengujiannya butuh set uji baru.
 
 **Eksperimen 4 -- panjang klaim** (20 butir positif non-batas; teks pengganggu **sintetis**,
 hasil indikatif):
@@ -217,8 +231,10 @@ hasil indikatif):
 - Pengenceran murni hanya menjatuhkan satu butir (`v1-002`, peringkat 2 -> 4; skornya memang
   tipis sejak awal) dan menurunkan skor artikel benar secara bertahap (median: kedua sisi
   0,746 / 0,705 / 0,511 pada 1.500 / 3.000 / 5.000 karakter; klaim di awal 0,782 / 0,774 / 0,765).
-- Artinya **batas 5.000 karakter di demo melampaui wilayah yang bekerja**. Pesan berantai dengan
-  pembuka panjang (>~2.000 karakter sebelum klaim) praktis tidak akan menemukan artikelnya.
+- Artinya batas 5.000 karakter yang sempat dipakai demo **melampaui wilayah yang bekerja**. Pesan
+  berantai dengan pembuka panjang (>~2.000 karakter sebelum klaim) praktis tidak akan menemukan
+  artikelnya. **Tindak lanjut:** batas demo diturunkan ke 1.500 karakter (19/20 terukur), dengan
+  peringatan sebelum pemeriksaan sejak ~220 token.
 - **Target Versi 2:** rewriter yang mengekstrak klaim inti sebelum retrieval, atau embedding
   per potongan pesan. Set uji Versi 2 wajib memuat pesan berantai panjang yang ASLI (bukan
   sintetis) dengan posisi klaim beragam.
@@ -237,6 +253,21 @@ Ambang tampilan `RELATED_SCORE_THRESHOLD = 0,57` di `src/presentation.py` **rapu
 - **Agenda Versi 2:** setel ulang ambang dari data terpisah (bukan set uji mana pun) setelah
   basis data diperluas, dan laporkan margin serta sebarannya. Karena ambang ini hanya
   memengaruhi tampilan, bukan vonis, ia tidak memengaruhi hasil evaluasi Versi 1.
+
+---
+
+## 7. Pemetaan komponen Versi 2 (diperbarui 2026-09-25)
+
+| Komponen | Tugas | Bukti dari Versi 1 | Keterukuran dampak |
+|---|---|---|---|
+| **Rewriter** (tugas 1) | Mengekstrak inti klaim dari pesan panjang **sebelum** retrieval | 18 dari 20 butir positif gagal Recall@3 pada pesan ~5.000 karakter karena klaim di luar jendela 512 token (bagian 5.2, eksperimen 4) | **Paling terukur**: selisih -18/20, jauh di atas kebetulan |
+| **Rewriter** (tugas 2) | Menulis ulang kueri saat retrieval gagal | 4 butir dengan artikel benar di luar top-3: 2 nyaris (peringkat 4), 2 jauh (6 dan 19) (bagian 1) | Kecil: 4 butir |
+| **Grader** | Menilai apakah kandidat benar-benar klaim yang sama | 2 kesalahan + 6 ketidakbulatan, semua dengan artikel benar di top-3 (bagian 2) | 7 butir unik; murni penilaian LLM |
+| **Kredibilitas sumber** | Menyaring rujukan lebih cerdas dari per domain | Tidak ada temuan kuantitatif dari set uji v1 (bagian 3) | Belum terukur |
+
+Agenda eksperimen terkait (bagian 5): menghapus seksi Penjelasan dari indeks; skema chunking,
+batas token indeks, dan model embedding lain (butuh pembangunan ulang indeks); penyetelan ulang
+ambang tampilan 0,57 dari data terpisah (bagian 6).
 
 ---
 
