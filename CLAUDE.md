@@ -25,6 +25,12 @@ akan disampaikan pemilik proyek; belum ada rancangan.
   artikel "mungkin terkait" (skor >= 0,57; dasar ambang di komentar `RELATED_SCORE_THRESHOLD`)
   TANPA mengubah vonis. Demo berbagi kuota harian (RPD 500) dengan evaluasi.
   `generator.py`, prompt, `retriever.py`, dan `v1.jsonl` tidak disentuh (uji kunci lolos).
+- **Eksperimen ablasi retrieval (2026-09-25; pengukuran, BUKAN penyetelan -- parameter produksi
+  tidak diubah):** `src/evaluation/retrieval_ablation.py`, hasil `testset/retrieval_ablation.json`
+  dan `_report.txt`, ringkasan + status tiap parameter di `testset/v1_temuan_untuk_v2.md` bagian
+  5-6. Inti: top-k dan agregasi tidak menunjukkan selisih bermakna; Narasi saja = seluruh seksi
+  (Penjelasan tidak menyumbang recall), Kesimpulan saja turun bermakna (-6/40); klaim ~5.000
+  karakter dengan pembuka panjang jatuh ke Recall@3 2/20 karena klaim terpotong di luar 512 token.
 - **Temuan ChromaDB (2026-09-25):** berkas indeks ditulis ulang setiap kali koleksi dibuka,
   juga oleh evaluasi -- lihat "Berkas indeks ChromaDB ditulis ulang setiap kali dibuka" di
   "Temuan Ingestion dan Retrieval". Relevan untuk tahap pengarsipan indeks: arsipkan berkas
@@ -385,6 +391,14 @@ pada 512 token pun tetap cocok kuat. Chunking per seksi dipertahankan
 karena jawaban diambil dari Kesimpulan artikel yang sama, tetapi
 rasionalnya adalah pemisahan peran seksi, bukan pencocokan lewat Narasi
 (lihat koreksi pada Aturan Wajib #2).
+
+**Dinilai ulang 2026-09-25 dengan 44 butir set uji (ablasi retrieval):** ukuran di atas menghitung
+seksi chunk teratas secara KESELURUHAN (artikel apa pun). Bila yang dihitung adalah chunk terbaik
+pada artikel yang BENAR, Narasi menang 35 dari 40 butir non-batas, dan retrieval dengan Narasi saja
+menyamai seluruh seksi (Recall@3 36/40, 0 butir berpindah). Jadi untuk menemukan artikel yang
+benar, asumsi awal tentang Narasi ternyata didukung; kemenangan Penjelasan pada ukuran lama
+kemungkinan terjadi di artikel tetangga (belum diuji langsung). Rincian:
+`testset/v1_temuan_untuk_v2.md` bagian 5.2.
 
 ### Retrieval diagregasi per `article_id`
 

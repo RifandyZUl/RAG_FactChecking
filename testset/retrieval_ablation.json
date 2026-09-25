@@ -1,0 +1,2217 @@
+{
+  "meta": {
+    "tanggal": "2026-09-25",
+    "model_embedding": "BAAI/bge-m3",
+    "jumlah_chunk": 450,
+    "batas_token": 512,
+    "jumlah_butir": 54,
+    "catatan": "Hanya retrieval; tanpa panggilan LLM. Skor kosinus eksak terhadap seluruh chunk. Pengukuran, bukan penyetelan: parameter produksi tidak diubah.",
+    "aturan_selisih": {
+      "alpha": 0.05,
+      "selisih_bersih_minimal": 3,
+      "uji": "McNemar eksak dua sisi, berpasangan per butir"
+    }
+  },
+  "validasi_kesetiaan": {
+    "eksak_sama_dengan_retrieve_produksi": 54,
+    "n": 54,
+    "berbeda_dari_produksi": [],
+    "eksak_sama_dengan_tercatat_evaluasi_v1": 54,
+    "berbeda_dari_tercatat": []
+  },
+  "eksperimen_1_top_k": {
+    "per_kelompok": {
+      "non_batas": {
+        "recall@1": {
+          "benar": 33,
+          "n": 40,
+          "proporsi": 0.825,
+          "wilson95": [
+            0.68,
+            0.913
+          ]
+        },
+        "recall@3": {
+          "benar": 36,
+          "n": 40,
+          "proporsi": 0.9,
+          "wilson95": [
+            0.769,
+            0.96
+          ]
+        },
+        "recall@5": {
+          "benar": 38,
+          "n": 40,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.835,
+            0.986
+          ]
+        },
+        "recall@10": {
+          "benar": 39,
+          "n": 40,
+          "proporsi": 0.975,
+          "wilson95": [
+            0.871,
+            0.996
+          ]
+        },
+        "recall@20": {
+          "benar": 40,
+          "n": 40,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.912,
+            1.0
+          ]
+        }
+      },
+      "batas": {
+        "recall@1": {
+          "benar": 3,
+          "n": 4,
+          "proporsi": 0.75,
+          "wilson95": [
+            0.301,
+            0.954
+          ]
+        },
+        "recall@3": {
+          "benar": 4,
+          "n": 4,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.51,
+            1.0
+          ]
+        },
+        "recall@5": {
+          "benar": 4,
+          "n": 4,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.51,
+            1.0
+          ]
+        },
+        "recall@10": {
+          "benar": 4,
+          "n": 4,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.51,
+            1.0
+          ]
+        },
+        "recall@20": {
+          "benar": 4,
+          "n": 4,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.51,
+            1.0
+          ]
+        }
+      },
+      "tipe:positif": {
+        "recall@1": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "recall@3": {
+          "benar": 20,
+          "n": 20,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.839,
+            1.0
+          ]
+        },
+        "recall@5": {
+          "benar": 20,
+          "n": 20,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.839,
+            1.0
+          ]
+        },
+        "recall@10": {
+          "benar": 20,
+          "n": 20,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.839,
+            1.0
+          ]
+        },
+        "recall@20": {
+          "benar": 20,
+          "n": 20,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.839,
+            1.0
+          ]
+        }
+      },
+      "tipe:negatif_sulit": {
+        "recall@1": {
+          "benar": 14,
+          "n": 20,
+          "proporsi": 0.7,
+          "wilson95": [
+            0.481,
+            0.855
+          ]
+        },
+        "recall@3": {
+          "benar": 16,
+          "n": 20,
+          "proporsi": 0.8,
+          "wilson95": [
+            0.584,
+            0.919
+          ]
+        },
+        "recall@5": {
+          "benar": 18,
+          "n": 20,
+          "proporsi": 0.9,
+          "wilson95": [
+            0.699,
+            0.972
+          ]
+        },
+        "recall@10": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "recall@20": {
+          "benar": 20,
+          "n": 20,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.839,
+            1.0
+          ]
+        }
+      },
+      "subtipe:pola_sama_entitas_beda": {
+        "recall@1": {
+          "benar": 3,
+          "n": 7,
+          "proporsi": 0.4286,
+          "wilson95": [
+            0.158,
+            0.75
+          ]
+        },
+        "recall@3": {
+          "benar": 4,
+          "n": 7,
+          "proporsi": 0.5714,
+          "wilson95": [
+            0.25,
+            0.842
+          ]
+        },
+        "recall@5": {
+          "benar": 6,
+          "n": 7,
+          "proporsi": 0.8571,
+          "wilson95": [
+            0.487,
+            0.974
+          ]
+        },
+        "recall@10": {
+          "benar": 6,
+          "n": 7,
+          "proporsi": 0.8571,
+          "wilson95": [
+            0.487,
+            0.974
+          ]
+        },
+        "recall@20": {
+          "benar": 7,
+          "n": 7,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.646,
+            1.0
+          ]
+        }
+      },
+      "subtipe:entitas_sama_klaim_beda": {
+        "recall@1": {
+          "benar": 5,
+          "n": 7,
+          "proporsi": 0.7143,
+          "wilson95": [
+            0.359,
+            0.918
+          ]
+        },
+        "recall@3": {
+          "benar": 6,
+          "n": 7,
+          "proporsi": 0.8571,
+          "wilson95": [
+            0.487,
+            0.974
+          ]
+        },
+        "recall@5": {
+          "benar": 6,
+          "n": 7,
+          "proporsi": 0.8571,
+          "wilson95": [
+            0.487,
+            0.974
+          ]
+        },
+        "recall@10": {
+          "benar": 7,
+          "n": 7,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.646,
+            1.0
+          ]
+        },
+        "recall@20": {
+          "benar": 7,
+          "n": 7,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.646,
+            1.0
+          ]
+        }
+      },
+      "subtipe:angka_waktu_beda": {
+        "recall@1": {
+          "benar": 6,
+          "n": 6,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.61,
+            1.0
+          ]
+        },
+        "recall@3": {
+          "benar": 6,
+          "n": 6,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.61,
+            1.0
+          ]
+        },
+        "recall@5": {
+          "benar": 6,
+          "n": 6,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.61,
+            1.0
+          ]
+        },
+        "recall@10": {
+          "benar": 6,
+          "n": 6,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.61,
+            1.0
+          ]
+        },
+        "recall@20": {
+          "benar": 6,
+          "n": 6,
+          "proporsi": 1.0,
+          "wilson95": [
+            0.61,
+            1.0
+          ]
+        }
+      }
+    },
+    "perbandingan_non_batas_terhadap_k3": {
+      "k=1_vs_k=3": {
+        "naik": 0,
+        "turun": 3,
+        "selisih_bersih": -3,
+        "p_mcnemar": 0.25,
+        "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+      },
+      "k=5_vs_k=3": {
+        "naik": 2,
+        "turun": 0,
+        "selisih_bersih": 2,
+        "p_mcnemar": 0.5,
+        "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+      },
+      "k=10_vs_k=3": {
+        "naik": 3,
+        "turun": 0,
+        "selisih_bersih": 3,
+        "p_mcnemar": 0.25,
+        "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+      },
+      "k=20_vs_k=3": {
+        "naik": 4,
+        "turun": 0,
+        "selisih_bersih": 4,
+        "p_mcnemar": 0.125,
+        "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+      }
+    },
+    "kegagalan_recall3_v1": {
+      "v1-022": {
+        "subtipe": "pola_sama_entitas_beda",
+        "artikel_diharapkan": "36648",
+        "peringkat_sebenarnya": 19,
+        "masuk_mulai_k": 20
+      },
+      "v1-024": {
+        "subtipe": "pola_sama_entitas_beda",
+        "artikel_diharapkan": "36576",
+        "peringkat_sebenarnya": 4,
+        "masuk_mulai_k": 5
+      },
+      "v1-027": {
+        "subtipe": "pola_sama_entitas_beda",
+        "artikel_diharapkan": "36191",
+        "peringkat_sebenarnya": 4,
+        "masuk_mulai_k": 5
+      },
+      "v1-033": {
+        "subtipe": "entitas_sama_klaim_beda",
+        "artikel_diharapkan": "36191",
+        "peringkat_sebenarnya": 6,
+        "masuk_mulai_k": 10
+      }
+    },
+    "peringkat_per_butir": {
+      "v1-001": 1,
+      "v1-002": 2,
+      "v1-003": 1,
+      "v1-004": 1,
+      "v1-005": 1,
+      "v1-006": 1,
+      "v1-007": 1,
+      "v1-008": 1,
+      "v1-009": 1,
+      "v1-010": 1,
+      "v1-011": 1,
+      "v1-012": 1,
+      "v1-013": 1,
+      "v1-014": 1,
+      "v1-015": 1,
+      "v1-016": 1,
+      "v1-017": 1,
+      "v1-018": 1,
+      "v1-019": 1,
+      "v1-020": 1,
+      "v1-021": 2,
+      "v1-022": 19,
+      "v1-023": 1,
+      "v1-024": 4,
+      "v1-025": 1,
+      "v1-026": 1,
+      "v1-027": 4,
+      "v1-028": 1,
+      "v1-029": 1,
+      "v1-030": 1,
+      "v1-031": 3,
+      "v1-032": 1,
+      "v1-033": 6,
+      "v1-034": 1,
+      "v1-035": 1,
+      "v1-036": 1,
+      "v1-037": 1,
+      "v1-038": 1,
+      "v1-039": 1,
+      "v1-040": 1,
+      "v1-051": 1,
+      "v1-052": 2,
+      "v1-053": 1,
+      "v1-054": 1
+    }
+  },
+  "eksperimen_2_agregasi": {
+    "strategi": {
+      "maks": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 36,
+            "n": 40,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.769,
+              0.96
+            ]
+          },
+          "recall@5": {
+            "benar": 38,
+            "n": 40,
+            "proporsi": 0.95,
+            "wilson95": [
+              0.835,
+              0.986
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "peringkat_per_butir": {
+          "v1-001": 1,
+          "v1-002": 2,
+          "v1-003": 1,
+          "v1-004": 1,
+          "v1-005": 1,
+          "v1-006": 1,
+          "v1-007": 1,
+          "v1-008": 1,
+          "v1-009": 1,
+          "v1-010": 1,
+          "v1-011": 1,
+          "v1-012": 1,
+          "v1-013": 1,
+          "v1-014": 1,
+          "v1-015": 1,
+          "v1-016": 1,
+          "v1-017": 1,
+          "v1-018": 1,
+          "v1-019": 1,
+          "v1-020": 1,
+          "v1-021": 2,
+          "v1-022": 19,
+          "v1-023": 1,
+          "v1-024": 4,
+          "v1-025": 1,
+          "v1-026": 1,
+          "v1-027": 4,
+          "v1-028": 1,
+          "v1-029": 1,
+          "v1-030": 1,
+          "v1-031": 3,
+          "v1-032": 1,
+          "v1-033": 6,
+          "v1-034": 1,
+          "v1-035": 1,
+          "v1-036": 1,
+          "v1-037": 1,
+          "v1-038": 1,
+          "v1-039": 1,
+          "v1-040": 1,
+          "v1-051": 1,
+          "v1-052": 2,
+          "v1-053": 1,
+          "v1-054": 1
+        }
+      },
+      "rata_rata": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 35,
+            "n": 40,
+            "proporsi": 0.875,
+            "wilson95": [
+              0.739,
+              0.945
+            ]
+          },
+          "recall@5": {
+            "benar": 38,
+            "n": 40,
+            "proporsi": 0.95,
+            "wilson95": [
+              0.835,
+              0.986
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "peringkat_per_butir": {
+          "v1-001": 1,
+          "v1-002": 2,
+          "v1-003": 1,
+          "v1-004": 1,
+          "v1-005": 1,
+          "v1-006": 1,
+          "v1-007": 1,
+          "v1-008": 1,
+          "v1-009": 1,
+          "v1-010": 1,
+          "v1-011": 1,
+          "v1-012": 1,
+          "v1-013": 1,
+          "v1-014": 1,
+          "v1-015": 1,
+          "v1-016": 1,
+          "v1-017": 1,
+          "v1-018": 2,
+          "v1-019": 1,
+          "v1-020": 1,
+          "v1-021": 1,
+          "v1-022": 16,
+          "v1-023": 1,
+          "v1-024": 5,
+          "v1-025": 1,
+          "v1-026": 2,
+          "v1-027": 7,
+          "v1-028": 1,
+          "v1-029": 1,
+          "v1-030": 2,
+          "v1-031": 4,
+          "v1-032": 1,
+          "v1-033": 4,
+          "v1-034": 1,
+          "v1-035": 1,
+          "v1-036": 2,
+          "v1-037": 1,
+          "v1-038": 1,
+          "v1-039": 1,
+          "v1-040": 1,
+          "v1-051": 1,
+          "v1-052": 3,
+          "v1-053": 1,
+          "v1-054": 1
+        }
+      },
+      "rata_rata_dua_teratas": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 35,
+            "n": 40,
+            "proporsi": 0.875,
+            "wilson95": [
+              0.739,
+              0.945
+            ]
+          },
+          "recall@5": {
+            "benar": 36,
+            "n": 40,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.769,
+              0.96
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "peringkat_per_butir": {
+          "v1-001": 1,
+          "v1-002": 2,
+          "v1-003": 1,
+          "v1-004": 1,
+          "v1-005": 1,
+          "v1-006": 1,
+          "v1-007": 1,
+          "v1-008": 1,
+          "v1-009": 1,
+          "v1-010": 1,
+          "v1-011": 1,
+          "v1-012": 1,
+          "v1-013": 1,
+          "v1-014": 1,
+          "v1-015": 1,
+          "v1-016": 1,
+          "v1-017": 1,
+          "v1-018": 1,
+          "v1-019": 1,
+          "v1-020": 1,
+          "v1-021": 1,
+          "v1-022": 18,
+          "v1-023": 1,
+          "v1-024": 6,
+          "v1-025": 1,
+          "v1-026": 1,
+          "v1-027": 7,
+          "v1-028": 1,
+          "v1-029": 1,
+          "v1-030": 2,
+          "v1-031": 4,
+          "v1-032": 1,
+          "v1-033": 6,
+          "v1-034": 1,
+          "v1-035": 1,
+          "v1-036": 1,
+          "v1-037": 1,
+          "v1-038": 1,
+          "v1-039": 1,
+          "v1-040": 1,
+          "v1-051": 1,
+          "v1-052": 3,
+          "v1-053": 1,
+          "v1-054": 1
+        }
+      }
+    },
+    "perbandingan_terhadap_maks": {
+      "rata_rata": {
+        "recall@3_non_batas": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        },
+        "butir_berpindah@3": [
+          {
+            "id": "v1-031",
+            "subtipe": "entitas_sama_klaim_beda",
+            "perubahan": "benar->salah"
+          }
+        ],
+        "recall@5_non_batas": {
+          "naik": 1,
+          "turun": 1,
+          "selisih_bersih": 0,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "identik"
+        },
+        "butir_berpindah@5": [
+          {
+            "id": "v1-027",
+            "subtipe": "pola_sama_entitas_beda",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-033",
+            "subtipe": "entitas_sama_klaim_beda",
+            "perubahan": "salah->benar"
+          }
+        ]
+      },
+      "rata_rata_dua_teratas": {
+        "recall@3_non_batas": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        },
+        "butir_berpindah@3": [
+          {
+            "id": "v1-031",
+            "subtipe": "entitas_sama_klaim_beda",
+            "perubahan": "benar->salah"
+          }
+        ],
+        "recall@5_non_batas": {
+          "naik": 0,
+          "turun": 2,
+          "selisih_bersih": -2,
+          "p_mcnemar": 0.5,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        },
+        "butir_berpindah@5": [
+          {
+            "id": "v1-024",
+            "subtipe": "pola_sama_entitas_beda",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-027",
+            "subtipe": "pola_sama_entitas_beda",
+            "perubahan": "benar->salah"
+          }
+        ]
+      }
+    }
+  },
+  "eksperimen_3_seksi": {
+    "seksi_terbaik_artikel_benar": {
+      "non_batas": {
+        "narasi": 35,
+        "kesimpulan": 3,
+        "penjelasan": 2
+      },
+      "batas": {
+        "narasi": 3,
+        "kesimpulan": 1
+      },
+      "per_tipe_non_batas": {
+        "positif": {
+          "narasi": 17,
+          "kesimpulan": 3
+        },
+        "negatif_sulit": {
+          "penjelasan": 2,
+          "narasi": 18
+        }
+      },
+      "per_butir": {
+        "v1-001": "narasi",
+        "v1-002": "kesimpulan",
+        "v1-003": "narasi",
+        "v1-004": "narasi",
+        "v1-005": "narasi",
+        "v1-006": "narasi",
+        "v1-007": "narasi",
+        "v1-008": "narasi",
+        "v1-009": "narasi",
+        "v1-010": "narasi",
+        "v1-011": "narasi",
+        "v1-012": "narasi",
+        "v1-013": "narasi",
+        "v1-014": "narasi",
+        "v1-015": "narasi",
+        "v1-016": "kesimpulan",
+        "v1-017": "kesimpulan",
+        "v1-018": "narasi",
+        "v1-019": "narasi",
+        "v1-020": "narasi",
+        "v1-021": "penjelasan",
+        "v1-022": "narasi",
+        "v1-023": "narasi",
+        "v1-024": "narasi",
+        "v1-025": "narasi",
+        "v1-026": "narasi",
+        "v1-027": "narasi",
+        "v1-028": "narasi",
+        "v1-029": "narasi",
+        "v1-030": "narasi",
+        "v1-031": "narasi",
+        "v1-032": "narasi",
+        "v1-033": "penjelasan",
+        "v1-034": "narasi",
+        "v1-035": "narasi",
+        "v1-036": "narasi",
+        "v1-037": "narasi",
+        "v1-038": "narasi",
+        "v1-039": "narasi",
+        "v1-040": "narasi",
+        "v1-051": "narasi",
+        "v1-052": "narasi",
+        "v1-053": "kesimpulan",
+        "v1-054": "narasi"
+      }
+    },
+    "kondisi": {
+      "seluruh_seksi": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 36,
+            "n": 40,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.769,
+              0.96
+            ]
+          },
+          "recall@5": {
+            "benar": 38,
+            "n": 40,
+            "proporsi": 0.95,
+            "wilson95": [
+              0.835,
+              0.986
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "tipe:positif": {
+          "recall@3": {
+            "benar": 20,
+            "n": 20,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.839,
+              1.0
+            ]
+          }
+        },
+        "tipe:negatif_sulit": {
+          "recall@3": {
+            "benar": 16,
+            "n": 20,
+            "proporsi": 0.8,
+            "wilson95": [
+              0.584,
+              0.919
+            ]
+          }
+        },
+        "subtipe:pola_sama_entitas_beda": {
+          "recall@3": {
+            "benar": 4,
+            "n": 7,
+            "proporsi": 0.5714,
+            "wilson95": [
+              0.25,
+              0.842
+            ]
+          }
+        },
+        "subtipe:entitas_sama_klaim_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 7,
+            "proporsi": 0.8571,
+            "wilson95": [
+              0.487,
+              0.974
+            ]
+          }
+        },
+        "subtipe:angka_waktu_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 6,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.61,
+              1.0
+            ]
+          }
+        }
+      },
+      "hanya_narasi": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 36,
+            "n": 40,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.769,
+              0.96
+            ]
+          },
+          "recall@5": {
+            "benar": 38,
+            "n": 40,
+            "proporsi": 0.95,
+            "wilson95": [
+              0.835,
+              0.986
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "tipe:positif": {
+          "recall@3": {
+            "benar": 20,
+            "n": 20,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.839,
+              1.0
+            ]
+          }
+        },
+        "tipe:negatif_sulit": {
+          "recall@3": {
+            "benar": 16,
+            "n": 20,
+            "proporsi": 0.8,
+            "wilson95": [
+              0.584,
+              0.919
+            ]
+          }
+        },
+        "subtipe:pola_sama_entitas_beda": {
+          "recall@3": {
+            "benar": 4,
+            "n": 7,
+            "proporsi": 0.5714,
+            "wilson95": [
+              0.25,
+              0.842
+            ]
+          }
+        },
+        "subtipe:entitas_sama_klaim_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 7,
+            "proporsi": 0.8571,
+            "wilson95": [
+              0.487,
+              0.974
+            ]
+          }
+        },
+        "subtipe:angka_waktu_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 6,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.61,
+              1.0
+            ]
+          }
+        }
+      },
+      "hanya_kesimpulan": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 30,
+            "n": 40,
+            "proporsi": 0.75,
+            "wilson95": [
+              0.598,
+              0.858
+            ]
+          },
+          "recall@5": {
+            "benar": 31,
+            "n": 40,
+            "proporsi": 0.775,
+            "wilson95": [
+              0.625,
+              0.877
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 3,
+            "n": 4,
+            "proporsi": 0.75,
+            "wilson95": [
+              0.301,
+              0.954
+            ]
+          },
+          "recall@5": {
+            "benar": 3,
+            "n": 4,
+            "proporsi": 0.75,
+            "wilson95": [
+              0.301,
+              0.954
+            ]
+          }
+        },
+        "tipe:positif": {
+          "recall@3": {
+            "benar": 18,
+            "n": 20,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.699,
+              0.972
+            ]
+          }
+        },
+        "tipe:negatif_sulit": {
+          "recall@3": {
+            "benar": 12,
+            "n": 20,
+            "proporsi": 0.6,
+            "wilson95": [
+              0.387,
+              0.781
+            ]
+          }
+        },
+        "subtipe:pola_sama_entitas_beda": {
+          "recall@3": {
+            "benar": 2,
+            "n": 7,
+            "proporsi": 0.2857,
+            "wilson95": [
+              0.082,
+              0.641
+            ]
+          }
+        },
+        "subtipe:entitas_sama_klaim_beda": {
+          "recall@3": {
+            "benar": 4,
+            "n": 7,
+            "proporsi": 0.5714,
+            "wilson95": [
+              0.25,
+              0.842
+            ]
+          }
+        },
+        "subtipe:angka_waktu_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 6,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.61,
+              1.0
+            ]
+          }
+        }
+      },
+      "narasi_dan_kesimpulan": {
+        "non_batas": {
+          "recall@3": {
+            "benar": 36,
+            "n": 40,
+            "proporsi": 0.9,
+            "wilson95": [
+              0.769,
+              0.96
+            ]
+          },
+          "recall@5": {
+            "benar": 38,
+            "n": 40,
+            "proporsi": 0.95,
+            "wilson95": [
+              0.835,
+              0.986
+            ]
+          }
+        },
+        "batas": {
+          "recall@3": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          },
+          "recall@5": {
+            "benar": 4,
+            "n": 4,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.51,
+              1.0
+            ]
+          }
+        },
+        "tipe:positif": {
+          "recall@3": {
+            "benar": 20,
+            "n": 20,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.839,
+              1.0
+            ]
+          }
+        },
+        "tipe:negatif_sulit": {
+          "recall@3": {
+            "benar": 16,
+            "n": 20,
+            "proporsi": 0.8,
+            "wilson95": [
+              0.584,
+              0.919
+            ]
+          }
+        },
+        "subtipe:pola_sama_entitas_beda": {
+          "recall@3": {
+            "benar": 4,
+            "n": 7,
+            "proporsi": 0.5714,
+            "wilson95": [
+              0.25,
+              0.842
+            ]
+          }
+        },
+        "subtipe:entitas_sama_klaim_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 7,
+            "proporsi": 0.8571,
+            "wilson95": [
+              0.487,
+              0.974
+            ]
+          }
+        },
+        "subtipe:angka_waktu_beda": {
+          "recall@3": {
+            "benar": 6,
+            "n": 6,
+            "proporsi": 1.0,
+            "wilson95": [
+              0.61,
+              1.0
+            ]
+          }
+        }
+      }
+    },
+    "perbandingan_terhadap_seluruh_seksi": {
+      "hanya_narasi": {
+        "naik": 0,
+        "turun": 0,
+        "selisih_bersih": 0,
+        "p_mcnemar": 1.0,
+        "kesimpulan": "identik",
+        "butir_berpindah": []
+      },
+      "hanya_kesimpulan": {
+        "naik": 0,
+        "turun": 6,
+        "selisih_bersih": -6,
+        "p_mcnemar": 0.0312,
+        "kesimpulan": "selisih bermakna",
+        "butir_berpindah": [
+          {
+            "id": "v1-008",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-010",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-021",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-025",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-030",
+            "perubahan": "benar->salah"
+          },
+          {
+            "id": "v1-031",
+            "perubahan": "benar->salah"
+          }
+        ]
+      },
+      "narasi_dan_kesimpulan": {
+        "naik": 0,
+        "turun": 0,
+        "selisih_bersih": 0,
+        "p_mcnemar": 1.0,
+        "kesimpulan": "identik",
+        "butir_berpindah": []
+      }
+    }
+  },
+  "eksperimen_4_panjang_klaim": {
+    "n_butir_positif": 20,
+    "klaim_asli": {
+      "recall@3": {
+        "benar": 20,
+        "n": 20,
+        "proporsi": 1.0,
+        "wilson95": [
+          0.839,
+          1.0
+        ]
+      },
+      "panjang_karakter": [
+        199,
+        132,
+        176,
+        159,
+        107,
+        59,
+        48,
+        71,
+        183,
+        115,
+        71,
+        201,
+        150,
+        189,
+        582,
+        135,
+        197,
+        88,
+        477,
+        66
+      ]
+    },
+    "batas_token_embedding": 512,
+    "kondisi": {
+      "kedua_sisi_1500": {
+        "penempatan": "kedua_sisi",
+        "target_karakter": 1500,
+        "panjang_karakter_aktual": [
+          1500,
+          1500
+        ],
+        "token_total_median": 335.0,
+        "keterbacaan_klaim": {
+          "utuh": 20
+        },
+        "recall@3": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        }
+      },
+      "kedua_sisi_3000": {
+        "penempatan": "kedua_sisi",
+        "target_karakter": 3000,
+        "panjang_karakter_aktual": [
+          3000,
+          3000
+        ],
+        "token_total_median": 665.0,
+        "keterbacaan_klaim": {
+          "utuh": 20
+        },
+        "recall@3": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        }
+      },
+      "kedua_sisi_5000": {
+        "penempatan": "kedua_sisi",
+        "target_karakter": 5000,
+        "panjang_karakter_aktual": [
+          5000,
+          5000
+        ],
+        "token_total_median": 1112.5,
+        "keterbacaan_klaim": {
+          "terpotong_seluruhnya": 18,
+          "sebagian": 2
+        },
+        "recall@3": {
+          "benar": 2,
+          "n": 20,
+          "proporsi": 0.1,
+          "wilson95": [
+            0.028,
+            0.301
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 18,
+          "selisih_bersih": -18,
+          "p_mcnemar": 0.0,
+          "kesimpulan": "selisih bermakna"
+        }
+      },
+      "belakang_1500": {
+        "penempatan": "belakang",
+        "target_karakter": 1500,
+        "panjang_karakter_aktual": [
+          1500,
+          1500
+        ],
+        "token_total_median": 330.0,
+        "keterbacaan_klaim": {
+          "utuh": 20
+        },
+        "recall@3": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        }
+      },
+      "belakang_3000": {
+        "penempatan": "belakang",
+        "target_karakter": 3000,
+        "panjang_karakter_aktual": [
+          3000,
+          3000
+        ],
+        "token_total_median": 667.5,
+        "keterbacaan_klaim": {
+          "utuh": 20
+        },
+        "recall@3": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        }
+      },
+      "belakang_5000": {
+        "penempatan": "belakang",
+        "target_karakter": 5000,
+        "panjang_karakter_aktual": [
+          5000,
+          5000
+        ],
+        "token_total_median": 1111.5,
+        "keterbacaan_klaim": {
+          "utuh": 20
+        },
+        "recall@3": {
+          "benar": 19,
+          "n": 20,
+          "proporsi": 0.95,
+          "wilson95": [
+            0.764,
+            0.991
+          ]
+        },
+        "perbandingan_terhadap_klaim_asli": {
+          "naik": 0,
+          "turun": 1,
+          "selisih_bersih": -1,
+          "p_mcnemar": 1.0,
+          "kesimpulan": "tidak dapat dibedakan dari kebetulan"
+        }
+      }
+    },
+    "per_butir": {
+      "v1-001": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8096,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 2,
+          "skor_artikel_benar": 0.7593,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 135,
+          "skor_artikel_benar": 0.4654,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8295,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8178,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8258,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-002": {
+        "kedua_sisi_1500": {
+          "peringkat": 4,
+          "skor_artikel_benar": 0.5704,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 4,
+          "skor_artikel_benar": 0.5699,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 43,
+          "skor_artikel_benar": 0.5182,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 4,
+          "skor_artikel_benar": 0.5821,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 4,
+          "skor_artikel_benar": 0.5725,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 4,
+          "skor_artikel_benar": 0.5908,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 2
+        }
+      },
+      "v1-003": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7725,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7066,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 104,
+          "skor_artikel_benar": 0.4971,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7936,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7761,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7744,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-004": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.758,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7178,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 66,
+          "skor_artikel_benar": 0.5065,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7813,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7726,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7711,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-005": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7065,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6942,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 109,
+          "skor_artikel_benar": 0.482,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7388,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7335,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7273,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-006": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6958,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6765,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 63,
+          "skor_artikel_benar": 0.5135,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7291,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.715,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.706,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-007": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6881,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6914,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 111,
+          "skor_artikel_benar": 0.4742,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7086,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7102,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.696,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-008": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6611,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6367,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 122,
+          "skor_artikel_benar": 0.4835,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6906,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6832,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6585,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-009": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7212,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 2,
+          "skor_artikel_benar": 0.6891,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 10,
+          "skor_artikel_benar": 0.5441,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7434,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7233,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7056,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-010": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7179,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7042,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 46,
+          "skor_artikel_benar": 0.5118,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7269,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7264,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7235,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-011": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.647,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6405,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 29,
+          "skor_artikel_benar": 0.5229,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6949,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6973,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6856,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-012": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7747,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7587,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 56,
+          "skor_artikel_benar": 0.5091,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8023,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8048,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8092,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-013": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7946,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7512,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 41,
+          "skor_artikel_benar": 0.5263,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8882,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8739,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8515,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-014": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8005,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7859,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 45,
+          "skor_artikel_benar": 0.5238,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8303,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8312,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8282,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-015": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7574,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7151,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.5835,
+          "keterbacaan_klaim": "sebagian"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7936,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7912,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.79,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-016": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7688,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7421,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 47,
+          "skor_artikel_benar": 0.5243,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7911,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.782,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7853,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-017": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7741,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6879,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 91,
+          "skor_artikel_benar": 0.4988,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7967,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.8009,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-018": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7338,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7177,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 62,
+          "skor_artikel_benar": 0.504,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7821,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7833,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7592,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-019": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7635,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7182,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 2,
+          "skor_artikel_benar": 0.5678,
+          "keterbacaan_klaim": "sebagian"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7827,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7896,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7868,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      },
+      "v1-020": {
+        "kedua_sisi_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6993,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6646,
+          "keterbacaan_klaim": "utuh"
+        },
+        "kedua_sisi_5000": {
+          "peringkat": 149,
+          "skor_artikel_benar": 0.4433,
+          "keterbacaan_klaim": "terpotong_seluruhnya"
+        },
+        "belakang_1500": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.7172,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_3000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6925,
+          "keterbacaan_klaim": "utuh"
+        },
+        "belakang_5000": {
+          "peringkat": 1,
+          "skor_artikel_benar": 0.6976,
+          "keterbacaan_klaim": "utuh"
+        },
+        "asli": {
+          "peringkat": 1
+        }
+      }
+    }
+  }
+}

@@ -123,6 +123,121 @@ menampilkan jumlah token klaim di panel penguji.
 - **Target:** penulis ulang kueri (rewriter) Versi 2 -- mengekstrak klaim inti dari pesan
   panjang sebelum retrieval. Set uji Versi 2 sebaiknya memuat pesan berantai panjang.
 
+Pembaruan 2026-09-25: dampaknya kini **terukur** -- lihat bagian 5.2, eksperimen 4.
+
+---
+
+## 5. Parameter retrieval yang ditetapkan tanpa pengukuran (dan ablasi 2026-09-25)
+
+Eksperimen: `src/evaluation/retrieval_ablation.py` (uji offline:
+`tests/test_retrieval_ablation.py`); hasil `testset/retrieval_ablation.json` dan
+`testset/retrieval_ablation_report.txt`. **Hanya retrieval, tanpa panggilan LLM**, pada 54 butir
+set uji beku dengan `expected_retrieval_article` sebagai kebenaran dasar (40 non-batas + 4 batas
+punya artikel sasaran). Skor kosinus eksak terhadap seluruh 450 chunk; kesetiaan tervalidasi:
+top-3 eksak = `retriever.retrieve` produksi 54/54 dan = top-3 tercatat evaluasi v1 54/54.
+**Pengukuran, bukan penyetelan -- tidak ada parameter produksi yang diubah.** Pengaruh pada
+akurasi akhir belum terukur (butuh menjalankan generator, dan itu membatalkan keabsahan baseline
+Versi 1; harus diuji pada set uji baru).
+
+Aturan tafsir: selisih dianggap bermakna hanya bila McNemar eksak p < 0,05 **dan** selisih bersih
+>= 3 butir. Selisih 1-2 butir tidak disimpulkan sebagai keunggulan. 44% butir berbagi artikel
+jangkar, jadi p dan interval Wilson cenderung terlalu percaya diri.
+
+### 5.1 Status tiap parameter
+
+| Parameter | Nilai Versi 1 | Status pengukuran |
+|---|---|---|
+| `top_k` kandidat ke LLM | 3 | **Diuji (retrieval saja)**, eksperimen 1. Efek pada kecocokan palsu dan ukuran konteks LLM **belum** diukur. |
+| Agregasi skor per artikel | maksimum antar-chunk | **Diuji**, eksperimen 2 (maks vs rata-rata vs rata-rata dua teratas). |
+| Chunking per seksi | Narasi / Penjelasan / Kesimpulan | **Sebagian diuji**, eksperimen 3: subset seksi yang ikut dicari (setara indeks tanpa seksi itu, karena tiap chunk di-embed sendiri). **Belum diuji**: skema chunking lain (per paragraf, seluruh artikel, jendela token) karena **butuh pembangunan ulang indeks**. |
+| Batas 512 token (`MAX_SEQ_LENGTH`) | 512 | **Sisi kueri diuji**, eksperimen 4 (klaim panjang). **Sisi indeks belum diuji** (embedding chunk dengan batas lain) karena **butuh pembangunan ulang indeks**; dampaknya kecil pada data sekarang (hanya 3/450 chunk terpotong). |
+| Model embedding | BGE-M3 | **Belum diuji**: pembanding model lain **butuh pembangunan ulang indeks**. |
+| `CHUNK_FETCH` (chunk diambil sebelum agregasi) | 30 | Tidak diuji terpisah; pada k=3 hasilnya identik dengan pencarian eksak penuh (54/54). |
+
+Parameter yang butuh pembangunan ulang indeks (chunking lain, batas token indeks, model
+embedding) adalah **agenda eksperimen Versi 2**, dengan indeks Versi 1 diarsipkan lebih dulu agar
+baseline tetap dapat direproduksi.
+
+### 5.2 Hasil ablasi
+
+**Eksperimen 1 -- top-k** (agregasi maks, seluruh seksi), non-batas n=40:
+
+| k | 1 | 3 | 5 | 10 | 20 |
+|---|---|---|---|---|---|
+| Recall@k | 33/40 | **36/40** | 38/40 | 39/40 | 40/40 |
+
+Positif 20/20 sejak k=3; seluruh kegagalan ada di negatif sulit. Terhadap k=3: k=5 +2 (p=0,50),
+k=10 +3 (p=0,25), k=20 +4 (p=0,125) -- **tidak ada yang dapat dibedakan dari kebetulan**. Empat
+kegagalan Recall@3 Versi 1: `v1-024` dan `v1-027` masuk mulai k=5 (peringkat 4), `v1-033` mulai
+k=10 (peringkat 6), `v1-022` mulai k=20 (peringkat 19). Menaikkan k juga menambah konteks LLM dan
+dapat menaikkan kecocokan palsu (tidak diukur), jadi k yang memaksimalkan recall belum tentu k
+terbaik.
+
+**Eksperimen 2 -- agregasi**: maks 36/40 (@3), 38/40 (@5); rata-rata 35/40, 38/40; rata-rata dua
+teratas 35/40, 36/40. Selisih maksimal 2 butir, **tidak dapat dibedakan dari kebetulan**. Tidak ada
+bukti untuk mengganti agregasi maksimum.
+
+**Eksperimen 3 -- seksi**:
+
+| Kondisi | Recall@3 non-batas | vs seluruh seksi |
+|---|---|---|
+| Seluruh seksi (produksi) | 36/40 | -- |
+| Hanya Narasi | 36/40 | identik (0 butir berpindah) |
+| Narasi + Kesimpulan (tanpa Penjelasan) | 36/40 | identik (0 butir berpindah) |
+| Hanya Kesimpulan | 30/40 | **-6, p=0,031: selisih bermakna** |
+
+- Pada artikel yang BENAR, chunk berskor tertinggi berasal dari **Narasi 35/40**, Kesimpulan 3,
+  Penjelasan 2 (positif: Narasi 17/20; negatif sulit: Narasi 18/20).
+- **Penjelasan tidak menyumbang recall** pada set ini: membuangnya tidak mengubah satu butir pun,
+  pada @3 maupun @5.
+- **Menilai ulang asumsi Narasi.** Asumsi awal "klaim pengguna paling cocok dengan Narasi"
+  sempat dinyatakan tidak terbukti (CLAUDE.md, 10 kueri set pengembangan). Ukuran di sana
+  berbeda: seksi chunk teratas SECARA KESELURUHAN, artikel apa pun (Penjelasan 7/10). Dengan 44
+  butir, **untuk artikel yang benar Narasi-lah yang paling cocok (35/40)**, dan Narasi saja sudah
+  menyamai recall seluruh seksi. Kemenangan Penjelasan pada ukuran lama kemungkinan besar terjadi
+  di artikel lain (tetangga), bukan pada artikel yang benar. Ini belum diuji langsung di sini.
+- **Implikasi untuk Versi 2 (bukan keputusan):** ada kemungkinan chunk Penjelasan lebih banyak
+  memunculkan tetangga daripada membantu menemukan artikel yang benar. Hal ini perlu diukur
+  (mis. kecocokan palsu dengan/tanpa Penjelasan) sebelum memutuskan apa pun.
+
+**Eksperimen 4 -- panjang klaim** (20 butir positif non-batas; teks pengganggu **sintetis**,
+hasil indikatif):
+
+| Panjang | Pengganggu di kedua sisi | Klaim di awal (pengganggu di belakang) |
+|---|---|---|
+| Asli (48-582 karakter) | 20/20 | 20/20 |
+| ~1.500 karakter | 19/20 | 19/20 |
+| ~3.000 karakter | 19/20 | 19/20 |
+| ~5.000 karakter | **2/20** (klaim di luar 512 token pada 18/20) | 19/20 |
+
+- **Penurunan besar disebabkan pemotongan token, bukan pengenceran:** pada 5.000 karakter
+  (median 1.112 token), separuh pengganggu di depan mendorong klaim melewati token ke-512 dan
+  model embedding tidak melihatnya sama sekali (artikel benar jatuh ke peringkat 10-149). Bila klaim
+  di awal pesan, recall tetap 19/20.
+- Pengenceran murni hanya menjatuhkan satu butir (`v1-002`, peringkat 2 -> 4; skornya memang
+  tipis sejak awal) dan menurunkan skor artikel benar secara bertahap (median: kedua sisi
+  0,746 / 0,705 / 0,511 pada 1.500 / 3.000 / 5.000 karakter; klaim di awal 0,782 / 0,774 / 0,765).
+- Artinya **batas 5.000 karakter di demo melampaui wilayah yang bekerja**. Pesan berantai dengan
+  pembuka panjang (>~2.000 karakter sebelum klaim) praktis tidak akan menemukan artikelnya.
+- **Target Versi 2:** rewriter yang mengekstrak klaim inti sebelum retrieval, atau embedding
+  per potongan pesan. Set uji Versi 2 wajib memuat pesan berantai panjang yang ASLI (bukan
+  sintetis) dengan posisi klaim beragam.
+
+---
+
+## 6. Keterbatasan ambang "mungkin terkait" 0,57 (demo)
+
+Ambang tampilan `RELATED_SCORE_THRESHOLD = 0,57` di `src/presentation.py` **rapuh**:
+
+- **Marginnya hanya 0,002** di atas skor kandidat tertinggi negatif mudah (0,5680).
+- Ambang ini **disetel dari data set uji v1 itu sendiri** (dicek silang pada 10 kueri set
+  pengembangan), bukan dari data terpisah.
+- Skor kosinus bergantung pada isi basis data. Menambah artikel mengubah tetangga terdekat dan
+  sebaran skor, sehingga **ambang ini tidak berlaku otomatis setelah basis data diperluas.**
+- **Agenda Versi 2:** setel ulang ambang dari data terpisah (bukan set uji mana pun) setelah
+  basis data diperluas, dan laporkan margin serta sebarannya. Karena ambang ini hanya
+  memengaruhi tampilan, bukan vonis, ia tidak memengaruhi hasil evaluasi Versi 1.
+
 ---
 
 ## Ringkasan angka
