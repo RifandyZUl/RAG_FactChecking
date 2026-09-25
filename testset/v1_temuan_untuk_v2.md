@@ -80,6 +80,51 @@ kredibilitas akun/sumber individual), bukan dari temuan analisis kuantitatif di 
 
 ---
 
+## 4. Temuan dari demo lokal (2026-09-25)
+
+Bukan hasil evaluasi set uji; diamati pemilik proyek saat mencoba demo (`src/app.py`) di
+browser, lalu dicatat di sini sebagai bahan Versi 2. Tidak ada perubahan prompt atau generator
+berdasarkan temuan ini (generator terkunci sejak tag `testset-v1`).
+
+### 4.1 Klarifikasi padat dan sulit diikuti pembaca awam
+
+Teks `klarifikasi` keluaran generator cenderung memadatkan beberapa hal ke satu kalimat panjang.
+Contoh nyata dari artikel **36730** ("Ojol Dilarang Beli Pertalite"): satu kalimat memuat
+sekaligus **wacana** (pernyataan yang sempat beredar), **ralat pejabat**, dan **kesimpulan**.
+Dua keluaran tercatat untuk artikel yang sama (set pengembangan, kueri "katanya ojol nggak boleh
+isi pertalite lagi ya?"):
+
+- `data/generation_repeat_gemini-3.5-flash-lite.jsonl`: "Meskipun pernyataan tersebut sempat
+  diungkapkan, pejabat berwenang kemudian meralatnya sehingga informasi mengenai larangan ojol
+  membeli Pertalite merupakan hal yang menyesatkan."
+- `data/generation_eval_gemini-3.5-flash-lite.jsonl`: "Meskipun sempat ada pernyataan terkait,
+  pihak berwenang menegaskan bahwa pengemudi ojek online dikecualikan dari kebijakan pembatasan
+  Pertalite, sehingga klaim larangan tersebut tidak benar."
+
+Keduanya juga merujuk "pernyataan tersebut"/"pernyataan terkait" tanpa menyebut siapa yang
+menyatakan apa, sehingga pembaca awam tidak tahu wacana mana yang diralat.
+
+- **Target:** instruksi bidang `klarifikasi` pada prompt Versi 2 (mis. kalimat pendek,
+  urutan fakta -> konteks, subjek eksplisit). Perubahan prompt wajib diukur pada set uji baru,
+  bukan set uji v1 yang beku.
+- **Yang sudah dilakukan di Versi 1 (hanya penyajian, teks tidak diubah):** kolom baca
+  dipersempit (560 px), jarak baris 1,75, dan klarifikasi dipisah jarak dari blok status serta
+  dipisah garis dari rujukan.
+
+### 4.2 Klaim panjang melebihi batas token embedding (dari kode + tokenizer; frekuensi di pemakaian nyata belum diukur)
+
+Batas masukan demo dinaikkan ke 5.000 karakter (pesan berantai nyata sering panjang). Retrieval
+meng-embed klaim dengan batas `MAX_SEQ_LENGTH` = 512 token, sehingga **bagian klaim di atas
+~512 token tidak ikut dicari** (LLM tetap membaca klaim utuh). Terukur dengan tokenizer bge-m3:
+satu contoh teks 5.000 karakter berbahasa Indonesia = 998 token. **Set uji v1 tidak menguji rentang ini**:
+klaim terpanjang 749 karakter / 152 token, 0 dari 54 butir di atas 512 token. Demo
+menampilkan jumlah token klaim di panel penguji.
+
+- **Target:** penulis ulang kueri (rewriter) Versi 2 -- mengekstrak klaim inti dari pesan
+  panjang sebelum retrieval. Set uji Versi 2 sebaiknya memuat pesan berantai panjang.
+
+---
+
 ## Ringkasan angka
 
 - Recall@3 non-batas: 36/40 (90%) -- tapi hanya 17/20 butir negatif_sulit yang benar-benar

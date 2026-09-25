@@ -604,5 +604,16 @@
       "status_H1_kedua_basis": "TERDUKUNG pada basis mana pun (1/20 dan 1/17 sama-sama <= 1, ambang pra-registrasi 'terdukung: <= 1 dari 20'). Ambang pra-registrasi ditulis untuk n=20; penerapannya pada n=17 di sini adalah pendekatan (angka absolut <=1), BUKAN ambang baru yang dipra-registrasi ulang -- pra-registrasi ambang basis-teruji yang sebenarnya adalah pekerjaan Versi 2 (lihat testset/v1_temuan_untuk_v2.md).",
       "cara_dilaporkan": "Laporan H1 Versi 1 selanjutnya WAJIB menyebut kedua angka (1/20 penuh, 1/17 basis teruji) berdampingan, bukan hanya salah satu."
     }
+  },
+  "temuan_chromadb_penulisan_ulang_indeks_2026-09-25": {
+    "tanggal": "2026-09-25",
+    "ringkasan": "Berkas indeks ChromaDB (data/chroma/chroma.sqlite3 serta data_level0.bin dan length.bin di folder segmen HNSW) ditulis ulang -- berubah secara byte -- setiap kali koleksi dibuka dan dikueri (chromadb 1.5.9), termasuk pada dua pembukaan berturut-turut.",
+    "bukan_akibat_demo": "Jalur yang dipakai evaluasi (ingest.get_collection, dipakai testset_eval) mengubah byte yang sama; demo (src/app.py) memakai get_collection tanpa membuat koleksi. Evaluasi Versi 1 pun berjalan dengan perilaku ini.",
+    "dasar_reproduksibilitas": "Reproduksibilitas evaluasi Versi 1 dijamin oleh kesamaan ISI indeks, bukan kesamaan byte berkas. Hash byte berkas indeks tidak boleh dipakai sebagai bukti indeks tidak berubah.",
+    "verifikasi_isi_2026-09-25": {
+      "index_check": "lolos: 450 chunk, id/teks/metadata identik dengan articles.json, kosinus sampel embedding ulang 1,000000",
+      "kueri_acak": "200 kueri acak (vektor tersimpan + derau kecil): top-30 HNSW identik dengan pencarian eksak brute-force atas seluruh vektor tersimpan (0 selisih)"
+    },
+    "batas": "Penyebab pasti tidak diselidiki (kemungkinan HNSW di-persist ulang saat dimuat). Keadaan byte sebelum pembukaan pertama pada 2026-09-25 tidak tercadang. Tidak mengubah v1.jsonl, prompt, generator, maupun hasil evaluasi."
   }
 }

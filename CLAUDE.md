@@ -10,9 +10,26 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-09-23)*
+*(2026-09-25)*
 
-**VERSI 1 SELESAI DAN TERUKUR. Tahap berjalan: menutup Versi 1, bersiap mulai Versi 2.**
+**VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap berikutnya (berurutan):
+(1) pengarsipan indeks Versi 1, (2) perluasan basis data, (3) Versi 2.** Rincian tahap berikutnya
+akan disampaikan pemilik proyek; belum ada rancangan.
+
+- **Demo lokal (2026-09-25):** `src/app.py` (Streamlit, adapter tipis; tidak ada logika
+  retrieval/generasi sendiri) + `src/presentation.py` (data tampilan, tanpa Streamlit, diuji
+  offline di `tests/test_presentation.py`) + `.streamlit/config.toml` (satu-satunya tempat kode
+  warna). Jalankan: `.\.venv\Scripts\python.exe -m streamlit run src\app.py`. Panel diagnostik
+  hanya di mode penguji (`DEMO_TESTER_MODE=1` atau `demo_tester_mode = true` di
+  `.streamlit/secrets.toml`, di-gitignore; bawaan mati). Hasil "belum ditemukan" menampilkan
+  artikel "mungkin terkait" (skor >= 0,57; dasar ambang di komentar `RELATED_SCORE_THRESHOLD`)
+  TANPA mengubah vonis. Demo berbagi kuota harian (RPD 500) dengan evaluasi.
+  `generator.py`, prompt, `retriever.py`, dan `v1.jsonl` tidak disentuh (uji kunci lolos).
+- **Temuan ChromaDB (2026-09-25):** berkas indeks ditulis ulang setiap kali koleksi dibuka,
+  juga oleh evaluasi -- lihat "Berkas indeks ChromaDB ditulis ulang setiap kali dibuka" di
+  "Temuan Ingestion dan Retrieval". Relevan untuk tahap pengarsipan indeks: arsipkan berkas
+  SEKALI lalu jangan buka arsipnya langsung (buka salinannya), dan verifikasi dengan isi, bukan
+  hash byte.
 
 - Set uji v1 beku (tag `testset-v1`, sidik jari generator dikunci di
   `v1.meta.json.sidik_jari_generator_v1`, ditegakkan `tests/test_testset_locks.py`), dievaluasi
@@ -29,10 +46,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
   pasangan minimal, ketergantungan antar-butir, dll.) ada lengkap di `v1.meta.json` -- tidak
   diringkas ulang di sini karena sudah tidak berubah (bagian dari sejarah pembekuan, bukan
   status yang sedang berjalan).
-- **Sudah di-commit & push:** seluruh pekerjaan Versi 1 hingga penutupan hari ini, termasuk tag
-  `testset-v1`, di `origin`. `.env` terverifikasi tidak ter-track sepanjang sesi.
-- **Belum dimulai:** Versi 2 (Corrective RAG) -- lihat "Status Pengembangan" di atas untuk
-  pemetaan awal temuan ke komponen, rancangan implementasi belum ada.
+- **Sudah di-commit & push:** seluruh pekerjaan Versi 1 termasuk tag `testset-v1`, lalu demo
+  (2026-09-25; dua commit: demo + uji, dokumentasi), di `origin`. `.env` terverifikasi tidak
+  ter-track.
+- **Belum dimulai:** pengarsipan indeks Versi 1, perluasan basis data, dan Versi 2 (Corrective
+  RAG) -- lihat "Status Pengembangan" di atas dan `testset/v1_temuan_untuk_v2.md` untuk pemetaan
+  temuan ke komponen; rancangan implementasi belum ada.
 
 ---
 
@@ -260,6 +279,8 @@ RAG_FactChecking/
 │   │   ├── gemini.py, gemini_errors.py      # GeminiProvider; penafsiran galat HTTP Gemini
 │   │   └── limits.py, throttle.py, ledger.py # angka kuota; jendela geser RPM/TPM; buku besar + anggaran
 │   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur
+│   ├── presentation.py   # Data tampilan demo (tanpa Streamlit): status, salinan teks, galat
+│   ├── app.py            # Demo Streamlit (streamlit run src\app.py); adapter tipis
 │   └── evaluation/       # Evaluasi & diagnostik LIVE (bukan uji otomatis)
 │       ├── generation_eval.py  #   evaluasi generasi (--check-budget, --compare)
 │       ├── retrieval_eval.py   #   verifikasi retrieval pada kueri sehari-hari
@@ -273,8 +294,10 @@ RAG_FactChecking/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
 │   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)
 │   └── chroma/           # Basis vektor ChromaDB (tidak di-commit)
-├── requirements.txt, requirements-dev.txt   # dependensi; + pytest
+├── .streamlit/config.toml  # Tema demo (satu-satunya tempat kode warna); secrets.toml di-gitignore
+├── requirements.txt, requirements-dev.txt   # dependensi (+ streamlit); + pytest, ruff
 ├── pytest.ini            # testpaths = tests, pythonpath = src
+├── ruff.toml             # hanya pengecualian disengaja (I001 di src/app.py)
 └── CLAUDE.md
 ```
 
@@ -418,6 +441,26 @@ pada artikel hasil retrieval, adalah jawabannya.
 **Ukuran sampel: baru 5 positif dan 5 negatif.** Angka-angka di atas
 (termasuk celah ≈ 0,05 untuk negatif yang jauh dari topik) adalah indikasi
 yang kuat untuk arah keputusan, bukan evaluasi statistik.
+
+### Berkas indeks ChromaDB ditulis ulang setiap kali dibuka (ditemukan 2026-09-25)
+
+Ditemukan saat menguji demo: `data/chroma/chroma.sqlite3` serta `data_level0.bin` dan
+`length.bin` di folder segmen HNSW **berubah secara byte setiap kali koleksi dibuka dan dikueri**
+(chromadb 1.5.9). **Ini bukan akibat demo:** jalur yang dipakai evaluasi
+(`ingest.get_collection`, dipakai `testset_eval`/`generation_eval`) mengubah byte yang sama,
+bahkan pada dua pembukaan berturut-turut, dan demo sendiri tidak membuat koleksi (memakai
+`get_collection`, bukan `get_or_create`). Jadi evaluasi Versi 1 pun berjalan dengan perilaku ini.
+
+**Konsekuensi: reproduksibilitas evaluasi Versi 1 dijamin oleh kesamaan ISI indeks, bukan
+kesamaan byte berkas.** Isi diverifikasi 2026-09-25 setelah perubahan byte:
+`evaluation.index_check` lolos (450 chunk, id/teks/metadata identik dengan `articles.json`,
+kosinus sampel embedding ulang 1,000000), dan **200 kueri acak** (vektor tersimpan + derau
+kecil) memberi top-30 HNSW **identik** dengan pencarian eksak brute-force atas seluruh vektor
+tersimpan (0 selisih). Hash byte berkas indeks karenanya **tidak** boleh dipakai sebagai bukti
+bahwa indeks tidak berubah; pakai `index_check` dan perbandingan hasil kueri. Penyebab pastinya
+(kemungkinan HNSW di-persist ulang saat dimuat) tidak diselidiki lebih jauh. Keadaan byte
+sebelum pembukaan pertama pada 2026-09-25 tidak tercadang. Tercatat juga di
+`testset/v1.meta.json` (`temuan_chromadb_penulisan_ulang_indeks_2026-09-25`).
 
 ### Pemuatan model: riwayat safetensors PR #130
 
@@ -917,7 +960,11 @@ IDE akan menampilkan garis merah pada siapa pun yang membukanya.
   `ScriptedProvider` bukan turunan `LLMProvider`), `test_client.py` 7, `test_discovery.py` 3,
   `test_reparse.py` 1. Periksa dengan `npx pyright tests` (atau Pylance). `test_gemini.py` dan
   `_fakes.py` sudah bersih (pyright standar dan strict, mypy, ruff).
-- **Gaya kode:** `ruff check` masih menandai urutan impor di `src/llm/limits.py` (I001).
+- **Gaya kode:** dengan `ruff==0.16.9` (dikunci di `requirements-dev.txt`; aturan bawaannya lebih
+  luas dari versi sebelumnya), `ruff check src tests` masih menandai **29 temuan lama** (per
+  2026-09-25) di luar berkas demo: 14 I001 (mis. `src/llm/limits.py`), 3 ISC004, dan 12 lain-lain.
+  Berkas demo (`src/app.py`, `src/presentation.py`, `tests/test_presentation.py`) bersih; I001
+  di `src/app.py` dikecualikan secara sengaja di `ruff.toml` (urutan impor `ingest` lebih dulu).
 - **Konfigurasi alat statis** (saran, belum dikerjakan): satu `pyproject.toml` untuk pyright/ruff agar
   IDE dan CI konsisten, termasuk jalur `src` dan `tests`.
 
