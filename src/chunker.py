@@ -20,7 +20,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from paths import ARTICLES_PATH
+from paths import INDEX_ARTICLES_PATH
 
 
 SECTIONS: tuple[str, ...] = ("narasi", "penjelasan", "kesimpulan")
@@ -48,8 +48,11 @@ def decode_references(value: str) -> list[str]:
     return json.loads(value) if value else []
 
 
-def load_articles(path: Path = ARTICLES_PATH) -> list[dict]:
-    """Baca hasil scraping. Galat dilempar bila berkas belum ada."""
+def load_articles(path: Path = INDEX_ARTICLES_PATH) -> list[dict]:
+    """
+    Baca hasil scraping dari indeks aktif (bawaan `data/articles.json`; lihat RAG_INDEX_DIR di
+    paths.py). Galat dilempar bila berkas belum ada.
+    """
     if not path.exists():
         raise FileNotFoundError(f"{path} tidak ditemukan; jalankan `python -m scraping` dulu")
     return json.loads(path.read_text(encoding="utf-8"))

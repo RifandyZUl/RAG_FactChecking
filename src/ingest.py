@@ -38,7 +38,7 @@ from chunker import (
     make_token_counter,
     truncation_report,
 )
-from paths import PROJECT_ROOT
+from paths import INDEX_CHROMA_DIR, is_archive_path
 
 MODEL_NAME = "BAAI/bge-m3"
 # Model dimuat dari branch main (pytorch_model.bin resmi BAAI). transformers
@@ -47,7 +47,8 @@ MODEL_NAME = "BAAI/bge-m3"
 # varian safetensors PR #130 (SFconvertbot) saat torch masih 2.5.1; bobotnya
 # sudah dibuktikan identik bit-per-bit dengan .bin (391/391 tensor), sehingga
 # embedding yang tersimpan tetap valid.
-CHROMA_DIR = PROJECT_ROOT / "data" / "chroma"
+# Indeks aktif: bawaan data/chroma; RAG_INDEX_DIR dapat mengarahkannya ke arsip (paths.py).
+CHROMA_DIR = INDEX_CHROMA_DIR
 COLLECTION_NAME = "turnbackhoax"
 BATCH_SIZE = 8  # batch kecil menahan puncak RAM (mesin dev hanya ~2,5 GB bebas)
 
@@ -63,7 +64,16 @@ def get_collection(path: Path = CHROMA_DIR) -> Any:
     )
 
 
-def reset_collection(path: Path = CHROMA_DIR) -> Any:
+def refuse_archive_write(path: Path, allow_archive: bool) -> None:
+    """Tolak operasi tulis ke indeks di dalam `archive/` kecuali diizinkan eksplisit."""
+    if is_archive_path(path) and not allow_archive:
+        raise PermissionError(
+            f"{path} berada di dalam archive/: indeks arsip tidak boleh ditulis. Bila memang "
+            "sedang membangun ulang arsip yang hilang, pakai --allow-archive (lihat README)."
+        )
+
+
+def reset_collection(path: Path = CHROMA_DIR, allow_archive: bool = False) -> Any:
     """
     Hapus koleksi lama (bila ada) lalu buat koleksi kosong: pembangunan ulang indeks dari nol.
 
@@ -71,6 +81,7 @@ def reset_collection(path: Path = CHROMA_DIR) -> Any:
     mendeteksi perubahan tokenizer, batas token, model, atau metadata pada chunk yang teksnya sama,
     dan tidak menghapus chunk usang. Setiap perubahan logika parsing atau chunking wajib memakai ini.
     """
+    refuse_archive_write(path, allow_archive)
     client = chromadb.PersistentClient(
         path=str(path), settings=Settings(anonymized_telemetry=False)
     )
@@ -166,16 +177,28 @@ def main() -> None:
                         help="hapus koleksi lama lalu bangun ulang dari nol (wajib setelah logika "
                              "parsing/chunking berubah); mencakup --force")
     parser.add_argument("--limit", type=int, default=None, help="batasi jumlah chunk (uji)")
+    parser.add_argument("--allow-archive", action="store_true",
+                        help="izinkan menulis ke indeks di dalam archive/ (hanya untuk membangun "
+                             "ulang arsip yang hilang)")
+    parser.add_argument("--articles", type=Path, default=None,
+                        help="articles.json sumber (bawaan: indeks aktif, lihat RAG_INDEX_DIR)")
+    parser.add_argument("--chroma-dir", type=Path, default=None,
+                        help="folder ChromaDB tujuan (bawaan: indeks aktif); dipakai untuk membangun "
+                             "ulang indeks di lokasi yang belum berisi indeks, mis. arsip yang hilang")
     args = parser.parse_args()
+    chroma_dir = args.chroma_dir.resolve() if args.chroma_dir else CHROMA_DIR
+    refuse_archive_write(chroma_dir, args.allow_archive)
 
-    articles = load_articles()
+    articles = load_articles(args.articles) if args.articles else load_articles()
+    print(f"sumber: {args.articles or 'indeks aktif'} -> tujuan: {chroma_dir}")
     chunks = build_chunks(articles, make_token_counter())
     if args.limit:
         chunks = chunks[: args.limit]
     print(f"{len(articles)} artikel -> {len(chunks)} chunk")
     print(truncation_report(chunks), "\n")
 
-    collection = reset_collection() if args.rebuild else get_collection()
+    collection = (reset_collection(chroma_dir, allow_archive=args.allow_archive) if args.rebuild
+                  else get_collection(chroma_dir))
     ingest(chunks, collection, force=args.force or args.rebuild)
 
     stored_ids = set(collection.get(include=[])["ids"])

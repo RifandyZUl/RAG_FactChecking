@@ -615,5 +615,35 @@
       "kueri_acak": "200 kueri acak (vektor tersimpan + derau kecil): top-30 HNSW identik dengan pencarian eksak brute-force atas seluruh vektor tersimpan (0 selisih)"
     },
     "batas": "Penyebab pasti tidak diselidiki (kemungkinan HNSW di-persist ulang saat dimuat). Keadaan byte sebelum pembukaan pertama pada 2026-09-25 tidak tercadang. Tidak mengubah v1.jsonl, prompt, generator, maupun hasil evaluasi."
+  },
+  "arsip_indeks_v1_2026-09-25": {
+    "tanggal_pengarsipan": "2026-09-25",
+    "lokasi": "archive/v1/ (chroma/ + articles.json); di-gitignore, TIDAK di-commit",
+    "sumber_salinan": "data/chroma (seluruh folder, termasuk segmen c181515c-... sisa sebelum --rebuild 2026-09-21) dan data/articles.json; disalin, bukan dipindah -- indeks utama tetap di data/",
+    "ukuran_mb": 9.51,
+    "alasan_tidak_di_commit": "Berisi teks artikel pihak ketiga (kebijakan sama dengan data/: tidak di-commit) dan berkas biner ChromaDB yang ditulis ulang setiap kali koleksi dibuka, sehingga akan selalu tampak berubah di git.",
+    "model_embedding": {
+      "nama": "BAAI/bge-m3",
+      "revisi_hf_terpasang": "5617a9f61b028005a4858fdac845db406aefb181",
+      "max_seq_length": 512,
+      "catatan": "Revisi dari cache Hugging Face lokal (refs/main) saat pengarsipan; embedding ulang dengan revisi lain tidak dijamin setara."
+    },
+    "sidik_jari_isi": {
+      "metode": "evaluation.index_check --fingerprint: hash atas ISI (id, teks, metadata JSON urut kunci, byte float32 embedding; urut id), BUKAN hash berkas -- ChromaDB menulis ulang berkas setiap kali dibuka.",
+      "jumlah_artikel": 150,
+      "jumlah_chunk": 450,
+      "sha256_daftar_artikel": "f76c41847b4cbc9c382a913d30f724d5aef7615ea5a676c66044d6140d48a8cb",
+      "sha256_articles_json_isi": "eb6110f9589e34dddc20acc45f66adbd7680131734b71e060161e39a2e4fe27b",
+      "sha256_teks_metadata": "42a3f26f06e522ede753086b6dfa7bef3326fe7ea10d334db8b96f5faf618fef",
+      "sha256_embedding_float32": "2e1027a98b453e22e78824e6b77ebf571323ddc89229adf0b29fe0c0bfa8227e"
+    },
+    "verifikasi_2026-09-25": {
+      "sidik_jari_arsip_sama_dengan_indeks_utama": "ya, keenam nilai identik; sidik jari indeks utama juga stabil pada dua pembukaan berturut-turut",
+      "index_check_pada_arsip": "lolos (RAG_INDEX_DIR=archive/v1): 150 artikel -> 450 chunk, id/teks/metadata identik dengan articles.json arsip, kosinus 8 sampel embedding ulang 1,000000",
+      "ablasi_retrieval_pada_arsip": "evaluation.retrieval_ablation pada arsip: testset/retrieval_ablation.json dan laporan teksnya IDENTIK dengan yang tercatat (selain tanggal); top-3 eksak = retrieve produksi 54/54 = tercatat evaluasi v1 54/54",
+      "catatan_penyalinan": "Disalin saat server demo Streamlit sedang berjalan (indeks terbuka tetapi diam); kesetaraan dibuktikan lewat verifikasi isi di atas, bukan diasumsikan."
+    },
+    "cara_memakai": "Set RAG_INDEX_DIR=archive/v1 sebelum menjalankan skrip evaluasi (lihat CLAUDE.md, aturan evaluasi terhadap baseline Versi 1). ingest menolak menulis ke archive/ kecuali --allow-archive.",
+    "bila_embedding_dibangun_ulang": "Membangun ulang arsip dari articles.json arsip (README) harus mencocokkan sha256_teks_metadata dan sha256_articles_json_isi persis. DIUJI 2026-09-25 di mesin pengembangan (ingest --rebuild --articles <salinan articles.json arsip> --chroma-dir <direktori sementara>, 8 mnt 22 dtk): keenam sidik jari identik, TERMASUK sha256_embedding_float32, dan index_check --expect-v1-archive lolos. Pada mesin/versi pustaka lain sha256_embedding_float32 bisa berbeda di digit presisi; kesetaraan lalu dibuktikan dengan index_check (kosinus) + ablasi retrieval identik."
   }
 }

@@ -12,8 +12,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-09-25)*
 
-**VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap berikutnya (berurutan):
-(1) pengarsipan indeks Versi 1, (2) perluasan basis data, (3) Versi 2.** Rincian tahap berikutnya
+**VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
+SELESAI 2026-09-25; berikutnya (2) perluasan basis data, (3) Versi 2.** Rincian tahap berikutnya
 akan disampaikan pemilik proyek; belum ada rancangan.
 
 - **Demo lokal (2026-09-25):** `src/app.py` (Streamlit, adapter tipis; tidak ada logika
@@ -36,6 +36,12 @@ akan disampaikan pemilik proyek; belum ada rancangan.
   Keterbatasan 512 token dicatat sebagai **keterbatasan utama** (lihat "Keterbatasan yang
   Diketahui", README, `v1_temuan_untuk_v2.md`). Rasional Aturan Wajib #2 dikoreksi: peran
   Narasi kembali didukung data. Parameter produksi lain tidak berubah.
+- **Tahap 2 SELESAI: arsip indeks Versi 1 (2026-09-25).** `archive/v1/` = salinan `data/chroma` +
+  `articles.json` (9,51 MB, di-gitignore). Sidik jari isi di `v1.meta.json`
+  (`arsip_indeks_v1_2026-09-25`); diverifikasi: sama dengan indeks utama, `index_check` lolos,
+  ablasi retrieval pada arsip identik dengan yang tercatat. Pemilihan indeks: `RAG_INDEX_DIR`.
+  **Aturan Wajib #6: pembandingan dengan baseline Versi 1 wajib memakai arsip.** Tahap berikutnya:
+  perluasan basis data (indeks utama `data/`), lalu Versi 2.
 - **Temuan ChromaDB (2026-09-25):** berkas indeks ditulis ulang setiap kali koleksi dibuka,
   juga oleh evaluasi -- lihat "Berkas indeks ChromaDB ditulis ulang setiap kali dibuka" di
   "Temuan Ingestion dan Retrieval". Relevan untuk tahap pengarsipan indeks: arsipkan berkas
@@ -215,6 +221,28 @@ berkasnya sudah tidak ada — termasuk cara mendeteksi kejadian serupa
 (periksa `docProps/core.xml` suatu `.xlsx`: creator `openpyxl` atau nama
 aplikasi lain berarti dihasilkan kode, bukan diketik manusia).
 
+### 6. Pembandingan dengan baseline Versi 1 wajib memakai indeks arsip
+
+Evaluasi yang **dimaksudkan untuk dibandingkan dengan baseline Versi 1** (akurasi 48/50,
+Recall@3 36/40, ablasi retrieval, dan evaluasi Versi 2 terhadap Versi 1) **wajib dijalankan pada
+indeks arsip `archive/v1`, bukan indeks utama `data/`**. Indeks utama akan diperluas; kalau
+datanya berbeda, selisih hasil tidak lagi murni karena arsitektur. Sidik jari isi arsip dicatat
+di `testset/v1.meta.json` (`arsip_indeks_v1_2026-09-25`) dan **wajib dicocokkan lebih dulu**:
+
+```powershell
+$env:PYTHONPATH = "src"
+$env:RAG_INDEX_DIR = "archive/v1"          # arahkan SEMUA pembacaan indeks ke arsip
+.\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive   # wajib kode keluar 0
+.\.venv\Scripts\python.exe -m evaluation.testset_eval       # atau skrip evaluasi lain, tanpa ubah kode
+.\.venv\Scripts\python.exe -m evaluation.retrieval_ablation --out-json X.json --out-report X.txt
+Remove-Item Env:RAG_INDEX_DIR               # kembali ke indeks utama
+```
+
+`RAG_INDEX_DIR` hanya mengubah jalur BACA (`paths.INDEX_DIR`); scraping tetap menulis ke `data/`,
+dan `ingest` menolak menulis ke `archive/` kecuali `--allow-archive`. Nilai yang tidak berisi
+indeks lengkap langsung gagal (tidak membuat indeks kosong). Jangan jalankan `ingest` dengan
+`--allow-archive` kecuali untuk membangun ulang arsip yang hilang (README, "Arsip indeks Versi 1").
+
 ---
 
 ## Lingkungan Pengembangan
@@ -287,7 +315,7 @@ Ketentuan yang berlaku:
 ```
 RAG_FactChecking/
 ├── src/
-│   ├── paths.py          # Jalur proyek terpusat (root, data/, cache, articles.json)
+│   ├── paths.py          # Jalur proyek terpusat; RAG_INDEX_DIR memilih indeks BACA (bawaan data/)
 │   ├── scraping/         # Pengambilan & parsing artikel TurnBackHoax
 │   │   ├── links.py      #   normalisasi URL + daftar domain diblokir (Aturan #1)
 │   │   ├── client.py     #   sesi HTTP, timeout/retry, cache HTML
@@ -314,6 +342,7 @@ RAG_FactChecking/
 ├── tests/                # Uji offline (pytest), satu berkas per modul
 │   ├── fixtures/         #   HTML nyata untuk uji (di-commit)
 │   └── _fakes.py         #   objek palsu bersama (bukan uji)
+├── archive/v1/           # Arsip indeks Versi 1 (chroma/ + articles.json; di-gitignore; Aturan Wajib #6)
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
 │   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)

@@ -290,6 +290,63 @@ $env:PYTHONPATH = "src"                             # wajib diatur ulang bila se
 .\.venv\Scripts\python.exe -m evaluation.testset_analysis  # hitung metrik (tanpa panggilan API)
 ```
 
+Evaluasi yang hasilnya akan **dibandingkan dengan baseline Versi 1** wajib memakai
+indeks arsip (bagian berikut), bukan indeks utama yang akan diperluas.
+
+### Arsip indeks Versi 1
+
+`archive/v1/` berisi salinan indeks ChromaDB dan `articles.json` (150 artikel,
+450 chunk, ~9,5 MB) persis seperti saat Versi 1 dievaluasi. Tujuannya agar
+evaluasi Versi 1 tetap dapat direproduksi setelah basis data diperluas, dan agar
+Versi 2 dapat dievaluasi pada data yang sama, sehingga perbedaan hasil murni
+karena arsitektur. Arsip **tidak di-commit**: isinya teks artikel pihak ketiga,
+dan ChromaDB menulis ulang berkasnya setiap kali dibuka. Sidik jari **isinya**
+(bukan hash berkas) tercatat di `testset/v1.meta.json`
+(`arsip_indeks_v1_2026-09-25`).
+
+Memakai arsip, tanpa mengubah kode:
+
+```powershell
+$env:PYTHONPATH = "src"
+$env:RAG_INDEX_DIR = "archive/v1"
+.\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive   # wajib lolos (kode 0)
+.\.venv\Scripts\python.exe -m evaluation.testset_eval                      # atau skrip lain
+Remove-Item Env:RAG_INDEX_DIR                                              # kembali ke data/
+```
+
+**Bila arsip hilang, bangun ulang dari `articles.json`:**
+
+1. Pulihkan `archive/v1/articles.json`. Kalau salinan arsipnya ikut hilang,
+   `data/articles.json` hanya boleh dipakai selama basis data belum diperluas.
+   Kecocokannya dibuktikan di langkah 3 (`sha256_articles_json_isi`).
+2. Bangun ulang indeksnya. `ingest` menolak menulis ke `archive/` tanpa
+   `--allow-archive`:
+
+   ```powershell
+   $env:PYTHONPATH = "src"
+   .\.venv\Scripts\python.exe src\ingest.py --rebuild --articles archive\v1\articles.json --chroma-dir archive\v1\chroma --allow-archive
+   ```
+
+3. Verifikasi:
+
+   ```powershell
+   $env:RAG_INDEX_DIR = "archive/v1"
+   .\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive
+   .\.venv\Scripts\python.exe -m evaluation.retrieval_ablation --out-json cek.json --out-report cek.txt
+   ```
+
+   `sha256_teks_metadata` dan `sha256_articles_json_isi` harus cocok persis, dan
+   `cek.json` harus identik dengan `testset/retrieval_ablation.json` (selain
+   tanggal). Prosedur ini sudah diuji (2026-09-25, mesin
+   pengembangan, ke direktori sementara): keenam sidik jari cocok, **termasuk byte
+   embedding**, dalam ~8 menit di CPU. Pada mesin atau versi pustaka lain,
+   `sha256_embedding_float32` bisa berbeda di digit presisi. Dalam kasus itu,
+   kesetaraan dibuktikan lewat kosinus `index_check` dan ablasi yang identik.
+
+Kalau `articles.json` versi 150 artikel itu hilang sama sekali, arsip tidak
+dapat dipulihkan persis. Daftar artikelnya hanya tercatat sebagai hash
+(`sha256_daftar_artikel`).
+
 ### Menjalankan demo
 
 Antarmuka Streamlit satu halaman (`src/app.py`) di atas pipeline yang sama

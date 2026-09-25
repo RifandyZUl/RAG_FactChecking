@@ -22,3 +22,7 @@ env/
 
 # Setelan lokal Streamlit (mis. mode penguji demo); bisa berisi rahasia
 .streamlit/secrets.toml
+
+# Arsip indeks (salinan ChromaDB + articles.json, ~9 MB; berisi teks pihak ketiga dan berkas biner
+# yang ditulis ulang ChromaDB setiap kali dibuka). Sidik jari isinya tercatat di testset/v1.meta.json.
+archive/
