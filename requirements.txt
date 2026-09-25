@@ -10,3 +10,5 @@ chromadb==1.5.9
 google-genai==2.24.0
 # Data zona waktu (America/Los_Angeles) untuk reset kuota harian; Windows tak punya bawaan
 tzdata==2026.4
+# Antarmuka demo (src/app.py); hanya menambah paket, tidak mengubah versi paket lain
+streamlit==1.64.0

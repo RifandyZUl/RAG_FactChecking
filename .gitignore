@@ -19,3 +19,6 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# Setelan lokal Streamlit (mis. mode penguji demo); bisa berisi rahasia
+.streamlit/secrets.toml

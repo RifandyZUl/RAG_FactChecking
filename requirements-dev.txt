@@ -1,3 +1,5 @@
 # Dependensi pengembangan (uji offline). Pasang: pip install -r requirements-dev.txt
 -r requirements.txt
 pytest==9.1.1
+# Linter; versi dikunci karena aturan bawaan ruff berubah antarversi (konfigurasi: ruff.toml)
+ruff==0.16.9
