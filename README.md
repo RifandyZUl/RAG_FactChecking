@@ -268,6 +268,44 @@ $env:PYTHONPATH = "src"                             # wajib diatur ulang bila se
 .\.venv\Scripts\python.exe -m evaluation.testset_analysis  # hitung metrik (tanpa panggilan API)
 ```
 
+### Menjalankan demo
+
+Antarmuka Streamlit satu halaman (`src/app.py`) di atas pipeline yang sama
+dengan yang dievaluasi; tidak ada logika retrieval atau generasi tambahan.
+Butuh indeks di `data/chroma/` (lihat "Membangun basis pengetahuan") dan
+`GEMINI_API_KEY` di `.env`.
+
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run src\app.py   # dari root repositori
+```
+
+Di Command Prompt (cmd), perintahnya sama tanpa `.\` di depan:
+`.venv\Scripts\python.exe -m streamlit run src\app.py`. Browser terbuka ke
+`http://localhost:8501`; hentikan dengan Ctrl+C.
+
+**Waktu muat pertama sekitar 67 detik** (terukur di mesin pengembangan, CPU):
+pemeriksaan pertama sejak aplikasi dinyalakan memuat model embedding bge-m3.
+Indikator proses menampilkan langkah yang sedang berjalan. Pemeriksaan
+berikutnya sekitar 4 detik.
+
+**Mode penguji** (bawaan mati) menampilkan panel "Detail untuk penguji":
+kandidat hasil retrieval beserta skor kemiripan, alasan LLM, latensi, token,
+dan jenis galat. Aktifkan dengan salah satu cara:
+
+```powershell
+$env:DEMO_TESTER_MODE = "1"          # variabel lingkungan (diutamakan), sesi PowerShell ini saja
+```
+
+atau buat `.streamlit/secrets.toml` (di-gitignore) berisi
+`demo_tester_mode = true`. Nilai `1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain
+atau tidak diatur berarti mati. `.env` tidak dibaca untuk setelan ini.
+
+> **Kuota bersama dengan evaluasi.** Demo dan evaluasi berbagi kuota harian
+> yang sama: 500 permintaan per hari untuk `gemini-3.5-flash-lite`, tercatat di
+> `data/quota_ledger.json`, satu permintaan per pemeriksaan. Bila keduanya
+> diperlukan di hari yang sama, **jalankan evaluasi lebih dulu**, agar evaluasi
+> tidak berhenti di tengah karena kuota sudah terpakai demo.
+
 ### Menjalankan uji
 
 ```powershell
@@ -292,6 +330,8 @@ src/
   ingest.py     embedding & vector store
   retriever.py  pencarian + agregasi per artikel
   generator.py  penyusunan jawaban  [terkunci sejak tag testset-v1]
+  presentation.py  data tampilan demo (tanpa Streamlit, teruji offline)
+  app.py        demo Streamlit (adapter tipis)
   paths.py      jalur proyek terpusat (root, data/, cache, articles.json)
 testset/
   v1.jsonl                   set uji beku (54 butir)
