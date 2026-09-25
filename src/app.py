@@ -20,7 +20,7 @@ from typing import Any
 
 # ingest diimpor lebih dulu: ia men-set DISABLE_SAFETENSORS_CONVERSION sebelum
 # transformers dimuat (lihat CLAUDE.md, "Jebakan"). Pengecualian I001 di ruff.toml.
-from ingest import CHROMA_DIR, COLLECTION_NAME, load_model
+from ingest import CHROMA_DIR, COLLECTION_NAME, MODEL_NAME, load_model
 
 import chromadb
 import chromadb.errors
@@ -41,6 +41,9 @@ from presentation import (
     INPUT_LABEL,
     INPUT_PLACEHOLDER,
     LIMITATION_NOTE,
+    LONG_CLAIM_CONFIRM,
+    LONG_CLAIM_WARNING,
+    MAX_INPUT_CHARS,
     PAGE_SUBTITLE,
     PAGE_TITLE,
     PROGRESS_DONE,
@@ -63,6 +66,7 @@ from presentation import (
     build_view,
     escape_markdown,
     failure_view,
+    is_long_claim,
     markdown_link,
     parse_flag,
     validate_claim,
@@ -72,6 +76,7 @@ from retriever import ArticleHit, retrieve
 logger = logging.getLogger("app")
 
 RESULT_STATE_KEY = "result_view"
+WARNED_TEXT_KEY = "long_claim_warned_text"
 CLARIFICATION_KEY = "clarification"
 
 # Satu-satunya CSS: jarak baris klarifikasi (tidak bisa diatur lewat config.toml).
@@ -127,6 +132,29 @@ def load_collection() -> Any:
 def load_embedder() -> Any:
     """Muat model embedding bge-m3 sekali per proses (fungsi yang sama dengan evaluasi)."""
     return load_model()
+
+
+@st.cache_resource(show_spinner=False)
+def load_tokenizer() -> Any:
+    """Tokenizer bge-m3 saja (ringan, tanpa bobot model) untuk mengukur klaim sebelum diperiksa."""
+    from transformers import AutoTokenizer
+
+    return AutoTokenizer.from_pretrained(MODEL_NAME)
+
+
+def count_claim_tokens(text: str) -> int | None:
+    """
+    Panjang klaim dalam token model embedding (termasuk token khusus, seperti saat di-embed).
+
+    None bila tokenizer tidak dapat dimuat; pemanggil lalu memakai ambang karakter. Galat
+    dicatat, tidak ditelan diam-diam.
+    """
+    try:
+        tokenizer = load_tokenizer()
+    except (OSError, ValueError) as e:
+        logger.warning("tokenizer tidak tersedia, peringatan panjang memakai hitungan karakter: %s", e)
+        return None
+    return len(tokenizer(text)["input_ids"])
 
 
 @st.cache_resource(show_spinner=False)
@@ -329,39 +357,59 @@ def render_result(view: ResultView, show_diagnostics: bool) -> None:
         render_diagnostics(view.diagnostics)
 
 
+def run_check(text: str) -> None:
+    """Jalankan pemeriksaan dengan indikator proses dan simpan hasilnya di sesi."""
+    with st.status(PROGRESS_RUNNING, expanded=True) as progress:
+        view = check_claim(text, on_step=progress.write)
+        # Selalu "complete": status "error" berwarna merah, sedangkan kegagalan
+        # teknis sengaja ditampilkan netral (abu), bukan dengan warna peringatan.
+        progress.update(
+            label=PROGRESS_FAILED if view.kind == "failed" else PROGRESS_DONE,
+            state="complete",
+            expanded=False,
+        )
+    st.session_state[RESULT_STATE_KEY] = view
+
+
 def main() -> None:
-    """Susun halaman: kepala, formulir, indikator proses, lalu hasil terakhir (bila ada)."""
+    """Susun halaman: kepala, masukan + peringatan, indikator proses, lalu hasil terakhir."""
     st.set_page_config(page_title=PAGE_TITLE, page_icon=":material/fact_check:", layout="centered")
     st.html(READING_CSS)
     render_header()
 
-    with st.form("claim_form", border=False):
-        # Sengaja tanpa `max_chars`: widget akan memotong teks tempelan diam-diam.
-        # Panjang diperiksa `validate_claim` dan pengguna diberi tahu.
-        claim = st.text_area(INPUT_LABEL, placeholder=INPUT_PLACEHOLDER, height=140)
-        submitted = st.form_submit_button(SUBMIT_LABEL, type="primary")
+    # Tanpa st.form: nilai kotak teks masuk begitu pengguna selesai mengetik/menempel (keluar
+    # dari kotak atau Ctrl+Enter), sehingga peringatan panjang tampil SEBELUM tombol ditekan.
+    # Sengaja tanpa `max_chars`: widget akan memotong teks tempelan diam-diam.
+    claim = st.text_area(INPUT_LABEL, placeholder=INPUT_PLACEHOLDER, height=140)
+    text = (claim or "").strip()
+    too_long = len(text) > MAX_INPUT_CHARS
+    long_claim = bool(text) and not too_long and is_long_claim(text, count_claim_tokens(text))
+    if too_long:
+        st.markdown(f":gray[{escape_markdown(validate_claim(text) or '')}]")
+    elif long_claim:
+        st.markdown(f":gray[{escape_markdown(LONG_CLAIM_WARNING)}]", width=READING_WIDTH_PX)
 
-    if submitted:
-        text = (claim or "").strip()
+    clicked = st.button(SUBMIT_LABEL, type="primary")
+    if long_claim and not clicked:
+        st.session_state[WARNED_TEXT_KEY] = text  # peringatan sudah terlihat untuk teks ini
+
+    if clicked:
         problem = validate_claim(text)
         if problem is not None:
             st.session_state.pop(RESULT_STATE_KEY, None)
-            st.markdown(f":gray[{escape_markdown(problem)}]")
+            if not too_long:  # pesan "terlalu panjang" sudah tampil di atas tombol
+                st.markdown(f":gray[{escape_markdown(problem)}]")
+        elif long_claim and st.session_state.get(WARNED_TEXT_KEY) != text:
+            # Teks panjang masuk bersamaan dengan klik: peringatan baru saja muncul, jadi
+            # pemeriksaan ditunda satu klik agar peringatan terbaca sebelum dijalankan.
+            st.session_state[WARNED_TEXT_KEY] = text
+            st.session_state.pop(RESULT_STATE_KEY, None)
+            st.markdown(f":gray[{escape_markdown(LONG_CLAIM_CONFIRM.format(button=SUBMIT_LABEL))}]")
         else:
-            with st.status(PROGRESS_RUNNING, expanded=True) as progress:
-                view = check_claim(text, on_step=progress.write)
-                # Selalu "complete": status "error" berwarna merah, sedangkan kegagalan
-                # teknis sengaja ditampilkan netral (abu), bukan dengan warna peringatan.
-                progress.update(
-                    label=PROGRESS_FAILED if view.kind == "failed" else PROGRESS_DONE,
-                    state="complete",
-                    expanded=False,
-                )
-            st.session_state[RESULT_STATE_KEY] = view
+            run_check(text)
 
     view = st.session_state.get(RESULT_STATE_KEY)
     if view is not None:
         render_result(view, show_diagnostics=tester_mode_enabled())
-
 
 main()
