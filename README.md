@@ -189,6 +189,27 @@ Pemisahan ini memetakan langsung kebutuhan Versi 2.
 
 ## Keterbatasan
 
+**Hanya andal untuk klaim pendek (keterbatasan utama).** Retrieval hanya membaca
+512 token pertama dari pesan pengguna (batas jendela embedding BGE-M3 yang
+dipakai). Pada pesan yang panjang, klaimnya bisa terdorong keluar dari jendela
+itu sehingga tidak ikut dicari sama sekali. Terukur pada 20 butir positif set uji
+dengan teks pengganggu sintetis bergaya pesan berantai, dibagi ke depan dan
+belakang klaim:
+
+| Panjang pesan | Recall@3 (klaim di tengah) | Recall@3 (klaim di awal pesan) |
+| --- | --- | --- |
+| Klaim asli (48–582 karakter) | 20/20 | 20/20 |
+| ~1.500 karakter | 19/20 | 19/20 |
+| ~3.000 karakter | 19/20 | 19/20 |
+| ~5.000 karakter | **2/20** | 19/20 |
+
+Pada ~5.000 karakter, klaim berada di luar 512 token pada 18 dari 20 butir. Kondisi
+pembanding (klaim di awal pesan, pengganggu di belakang) tetap 19/20, jadi
+penyebabnya adalah pemotongan token, bukan sekadar panjang teks. Karena itu demo
+membatasi masukan pada 1.500 karakter dan memperingatkan pengguna sejak ~220 token.
+Teks pengganggunya sintetis, sehingga angka ini indikatif. Rincian:
+`testset/retrieval_ablation_report.txt`.
+
 **Cakupan basis pengetahuan.** Hanya memuat hoaks yang **sudah** diverifikasi.
 Klaim yang baru viral akan dijawab "belum ditemukan" walaupun sebenarnya hoaks.
 Jawaban itu sah, bukan kegagalan sistem.
@@ -221,7 +242,8 @@ tren arsitektur.
 
 | Komponen | Menargetkan | Bukti dari Versi 1 |
 | --- | --- | --- |
-| **Query rewriter** | Kegagalan retrieval | 4 butir dengan artikel benar di luar top-3, dua di antaranya nyaris masuk (peringkat 4) |
+| **Query rewriter** — (1) ekstraksi inti klaim dari pesan panjang sebelum retrieval | Klaim terdorong keluar jendela 512 token | 18 dari 20 butir positif gagal Recall@3 pada pesan ~5.000 karakter (dampak paling terukur) |
+| **Query rewriter** — (2) penulisan ulang kueri saat retrieval gagal | Kegagalan retrieval | 4 butir dengan artikel benar di luar top-3, dua di antaranya nyaris masuk (peringkat 4) |
 | **Grader relevansi** | Kegagalan penilaian generator | 2 kesalahan + 6 keputusan tidak bulat, seluruhnya dengan artikel benar sudah tersedia di top-3 |
 | **Penilaian kredibilitas sumber** | Penyaringan rujukan yang terlalu konservatif | Tidak ada temuan langsung dari evaluasi; berasal dari keterbatasan desain Versi 1 |
 
@@ -274,6 +296,12 @@ Antarmuka Streamlit satu halaman (`src/app.py`) di atas pipeline yang sama
 dengan yang dievaluasi; tidak ada logika retrieval atau generasi tambahan.
 Butuh indeks di `data/chroma/` (lihat "Membangun basis pengetahuan") dan
 `GEMINI_API_KEY` di `.env`.
+
+Masukan dibatasi **1.500 karakter** (wilayah yang terukur bekerja; lihat
+"Keterbatasan"). Sejak ~220 token (sekitar 1.000–1.300 karakter), demo menampilkan
+peringatan **sebelum** pemeriksaan dan menyarankan menyalin inti klaimnya saja.
+Kalau teks panjang ditempel lalu tombol langsung ditekan, klik pertama hanya
+menampilkan peringatan; klik berikutnya baru menjalankan pemeriksaan.
 
 ```powershell
 .\.venv\Scripts\python.exe -m streamlit run src\app.py   # dari root repositori

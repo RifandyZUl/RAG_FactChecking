@@ -31,6 +31,11 @@ akan disampaikan pemilik proyek; belum ada rancangan.
   5-6. Inti: top-k dan agregasi tidak menunjukkan selisih bermakna; Narasi saja = seluruh seksi
   (Penjelasan tidak menyumbang recall), Kesimpulan saja turun bermakna (-6/40); klaim ~5.000
   karakter dengan pembuka panjang jatuh ke Recall@3 2/20 karena klaim terpotong di luar 512 token.
+- **Tindak lanjut ablasi (2026-09-25):** batas masukan demo diturunkan 5.000 -> **1.500**
+  karakter dan ada peringatan pesan panjang (token bge-m3, ambang 220) SEBELUM pemeriksaan.
+  Keterbatasan 512 token dicatat sebagai **keterbatasan utama** (lihat "Keterbatasan yang
+  Diketahui", README, `v1_temuan_untuk_v2.md`). Rasional Aturan Wajib #2 dikoreksi: peran
+  Narasi kembali didukung data. Parameter produksi lain tidak berubah.
 - **Temuan ChromaDB (2026-09-25):** berkas indeks ditulis ulang setiap kali koleksi dibuka,
   juga oleh evaluasi -- lihat "Berkas indeks ChromaDB ditulis ulang setiap kali dibuka" di
   "Temuan Ingestion dan Retrieval". Relevan untuk tahap pengarsipan indeks: arsipkan berkas
@@ -100,9 +105,15 @@ Proyek dibangun bertahap dalam dua versi:
   node penilai relevansi dokumen (grader), penulis ulang kueri (query
   rewriter), dan penilaian kredibilitas sumber -- lihat
   `testset/v1_temuan_untuk_v2.md` untuk pemetaan temuan Versi 1 ke masing-
-  masing komponen (rewriter menargetkan 4 kegagalan retrieval, grader
-  menargetkan 7 butir kegagalan/ketidakbulatan penilaian; kredibilitas sumber
-  tidak punya temuan kuantitatif langsung dari set uji v1). **Kandidat fitur
+  masing komponen. **Rewriter punya dua tugas berbasis bukti:** (1) mengekstrak
+  inti klaim dari pesan panjang sebelum retrieval -- dampak paling terukur, 18
+  dari 20 butir positif gagal Recall@3 pada pesan ~5.000 karakter; (2) menulis
+  ulang kueri saat retrieval gagal (4 butir). Grader menargetkan 7 butir
+  kegagalan/ketidakbulatan penilaian; kredibilitas sumber tidak punya temuan
+  kuantitatif langsung dari set uji v1. **Agenda eksperimen (dicatat, belum
+  diputuskan):** menghapus seksi Penjelasan dari indeks (0 butir Recall@3
+  berpindah saat dihilangkan; memangkas sepertiga chunk) -- wajib diuji dulu
+  pengaruhnya pada kualitas jawaban generator. **Kandidat fitur
   (dicatat, belum diputuskan):** verdict ketiga "artikel terkait" untuk klaim
   yang lebih umum daripada artikel (mis. "Malaysia marah soal asap" vs artikel
   "Malaysia Laporkan Indonesia ke PBB"). Di Versi 1 klaim seperti itu
@@ -156,11 +167,18 @@ klaim yang beredar, Penjelasan memuat proses penelusuran, dan
 yang sama. Pemotongan berbasis karakter merusak pemisahan ini karena satu
 chunk dapat berisi campuran akhir Narasi dan awal Penjelasan.
 
-> **Koreksi rasional (hasil uji Versi 1):** rumusan awal aturan ini
-> menyatakan bahwa klaim pengguna paling cocok dengan chunk Narasi.
-> Asumsi itu **tidak terbukti** pada pengujian; lihat "Temuan Ingestion
-> dan Retrieval". Manfaat chunking per seksi adalah pemisahan peran seksi,
-> bukan pencocokan lewat Narasi. Aturannya sendiri tidak berubah.
+> **Riwayat rasional.** Rumusan awal aturan ini menyatakan bahwa klaim
+> pengguna paling cocok dengan chunk Narasi. Pengujian awal (10 kueri set
+> pengembangan) sempat menyatakannya **tidak terbukti** karena chunk
+> Penjelasan unggul 7/10. **Koreksi 2026-09-25:** pengukuran itu menghitung
+> chunk teratas dari **artikel mana pun**. Ablasi retrieval pada set uji v1
+> mengukur chunk terbaik dari **artikel yang benar**: Narasi unggul **35/40**,
+> dan retrieval dengan Narasi saja menyamai seluruh seksi (Recall@3 36/40,
+> 0 butir berpindah). Jadi **rasional chunking per seksi, termasuk peran
+> Narasi sebagai pencocok klaim, kembali didukung data.** Dugaan bahwa
+> Penjelasan lebih sering memunculkan artikel tetangga (penjelasan atas 7/10
+> itu) **belum diuji**. Aturannya sendiri tidak berubah. Rincian:
+> `testset/v1_temuan_untuk_v2.md` bagian 5.2.
 
 ### 3. Jangan biarkan LLM mengarang tautan
 
@@ -375,7 +393,7 @@ berbahasa sehari-hari (`src/evaluation/retrieval_eval.py`). **Sampelnya baru 5
 kueri**: cukup untuk sanity check dan menemukan masalah, bukan evaluasi
 statistik.
 
-### Penjelasan menang atas Narasi [DIUKUR ULANG 2026-09-21] — BERTAHAN (arah), angka berubah
+### Penjelasan menang atas Narasi [DIUKUR ULANG 2026-09-21] — BERTAHAN (arah), angka berubah; ukuran "artikel mana pun", lihat koreksi 2026-09-25 di bawah
 
 Diukur ulang pada 10 kueri (bukan 5): chunk Penjelasan tetap paling sering menang.
 Peringkat satu: Penjelasan 7, Narasi 2, Kesimpulan 1 (data lama pada 10 kueri yang sama:
@@ -988,6 +1006,19 @@ IDE akan menampilkan garis merah pada siapa pun yang membukanya.
 
 Batasan berikut sudah disadari dan diterima. Jangan memperlakukannya
 sebagai cacat yang perlu diperbaiki tanpa diminta.
+
+- **KETERBATASAN UTAMA: sistem hanya andal untuk klaim di bawah 512 token
+  pada sisi kueri.** Retrieval hanya meng-embed 512 token pertama pesan
+  (`MAX_SEQ_LENGTH`). Pada pesan panjang, klaim terdorong keluar dari jendela
+  embedding sehingga tidak ikut dicari. Terukur (ablasi 2026-09-25, 20 butir
+  positif, pengganggu sintetis di depan dan belakang klaim): Recall@3 **19/20**
+  pada ~1.500 dan ~3.000 karakter, runtuh ke **2/20** pada ~5.000 karakter
+  (klaim di luar 512 token pada 18/20). Pembanding klaim-di-awal (pengganggu
+  hanya di belakang) tetap **19/20** pada ~5.000 karakter, jadi penyebabnya
+  pemotongan token, bukan panjang itu sendiri. Mitigasi di demo: batas masukan
+  1.500 karakter dan peringatan sebelum pemeriksaan sejak ~220 token (batas
+  5.000 sebelumnya ditetapkan tanpa pengukuran). Perbaikan sebenarnya adalah
+  agenda Versi 2 (rewriter tugas 1).
 
 - Basis pengetahuan hanya memuat hoaks yang **sudah** diverifikasi
   Mafindo. Klaim yang baru viral belum tentu ada di dalamnya, sehingga
