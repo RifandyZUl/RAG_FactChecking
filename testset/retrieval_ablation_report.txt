@@ -1,0 +1,126 @@
+==============================================================================================
+EKSPERIMEN ABLASI RETRIEVAL -- SET UJI V1 BEKU (54 butir)
+==============================================================================================
+Tanggal: 2026-09-25 | model embedding: BAAI/bge-m3 | chunk: 450 | batas token: 512
+
+HANYA MENGUKUR RETRIEVAL. Tidak ada panggilan LLM. Pengaruh pada AKURASI AKHIR belum terukur:
+mengukurnya butuh menjalankan generator dengan parameter lain, dan itu akan membatalkan
+keabsahan baseline Versi 1 (set uji v1 sudah dipakai; perubahan harus diuji pada set uji baru).
+Hasil ini PENGUKURAN, bukan penyetelan: parameter produksi tidak diubah.
+
+Aturan membaca selisih: dua kondisi dibandingkan pada butir yang SAMA dengan uji McNemar eksak.
+'Selisih bermakna' hanya bila p < 0.05 DAN selisih bersih >= 3 butir. Selisih 1-2
+butir TIDAK disimpulkan sebagai keunggulan. Caveat tambahan: 44% butir berbagi artikel jangkar
+(tidak saling bebas), jadi interval Wilson dan p di bawah cenderung terlalu percaya diri.
+Recall hanya dihitung pada butir yang punya expected_retrieval_article: 40 non-batas
+(20 positif + 20 negatif sulit) dan 4 batas; 10 negatif mudah tidak punya artikel sasaran
+dan TIDAK masuk hitungan (sama dengan Recall@3 36/40 pada evaluasi Versi 1).
+
+VALIDASI KESETIAAN (skor eksak brute-force vs sistem produksi)
+  top-3 eksak (agregasi maks) = retriever.retrieve produksi: 54/54 butir 
+  top-3 eksak = top-3 tercatat evaluasi v1:                 54/54 butir 
+
+----------------------------------------------------------------------------------------------
+EKSPERIMEN 1 -- Recall@k (agregasi maks, seluruh seksi). Format: benar/n [Wilson95]
+----------------------------------------------------------------------------------------------
+kelompok                                    @1          @3          @5         @10         @20
+non_batas                            33/40       36/40       38/40       39/40       40/40    
+batas                                 3/4         4/4         4/4         4/4         4/4     
+tipe:positif                         19/20       20/20       20/20       20/20       20/20    
+tipe:negatif_sulit                   14/20       16/20       18/20       19/20       20/20    
+subtipe:pola_sama_entitas_beda        3/7         4/7         6/7         6/7         7/7     
+subtipe:entitas_sama_klaim_beda       5/7         6/7         6/7         7/7         7/7     
+subtipe:angka_waktu_beda              6/6         6/6         6/6         6/6         6/6     
+
+Non-batas, detail Wilson95:
+  Recall@1  33/40 [0.68-0.91]
+  Recall@3  36/40 [0.77-0.96]
+  Recall@5  38/40 [0.83-0.99]
+  Recall@10 39/40 [0.87-1.00]
+  Recall@20 40/40 [0.91-1.00]
+
+Perbandingan terhadap k=3 (non-batas; k lebih besar hanya bisa menambah):
+  k=1_vs_k=3   naik 0, turun 3, bersih -3, p McNemar 0.250 -> tidak dapat dibedakan dari kebetulan
+  k=5_vs_k=3   naik 2, turun 0, bersih +2, p McNemar 0.500 -> tidak dapat dibedakan dari kebetulan
+  k=10_vs_k=3  naik 3, turun 0, bersih +3, p McNemar 0.250 -> tidak dapat dibedakan dari kebetulan
+  k=20_vs_k=3  naik 4, turun 0, bersih +4, p McNemar 0.125 -> tidak dapat dibedakan dari kebetulan
+
+Empat kegagalan Recall@3 Versi 1 -- peringkat sebenarnya dan k pertama yang memuatnya:
+  v1-022 (pola_sama_entitas_beda): artikel 36648 peringkat 19, masuk mulai k=20 (dari k yang diuji [1, 3, 5, 10, 20])
+  v1-024 (pola_sama_entitas_beda): artikel 36576 peringkat 4, masuk mulai k=5 (dari k yang diuji [1, 3, 5, 10, 20])
+  v1-027 (pola_sama_entitas_beda): artikel 36191 peringkat 4, masuk mulai k=5 (dari k yang diuji [1, 3, 5, 10, 20])
+  v1-033 (entitas_sama_klaim_beda): artikel 36191 peringkat 6, masuk mulai k=10 (dari k yang diuji [1, 3, 5, 10, 20])
+
+CATATAN: menaikkan k punya konsekuensi yang TIDAK diukur di sini -- konteks ke LLM membesar
+(token dan biaya per panggilan), dan kandidat yang saling mirip dapat menaikkan risiko
+kecocokan palsu. k yang memaksimalkan recall belum tentu k terbaik untuk sistem keseluruhan.
+
+----------------------------------------------------------------------------------------------
+EKSPERIMEN 2 -- Strategi agregasi skor per artikel (seluruh seksi)
+----------------------------------------------------------------------------------------------
+strategi                          non-batas @3          non-batas @5        batas @3        batas @5
+maks                         36/40 [0.77-0.96]     38/40 [0.83-0.99] 4/4  [0.51-1.00] 4/4  [0.51-1.00]
+rata_rata                    35/40 [0.74-0.94]     38/40 [0.83-0.99] 4/4  [0.51-1.00] 4/4  [0.51-1.00]
+rata_rata_dua_teratas        35/40 [0.74-0.94]     36/40 [0.77-0.96] 4/4  [0.51-1.00] 4/4  [0.51-1.00]
+  rata_rata vs maks:
+    @3 non-batas: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+    @3 butir berpindah (termasuk batas): v1-031[entitas_sama_klaim_beda] benar->salah
+    @5 non-batas: naik 1, turun 1, bersih +0, p McNemar 1.000 -> identik
+    @5 butir berpindah (termasuk batas): v1-027[pola_sama_entitas_beda] benar->salah, v1-033[entitas_sama_klaim_beda] salah->benar
+  rata_rata_dua_teratas vs maks:
+    @3 non-batas: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+    @3 butir berpindah (termasuk batas): v1-031[entitas_sama_klaim_beda] benar->salah
+    @5 non-batas: naik 0, turun 2, bersih -2, p McNemar 0.500 -> tidak dapat dibedakan dari kebetulan
+    @5 butir berpindah (termasuk batas): v1-024[pola_sama_entitas_beda] benar->salah, v1-027[pola_sama_entitas_beda] benar->salah
+
+----------------------------------------------------------------------------------------------
+EKSPERIMEN 3 -- Kontribusi seksi
+----------------------------------------------------------------------------------------------
+Seksi chunk berskor tertinggi pada artikel yang BENAR (non-batas, n=40): {'narasi': 35, 'kesimpulan': 3, 'penjelasan': 2}
+   (Ukuran ini BERBEDA dari 'seksi pemenang top-1 chunk' pada 10 kueri set pengembangan di
+   CLAUDE.md, yang menghitung seksi chunk teratas SECARA KESELURUHAN, artikel apa pun.)
+   positif: {'narasi': 17, 'kesimpulan': 3}
+   negatif_sulit: {'penjelasan': 2, 'narasi': 18}
+   batas (n=4): {'narasi': 3, 'kesimpulan': 1}
+
+kondisi                             non-batas @3          non-batas @5        batas @3
+seluruh_seksi                  36/40 [0.77-0.96]     38/40 [0.83-0.99] 4/4  [0.51-1.00]
+hanya_narasi                   36/40 [0.77-0.96]     38/40 [0.83-0.99] 4/4  [0.51-1.00]
+hanya_kesimpulan               30/40 [0.60-0.86]     31/40 [0.62-0.88] 3/4  [0.30-0.95]
+narasi_dan_kesimpulan          36/40 [0.77-0.96]     38/40 [0.83-0.99] 4/4  [0.51-1.00]
+  Recall@3 per tipe/subtipe (non-batas):
+    tipe:positif                        20/20    20/20    18/20    20/20     (urutan kolom: seluruh_seksi, hanya_narasi, hanya_kesimpulan, narasi_dan_kesimpulan)
+    tipe:negatif_sulit                  16/20    16/20    12/20    16/20     (urutan kolom: seluruh_seksi, hanya_narasi, hanya_kesimpulan, narasi_dan_kesimpulan)
+    subtipe:pola_sama_entitas_beda       4/7      4/7      2/7      4/7      (urutan kolom: seluruh_seksi, hanya_narasi, hanya_kesimpulan, narasi_dan_kesimpulan)
+    subtipe:entitas_sama_klaim_beda      6/7      6/7      4/7      6/7      (urutan kolom: seluruh_seksi, hanya_narasi, hanya_kesimpulan, narasi_dan_kesimpulan)
+    subtipe:angka_waktu_beda             6/6      6/6      6/6      6/6      (urutan kolom: seluruh_seksi, hanya_narasi, hanya_kesimpulan, narasi_dan_kesimpulan)
+  hanya_narasi vs seluruh_seksi (@3 non-batas): naik 0, turun 0, bersih +0, p McNemar 1.000 -> identik
+     berpindah: tidak ada
+  hanya_kesimpulan vs seluruh_seksi (@3 non-batas): naik 0, turun 6, bersih -6, p McNemar 0.031 -> selisih bermakna
+     berpindah: v1-008 benar->salah, v1-010 benar->salah, v1-021 benar->salah, v1-025 benar->salah, v1-030 benar->salah, v1-031 benar->salah
+  narasi_dan_kesimpulan vs seluruh_seksi (@3 non-batas): naik 0, turun 0, bersih +0, p McNemar 1.000 -> identik
+     berpindah: tidak ada
+
+----------------------------------------------------------------------------------------------
+EKSPERIMEN 4 -- Panjang klaim (butir positif non-batas, n=20); batas token embedding 512
+----------------------------------------------------------------------------------------------
+Teks pengganggu SINTETIS (sapaan, ajakan menyebarkan, tanda baca berlebihan), bukan pesan asli:
+hasilnya INDIKATIF. 'kedua_sisi' = pengganggu dibagi ke depan dan belakang klaim (skenario diminta);
+'belakang' = pembanding, klaim di awal pesan, untuk memisahkan efek pengenceran dari pemotongan token.
+  klaim asli: Recall@3 20/20 [0.84-1.00], panjang 48-582 karakter
+  kedua_sisi_1500    Recall@3 19/20 [0.76-0.99] | token median 335 | klaim terbaca: {'utuh': 20}
+                     vs asli: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+  kedua_sisi_3000    Recall@3 19/20 [0.76-0.99] | token median 665 | klaim terbaca: {'utuh': 20}
+                     vs asli: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+  kedua_sisi_5000    Recall@3  2/20 [0.03-0.30] | token median 1112 | klaim terbaca: {'terpotong_seluruhnya': 18, 'sebagian': 2}
+                     vs asli: naik 0, turun 18, bersih -18, p McNemar 0.000 -> selisih bermakna
+  belakang_1500      Recall@3 19/20 [0.76-0.99] | token median 330 | klaim terbaca: {'utuh': 20}
+                     vs asli: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+  belakang_3000      Recall@3 19/20 [0.76-0.99] | token median 668 | klaim terbaca: {'utuh': 20}
+                     vs asli: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+  belakang_5000      Recall@3 19/20 [0.76-0.99] | token median 1112 | klaim terbaca: {'utuh': 20}
+                     vs asli: naik 0, turun 1, bersih -1, p McNemar 1.000 -> tidak dapat dibedakan dari kebetulan
+
+Keterbacaan klaim: 'utuh' = seluruh token klaim di dalam batas embedding; 'sebagian' = terpotong;
+'terpotong_seluruhnya' = klaim di luar batas (model hanya melihat pengganggu).
+
