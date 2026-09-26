@@ -29,16 +29,28 @@ SCORE_SAME = 0.80  # skor retrieval Narasi->chunk ke atas dianggap kemungkinan s
 SCORE_NEIGHBOR = 0.55  # di bawah ini dianggap jauh
 
 
+_URL_NO_SCHEME_RE = re.compile(
+    r"(?<![\w@.])(?:[a-z0-9-]+\.)+"
+    r"(?:com|id|net|org|co|info|biz|xyz|site|online|store|shop|top|click|link|app|io|me|ly|gl|gd|cc|to)"
+    r"(?![\w-])(?:/\S*)?",
+    re.IGNORECASE,
+)
+
+
 def pii_flags(text: str) -> list[str]:
     """Penanda data pribadi yang harus dibersihkan sebelum masuk berkas (bukan pembersihan otomatis)."""
     flags = []
-    if re.search(r"(?<!\d)(?:\+?62[\s\-]?|0)8[\d\-\s]{8,13}\d", text):
+    # Pemisah nomor: spasi, "-", dan en/em-dash (dipakai di halaman TurnBackHoax); juga wa.me/<nomor>.
+    phone = re.search(r"(?<!\d)(?:\+?62[\s\-–—]?|0)8[\d\-–—\s]{8,13}\d", text)
+    if phone or re.search(r"wa\.me/\+?\d", text, re.IGNORECASE):
         flags.append("nomor_telepon")
     if re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", text):
         flags.append("email")
     if re.search(r"(?<!\w)@\w{3,}", text):
         flags.append("handle_akun")
-    if re.search(r"https?://|www\.", text):
+    # URL berskema, www., ATAU tanpa skema (mis. "bantuan-desa.web.id/daftar", "bit.ly/xyz"): tautan
+    # phishing sering ditulis tanpa http:// dan dulu lolos (kasus Pendamping Lokal Desa, 2026-09-22).
+    if re.search(r"https?://|www\.", text) or _URL_NO_SCHEME_RE.search(text):
         flags.append("url_di_teks")
     if re.search(r"(?:akun|channel|kanal)\s+\w+\s+[“\"][^”\"]{2,40}[”\"]", text, re.I):
         flags.append("nama_akun")

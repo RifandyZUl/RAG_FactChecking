@@ -283,6 +283,20 @@ def assert_no_pii(klaim: str, item_id: str = "") -> None:
                           f"id={item_id!r} klaim={klaim!r}")
 
 
+RAW_WITHHELD = "[teks mentah tidak disimpan: memuat penanda data pribadi]"
+
+
+def assert_pii_checked(rows: list[dict[str, Any]]) -> None:
+    """
+    Penjaga TETAP sebelum kandidat ditulis ke berkas: setiap baris wajib sudah melewati
+    `pii_flags` (kunci `pii_flags` ada di `pemeriksaan`). Pemeriksaan PII bukan langkah
+    sesekali -- baris tanpa hasil pemeriksaan PII menghentikan penulisan.
+    """
+    missing = [i for i, r in enumerate(rows) if "pii_flags" not in r.get("pemeriksaan", {})]
+    if missing:
+        raise ValueError(f"{len(missing)} kandidat belum melewati pemeriksaan PII (indeks {missing[:5]})")
+
+
 def generate_for_job(
     provider: Any,
     slot: str,
@@ -317,13 +331,18 @@ def generate_for_job(
     versi = provider.model_version_info()
     klaim_list = parse_klaim_list(raw)
     if klaim_list is None:
+        # Keluaran mentah juga diperiksa PII: model bisa menyalin kontak penipu dari Narasi di prompt
+        # (kasus nyata: nomor dari Narasi 36191, lihat v1.meta.json) atau mengarang nomor/tautan yang
+        # kebetulan nyata. Bila ada penanda, teks mentahnya TIDAK disimpan -- hanya penandanya.
+        raw_flags = pii_flags(raw)
         return [{
             "slot": slot, "target_article": target_article, "klaim": None,
             "model": provider.model, "versi": versi,
             "dibuat_pada": datetime.now(timezone.utc).isoformat(),
             "prompt_pembuat": f"{slot}_v1", "sumber": "buatan_model",
-            "galat": "gagal urai JSON", "raw": raw[:500],
-            "pemeriksaan": {}, "lolos_pemeriksaan_otomatis": False,
+            "galat": "gagal urai JSON",
+            "raw": RAW_WITHHELD if raw_flags else raw[:500],
+            "pemeriksaan": {"pii_flags": raw_flags}, "lolos_pemeriksaan_otomatis": False,
             "status": "gagal format, dibuang",
         }]
 
@@ -400,6 +419,7 @@ def main() -> int:
             mark = "lolos" if r["lolos_pemeriksaan_otomatis"] else "GAGAL"
             print(f"  [{mark}] {slot} {aid or ''}: {r.get('klaim') or r.get('galat')}")
 
+    assert_pii_checked(all_out)  # wajib: tidak ada kandidat yang ditulis tanpa pemeriksaan PII
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("a", encoding="utf-8") as f:
         for c in all_out:

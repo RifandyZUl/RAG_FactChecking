@@ -8,7 +8,9 @@ import pytest
 
 from _fakes import ScriptedProvider
 from candidates.gemma_generate import (
+    RAW_WITHHELD,
     assert_no_pii,
+    assert_pii_checked,
     assert_reviewed_before_testset,
     build_prompt_negatif_angka_waktu,
     build_prompt_negatif_entitas_sama,
@@ -95,7 +97,7 @@ def test_run_checks_flags_phone_number_pii() -> None:
     pii_flags() (sudah ada di candidates/screen.py). Diperbaiki: run_checks kini memanggilnya
     untuk SEMUA slot (bukan hanya negatif).
     """
-    text = "Ada bantuan dana hibah 500 juta, daftar lewat WA 0859-6345-11291"
+    text = "Ada bantuan dana hibah 500 juta, daftar lewat WA 0800-0000-0000"
     checks = run_checks("positif", text, "Narasi apa saja", DB_TITLES, GUIDE_TEXT)
     assert "nomor_telepon" in checks["pii_flags"]
     assert passed_checks("positif", checks) is False
@@ -279,7 +281,7 @@ def test_assert_reviewed_before_testset_allows_passed_candidate() -> None:
 
 def test_assert_no_pii_rejects_phone_number() -> None:
     with pytest.raises(ValueError):
-        assert_no_pii("daftar lewat WA 0859-6345-11291 ya", "v1-999")
+        assert_no_pii("daftar lewat WA 0800-0000-0000 ya", "v1-999")
 
 
 def test_assert_no_pii_rejects_email() -> None:
@@ -289,3 +291,37 @@ def test_assert_no_pii_rejects_email() -> None:
 
 def test_assert_no_pii_allows_clean_text() -> None:
     assert assert_no_pii("klaim biasa tanpa data pribadi apa pun", "v1-999") is None
+
+
+# -- pemeriksaan PII sebagai bagian TETAP alur (2026-09-26) -------------------
+
+def test_format_failure_withholds_raw_output_containing_pii() -> None:
+    """Keluaran mentah yang gagal diurai tetap diperiksa PII; bila ada penanda, teksnya tidak disimpan."""
+    provider = ScriptedProvider(["bukan json, daftar lewat WA 0800-0000-0000 atau bantuan-contoh.web.id/daftar"])
+    provider.model = "gemma-4-test"
+    rows = generate_for_job(provider, "negatif_mudah", None, ARTICLES, DB_TITLES, GUIDE_TEXT)
+    assert rows[0]["raw"] == RAW_WITHHELD
+    assert {"nomor_telepon", "url_di_teks"} <= set(rows[0]["pemeriksaan"]["pii_flags"])
+    assert "0800" not in str(rows[0])
+
+
+def test_format_failure_keeps_clean_raw_output_for_audit() -> None:
+    provider = ScriptedProvider(["ini bukan json"])
+    provider.model = "gemma-4-test"
+    rows = generate_for_job(provider, "negatif_mudah", None, ARTICLES, DB_TITLES, GUIDE_TEXT)
+    assert rows[0]["raw"] == "ini bukan json"
+    assert rows[0]["pemeriksaan"] == {"pii_flags": []}
+
+
+def test_every_generated_row_carries_pii_check() -> None:
+    provider = ScriptedProvider(['{"klaim": ["klaim bersih satu", "daftar di bit.ly/contoh-fiktif"]}'])
+    provider.model = "gemma-4-test"
+    rows = generate_for_job(provider, "negatif_mudah", None, ARTICLES, DB_TITLES, GUIDE_TEXT)
+    assert_pii_checked(rows)  # tidak melempar
+    flagged = [r for r in rows if r["pemeriksaan"]["pii_flags"]]
+    assert len(flagged) == 1 and flagged[0]["lolos_pemeriksaan_otomatis"] is False
+
+
+def test_assert_pii_checked_blocks_rows_without_pii_check() -> None:
+    with pytest.raises(ValueError, match="pemeriksaan PII"):
+        assert_pii_checked([{"klaim": "x", "pemeriksaan": {"leak_flag": False}}])

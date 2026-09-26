@@ -429,7 +429,7 @@
     "kandidat_mengandung_pii_seperti_belum_diperiksa_otomatis": {
       "temuan": "gemma_generate.py TIDAK PERNAH menjalankan pii_flags() (fungsi yang sudah ada di candidates/screen.py untuk kandidat arsip/Liputan6) pada kandidat Gemma -- gap desain, bukan disengaja.",
       "butir_terdampak": [
-        {"id": "gemma-positif-36191-8", "isi": "nomor telepon berpola WA Indonesia (0859-6345-11291) di teks klaim", "keputusan_pemilik_proyek": "Setuju/Sama (belum menyinggung isu PII)"},
+        {"id": "gemma-positif-36191-8", "isi": "nomor telepon berpola WA Indonesia (0800-0000-0000; nomor asli -- nomor penipu yang dikutip Narasi artikel 36191 dan disalin Gemma -- diganti 2026-09-26, lihat pemeriksaan_data_terpublikasi_2026-09-26) di teks klaim", "keputusan_pemilik_proyek": "Setuju/Sama (belum menyinggung isu PII)"},
         {"id": "gemma-positif-36191-10", "isi": "rujukan akun TikTok fiktif (dana.hibh) di teks klaim -- INI juga pemenang sampel acak berbenih untuk sel positif 36191", "keputusan_pemilik_proyek": "Setuju/Sama (belum menyinggung isu PII)"}
       ],
       "menunggu_keputusan": "Nomor/handle ini kemungkinan besar fiktif (buatan Gemma, bukan data pribadi asli), TAPI berbentuk seperti nomor/akun asli dan set uji akan diterbitkan publik. Pilihan: (a) terima apa adanya (fiktif, bukan PII asli), (b) edit (redaksi jadi placeholder mis. '[nomor]'/'[akun]', sama seperti liputan6-8293783 dulu), atau (c) tolak, pakai cadangan (untuk 36191-10: cadangan hasil sampel adalah 36191-8 -- yang JUGA punya isu ini -- lalu 36191-9, yang bersih)."
@@ -645,5 +645,50 @@
     },
     "cara_memakai": "Set RAG_INDEX_DIR=archive/v1 sebelum menjalankan skrip evaluasi (lihat CLAUDE.md, aturan evaluasi terhadap baseline Versi 1). ingest menolak menulis ke archive/ kecuali --allow-archive.",
     "bila_embedding_dibangun_ulang": "Membangun ulang arsip dari articles.json arsip (README) harus mencocokkan sha256_teks_metadata dan sha256_articles_json_isi persis. DIUJI 2026-09-25 di mesin pengembangan (ingest --rebuild --articles <salinan articles.json arsip> --chroma-dir <direktori sementara>, 8 mnt 22 dtk): keenam sidik jari identik, TERMASUK sha256_embedding_float32, dan index_check --expect-v1-archive lolos. Pada mesin/versi pustaka lain sha256_embedding_float32 bisa berbeda di digit presisi; kesetaraan lalu dibuktikan dengan index_check (kosinus) + ablasi retrieval identik."
+  },
+  "pemeriksaan_data_terpublikasi_2026-09-26": {
+    "tanggal": "2026-09-26",
+    "cakupan": "Seluruh 107 berkas ter-commit dan 267 blob di 61 commit riwayat git; pemindai tersendiri (bukan hanya pii_flags): nomor Indonesia termasuk wa.me dan en-dash, surel, URL berskema dan tanpa skema, pemendek tautan, tautan media sosial, akun @, penulisan tersamar ([dot]); tinjauan manual seluruh butir v1.jsonl yang bertautan dan seluruh klaim yang menyebut link/daftar/WA/nomor.",
+    "hasil": {
+      "v1.jsonl": "0 nomor/surel/akun/pemendek di kolom mana pun; tautan hanya di url_asal (39 butir, domain cek fakta/media); v1-026 berisi placeholder [tautan]. Tidak diubah.",
+      "testset_lain_dan_dokumentasi": "Satu-satunya temuan: nomor di catatan gap PII (kandidat Gemma) yang ternyata disalin dari Narasi artikel 36191 (diganti, lihat penggantian_nomor).",
+      "tests_fixtures": "15 HTML asli (TurnBackHoax, arsip, Liputan6) memuat teks artikel lengkap, tautan sumber hoaks (termasuk profil Facebook pribadi), akun pribadi, serta hotline dan surel redaksi -- disamarkan (lihat fixture_disamarkan).",
+      "riwayat_git": "Tidak ada nomor, surel, atau tautan phishing yang pernah ter-commit lalu dihapus; data/, archive/, .env, data/candidates/ dan .xlsx tidak pernah ter-commit di commit mana pun.",
+      "keterbatasan": "Tautan di dalam gambar/tangkapan layar tidak terdeteksi; pemindai berbasis pola menghasilkan positif palsu yang disaring manual."
+    },
+    "penggantian_nomor": {
+      "berkas": [
+        "testset/v1.meta.json (catatan gap PII, butir kandidat gemma-positif-36191-8)",
+        "tests/test_gemma_generate.py (masukan uji)"
+      ],
+      "nilai_baru": "0800-0000-0000",
+      "alasan": "Semula diduga karangan model; DIKOREKSI 2026-09-26: nomor itu muncul PERSIS di Narasi artikel 36191 (label PENIPUAN, 'Bank Indonesia Cairkan Dana Hibah untuk Masyarakat Kurang Mampu'), yaitu nomor kontak penipu yang dikutip TurnBackHoax, dan disalin Gemma dari Narasi di prompt. Repositori publik tidak boleh ikut menyebarkan kontak penipuan, dan nomor itu bisa saja kini dipakai orang lain.",
+      "pemilihan_nilai": "Prefiks 0800 adalah blok bebas pulsa, bukan prefiks seluler, dan seluruh digit sisanya nol; format ini tidak lazim untuk nomor bebas pulsa yang dialokasikan. Bahwa nomor ini tidak aktif TIDAK diverifikasi ke operator; pilihan ini meminimalkan, bukan meniadakan, kemungkinan merujuk nomor nyata.",
+      "catatan": "Nomor asli tetap ada di riwayat git (lihat keputusan_riwayat_git). Temuan sampingan: pemeriksaan salin Narasi (>= 4 kata) tidak menangkap penyalinan nomor, karena nomor bukan kata; pemeriksaan PII tetap (pemeriksaan_pii_gemma_tetap) kini menangkapnya."
+    },
+    "pemeriksaan_pii_gemma_tetap": "candidates/screen.py pii_flags diperluas (URL tanpa skema termasuk bit.ly/..., pemisah en/em-dash, wa.me/<nomor>); gemma_generate.generate_for_job kini memeriksa PII pada keluaran mentah yang gagal diurai dan TIDAK menyimpan teks mentahnya bila ada penanda; main() memanggil assert_pii_checked sebelum menulis kandidat, sehingga baris tanpa hasil pemeriksaan PII menghentikan penulisan. Diuji di tests/test_gemma_generate.py dan tests/test_candidates.py.",
+    "fixture_disamarkan": {
+      "alat": "tests/anonymize_fixtures.py (aturan generik, tanpa tabel nilai asli)",
+      "metode": "Teks isi diganti kata semu sepanjang kata asli, bergantung pada kata dan urutan kemunculan (bukan sandi substitusi kata-ke-kata); struktur HTML, tanda baca, tanda kutip, angka, dan kata penanda kode dipertahankan; tautan sumber hoaks -> jalur fiktif pada domain yang sama; seluruh nomor dan surel -> nilai fiktif. Judul, label, tanggal, kategori, navigasi, dan rujukan media tidak diubah.",
+      "verifikasi": "Baca-tulis ulang BeautifulSoup tanpa perubahan memberi hasil parser identik (15/15). Jumlah assert pada 6 berkas uji berbasis fixture sama sebelum/sesudah (51+8+12+4+10+5 = 90). Kontrol negatif 14 mutasi modul: himpunan uji yang gagal IDENTIK antara fixture asli dan tersamar; 13/14 mutasi tertangkap di keduanya, M14 (lewati kutipan pendek di extract_claim) tidak tertangkap di keduanya karena mutan ekuivalen (split_quote_spans sudah menyaring panjang minimum). Pemindaian ulang: 0 nomor, 0 surel, 0 akun pribadi, 0 tautan sumber hoaks asli tersisa."
+    },
+    "keputusan_riwayat_git": {
+      "keputusan": "Riwayat git TIDAK ditulis ulang (keputusan pemilik proyek 2026-09-26).",
+      "alasan": "Isi riwayat berupa teks artikel yang sudah publik dan tautan yang diterbitkan pemeriksa fakta sendiri, tanpa kredensial atau data rahasia. Menulis ulang riwayat mengubah seluruh hash commit, termasuk tag testset-v1 dan rujukan commit di dokumentasi, sehingga justru merusak reproduksibilitas.",
+      "konsekuensi": "Fixture asli dan nomor karangan Gemma tetap dapat ditemukan di riwayat git; perbaikan hanya berlaku mulai commit 2026-09-26."
+    },
+    "pelajaran_nomor_penipu_2026-09-26": {
+      "fakta": "Nomor di catatan gap PII (kandidat gemma-positif-36191-8) adalah NOMOR PENIPU ASLI yang dikutip Narasi artikel sumber 36191, BUKAN karangan model. Gemma menyalinnya dari Narasi yang ikut di prompt pembuatan kandidat.",
+      "celah": "Pemeriksaan penyalinan Narasi (copies_ngram, larangan salin >= 4 kata berurutan) tidak menangkapnya karena nomor telepon bukan kata: salinan kontak, tautan, atau angka lolos dari pemeriksaan berbasis kata.",
+      "pelajaran": "Keluaran model yang diberi teks sumber hoaks harus diperiksa PII secara terpisah dari pemeriksaan salin-teks, dan dugaan 'karangan model' wajib dicek terhadap teks sumber sebelum dicatat. Pemeriksaan PII kini bagian tetap alur (pemeriksaan_pii_gemma_tetap)."
+    },
+    "keterbatasan_kredibilitas_asal_usul": "Kredibilitas situs asal-usul butir (kolom url_asal) TIDAK diverifikasi untuk seluruh butir set uji v1; hanya abcnews.co.id (v1-016) yang diperiksa, sebagai sampel. url_asal hanya menandai asal-usul teks klaim; label emas bertumpu pada artikel TurnBackHoax target dan ditetapkan manusia, bukan pada situs asal-usul.",
+    "voxnetizens_v1-029": "Tagar #voxnetizens di v1-029 DIBIARKAN (keputusan pemilik proyek): bentuknya tagar, bukan akun, risikonya rendah, dan mengubah butir terkunci butuh alasan lebih kuat.",
+    "verifikasi_abcnews_v1-016": {
+      "url_asal": "https://www.abcnews.co.id/emil-dardak-bantah-keracunan-ponpes",
+      "cara": "Pencarian web saja; situsnya tidak diakses langsung karena robots.txt-nya membalas HTTP 520 sehingga izin akses tidak dapat dipastikan.",
+      "temuan": "abcnews.co.id adalah situs berita Indonesia (memuat halaman Pedoman Media Siber), tidak berafiliasi dengan ABC News AS; namanya mirip ABC News dan situs palsu terkenal ABCnews.com.co, tetapi itu bukan bukti bahwa situs ini palsu. Status verifikasi Dewan Pers TIDAK dapat dipastikan (tidak muncul di hasil pencarian; portal Dewan Pers sedang dalam perbaikan). Substansi klaim (Emil Dardak membantah ada santri meninggal akibat keracunan MBG di ponpes Sidoarjo) dikonfirmasi media kredibel lain: Kompas, CNN Indonesia, Antara.",
+      "tindakan": "Butir tidak diubah. url_asal hanya asal-usul butir, bukan rujukan yang ditampilkan ke pengguna; label emas v1-016 bertumpu pada artikel TurnBackHoax 36573, bukan pada situs ini."
+    }
   }
 }
