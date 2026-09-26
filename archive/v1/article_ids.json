@@ -1,0 +1,1209 @@
+{
+  "keterangan": "Daftar 150 artikel arsip indeks Versi 1 (archive/v1), urutan sama dengan articles.json arsip. HANYA metadata; isi seksi (Narasi/Penjelasan/Kesimpulan) dan tautan TIDAK disertakan karena memuat teks hoaks apa adanya, termasuk nomor dan tautan penipuan. Pemulihan: README, 'Arsip indeks Versi 1'.",
+  "sumber": "archive/v1/articles.json (TurnBackHoax.id / MAFINDO)",
+  "dibuat": "2026-09-26",
+  "jumlah": 150,
+  "sha256_daftar_artikel": "f76c41847b4cbc9c382a913d30f724d5aef7615ea5a676c66044d6140d48a8cb",
+  "artikel": [
+    {
+      "article_id": "36738",
+      "url": "https://turnbackhoax.id/articles/36738-salah-ada-kebijakan-razia-kendaraan-dari-rumah-ke-rumah",
+      "title": "Ada Kebijakan Razia Kendaraan dari Rumah ke Rumah",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "18/09/2026"
+    },
+    {
+      "article_id": "36737",
+      "url": "https://turnbackhoax.id/articles/36737-penipuan-tautan-pendaftaran-program-bantuan-lansia",
+      "title": "Tautan Pendaftaran Program Bantuan Lansia",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "18/09/2026"
+    },
+    {
+      "article_id": "36731",
+      "url": "https://turnbackhoax.id/articles/36731-penipuan-tautan-pendaftaran-cek-kesehatan-gratis",
+      "title": "Tautan Pendaftaran Cek Kesehatan Gratis",
+      "label": "PENIPUAN",
+      "category": "Kesehatan",
+      "date": "17/09/2026"
+    },
+    {
+      "article_id": "36730",
+      "url": "https://turnbackhoax.id/articles/36730-salah-ojol-dilarang-beli-pertalite",
+      "title": "Ojol Dilarang Beli Pertalite",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "17/09/2026"
+    },
+    {
+      "article_id": "36729",
+      "url": "https://turnbackhoax.id/articles/36729-salah-malaysia-laporkan-indonesia-ke-pbb-soal-karhutla",
+      "title": "Malaysia Laporkan Indonesia ke PBB soal Karhutla",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "17/09/2026"
+    },
+    {
+      "article_id": "36727",
+      "url": "https://turnbackhoax.id/articles/36727-salah-video-laut-merak-kering-imbas-erupsi-gunung-anak-krakatau",
+      "title": "Video \"Laut Merak Kering Imbas Erupsi Gunung Anak Krakatau\"",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "17/09/2026"
+    },
+    {
+      "article_id": "36706",
+      "url": "https://turnbackhoax.id/articles/36706-salah-pembangunan-ikn-dihentikan-sementara-dana-dialihkan-ke-mbg-dan-kopdes",
+      "title": "Pembangunan IKN Dihentikan Sementara, Dana Dialihkan ke MBG dan Kopdes",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "16/09/2026"
+    },
+    {
+      "article_id": "36701",
+      "url": "https://turnbackhoax.id/articles/36701-penipuan-tautan-lowongan-kerja-elabram-systems",
+      "title": "Tautan Lowongan Kerja Elabram Systems",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "16/09/2026"
+    },
+    {
+      "article_id": "36700",
+      "url": "https://turnbackhoax.id/articles/36700-salah-dokumentasi-aksi-pembakaran-gudang-mbg-di-ntb",
+      "title": "Dokumentasi \"Aksi Pembakaran Gudang MBG di NTB\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "16/09/2026"
+    },
+    {
+      "article_id": "36682",
+      "url": "https://turnbackhoax.id/articles/36682-salah-toko-harian-dipaksa-tutup-karena-dekat-dengan-kopdes",
+      "title": "Toko Harian Dipaksa Tutup karena Dekat dengan Kopdes",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "16/09/2026"
+    },
+    {
+      "article_id": "36681",
+      "url": "https://turnbackhoax.id/articles/36681-salah-gibran-sebut-tidak-tahu-kasus-keracunan-mbg",
+      "title": "Gibran Sebut Tidak Tahu Kasus Keracunan MBG",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "15/09/2026"
+    },
+    {
+      "article_id": "36680",
+      "url": "https://turnbackhoax.id/articles/36680-salah-kota-malang-sepakat-hentikan-mbg",
+      "title": "Kota Malang Sepakat Hentikan MBG",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "15/09/2026"
+    },
+    {
+      "article_id": "36672",
+      "url": "https://turnbackhoax.id/articles/36672-penipuan-lowongan-kerja-cosmos-indonesia",
+      "title": "Lowongan Kerja Cosmos Indonesia",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "15/09/2026"
+    },
+    {
+      "article_id": "36655",
+      "url": "https://turnbackhoax.id/articles/36655-salah-dokumentasi-malaysia-kirim-pesawat-padamkan-karhutla-sumatra-2026",
+      "title": "Dokumentasi “Malaysia Kirim Pesawat, Padamkan Karhutla Sumatra 2026”",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36654",
+      "url": "https://turnbackhoax.id/articles/36654-penipuan-tautan-pendaftaran-bansos-digital",
+      "title": "Tautan Pendaftaran Bansos Digital",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36649",
+      "url": "https://turnbackhoax.id/articles/36649-penipuan-tautan-pendaftaran-tunjangan-lansia-2026",
+      "title": "Tautan Pendaftaran Tunjangan Lansia 2026",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36648",
+      "url": "https://turnbackhoax.id/articles/36648-penipuan-tautan-pendaftaran-lowongan-kerja-puskesmas",
+      "title": "Tautan Pendaftaran Lowongan Kerja Puskesmas",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36647",
+      "url": "https://turnbackhoax.id/articles/36647-penipuan-email-rekrutmen-indonesia-weda-bay-industrial-park",
+      "title": "Email Rekrutmen Indonesia Weda Bay Industrial Park",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36645",
+      "url": "https://turnbackhoax.id/articles/36645-penipuan-tautan-lowongan-kerja-cap-lang",
+      "title": "Tautan Lowongan Kerja Cap Lang",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "14/09/2026"
+    },
+    {
+      "article_id": "36644",
+      "url": "https://turnbackhoax.id/articles/36644-penipuan-informasi-pendaftaran-dana-pensiunan-dari-mahfud-md",
+      "title": "Informasi \"Pendaftaran Dana Pensiunan\" dari Mahfud MD",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "13/09/2026"
+    },
+    {
+      "article_id": "36641",
+      "url": "https://turnbackhoax.id/articles/36641-penipuan-tautan-lowongan-kerja-djarum-group",
+      "title": "Tautan Lowongan Kerja Djarum Group",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "12/09/2026"
+    },
+    {
+      "article_id": "36622",
+      "url": "https://turnbackhoax.id/articles/36622-salah-video-gempa-susulan-guncang-pulau-flores-m-5-8",
+      "title": "Video \"Gempa Susulan Guncang Pulau Flores M 5,8\"",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "12/09/2026"
+    },
+    {
+      "article_id": "36621",
+      "url": "https://turnbackhoax.id/articles/36621-penipuan-tautan-pendaftaran-beasiswa-unggulan-2026-dari-kemendikdasmen",
+      "title": "Tautan Pendaftaran Beasiswa Unggulan 2026 dari Kemendikdasmen",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "12/09/2026"
+    },
+    {
+      "article_id": "36613",
+      "url": "https://turnbackhoax.id/articles/36613-penipuan-tautan-pendaftaran-magang-di-kementerian-keuangan",
+      "title": "Tautan Pendaftaran Magang di Kementerian Keuangan",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "11/09/2026"
+    },
+    {
+      "article_id": "36612",
+      "url": "https://turnbackhoax.id/articles/36612-penipuan-tautan-pendaftaran-lowongan-indosat-ooredoo",
+      "title": "Tautan Pendaftaran Lowongan Indosat Ooredoo",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "11/09/2026"
+    },
+    {
+      "article_id": "36610",
+      "url": "https://turnbackhoax.id/articles/36610-salah-darurat-tsunami-di-pesisir-banten-dan-lampung-akibat-erupsi-gunung-anak-krakatau",
+      "title": "Darurat Tsunami di Pesisir Banten dan Lampung akibat Erupsi Gunung Anak Krakatau",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "11/09/2026"
+    },
+    {
+      "article_id": "36606",
+      "url": "https://turnbackhoax.id/articles/36606-salah-imbauan-untuk-tidak-menampung-air-hujan-karena-operasi-modifikasi-cuaca",
+      "title": "Imbauan untuk Tidak Menampung Air Hujan karena Operasi Modifikasi Cuaca",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "10/09/2026"
+    },
+    {
+      "article_id": "36604",
+      "url": "https://turnbackhoax.id/articles/36604-salah-zulhas-temukan-bukti-mbg-sengaja-diracun-pihak-oposisi",
+      "title": "Zulhas Temukan Bukti MBG Sengaja Diracun Pihak Oposisi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "10/09/2026"
+    },
+    {
+      "article_id": "36603",
+      "url": "https://turnbackhoax.id/articles/36603-salah-anies-baswedan-menolak-ruu-perampasan-aset",
+      "title": "Anies Baswedan Menolak RUU Perampasan Aset",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "10/09/2026"
+    },
+    {
+      "article_id": "36598",
+      "url": "https://turnbackhoax.id/articles/36598-salah-prabowo-tetapkan-30-september-libur-nasional-kenang-g30s-pki",
+      "title": "Prabowo Tetapkan 30 September Libur Nasional, Kenang G30S/PKI",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "10/09/2026"
+    },
+    {
+      "article_id": "36597",
+      "url": "https://turnbackhoax.id/articles/36597-penipuan-video-megawati-membagikan-dana-bantuan-modal-usaha",
+      "title": "Video Megawati Membagikan Dana Bantuan Modal Usaha",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "10/09/2026"
+    },
+    {
+      "article_id": "36596",
+      "url": "https://turnbackhoax.id/articles/36596-salah-world-bank-indonesia-negara-berkembang-termiskin-di-dunia-tahun-2026",
+      "title": "World Bank: Indonesia Negara Berkembang Termiskin di Dunia Tahun 2026",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "09/09/2026"
+    },
+    {
+      "article_id": "36595",
+      "url": "https://turnbackhoax.id/articles/36595-salah-perbatasan-ri-malaysia-resmi-ditutup-karena-pilot-malaysia-selundupkan-narkoba",
+      "title": "Perbatasan RI-Malaysia Resmi Ditutup karena Pilot Malaysia Selundupkan Narkoba",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "09/09/2026"
+    },
+    {
+      "article_id": "36590",
+      "url": "https://turnbackhoax.id/articles/36590-salah-erupsi-gunung-di-indonesia-berkaitan-dengan-haarp",
+      "title": "Erupsi Gunung di Indonesia Berkaitan dengan HAARP",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "09/09/2026"
+    },
+    {
+      "article_id": "36589",
+      "url": "https://turnbackhoax.id/articles/36589-penipuan-kontak-pendaftaran-bantuan-dari-bank-indonesia",
+      "title": "Kontak “Pendaftaran Bantuan dari Bank Indonesia”",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "09/09/2026"
+    },
+    {
+      "article_id": "36586",
+      "url": "https://turnbackhoax.id/articles/36586-penipuan-tautan-lowongan-kerja-deloitte-indonesia",
+      "title": "Tautan Lowongan Kerja Deloitte Indonesia",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "08/09/2026"
+    },
+    {
+      "article_id": "36585",
+      "url": "https://turnbackhoax.id/articles/36585-salah-hotel-shangri-la-surabaya-dijual-rp2-3-t",
+      "title": "Hotel Shangri-La Surabaya Dijual Rp2,3 T",
+      "label": "SALAH",
+      "category": "Bisnis",
+      "date": "08/09/2026"
+    },
+    {
+      "article_id": "36582",
+      "url": "https://turnbackhoax.id/articles/36582-salah-kebakaran-hutan-kalimantan-merambat-ke-permukiman-brunei-darussalam",
+      "title": "Kebakaran Hutan Kalimantan Merambat ke Permukiman Brunei Darussalam",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "08/09/2026"
+    },
+    {
+      "article_id": "36577",
+      "url": "https://turnbackhoax.id/articles/36577-salah-vaksin-cacar-air-sebabkan-pandemi-shingles",
+      "title": "Vaksin Cacar Air Sebabkan Pandemi Shingles",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "07/09/2026"
+    },
+    {
+      "article_id": "36576",
+      "url": "https://turnbackhoax.id/articles/36576-penipuan-kontak-pendaftaran-dana-bantuan-dari-menko-airlangga",
+      "title": "Kontak “Pendaftaran Dana Bantuan” dari Menko Airlangga",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "07/09/2026"
+    },
+    {
+      "article_id": "36575",
+      "url": "https://turnbackhoax.id/articles/36575-penipuan-bantuan-pemerintah-untuk-rakyat-umur-40-70-tahun",
+      "title": "Bantuan Pemerintah untuk Rakyat Umur 40-70 Tahun",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "07/09/2026"
+    },
+    {
+      "article_id": "36574",
+      "url": "https://turnbackhoax.id/articles/36574-salah-rombongan-aksi-27-agustus-2026-terima-bingkisan-dari-polisi",
+      "title": "Rombongan Aksi 27 Agustus 2026 Terima Bingkisan dari Polisi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "07/09/2026"
+    },
+    {
+      "article_id": "36573",
+      "url": "https://turnbackhoax.id/articles/36573-salah-sejumlah-santri-di-sidoarjo-meninggal-akibat-mbg",
+      "title": "Sejumlah Santri di Sidoarjo Meninggal Akibat MBG",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "07/09/2026"
+    },
+    {
+      "article_id": "36572",
+      "url": "https://turnbackhoax.id/articles/36572-penipuan-pendaftaran-bantuan-dana-presiden",
+      "title": "Pendaftaran Bantuan Dana Presiden",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "06/09/2026"
+    },
+    {
+      "article_id": "36571",
+      "url": "https://turnbackhoax.id/articles/36571-penipuan-pendaftaran-dana-bantuan-dari-menteri-pendidikan",
+      "title": "Pendaftaran Dana Bantuan dari Menteri Pendidikan",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "05/09/2026"
+    },
+    {
+      "article_id": "36564",
+      "url": "https://turnbackhoax.id/articles/36564-penipuan-tautan-undian-berhadiah-wondr-bni",
+      "title": "Tautan Undian Berhadiah Wondr BNI",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "04/09/2026"
+    },
+    {
+      "article_id": "36563",
+      "url": "https://turnbackhoax.id/articles/36563-penipuan-tautan-pendaftaran-lowongan-kerja-yupi-indo-jelly-gum",
+      "title": "Tautan Pendaftaran Lowongan Kerja Yupi Indo Jelly Gum",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "04/09/2026"
+    },
+    {
+      "article_id": "36562",
+      "url": "https://turnbackhoax.id/articles/36562-penipuan-tautan-pendaftaran-magang-setjen-dpr-ri-2026",
+      "title": "Tautan Pendaftaran Magang Setjen DPR RI 2026",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "04/09/2026"
+    },
+    {
+      "article_id": "36561",
+      "url": "https://turnbackhoax.id/articles/36561-penipuan-tautan-pendaftaran-lowongan-damkar-satpol-pp-dan-dishub-2026",
+      "title": "Tautan Pendaftaran Lowongan Damkar, Satpol PP, dan Dishub 2026",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "04/09/2026"
+    },
+    {
+      "article_id": "36560",
+      "url": "https://turnbackhoax.id/articles/36560-penipuan-tautan-undian-berhadiah-bank-sumsel-babel-2026",
+      "title": "Tautan Undian Berhadiah Bank Sumsel Babel 2026",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "04/09/2026"
+    },
+    {
+      "article_id": "36547",
+      "url": "https://turnbackhoax.id/articles/36547-penipuan-wayan-koster-bagi-bagi-dana-bantuan",
+      "title": "Wayan Koster Bagi-Bagi Dana Bantuan",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "03/09/2026"
+    },
+    {
+      "article_id": "36546",
+      "url": "https://turnbackhoax.id/articles/36546-penipuan-video-sri-mulyani-tawarkan-modal-usaha-dan-pelunasan-utang",
+      "title": "Video “Sri Mulyani Tawarkan Modal Usaha dan Pelunasan Utang”",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "03/09/2026"
+    },
+    {
+      "article_id": "36545",
+      "url": "https://turnbackhoax.id/articles/36545-penipuan-tautan-pendaftaran-sekolah-kedinasan-2026",
+      "title": "Tautan Pendaftaran Sekolah Kedinasan 2026",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "03/09/2026"
+    },
+    {
+      "article_id": "36544",
+      "url": "https://turnbackhoax.id/articles/36544-salah-pulau-menjangan-kecil-dijual-rp500-miliar",
+      "title": "Pulau Menjangan Kecil Dijual Rp500 Miliar",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "03/09/2026"
+    },
+    {
+      "article_id": "36521",
+      "url": "https://turnbackhoax.id/articles/36521-salah-mau-hemat-dana-pemerintah-tolak-keluarkan-anggaran-penanganan-karhutla",
+      "title": "Mau Hemat Dana, Pemerintah Tolak Keluarkan Anggaran Penanganan Karhutla",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "02/09/2026"
+    },
+    {
+      "article_id": "36520",
+      "url": "https://turnbackhoax.id/articles/36520-salah-bayi-di-jepara-meninggal-usai-imunisasi-dpt",
+      "title": "Bayi di Jepara Meninggal Usai Imunisasi DPT",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "02/09/2026"
+    },
+    {
+      "article_id": "36519",
+      "url": "https://turnbackhoax.id/articles/36519-penipuan-tautan-undian-berhadiah-bank-riau-kepri-brk-syariah-2026",
+      "title": "Tautan Undian Berhadiah Bank Riau Kepri (BRK) Syariah 2026",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "02/09/2026"
+    },
+    {
+      "article_id": "36518",
+      "url": "https://turnbackhoax.id/articles/36518-penipuan-video-dedi-mulyadi-bagi-bagi-dana-bantuan",
+      "title": "Video “Dedi Mulyadi Bagi-Bagi Dana Bantuan”",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "02/09/2026"
+    },
+    {
+      "article_id": "36497",
+      "url": "https://turnbackhoax.id/articles/36497-salah-video-rombongan-bus-dari-palembang-ke-jakarta-untuk-demo-27-agustus-2026",
+      "title": "Video \"Rombongan Bus dari Palembang ke Jakarta untuk Demo 27 Agustus 2026\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "01/09/2026"
+    },
+    {
+      "article_id": "36496",
+      "url": "https://turnbackhoax.id/articles/36496-salah-video-suasana-malam-tanggal-27-agustus-2026-jakarta",
+      "title": "Video \"Suasana Malam Tanggal 27 Agustus 2026 Jakarta\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "01/09/2026"
+    },
+    {
+      "article_id": "36495",
+      "url": "https://turnbackhoax.id/articles/36495-salah-mualem-minta-aceh-pisah-dari-nkri",
+      "title": "Mualem Minta Aceh Pisah dari NKRI",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "01/09/2026"
+    },
+    {
+      "article_id": "36486",
+      "url": "https://turnbackhoax.id/articles/36486-salah-gunung-lewotobi-laki-laki-erupsi-usai-gempa-ntt",
+      "title": "Gunung Lewotobi Laki-Laki Erupsi Usai Gempa NTT",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "01/09/2026"
+    },
+    {
+      "article_id": "36485",
+      "url": "https://turnbackhoax.id/articles/36485-salah-foto-kebakaran-hutan-kalimantan-merambat-ke-ikn",
+      "title": "Foto “Kebakaran Hutan Kalimantan Merambat ke IKN”",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36484",
+      "url": "https://turnbackhoax.id/articles/36484-salah-pramono-anung-larang-warga-non-dki-kerja-di-jakarta",
+      "title": "Pramono Anung Larang Warga Non-DKI Kerja di Jakarta",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36483",
+      "url": "https://turnbackhoax.id/articles/36483-salah-efek-samping-vaksin-dpt-daptacel-sengaja-disembunyikan",
+      "title": "Efek Samping Vaksin DPT Daptacel Sengaja Disembunyikan",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36480",
+      "url": "https://turnbackhoax.id/articles/36480-salah-video-rombongan-bus-santri-tebuireng-ikut-demonstrasi",
+      "title": "Video “Rombongan Bus Santri Tebuireng Ikut Demonstrasi”",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36479",
+      "url": "https://turnbackhoax.id/articles/36479-salah-cek-kesehatan-gratis-itu-agenda-plandemi-jilid-2",
+      "title": "Cek Kesehatan Gratis Itu Agenda Plandemi Jilid 2",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36478",
+      "url": "https://turnbackhoax.id/articles/36478-salah-menteri-agama-ri-nasaruddin-umar-mengundurkan-diri-dari-kabinet-ri",
+      "title": "Menteri Agama RI Nasaruddin Umar Mengundurkan Diri dari Kabinet RI",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36477",
+      "url": "https://turnbackhoax.id/articles/36477-salah-prabowo-instruksikan-pph-21-dipotong-35-dari-gaji-pekerja",
+      "title": "Prabowo Instruksikan PPh 21 Dipotong 35% dari Gaji Pekerja",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "31/08/2026"
+    },
+    {
+      "article_id": "36476",
+      "url": "https://turnbackhoax.id/articles/36476-salah-demi-mbg-ratusan-bumn-bakal-ditutup-akhir-2026",
+      "title": "Demi MBG, Ratusan BUMN Bakal Ditutup Akhir 2026",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "30/08/2026"
+    },
+    {
+      "article_id": "36474",
+      "url": "https://turnbackhoax.id/articles/36474-salah-video-persiapan-demo-27-agustus-2026-lautan-manusia-di-monas",
+      "title": "Video \"Persiapan Demo 27 Agustus 2026, Lautan Manusia di Monas\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "30/08/2026"
+    },
+    {
+      "article_id": "36457",
+      "url": "https://turnbackhoax.id/articles/36457-salah-bahlil-sebut-rakyat-minta-harga-bbm-dinaikkan",
+      "title": "Bahlil Sebut Rakyat Minta Harga BBM Dinaikkan",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "29/08/2026"
+    },
+    {
+      "article_id": "36456",
+      "url": "https://turnbackhoax.id/articles/36456-penipuan-tautan-pendaftaran-program-indonesia-pintar-pip",
+      "title": "Tautan Pendaftaran Program Indonesia Pintar (PIP)",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "29/08/2026"
+    },
+    {
+      "article_id": "36432",
+      "url": "https://turnbackhoax.id/articles/36432-penipuan-tautan-voucer-hari-kemerdekaan-dari-indomaret",
+      "title": "Tautan \"Voucer Hari Kemerdekaan\" dari Indomaret",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36431",
+      "url": "https://turnbackhoax.id/articles/36431-salah-dpr-buat-ruu-larangan-membeli-rokok",
+      "title": "DPR Buat RUU Larangan Membeli Rokok",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36414",
+      "url": "https://turnbackhoax.id/articles/36414-penipuan-tautan-pendaftaran-bantuan-sejahtera-purna-bakti-2026-untuk-pensiunan-pns",
+      "title": "Tautan Pendaftaran Bantuan Sejahtera Purna Bakti 2026 untuk Pensiunan PNS",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36413",
+      "url": "https://turnbackhoax.id/articles/36413-salah-dokumentasi-tentara-pbb-jaga-keamanan-aceh",
+      "title": "Dokumentasi \"Tentara PBB Jaga Keamanan Aceh\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36412",
+      "url": "https://turnbackhoax.id/articles/36412-penipuan-tautan-pendaftaran-dosen-dan-guru-pamong-2026",
+      "title": "Tautan Pendaftaran Dosen dan Guru Pamong 2026",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36395",
+      "url": "https://turnbackhoax.id/articles/36395-salah-video-rakyat-ntt-dan-aceh-ke-kediaman-prabowo-minta-kemerdekaan",
+      "title": "Video \"Rakyat NTT dan Aceh ke Kediaman Prabowo, Minta Kemerdekaan\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "28/08/2026"
+    },
+    {
+      "article_id": "36388",
+      "url": "https://turnbackhoax.id/articles/36388-salah-video-gedung-ambruk-saat-gempa-magnitudo-7-7-guncang-lepas-pantai-flores",
+      "title": "Video \"Gedung Ambruk saat Gempa Magnitudo 7,7 Guncang Lepas Pantai Flores\"",
+      "label": "SALAH",
+      "category": "Bencana",
+      "date": "27/08/2026"
+    },
+    {
+      "article_id": "36387",
+      "url": "https://turnbackhoax.id/articles/36387-salah-indonesia-resmi-keluar-dari-keanggotaan-world-bank",
+      "title": "Indonesia Resmi Keluar dari Keanggotaan World Bank",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "27/08/2026"
+    },
+    {
+      "article_id": "36386",
+      "url": "https://turnbackhoax.id/articles/36386-salah-dukcapil-melarang-nama-anak-dari-inspirasi-karakter-fiksi",
+      "title": "Dukcapil Melarang Nama Anak dari Inspirasi Karakter Fiksi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "27/08/2026"
+    },
+    {
+      "article_id": "36380",
+      "url": "https://turnbackhoax.id/articles/36380-salah-kantor-imf-di-indonesia-ditutup-tni-polri",
+      "title": "Kantor IMF di Indonesia Ditutup TNI-Polri",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "27/08/2026"
+    },
+    {
+      "article_id": "36379",
+      "url": "https://turnbackhoax.id/articles/36379-penipuan-pendaftaran-lowongan-kerja-family-mart",
+      "title": "Pendaftaran Lowongan Kerja Family Mart",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "27/08/2026"
+    },
+    {
+      "article_id": "36358",
+      "url": "https://turnbackhoax.id/articles/36358-penipuan-tautan-pendaftaran-sim-gratis-spesial-hut-ke-81-ri",
+      "title": "Tautan Pendaftaran “SIM Gratis Spesial HUT ke-81 RI”",
+      "label": "PENIPUAN",
+      "category": "Politik",
+      "date": "26/08/2026"
+    },
+    {
+      "article_id": "36357",
+      "url": "https://turnbackhoax.id/articles/36357-salah-bgn-minta-sppg-jadi-penyuplai-makanan-rumah-sakit",
+      "title": "BGN Minta SPPG Jadi Penyuplai Makanan Rumah Sakit",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "26/08/2026"
+    },
+    {
+      "article_id": "36354",
+      "url": "https://turnbackhoax.id/articles/36354-salah-dadan-hindayana-mengaku-uang-korupsinya-dibagi-ke-petinggi-psi",
+      "title": "Dadan Hindayana Mengaku Uang Korupsinya Dibagi ke Petinggi PSI",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "26/08/2026"
+    },
+    {
+      "article_id": "36353",
+      "url": "https://turnbackhoax.id/articles/36353-salah-aceh-berpisah-dari-indonesia",
+      "title": "Aceh Berpisah dari Indonesia",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "26/08/2026"
+    },
+    {
+      "article_id": "36333",
+      "url": "https://turnbackhoax.id/articles/36333-penipuan-pendaftaran-rekrutmen-astra-agro-lestari-lewat-whatsapp",
+      "title": "Pendaftaran Rekrutmen Astra Agro Lestari Lewat WhatsApp",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "25/08/2026"
+    },
+    {
+      "article_id": "36331",
+      "url": "https://turnbackhoax.id/articles/36331-penipuan-gambar-pendaftaran-lowongan-kerja-japfa-indonesia",
+      "title": "Gambar Pendaftaran Lowongan Kerja Japfa Indonesia",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "25/08/2026"
+    },
+    {
+      "article_id": "36296",
+      "url": "https://turnbackhoax.id/articles/36296-salah-dokumentasi-aksi-demo-di-aceh-dan-papua-agustus-2026",
+      "title": "Dokumentasi \"Aksi Demo di Aceh dan Papua Agustus 2026\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "24/08/2026"
+    },
+    {
+      "article_id": "36287",
+      "url": "https://turnbackhoax.id/articles/36287-salah-prabowo-bakal-perintahkan-tni-polri-tangkap-semua-masyarakat-aceh",
+      "title": "Prabowo Bakal Perintahkan TNI-Polri Tangkap Semua Masyarakat Aceh",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "24/08/2026"
+    },
+    {
+      "article_id": "36286",
+      "url": "https://turnbackhoax.id/articles/36286-penipuan-whatsapp-pendaftaran-bantuan-beras-dari-pemerintah",
+      "title": "WhatsApp Pendaftaran Bantuan Beras dari Pemerintah",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "24/08/2026"
+    },
+    {
+      "article_id": "36285",
+      "url": "https://turnbackhoax.id/articles/36285-salah-honda-resmi-keluar-dari-indonesia-karena-campur-tangan-pemerintah",
+      "title": "Honda Resmi Keluar dari Indonesia karena Campur Tangan Pemerintah",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "24/08/2026"
+    },
+    {
+      "article_id": "36284",
+      "url": "https://turnbackhoax.id/articles/36284-penipuan-tautan-pendaftaran-umkm-di-ikn",
+      "title": "Tautan “Pendaftaran UMKM di IKN”",
+      "label": "PENIPUAN",
+      "category": "Bisnis",
+      "date": "24/08/2026"
+    },
+    {
+      "article_id": "36283",
+      "url": "https://turnbackhoax.id/articles/36283-salah-pemerintah-tetapkan-aceh-darurat-operasi-militer-1-september-2026",
+      "title": "Pemerintah Tetapkan Aceh Darurat Operasi Militer 1 September 2026",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "23/08/2026"
+    },
+    {
+      "article_id": "36282",
+      "url": "https://turnbackhoax.id/articles/36282-penipuan-undian-berhadiah-bri-sambut-hut-ke-81-ri",
+      "title": "Undian Berhadiah BRI Sambut HUT ke-81 RI",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "23/08/2026"
+    },
+    {
+      "article_id": "36264",
+      "url": "https://turnbackhoax.id/articles/36264-salah-snack-luppo-produk-israel-mengandung-pil-kelumpuhan",
+      "title": "Snack Luppo Produk Israel Mengandung Pil Kelumpuhan",
+      "label": "SALAH",
+      "category": "Kriminalitas",
+      "date": "22/08/2026"
+    },
+    {
+      "article_id": "36224",
+      "url": "https://turnbackhoax.id/articles/36224-salah-kpk-menyita-delapan-rumah-mewah-gubernur-khofifah",
+      "title": "KPK Menyita Delapan Rumah Mewah Gubernur Khofifah",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "21/08/2026"
+    },
+    {
+      "article_id": "36217",
+      "url": "https://turnbackhoax.id/articles/36217-salah-infografis-sistem-desil-terbaru-2026",
+      "title": "Infografis Sistem Desil Terbaru 2026",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36216",
+      "url": "https://turnbackhoax.id/articles/36216-salah-prabowo-terbitkan-perpu-pemiskinan-koruptor",
+      "title": "Prabowo Terbitkan Perpu Pemiskinan Koruptor",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36215",
+      "url": "https://turnbackhoax.id/articles/36215-salah-nhs-pertimbangkan-menonton-premier-league-sebagai-terapi-depresi",
+      "title": "NHS Pertimbangkan \"Menonton Premier League\" sebagai Terapi Depresi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36214",
+      "url": "https://turnbackhoax.id/articles/36214-salah-vaksin-hpv-bikin-anak-laki-laki-impoten",
+      "title": "Vaksin HPV Bikin Anak Laki-Laki Impoten",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36213",
+      "url": "https://turnbackhoax.id/articles/36213-salah-rektor-ugm-ditangkap-imbas-kasus-ijazah-palsu-jokowi",
+      "title": "Rektor UGM Ditangkap Imbas Kasus Ijazah Palsu Jokowi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36212",
+      "url": "https://turnbackhoax.id/articles/36212-salah-vaksin-hpv-sebabkan-hiv",
+      "title": "Vaksin HPV Sebabkan HIV",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "20/08/2026"
+    },
+    {
+      "article_id": "36191",
+      "url": "https://turnbackhoax.id/articles/36191-penipuan-bank-indonesia-cairkan-dana-hibah-untuk-masyarakat-kurang-mampu",
+      "title": "Bank Indonesia Cairkan Dana Hibah untuk Masyarakat Kurang Mampu",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "19/08/2026"
+    },
+    {
+      "article_id": "36190",
+      "url": "https://turnbackhoax.id/articles/36190-penipuan-pendaftaran-dana-bantuan-dari-bupati-bangkalan",
+      "title": "Pendaftaran “Dana Bantuan dari Bupati Bangkalan”",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "19/08/2026"
+    },
+    {
+      "article_id": "36166",
+      "url": "https://turnbackhoax.id/articles/36166-penipuan-pendaftaran-bantuan-sepeda-listrik-untuk-anak-sekolah",
+      "title": "Pendaftaran Bantuan Sepeda Listrik untuk Anak Sekolah",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "18/08/2026"
+    },
+    {
+      "article_id": "36164",
+      "url": "https://turnbackhoax.id/articles/36164-salah-djp-pungut-pajak-masyarakat-yang-jogging-di-area-tertentu",
+      "title": "DJP Pungut Pajak Masyarakat yang Jogging di Area Tertentu",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "18/08/2026"
+    },
+    {
+      "article_id": "36163",
+      "url": "https://turnbackhoax.id/articles/36163-salah-prabowo-tetapkan-28-agustus-libur-bersama-kenang-kerusuhan-agustus-2025",
+      "title": "Prabowo Tetapkan 28 Agustus Libur Bersama, Kenang Kerusuhan Agustus 2025",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "18/08/2026"
+    },
+    {
+      "article_id": "36161",
+      "url": "https://turnbackhoax.id/articles/36161-penipuan-tautan-pendaftaran-bpjs-kesehatan-gratis-2026",
+      "title": "Tautan Pendaftaran BPJS Kesehatan Gratis 2026",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "17/08/2026"
+    },
+    {
+      "article_id": "36160",
+      "url": "https://turnbackhoax.id/articles/36160-salah-vaksin-hepatitis-b-berbahaya-dan-sebabkan-kematian-bayi",
+      "title": "Vaksin Hepatitis B Berbahaya dan Sebabkan Kematian Bayi",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "17/08/2026"
+    },
+    {
+      "article_id": "36157",
+      "url": "https://turnbackhoax.id/articles/36157-penipuan-tautan-klaim-bantuan-subsidi-pemerintah-2026",
+      "title": "Tautan Klaim \"Bantuan Subsidi Pemerintah\" 2026",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "16/08/2026"
+    },
+    {
+      "article_id": "36156",
+      "url": "https://turnbackhoax.id/articles/36156-salah-mbg-bakal-disalurkan-lewat-kartu-atm",
+      "title": "MBG Bakal Disalurkan Lewat Kartu ATM",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "15/08/2026"
+    },
+    {
+      "article_id": "36154",
+      "url": "https://turnbackhoax.id/articles/36154-penipuan-kdm-hadirkan-rumah-usaha-dp-rp750-ribu-tanpa-bi-checking",
+      "title": "KDM Hadirkan Rumah Usaha, DP Rp750 Ribu Tanpa BI Checking",
+      "label": "PENIPUAN",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36144",
+      "url": "https://turnbackhoax.id/articles/36144-salah-dokumen-bpom-bocor-sebut-vaksin-polio-bahayakan-kesehatan",
+      "title": "Dokumen BPOM Bocor, Sebut Vaksin Polio Bahayakan Kesehatan",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36143",
+      "url": "https://turnbackhoax.id/articles/36143-salah-video-penggusuran-lahan-untuk-pembangunan-kopdes-merah-putih",
+      "title": "Video “Penggusuran Lahan untuk Pembangunan Kopdes Merah Putih”",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36142",
+      "url": "https://turnbackhoax.id/articles/36142-penipuan-tautan-pendaftaran-lowongan-kerja-pt-taspen",
+      "title": "Tautan Pendaftaran Lowongan Kerja PT Taspen",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36141",
+      "url": "https://turnbackhoax.id/articles/36141-salah-bank-indonesia-bakal-cetak-uang-baru-untuk-asta-cita-prabowo",
+      "title": "Bank Indonesia Bakal Cetak Uang Baru untuk Asta Cita Prabowo",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36140",
+      "url": "https://turnbackhoax.id/articles/36140-salah-gaji-manajer-koperasi-desa-merah-putih-rp16-juta-per-bulan",
+      "title": "Gaji Manajer Koperasi Desa Merah Putih Rp16 Juta per Bulan",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36139",
+      "url": "https://turnbackhoax.id/articles/36139-salah-barang-bukti-kasus-korupsi-mantan-gubernur-lampung-hilang",
+      "title": "Barang Bukti Kasus Korupsi Mantan Gubernur Lampung Hilang",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36138",
+      "url": "https://turnbackhoax.id/articles/36138-salah-prabowo-perintahkan-penangkapan-jampidsus-febrie",
+      "title": "Prabowo Perintahkan Penangkapan Jampidsus Febrie",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "14/08/2026"
+    },
+    {
+      "article_id": "36122",
+      "url": "https://turnbackhoax.id/articles/36122-penipuan-tautan-pendaftaran-pulsa-dan-kuota-internet-gratis-spesial-hut-ke-81-ri",
+      "title": "Tautan Pendaftaran Pulsa dan Kuota Internet Gratis Spesial HUT ke-81 RI",
+      "label": "PENIPUAN",
+      "category": "Hadiah",
+      "date": "13/08/2026"
+    },
+    {
+      "article_id": "36121",
+      "url": "https://turnbackhoax.id/articles/36121-penipuan-tautan-lowongan-kerja-agrinas-jaladri-nusantara",
+      "title": "Tautan Lowongan Kerja Agrinas Jaladri Nusantara",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "13/08/2026"
+    },
+    {
+      "article_id": "36120",
+      "url": "https://turnbackhoax.id/articles/36120-parodi-prabowo-wanita-hamil-wajib-bayar-pajak-tiap-bulan",
+      "title": "Prabowo : Wanita Hamil Wajib Bayar Pajak Tiap Bulan",
+      "label": "PARODI",
+      "category": "Politik",
+      "date": "13/08/2026"
+    },
+    {
+      "article_id": "36113",
+      "url": "https://turnbackhoax.id/articles/36113-penipuan-tautan-pendaftaran-upacara-17-agustus-2026-di-istana",
+      "title": "Tautan “Pendaftaran Upacara 17 Agustus 2026 di Istana”",
+      "label": "PENIPUAN",
+      "category": "Other",
+      "date": "13/08/2026"
+    },
+    {
+      "article_id": "36111",
+      "url": "https://turnbackhoax.id/articles/36111-parodi-sinar-matahari-bakal-dikelola-negara-rakyat-jemur-pakaian-dikenai-pajak",
+      "title": "Sinar Matahari Bakal Dikelola Negara, Rakyat Jemur Pakaian Dikenai Pajak",
+      "label": "PARODI",
+      "category": "Politik",
+      "date": "13/08/2026"
+    },
+    {
+      "article_id": "36119",
+      "url": "https://turnbackhoax.id/articles/36119-penipuan-tautan-pendaftaran-bantuan-bibit-tanaman-buah",
+      "title": "Tautan Pendaftaran Bantuan Bibit Tanaman Buah",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "12/08/2026"
+    },
+    {
+      "article_id": "36110",
+      "url": "https://turnbackhoax.id/articles/36110-salah-uni-eropa-larang-indonesia-produksi-bbm-b50",
+      "title": "Uni Eropa Larang Indonesia Produksi BBM B50",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "12/08/2026"
+    },
+    {
+      "article_id": "36109",
+      "url": "https://turnbackhoax.id/articles/36109-salah-video-menpan-rb-umumkan-cpns-2026-resmi-dibuka",
+      "title": "Video “MenPAN-RB Umumkan CPNS 2026 Resmi Dibuka”",
+      "label": "SALAH",
+      "category": "Lowongan",
+      "date": "12/08/2026"
+    },
+    {
+      "article_id": "36101",
+      "url": "https://turnbackhoax.id/articles/36101-salah-ova-emilia-mundur-dari-kursi-rektor-ugm-hindari-kasus-ijazah-jokowi",
+      "title": "Ova Emilia Mundur dari Kursi Rektor UGM, Hindari Kasus Ijazah Jokowi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "12/08/2026"
+    },
+    {
+      "article_id": "36090",
+      "url": "https://turnbackhoax.id/articles/36090-salah-dokumentasi-fasilitas-minyak-arab-saudi-terbakar-imbas-serangan-yaman",
+      "title": "Dokumentasi \"Fasilitas Minyak Arab Saudi Terbakar Imbas Serangan Yaman\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36089",
+      "url": "https://turnbackhoax.id/articles/36089-penipuan-tautan-lowongan-kerja-untuk-lansia-2026",
+      "title": "Tautan Lowongan Kerja untuk Lansia 2026",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36088",
+      "url": "https://turnbackhoax.id/articles/36088-salah-pendaftaran-upacara-hut-ke-81-ri-di-istana-negara-dipungut-biaya",
+      "title": "Pendaftaran Upacara HUT ke-81 RI di Istana Negara Dipungut Biaya",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36087",
+      "url": "https://turnbackhoax.id/articles/36087-salah-dokumentasi-penggerebekan-markas-buzzer-penyerang-mbg",
+      "title": "Dokumentasi \"Penggerebekan Markas Buzzer Penyerang MBG\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36086",
+      "url": "https://turnbackhoax.id/articles/36086-salah-prabowo-pinjam-dana-dari-korea-dan-jepang-untuk-mbg-dan-kdmp",
+      "title": "Prabowo Pinjam Dana dari Korea dan Jepang untuk MBG dan KDMP",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36062",
+      "url": "https://turnbackhoax.id/articles/36062-penipuan-aplikasi-investasi-emas-diawasi-bank-indonesia",
+      "title": "Aplikasi Investasi Emas Diawasi Bank Indonesia",
+      "label": "PENIPUAN",
+      "category": "Bisnis",
+      "date": "11/08/2026"
+    },
+    {
+      "article_id": "36054",
+      "url": "https://turnbackhoax.id/articles/36054-penipuan-foto-pendaftaran-lowongan-kerja-cleo",
+      "title": "Foto Pendaftaran Lowongan Kerja Cleo",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "10/08/2026"
+    },
+    {
+      "article_id": "36053",
+      "url": "https://turnbackhoax.id/articles/36053-salah-vaksinasi-menyebabkan-autisme",
+      "title": "Vaksinasi Menyebabkan Autisme",
+      "label": "SALAH",
+      "category": "Kesehatan",
+      "date": "10/08/2026"
+    },
+    {
+      "article_id": "36052",
+      "url": "https://turnbackhoax.id/articles/36052-salah-prabowo-mau-sita-usaha-gilingan-padi-berpendapatan-besar",
+      "title": "Prabowo Mau Sita Usaha Gilingan Padi Berpendapatan Besar",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "10/08/2026"
+    },
+    {
+      "article_id": "36051",
+      "url": "https://turnbackhoax.id/articles/36051-salah-mendes-yandri-pemerintah-berharap-toko-di-desa-ditutup-agar-rakyat-belanja-di-kopdes",
+      "title": "Mendes Yandri: Pemerintah Berharap Toko di Desa Ditutup agar Rakyat Belanja di Kopdes",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "10/08/2026"
+    },
+    {
+      "article_id": "36049",
+      "url": "https://turnbackhoax.id/articles/36049-penipuan-sultan-brunei-bagi-bagi-dana-bantuan",
+      "title": "Sultan Brunei Bagi-Bagi Dana Bantuan",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "09/08/2026"
+    },
+    {
+      "article_id": "36048",
+      "url": "https://turnbackhoax.id/articles/36048-penipuan-pendaftaran-lowongan-kerja-indogrosir",
+      "title": "Pendaftaran Lowongan Kerja Indogrosir",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "08/08/2026"
+    },
+    {
+      "article_id": "36047",
+      "url": "https://turnbackhoax.id/articles/36047-salah-dokumentasi-kondisi-pangkalan-militer-udara-as-di-kuwait-pasca-dibombardir-iran",
+      "title": "Dokumentasi \"Kondisi Pangkalan Militer Udara AS di Kuwait Pasca Dibombardir Iran\"",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "08/08/2026"
+    },
+    {
+      "article_id": "36043",
+      "url": "https://turnbackhoax.id/articles/36043-penipuan-tautan-pendaftaran-bantuan-stimulan-perumahan-swadaya-bsps",
+      "title": "Tautan Pendaftaran Bantuan Stimulan Perumahan Swadaya (BSPS)",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "07/08/2026"
+    },
+    {
+      "article_id": "36042",
+      "url": "https://turnbackhoax.id/articles/36042-penipuan-tautan-pendaftaran-bantuan-pangan-2026",
+      "title": "Tautan Pendaftaran Bantuan Pangan 2026",
+      "label": "PENIPUAN",
+      "category": "Bantuan",
+      "date": "07/08/2026"
+    },
+    {
+      "article_id": "36041",
+      "url": "https://turnbackhoax.id/articles/36041-penipuan-foto-lowongan-kerja-customer-service-tokopedia",
+      "title": "Foto Lowongan Kerja Customer Service Tokopedia",
+      "label": "PENIPUAN",
+      "category": "Lowongan",
+      "date": "07/08/2026"
+    },
+    {
+      "article_id": "36020",
+      "url": "https://turnbackhoax.id/articles/36020-salah-prabowo-dan-gibran-ambil-alih-pengesahan-ruu-perampasan-aset",
+      "title": "Prabowo dan Gibran Ambil Alih Pengesahan RUU Perampasan Aset",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "07/08/2026"
+    },
+    {
+      "article_id": "36019",
+      "url": "https://turnbackhoax.id/articles/36019-salah-prabowo-warung-tidak-memberi-keuntungan-untuk-negara",
+      "title": "Prabowo: Warung Tidak Memberi Keuntungan untuk Negara",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "07/08/2026"
+    },
+    {
+      "article_id": "35991",
+      "url": "https://turnbackhoax.id/articles/35991-salah-polri-temukan-bunker-berisi-uang-ribuan-triliun-di-rumah-jokowi",
+      "title": "Polri Temukan Bunker Berisi Uang Ribuan Triliun di Rumah Jokowi",
+      "label": "SALAH",
+      "category": "Politik",
+      "date": "05/08/2026"
+    }
+  ]
+}

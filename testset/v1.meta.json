@@ -690,5 +690,17 @@
       "temuan": "abcnews.co.id adalah situs berita Indonesia (memuat halaman Pedoman Media Siber), tidak berafiliasi dengan ABC News AS; namanya mirip ABC News dan situs palsu terkenal ABCnews.com.co, tetapi itu bukan bukti bahwa situs ini palsu. Status verifikasi Dewan Pers TIDAK dapat dipastikan (tidak muncul di hasil pencarian; portal Dewan Pers sedang dalam perbaikan). Substansi klaim (Emil Dardak membantah ada santri meninggal akibat keracunan MBG di ponpes Sidoarjo) dikonfirmasi media kredibel lain: Kompas, CNN Indonesia, Antara.",
       "tindakan": "Butir tidak diubah. url_asal hanya asal-usul butir, bukan rujukan yang ditampilkan ke pengguna; label emas v1-016 bertumpu pada artikel TurnBackHoax 36573, bukan pada situs ini."
     }
+  },
+  "jalur_data_resmi_yudistira_2026-09-26": {
+    "tanggal": "2026-09-26",
+    "temuan": "Mafindo menyediakan API publik (Mafindo Public API; host https://yudistira.turnbackhoax.id/api/, karena itu disebut 'Yudistira'). Dokumentasi: https://mafindodocs.netlify.app/ (V1 dan V2). API key diminta lewat halaman kontak TurnBackHoax (https://turnbackhoax.id/tentang-kami/kontak-kami/). Dokumentasinya secara eksplisit mengundang pengembang memakai ulang basis data cek fakta mereka ('open to all developers or any parties which want to help').",
+    "status_dokumentasi": "Terakhir diperbarui 8/7/2022 (Agustus 2022) menurut halaman dokumentasi; mungkin sudah usang terhadap API yang berjalan sekarang.",
+    "status_akses": "Pemilik proyek sudah mengajukan permintaan API key (2026-09-26); belum ada jawaban. Belum ada satu pun panggilan API yang dilakukan.",
+    "struktur_respons_menurut_dokumentasi_v2": "Objek News memuat antara lain id, title, content, fact, conclusion, references, source_issue, source_link, classification, status, tanggal, tags, claim_review. Isi artikel TIDAK dipecah menjadi seksi Narasi/Penjelasan/Kesimpulan seperti HTML; ada bidang terpisah content, fact, dan conclusion yang MUNGKIN sepadan dengan Narasi, Penjelasan, Kesimpulan, serta references dan source_link yang MUNGKIN memisahkan rujukan sahih dari sumber hoaks. Pemetaan ini dugaan dari dokumentasi (dibaca lewat ringkasan halaman 2026-09-26), BELUM diverifikasi terhadap respons nyata.",
+    "implikasi_tahap_3": [
+      "Bila API key diberikan dan respons nyata memisahkan seksi artikel setara HTML (Narasi/Penjelasan/Kesimpulan, dan rujukan terpisah dari sumber hoaks sesuai Aturan Wajib #1), perluasan basis data sebaiknya memakai API resmi alih-alih scraping.",
+      "Bila struktur respons tidak memisahkan seksi, strategi chunking per seksi (Aturan Wajib #2) tidak dapat diterapkan langsung pada data API; hal itu wajib dievaluasi lebih dulu sebelum dipakai.",
+      "Sumber data Versi 1 (scraping HTML, articles.json 150 artikel) dan indeks arsip archive/v1 TIDAK BOLEH diganti dalam keadaan apa pun, termasuk bila data API tersedia (Aturan Wajib #6)."
+    ]
   }
 }

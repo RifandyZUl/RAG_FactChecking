@@ -116,14 +116,14 @@ menyatakan apa, sehingga pembaca awam tidak tahu wacana mana yang diralat.
 hasil):** "Pihak berwenang memang pernah menyatakan wacana tersebut, namun belakangan telah
 meralatnya." Frasa "namun belakangan telah meralatnya" terasa kaku, dan subjek-objeknya tidak
 jelas bagi pembaca awam: tidak terbaca siapa yang meralat dan apa yang diralat. Bahasa yang lebih
-wajar misalnya "tapi pernyataan itu kemudian diralat".
+wajar misalnya "tapi pernyataan itu kemudian diluruskan kembali".
 
 **Variasi antar-panggilan.** Tiga keluaran di atas berasal dari panggilan berbeda dengan prompt
 yang sama untuk artikel yang sama, dan mutu penyajiannya berbeda-beda (dua menyebut
 "menyesatkan"/"tidak benar" sebagai kesimpulan, satu tidak). Ini konsisten dengan temuan 6 dari
 54 butir set uji yang keputusannya tidak bulat antar-run (bagian 2): keluaran generator
 bervariasi antar-panggilan, bukan hanya pada keputusan tetapi juga pada gaya bahasa. Karena itu
-perbaikan gaya bahasa di Versi 2 **sebaiknya dievaluasi pada beberapa kali pemanggilan per butir,
+perbaikan gaya bahasa di Versi 2 **wajib dievaluasi pada beberapa kali pemanggilan per butir,
 bukan satu kali**, misalnya dengan menilai sebaran mutu dari 3 run seperti evaluasi v1.
 
 **Sasaran Versi 2 (gaya bahasa):** tambahkan instruksi gaya bahasa pada prompt agar klarifikasi
