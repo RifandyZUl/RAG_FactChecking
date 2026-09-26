@@ -1,5 +1,9 @@
 """
-Uji claim_candidate() (candidates/screen.py) memakai HTML NYATA arsip TurnBackHoax
+Uji claim_candidate() (candidates/screen.py) memakai HTML nyata arsip TurnBackHoax
+Fixture sudah DISAMARKAN (tests/anonymize_fixtures.py): struktur HTML asli dipertahankan, tetapi
+teks isi diganti kata semu sepanjang kata asli dan tautan sumber hoaks diganti jalur fiktif pada
+domain yang sama. Literal teks pada asersi di bawah adalah padanan TERSAMAR (posisi karakternya
+sama dengan teks asli), sehingga setiap pemeriksaan menguji hal yang sama seperti sebelumnya.
 (tests/fixtures/), lewat jalur parsing yang sama dengan pengumpul (scraping.parser.parse_article).
 
 Fixture archive_32490.html, archive_35310.html, archive_35850.html adalah tiga kandidat yang
@@ -28,20 +32,20 @@ def _narasi(article_id: str) -> str:
 
 def test_claim_candidate_32490_ambil_pesan_bantuan_bukan_kalimat_pembuka() -> None:
     claim = claim_candidate(_narasi("32490"))
-    assert claim.startswith("Bantuan Dana untuk masyarakat non muslim")
-    assert "mengunggah" not in claim
+    assert claim.startswith("Hirawac Nala tahop gecotohefa dow naheri")
+    assert "lolitonabi" not in claim  # kata "mengunggah" pada kalimat pembuka
 
 
 def test_claim_candidate_35310_ambil_kutipan_jubir_bukan_kalimat_pembuka() -> None:
     claim = claim_candidate(_narasi("35310"))
-    assert claim.startswith("Pertamax Jadi Rp 16.250 per Liter")
-    assert "Beredar unggahan gambar" not in claim
+    assert claim.startswith("Jutewojo Legu Mu 16.250 gag Monut")
+    assert "Tajowol hajapero pipute" not in claim  # kalimat pembuka
 
 
 def test_claim_candidate_35850_ambil_isi_lowongan_bukan_kalimat_pembuka() -> None:
     claim = claim_candidate(_narasi("35850"))
-    assert claim.startswith("LOWONGAN KERJA J&T CARGO")
-    assert "mengunggah video" not in claim
+    assert claim.startswith("FAJIWORA HADIN B&W KUREP")
+    assert "copajesepe bawin" not in claim  # kalimat pembuka
 
 
 def test_claim_candidate_preserves_quoted_narasi_without_narasi_cue_word_inside() -> None:
