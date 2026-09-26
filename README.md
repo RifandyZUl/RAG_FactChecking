@@ -314,11 +314,21 @@ $env:RAG_INDEX_DIR = "archive/v1"
 Remove-Item Env:RAG_INDEX_DIR                                              # kembali ke data/
 ```
 
-**Bila arsip hilang, bangun ulang dari `articles.json`:**
+**Bila arsip hilang, bangun ulang dari daftar artikel.** Yang ter-commit hanya
+`archive/v1/article_ids.json`: id, URL, judul, label, kategori, dan tanggal ke-150
+artikel, dalam urutan arsip. `articles.json` sengaja tidak di-commit karena memuat
+teks hoaks apa adanya, termasuk nomor dan tautan penipuan.
 
-1. Pulihkan `archive/v1/articles.json`. Kalau salinan arsipnya ikut hilang,
-   `data/articles.json` hanya boleh dipakai selama basis data belum diperluas.
-   Kecocokannya dibuktikan di langkah 3 (`sha256_articles_json_isi`).
+1. Pulihkan `archive/v1/articles.json` lewat scraping ulang berdasarkan daftar
+   URL itu. Artikel diambil dari cache `data/raw_html/` bila ada, dan dari situs
+   sumber bila tidak (timeout 45 dtk, retry, jeda 1,5 dtk). Proses gagal tanpa
+   menulis berkas bila ada artikel yang tidak dapat dipulihkan:
+
+   ```powershell
+   $env:PYTHONPATH = "src"
+   .\.venv\Scripts\python.exe -m scraping.restore archive\v1\article_ids.json --out archive\v1\articles.json
+   ```
+
 2. Bangun ulang indeksnya. `ingest` menolak menulis ke `archive/` tanpa
    `--allow-archive`:
 
@@ -343,9 +353,20 @@ Remove-Item Env:RAG_INDEX_DIR                                              # kem
    `sha256_embedding_float32` bisa berbeda di digit presisi. Dalam kasus itu,
    kesetaraan dibuktikan lewat kosinus `index_check` dan ablasi yang identik.
 
-Kalau `articles.json` versi 150 artikel itu hilang sama sekali, arsip tidak
-dapat dipulihkan persis. Daftar artikelnya hanya tercatat sebagai hash
-(`sha256_daftar_artikel`).
+Pemulihan dari cache sudah diuji (2026-09-26): `scraping.restore` menghasilkan
+`articles.json` dengan `sha256_articles_json_isi` identik dengan yang tercatat.
+Jalur jaringan belum diuji.
+
+**Keterbatasan pemulihan lewat scraping ulang:**
+
+- Bergantung pada artikel yang **masih tersedia** di situs sumber. Artikel yang
+  dihapus atau dipindahkan penerbit membuat pemulihan gagal.
+- Artikel yang **diperbarui penerbitnya** setelah diambil (September 2026) menghasilkan teks
+  berbeda, sehingga sidik jari (`sha256_articles_json_isi`, `sha256_teks_metadata`)
+  tidak cocok lagi. Arsip seperti itu **bukan** arsip Versi 1 dan tidak sah
+  untuk dibandingkan dengan baseline.
+- Hasil parse juga bergantung pada parser. Selama parser berubah, pemulihan hanya
+  setara bila dijalankan dengan kode pada tag atau commit yang sama.
 
 ### Menjalankan demo
 
@@ -447,9 +468,30 @@ tests/
 
 Basis pengetahuan berasal dari [TurnBackHoax.id](https://turnbackhoax.id)
 (MAFINDO), organisasi pemeriksa fakta tersertifikasi IFCN. Sebagian butir set uji
-diambil dari [Liputan6 Cek Fakta](https://www.liputan6.com/cek-fakta). Repositori
-ini tidak mendistribusikan ulang isi artikel; hanya kutipan klaim dan tautan
-sumber yang disimpan.
+diambil dari [Liputan6 Cek Fakta](https://www.liputan6.com/cek-fakta).
+
+Repositori ini tidak mendistribusikan ulang isi artikel. Yang disimpan hanya:
+
+- **Daftar artikel** basis pengetahuan (`archive/v1/article_ids.json`): id, URL,
+  judul, label, kategori, dan tanggal, tanpa isi seksi.
+- **Butir set uji** (`testset/v1.jsonl`): teks klaim, berupa kutipan pesan yang
+  beredar (dibersihkan dari data pribadi dan tautan) atau klaim tulisan model dan
+  manusia, beserta URL asal-usulnya.
+- **Fixture uji** (`tests/fixtures/`): struktur HTML halaman asli dengan isi yang
+  **disamarkan** (`tests/anonymize_fixtures.py`). Teks diganti kata semu, tautan
+  sumber hoaks diganti jalur fiktif, dan nomor serta surel diganti nilai fiktif.
+
+Teks lengkap artikel dan indeks vektor hanya ada di mesin lokal (`data/`,
+`archive/`) dan tidak di-commit. Selain menyangkut hak penerbit, teks itu memuat
+isi hoaks apa adanya: pemeriksaan 2026-09-26 menemukan **12 dari 150 artikel**
+(semuanya berlabel PENIPUAN) memuat nomor telepon atau tautan WhatsApp penipu, dan
+**62 dari 150** memuat domain di luar daftar aman (media, pemerintah, cek fakta,
+platform sosial), termasuk domain yang tampak phishing. Klasifikasi domain itu
+heuristik. Menerbitkan `articles.json` berarti ikut menyebarkan kontak dan tautan
+penipuan tersebut. **Catatan:** riwayat git sebelum 2026-09-26 masih
+memuat fixture versi asli. Riwayat sengaja tidak ditulis ulang agar hash commit
+dan tag `testset-v1` tetap sah; alasannya tercatat di `testset/v1.meta.json`
+(`pemeriksaan_data_terpublikasi_2026-09-26`).
 
 Proyek ini dibuat untuk keperluan pembelajaran dan portofolio, bukan sebagai
 pengganti layanan pemeriksa fakta resmi.

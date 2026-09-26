@@ -25,4 +25,8 @@ env/
 
 # Arsip indeks (salinan ChromaDB + articles.json, ~9 MB; berisi teks pihak ketiga dan berkas biner
 # yang ditulis ulang ChromaDB setiap kali dibuka). Sidik jari isinya tercatat di testset/v1.meta.json.
-archive/
+archive/*
+!archive/v1/
+archive/v1/*
+# Kecuali daftar artikel (metadata saja, tanpa isi seksi; aman dipublikasikan):
+!archive/v1/article_ids.json

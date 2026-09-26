@@ -13,7 +13,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 *(2026-09-25)*
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
-SELESAI 2026-09-25; berikutnya (2) perluasan basis data, (3) Versi 2.** Rincian tahap berikutnya
+SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); berikutnya (2) perluasan basis
+data, (3) Versi 2.** Rincian tahap berikutnya
 akan disampaikan pemilik proyek; belum ada rancangan.
 
 - **Demo lokal (2026-09-25):** `src/app.py` (Streamlit, adapter tipis; tidak ada logika
@@ -36,6 +37,30 @@ akan disampaikan pemilik proyek; belum ada rancangan.
   Keterbatasan 512 token dicatat sebagai **keterbatasan utama** (lihat "Keterbatasan yang
   Diketahui", README, `v1_temuan_untuk_v2.md`). Rasional Aturan Wajib #2 dikoreksi: peran
   Narasi kembali didukung data. Parameter produksi lain tidak berubah.
+- **Jalur data resmi untuk tahap 3 (dicatat 2026-09-26, belum dipakai):** Mafindo menyediakan API
+  publik (host `https://yudistira.turnbackhoax.id/api/`, "Yudistira"); dokumentasi
+  https://mafindodocs.netlify.app/ (terakhir diperbarui Agustus 2022, mungkin usang); API key lewat
+  halaman kontak TurnBackHoax -- pemilik proyek sudah mengajukan permintaan. Dokumentasi mengundang
+  pengembang memakai ulang basis datanya. Menurut dokumentasi v2, objek News punya bidang terpisah
+  `content`, `fact`, `conclusion`, `references`, `source_link` (pemetaan ke Narasi/Penjelasan/
+  Kesimpulan/Referensi/sumber hoaks BELUM diverifikasi). **Implikasi tahap 3:** bila key diberikan dan
+  respons memisahkan seksi setara HTML, perluasan basis data sebaiknya lewat API, bukan scraping; bila
+  tidak memisahkan seksi, chunking per seksi (Aturan Wajib #2) tidak dapat diterapkan dan wajib
+  dievaluasi dulu. **Sumber data Versi 1 dan indeks arsip `archive/v1` tidak boleh diganti dalam keadaan
+  apa pun.** Rincian: `v1.meta.json` (`jalur_data_resmi_yudistira_2026-09-26`).
+- **Penutupan tahap 2 (2026-09-26): pemeriksaan data terpublikasi.** Rincian di `v1.meta.json`
+  (`pemeriksaan_data_terpublikasi_2026-09-26`). (1) `tests/fixtures/` DISAMARKAN lewat
+  `tests/anonymize_fixtures.py` (teks isi -> kata semu sepanjang aslinya, tautan sumber hoaks ->
+  jalur fiktif di domain sama, nomor/surel -> fiktif); jumlah assert sama (90) dan 14 mutasi kontrol
+  negatif memberi himpunan uji gagal identik dengan fixture asli. (2) Nomor di catatan PII Gemma
+  diganti `0800-0000-0000` -- ternyata BUKAN karangan model, melainkan nomor penipu dari Narasi
+  36191 yang disalin Gemma. (3) Pemeriksaan PII Gemma kini tetap: `pii_flags` diperluas (URL tanpa
+  skema, en-dash, wa.me), keluaran mentah diperiksa, `assert_pii_checked` sebelum menulis.
+  (4) Riwayat git TIDAK ditulis ulang (keputusan pemilik proyek). (5) `archive/v1/article_ids.json`
+  (metadata saja) di-commit; pemulihan arsip lewat `python -m scraping.restore` (lihat README).
+  `articles.json` TIDAK di-commit: 12/150 artikel (semuanya PENIPUAN) memuat nomor telepon/wa.me dan
+  62/150 memuat domain di luar daftar media/pemerintah/cek fakta/platform sosial (klasifikasi
+  heuristik; di dalamnya domain yang tampak phishing, mis. subdomain vercel.app dan bit.ly).
 - **Tahap 2 SELESAI: arsip indeks Versi 1 (2026-09-25).** `archive/v1/` = salinan `data/chroma` +
   `articles.json` (9,51 MB, di-gitignore). Sidik jari isi di `v1.meta.json`
   (`arsip_indeks_v1_2026-09-25`); diverifikasi: sama dengan indeks utama, `index_check` lolos,
@@ -322,7 +347,8 @@ RAG_FactChecking/
 │   │   ├── discovery.py  #   pengumpulan URL dari halaman daftar
 │   │   ├── parser.py     #   parsing HTML artikel -> dict terstruktur
 │   │   ├── pipeline.py   #   orkestrasi + CLI (python -m scraping)
-│   │   └── reparse.py    #   parse ulang dari cache TANPA jaringan (python -m scraping.reparse)
+│   │   ├── reparse.py    #   parse ulang dari cache TANPA jaringan (python -m scraping.reparse)
+│   │   └── restore.py    #   pulihkan articles.json arsip dari daftar artikel (cache/jaringan)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
@@ -340,9 +366,10 @@ RAG_FactChecking/
 │       ├── probe_quota.py      #   probe tunggal ke server (1 permintaan)
 │       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
 ├── tests/                # Uji offline (pytest), satu berkas per modul
-│   ├── fixtures/         #   HTML nyata untuk uji (di-commit)
+│   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat anonymize_fixtures.py
 │   └── _fakes.py         #   objek palsu bersama (bukan uji)
-├── archive/v1/           # Arsip indeks Versi 1 (chroma/ + articles.json; di-gitignore; Aturan Wajib #6)
+├── archive/v1/           # Arsip indeks Versi 1 (chroma/ + articles.json di-gitignore; Aturan Wajib #6)
+│   └── article_ids.json  #   daftar 150 artikel (metadata saja) -- SATU-SATUNYA berkas arsip yang di-commit
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
 │   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)
@@ -382,6 +409,10 @@ RAG_FactChecking/
 ---
 
 ## Cara Kerja yang Diharapkan
+
+- **Tidak ada teks artikel, tautan sumber hoaks, atau kontak di berkas ter-commit.** Fixture HTML
+  baru WAJIB disamarkan dulu (`PYTHONPATH=src python tests/anonymize_fixtures.py <asli> <keluaran>`),
+  dan literal uji diambil dari hasil tersamar. `articles.json` dan HTML mentah tetap lokal.
 
 Proyek ini bertujuan pembelajaran, sehingga cara mengerjakannya penting,
 bukan hanya hasil akhirnya.
