@@ -1,6 +1,11 @@
 """
-Uji ekstraksi kutipan candidates/crosssite.py memakai HTML NYATA Liputan6 (tests/fixtures/) dan
+Uji ekstraksi kutipan candidates/crosssite.py memakai HTML nyata Liputan6 (tests/fixtures/) dan
 uji unit split_quote_spans dengan string buatan yang meniru pola tanda kutip bermasalah.
+
+Fixture sudah DISAMARKAN (tests/anonymize_fixtures.py): struktur HTML asli dipertahankan, tetapi
+teks isi diganti kata semu sepanjang kata asli dan tautan sumber hoaks diganti jalur fiktif pada
+domain yang sama. Literal teks pada asersi di bawah adalah padanan TERSAMAR (posisi karakternya
+sama dengan teks asli), sehingga setiap pemeriksaan menguji hal yang sama seperti sebelumnya.
 
 Fixture liputan6_8292010.html dan liputan6_8293157.html berasal dari cache pengumpulan kandidat
 (data/candidates_cache/liputan6/) -- dua kasus nyata yang sempat gagal diekstrak (lihat CLAUDE.md/
@@ -48,10 +53,10 @@ def test_extract_claim_8292010_ambil_pernyataan_hoaks_bukan_bantahan() -> None:
     """
     claim = _extract_from_fixture("liputan6_8292010.html")
     assert claim is not None
-    assert claim.startswith("kalau bisa seluruh warung")
-    assert "buat negara" in claim
-    assert "Gak bisa pak" not in claim
-    assert "menambahkan narasi" not in claim
+    assert claim.startswith("johul balu medocip kajaju")
+    assert "dona cemimo" in claim
+    assert "Wep wala sek" not in claim  # kutipan bantahan warganet
+    assert "nepufepolok narasi" not in claim  # "menambahkan narasi"
 
 
 def test_extract_claim_8293157_ambil_transkrip_bukan_kalimat_pembuka() -> None:
@@ -61,6 +66,6 @@ def test_extract_claim_8293157_ambil_transkrip_bukan_kalimat_pembuka() -> None:
     """
     claim = _extract_from_fixture("liputan6_8293157.html")
     assert claim is not None
-    assert claim != "Unggahan menyertakan keterangan sebagai berikut:"
-    assert claim.startswith("Presenter:")
-    assert "Abdul Somad" in claim
+    assert claim != "Banuhemo mucewujetel bakuwilegi sebagai berikut:"  # teks wartawan di antara kutipan
+    assert claim.startswith("Rafegecos:")  # penanda "Presenter:"
+    assert "Cesub Rawar" in claim  # nama tokoh di dalam transkrip

@@ -1,4 +1,9 @@
-"""Uji parsing HTML NYATA TurnBackHoax (scraping.parser) memakai fixture di tests/fixtures/.
+"""Uji parsing HTML nyata TurnBackHoax (scraping.parser) memakai fixture di tests/fixtures/.
+
+Fixture sudah DISAMARKAN (tests/anonymize_fixtures.py): struktur HTML asli dipertahankan, tetapi
+teks isi diganti kata semu sepanjang kata asli dan tautan sumber hoaks diganti jalur fiktif pada
+domain yang sama. Literal teks pada asersi di bawah adalah padanan TERSAMAR (posisi karakternya
+sama dengan teks asli), sehingga setiap pemeriksaan menguji hal yang sama seperti sebelumnya.
 
 Fixture berasal dari cache hasil scraping (data/raw_html/) dan disalin ke tests/fixtures/ agar
 ikut ter-commit (data/raw_html/ di-gitignore dan bisa berubah saat scraping ulang dengan
@@ -44,8 +49,8 @@ def test_article_36738() -> None:
     assert a["narasi"] and a["penjelasan"], "seksi Narasi/Penjelasan kosong"
     assert a["kesimpulan"].startswith("Faktanya"), "isi Kesimpulan salah"
 
-    tiktok = "https://vt.tiktok.com/ZSq9c6ky7/"
-    archive = "https://archive.li/n2Rxw"
+    tiktok = "https://vt.tiktok.com/contoh-fiktif-1"  # jalur fiktif; domain asli dipertahankan
+    archive = "https://archive.li/contoh-fiktif-2"
 
     # Wajib: tautan hoaks TIDAK boleh muncul di references (Aturan Wajib #1)
     assert tiktok not in a["references"], "TikTok bocor ke references"
@@ -72,7 +77,7 @@ def test_article_36738() -> None:
 
 def test_article_36729() -> None:
     a = load("36729")
-    assert a["kesimpulan"].startswith("Faktanya, Malaysia tidak melaporkan")
+    assert a["kesimpulan"].startswith("Faktanya, Lirikewu cufom hebakogape")
     assert any("x.com" in c for c in a["claim_sources"]), "sumber klaim tidak terambil"
     assert not any("x.com" in r for r in a["references"])
     assert any("cnnindonesia.com" in r for r in a["references"])
@@ -170,17 +175,17 @@ def test_extract_sections_has_no_nested_duplication() -> None:
 def test_nested_section_markers_are_separated() -> None:
     """Penjelasan/Kesimpulan yang terselip di dalam blok lain tidak boleh menumpang di seksi sebelumnya."""
     a = load("36590")  # Penjelasan bersarang di dalam Narasi
-    assert "Tim Pemeriksa Fakta Mafindo" not in a["narasi"], "Penjelasan masuk ke Narasi"
-    assert a["penjelasan"].startswith("Tim Pemeriksa Fakta Mafindo (TurnBackHoax) mencari tahu")
-    assert a["kesimpulan"].startswith("Faktanya, gelombang radio dari HAARP")
+    assert "Nef Kehahupep Fakta Howefuc" not in a["narasi"], "Penjelasan masuk ke Narasi"
+    assert a["penjelasan"].startswith("Nef Kehahupep Fakta Howefuc (Dimegutiweha) goturob rowu")
+    assert a["kesimpulan"].startswith("Faktanya, polidocom sawaj duci KIFUR")
     assert a["kesimpulan"] not in a["narasi"] and a["kesimpulan"] not in a["penjelasan"]
 
     a = load("36483")  # Kesimpulan bersarang di dalam Penjelasan
-    assert a["kesimpulan"].startswith("Faktanya, dokumen sumber tangkapan layar bersifat terbuka")
-    assert "Faktanya, dokumen sumber tangkapan layar" not in a["penjelasan"], "awal Kesimpulan masuk ke Penjelasan"
-    assert a["penjelasan"].startswith("Disadur dari artikel Periksa Fakta tirto.id")
+    assert a["kesimpulan"].startswith("Faktanya, wawopoc wesota conapitar lekuw cudigore telifen")
+    assert "Faktanya, wawopoc wesota conapitar lekuw" not in a["penjelasan"], "awal Kesimpulan masuk ke Penjelasan"
+    assert a["penjelasan"].startswith("Gamoraj mude jumabir Periksa Fakta tirto.id")
 
     a = load("36603")  # struktur biasa, tetapi Kesimpulan sebelumnya tercatat di seksi lain
-    assert a["kesimpulan"].startswith("Tidak ditemukan pemberitaan atau sumber kredibel")
+    assert a["kesimpulan"].startswith("Wames mafakuwod karaholodac coli picado mehuwori")
     assert a["kesimpulan"] not in a["narasi"] and a["kesimpulan"] not in a["penjelasan"]
-    assert a["narasi"].startswith("Akun Facebook") and a["penjelasan"].startswith("Tim Pemeriksa Fakta Mafindo")
+    assert a["narasi"].startswith("Faja Sepomigu") and a["penjelasan"].startswith("Toc Bebodemar Fakta Wudotek")
