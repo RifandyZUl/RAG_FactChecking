@@ -14,6 +14,16 @@ def test_pii_flags_detects_phone_email_handle_url_and_account_name() -> None:
     assert pii_flags("tahun 2015 sebanyak 1.234.567 orang") == []
 
 
+def test_pii_flags_catches_forms_that_used_to_slip_through() -> None:
+    """Celah yang ditemukan pada pemeriksaan 2026-09-26: en-dash, wa.me, dan URL tanpa skema."""
+    assert "nomor_telepon" in pii_flags("Hotline 0800–0000–0000")  # pemisah en-dash
+    assert "nomor_telepon" in pii_flags("chat wa.me/628000000000")
+    assert "url_di_teks" in pii_flags("daftar di bantuan-contoh.web.id/form")
+    assert "url_di_teks" in pii_flags("klik bit.ly/contoh-fiktif")
+    assert pii_flags("harga naik 2,5 persen, kata pejabat.") == []
+    assert pii_flags("Bupati A.B. Contoh menegaskan hal itu") == []
+
+
 def test_claim_candidate_prefers_first_long_quote_else_first_sentence() -> None:
     n = ("Akun X “abc” mengunggah narasi: “Pemerintah akan menghapus subsidi listrik mulai bulan depan "
          "untuk semua rumah tangga”. Hingga kini 1.000 suka.")
