@@ -33,3 +33,6 @@ archive/v1/*
 
 # Hasil perluasan basis data (teks artikel pihak ketiga, termasuk kontak penipu)
 data/expansion/
+
+# Cadangan indeks produksi sebelum operasi berisiko (tidak di-commit; terpisah dari archive/v1)
+data/backups/
