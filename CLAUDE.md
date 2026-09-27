@@ -61,6 +61,17 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     menghitung retry. **Celah:** artikel yang gagal TIDAK dicoba ulang di jalan berikutnya (mode
     mundur memasukkannya ke `known_ids`; mode maju berhenti di artikel dimiliki yang lebih baru).
     Halaman daftar gagal -> RuntimeError (keras). Belum diperbaiki.
+    **Sejak 2026-09-27:** setiap artikel gagal (kedua mode) langsung ditambahkan ke
+    `data/expansion/failed_ids.json` (hanya ditambah, tidak pernah ditimpa; id, url, alasan, retry,
+    jalan, waktu UTC), dan laporan kelompok/maju memuat `retry` (artikel, halaman_daftar) serta
+    `id_gagal`. Semantik `state.json` tidak diubah. Percobaan ulang otomatis BELUM ada (rancangan:
+    langkah coba-ulang terpisah yang membaca `failed_ids.json`, bukan lewat penelusuran daftar).
+  - **Baris baru (diperbaiki 2026-09-27):** cache ditulis dengan `newline=""` (sebelumnya mode teks
+    Windows mengubah CRLF server menjadi CR CR LF, terbaca sebagai baris kosong palsu; 14 berkas cache
+    lama tetap begitu, sengaja tidak diubah agar `articles.json` tidak berubah) dan `parse_article`
+    menormalkan CRLF/CR -> LF. Hasil parse jaringan kini identik dengan hasil parse cache (diuji);
+    672 artikel yang ada tidak berubah (reparse identik). Reparse sebelum penggabungan tetap dianjurkan
+    untuk hasil kelompok yang diambil dengan kode lama (termasuk kelompok 3).
   - **Cakupan waktu (koreksi 2026-09-27):** kelompok 1 = ~71 hari untuk 250 artikel (~3,5 artikel/
     hari), jadi 1.000 artikel ~9-10 bulan ke belakang, bukan ~13 bulan seperti perkiraan awal.
     Laju bisa berbeda di periode lain.
@@ -323,7 +334,9 @@ indeks lengkap langsung gagal (tidak membuat indeks kosong). Jangan jalankan `in
 bila janggal; ia tidak pernah menimpa label judul.
 
 Dasar (672 artikel: basis + kelompok 1-2 + mode maju, diperiksa dari cache HTML 2026-09-27): seksi
-Hasil Periksa Fakta berbunyi "Salah" pada **670/672**, termasuk **279/279 PENIPUAN dan 5/5 PARODI**.
+Hasil Periksa Fakta berbunyi "Salah" pada **670/672**, termasuk **280/280 PENIPUAN dan 5/5 PARODI**
+(dua sisanya, 36224 dan 35176, berlabel SALAH; angka 279 di catatan awal menghitung 35383 sebagai
+TIDAK DIKETAHUI, sebelum aturan ini diterapkan).
 Jadi seksi itu adalah nilai kebenaran kasar, bukan kategori, dan PENIPUAN/PARODI adalah jenis
 "Salah". Kasus seperti 35383 (judul PENIPUAN, isi "Salah") karenanya **tidak bertentangan**. Dua
 kejanggalan sejati: 36224 (basis; isi "Benar") dan 35176 (kelompok 1; isi "Dalam Proses"). Pada
@@ -1151,6 +1164,13 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   5.000 sebelumnya ditetapkan tanpa pengukuran). Perbaikan sebenarnya adalah
   agenda Versi 2 (rewriter tugas 1).
 
+- **Tidak ada mekanisme untuk menyegarkan artikel lama yang isinya berubah di sumber** (dicatat
+  2026-09-27). Artikel yang sudah ada di cache `data/raw_html/` tidak pernah diambil ulang (mode maju
+  berhenti pada artikel pertama yang sudah dimiliki; cache dipakai tanpa memeriksa perubahan), jadi
+  koreksi, pembaruan Kesimpulan, atau perubahan label oleh TurnBackHoax tidak akan terlihat. Contoh
+  kasus yang perlu diwaspadai: 35176 berseksi Hasil Periksa Fakta "Dalam Proses" (judul SALAH,
+  Kesimpulan menyatakan klaimnya keliru) -- artikel semacam ini bisa saja diperbarui kemudian. Ini
+  **bukan** bukti bahwa putusannya berubah; hanya contoh artikel yang isinya mungkin belum final.
 - Basis pengetahuan hanya memuat hoaks yang **sudah** diverifikasi
   Mafindo. Klaim yang baru viral belum tentu ada di dalamnya, sehingga
   jawaban "belum ditemukan" adalah keluaran yang sah dan benar.

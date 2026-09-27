@@ -206,3 +206,14 @@ def test_nested_section_markers_are_separated() -> None:
 def test_parse_title_broken_brackets_only_for_known_labels(title: str, expected: tuple[str, str]) -> None:
     """Aturan Wajib #7: kurung rusak diterima hanya untuk KNOWN_LABELS; judul tetap sumber label."""
     assert parse_title(title) == expected
+
+
+def test_parse_article_same_for_crlf_and_lf_html() -> None:
+    """HTML jaringan (CRLF, CR) dan HTML cache (LF) harus memberi hasil parse identik, tanpa reparse."""
+    lf = read_fixture("36738.html")
+    url = "https://turnbackhoax.id/articles/36738-contoh"
+    crlf = lf.replace("\n", "\r\n")
+    assert parse_article(crlf, url) == parse_article(lf, url)
+    cr_only = lf.replace("\n", "\r")
+    assert parse_article(cr_only, url) == parse_article(lf, url)
+    assert not any("\r" in v for v in parse_article(crlf, url).values() if isinstance(v, str))

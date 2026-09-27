@@ -1,5 +1,8 @@
 """Uji offline scraping.expand (tanpa jaringan): penentuan jangkar, pengumpulan URL, statistik, alasan gagal."""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from scraping import expand
@@ -8,6 +11,8 @@ from scraping.expand import (
     batch_stats,
     collect_new_urls,
     collect_urls,
+    record_failure,
+    scrape_all,
     scrape_with_reason,
     urls_after_anchor,
 )
@@ -109,20 +114,65 @@ def test_batch_stats_empty_batch() -> None:
     assert s["tingkat_gagal"] == 0.0 and s["rentang_tanggal"] is None
 
 
-def test_scrape_with_reason_extracts_reason_from_client_log(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_scrape_with_reason_extracts_reason_and_retries_from_client_log(monkeypatch: pytest.MonkeyPatch) -> None:
     def failing(url: str, session: object) -> tuple[None, bool]:
+        print("  [retry 1/3] ReadTimeout; menunggu 2 dtk")
+        print("  [retry 2/3] ReadTimeout; menunggu 4 dtk")
         print(f"  [gagal] {url} -> 404 Client Error: Not Found")
         return None, True
 
     monkeypatch.setattr(expand, "scrape_article", failing)
-    art, net, reason = scrape_with_reason(u(1), None)
-    assert art is None and net is True and reason == "404 Client Error: Not Found"
+    assert scrape_with_reason(u(1), None) == (None, True, "404 Client Error: Not Found", 2)
 
     monkeypatch.setattr(expand, "scrape_article", lambda url, s: (None, False))
     assert scrape_with_reason(u(1), None)[2].startswith("HTML sah tetapi parse_article")
 
-    monkeypatch.setattr(expand, "scrape_article", lambda url, s: ({"article_id": "1"}, False))
-    assert scrape_with_reason(u(1), None) == ({"article_id": "1"}, False, "")
+    def ok_after_retry(url: str, session: object) -> tuple[dict, bool]:
+        print("  [retry 1/3] ConnectionError; menunggu 2 dtk")
+        return {"article_id": "1"}, True
+
+    monkeypatch.setattr(expand, "scrape_article", ok_after_retry)
+    assert scrape_with_reason(u(1), None) == ({"article_id": "1"}, True, "", 1), "retry pada artikel berhasil ikut terhitung"
+
+
+def test_record_failure_appends_across_runs_never_overwrites(tmp_path: Path) -> None:
+    path = tmp_path / "failed_ids.json"
+    record_failure({"url": u(1), "article_id": "1", "alasan": "a", "retry": 3}, run="batch_03", path=path)
+    record_failure({"url": u(2), "article_id": "2", "alasan": "b", "retry": 0}, run="forward_2026-09-28", path=path)
+    record_failure({"url": u(1), "article_id": "1", "alasan": "a", "retry": 3}, run="batch_04", path=path)
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    assert [(e["article_id"], e["jalan"]) for e in entries] == [
+        ("1", "batch_03"), ("2", "forward_2026-09-28"), ("1", "batch_04")], "entri lama dipertahankan, urutan dijaga"
+    assert all(e["waktu_utc"] and e["alasan"] for e in entries)
+
+
+def test_scrape_all_records_each_failure_and_counts_retries(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    ledger = tmp_path / "failed_ids.json"
+    monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+    monkeypatch.setattr(expand, "RETRIES", {"artikel": 0, "halaman_daftar": 0})
+    monkeypatch.setattr(expand.time, "sleep", lambda s: None)
+    outcomes = {u(1): (_art("1"), True, "", 1), u(2): (None, True, "ReadTimeout setelah 4 percobaan", 3),
+                u(3): (None, False, "HTML sah tetapi parse_article mengembalikan None", 0)}
+    monkeypatch.setattr(expand, "scrape_with_reason", lambda url, s: outcomes[url])
+    arts, fails = scrape_all([u(1), u(2), u(3)], None, run="batch_09")
+    assert [a["article_id"] for a in arts] == ["1"]
+    assert [(f["article_id"], f["retry"]) for f in fails] == [("2", 3), ("3", 0)]
+    assert expand.RETRIES["artikel"] == 4
+    logged = json.loads(ledger.read_text(encoding="utf-8"))
+    assert [(e["article_id"], e["jalan"]) for e in logged] == [("2", "batch_09"), ("3", "batch_09")]
+    assert batch_stats(arts, fails, 3)["id_gagal"] == ["2", "3"]
+
+
+def test_fetch_list_page_counts_list_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(expand, "RETRIES", {"artikel": 0, "halaman_daftar": 0})
+
+    def flaky_soup(url: str, session: object) -> None:
+        print("  [retry 1/3] halaman galat (HTML tidak lolos validasi); menunggu 2 dtk")
+        print(f"  [gagal] {url} -> ReadTimeout setelah 4 percobaan")
+
+    monkeypatch.setattr(expand, "get_soup", flaky_soup)
+    assert expand.fetch_list_page(5, None) is None
+    assert expand.RETRIES == {"artikel": 0, "halaman_daftar": 1}
 
 
 def test_failure_threshold_is_the_owner_choice() -> None:

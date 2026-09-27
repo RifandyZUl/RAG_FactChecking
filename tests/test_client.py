@@ -64,3 +64,22 @@ def test_fetch_retry_policy(monkeypatch) -> None:
     sess = FakeSession([FakeResponse("nope", status=404)])
     html, _ = fetch_html("u", sess)
     assert html is None and sess.calls == 1, "404 tidak boleh di-retry"
+
+
+def test_cache_preserves_crlf_so_network_and_cache_parse_identically(tmp_path: Path) -> None:
+    """Cache ditulis apa adanya (tanpa CR CR LF) dan hasil parse jaringan == hasil parse cache."""
+    from scraping.parser import parse_article
+
+    net_html = read_fixture("36738.html").replace("\n", "\r\n")
+    cache = tmp_path / "36738.html"
+    url = "https://turnbackhoax.id/articles/36738-contoh"
+
+    html_net, from_net = fetch_html(url, FakeSession([FakeResponse(net_html)]), cache,
+                                    validate=is_valid_article_html)
+    assert from_net and html_net == net_html
+    raw = cache.read_bytes()
+    assert b"\r\r\n" not in raw and raw.count(b"\r\n") == net_html.count("\r\n")
+
+    html_cache, from_net = fetch_html(url, FakeSession([]), cache, validate=is_valid_article_html)
+    assert not from_net
+    assert parse_article(html_net, url) == parse_article(html_cache, url)

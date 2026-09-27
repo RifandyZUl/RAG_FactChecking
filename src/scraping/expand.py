@@ -7,7 +7,9 @@ baru, dan id artikel TIDAK menurun monoton. Karena itu titik mulai dicari lewat 
 tertua yang dimiliki, dalam urutan daftar), bukan lewat id atau nomor halaman tetap.
 
 Tiap kelompok ditulis ke data/expansion/batch_NN.json (artikel, urutan daftar) dan
-batch_NN_report.json (berhasil, gagal beserta alasan, seksi kosong, rentang tanggal). Status
+batch_NN_report.json (berhasil, gagal beserta alasan, id gagal, jumlah retry, seksi kosong, rentang
+tanggal). Setiap artikel gagal (kedua mode) juga ditambahkan ke data/expansion/failed_ids.json, yang
+tidak pernah ditimpa antar-jalan. Status
 lanjutan disimpan di data/expansion/state.json. HTML mentah di-cache di data/raw_html/ lewat
 scrape_article, sehingga parsing dapat diulang tanpa memanggil server. Penggabungan ke
 data/articles.json dilakukan TERPISAH setelah seluruh kelompok lolos pemeriksaan kualitas.
@@ -32,7 +34,8 @@ import json
 import re
 import sys
 import time
-from datetime import date, datetime
+from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -45,7 +48,11 @@ EXPANSION_DIR = DATA_DIR / "expansion"
 STATE_PATH = EXPANSION_DIR / "state.json"
 MAX_FAILURE_RATE = 0.05  # ambang sewenang-wenang dari pemilik proyek (bukan berbasis data)
 SECTIONS = ("narasi", "penjelasan", "kesimpulan")
+FAILED_PATH = EXPANSION_DIR / "failed_ids.json"  # buku gagal: hanya ditambah, tidak pernah ditimpa antar-jalan
 _FAIL_LINE = re.compile(r"\[gagal\] \S+ -> (.+)")
+_RETRY_LINE = re.compile(r"\[retry \d+/\d+\]")
+# Jumlah retry scraping.client pada jalan ini (dibaca dari keluarannya; modul klien tidak diubah).
+RETRIES = {"artikel": 0, "halaman_daftar": 0}
 
 
 def article_id_of(url: str) -> str | None:
@@ -91,6 +98,7 @@ def batch_stats(articles: list[dict], failures: list[dict], attempted: int) -> d
         "tanggal_tanpa_format_sah": len(articles) - len(dates),
         "rentang_tanggal": [min(dates).isoformat(), max(dates).isoformat()] if dates else None,
         "label": _count(a.get("label") for a in articles),
+        "id_gagal": [f["article_id"] for f in failures],
     }
 
 
@@ -101,8 +109,20 @@ def _count(values: Any) -> dict[str, int]:
     return dict(sorted(out.items(), key=lambda kv: -kv[1]))
 
 
+def _captured(fn: Any, *args: Any) -> tuple[Any, str]:
+    """Jalankan fn sambil menangkap keluarannya (lalu dicetak ulang), untuk membaca baris retry/gagal."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        result = fn(*args)
+    log = buf.getvalue()
+    if log:
+        print(log, end="")
+    return result, log
+
+
 def fetch_list_page(page: int, session: Any) -> list[str] | None:
-    soup = get_soup(f"{LIST_URL}?page={page}", session)
+    soup, log = _captured(get_soup, f"{LIST_URL}?page={page}", session)
+    RETRIES["halaman_daftar"] += len(_RETRY_LINE.findall(log))
     if soup is None:
         return None
     seen: list[str] = []
@@ -179,27 +199,46 @@ def forward_known_ids(state: dict[str, Any]) -> set[str]:
     return known
 
 
-def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str]:
-    """scrape_article + alasan gagal (diambil dari keluaran fetch_html; modul klien tidak diubah)."""
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        art, from_network = scrape_article(url, session)
-    log = buf.getvalue()
-    if log:
-        print(log, end="")
+def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str, int]:
+    """
+    scrape_article + alasan gagal + jumlah retry (keduanya dibaca dari keluaran fetch_html; modul
+    klien tidak diubah). Mengembalikan (artikel, dari_jaringan, alasan, retry).
+    """
+    (art, from_network), log = _captured(scrape_article, url, session)
+    retries = len(_RETRY_LINE.findall(log))
     if art is not None:
-        return art, from_network, ""
+        return art, from_network, "", retries
     m = _FAIL_LINE.search(log)
-    return None, from_network, (m.group(1).strip() if m else "HTML sah tetapi parse_article mengembalikan None")
+    reason = m.group(1).strip() if m else "HTML sah tetapi parse_article mengembalikan None"
+    return None, from_network, reason, retries
 
 
-def scrape_all(urls: list[str], session: Any) -> tuple[list[dict], list[dict]]:
+def record_failure(failure: dict[str, Any], run: str, path: Path | None = None) -> None:
+    """
+    Tambahkan satu kegagalan ke buku gagal (`failed_ids.json`). Entri lama tidak pernah ditimpa atau
+    dihapus; ditulis segera per kegagalan (berkas sementara lalu ganti) agar tetap tercatat bila jalan
+    terhenti sesudahnya.
+    """
+    path = path or FAILED_PATH
+    entries = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    entries.append({**failure, "jalan": run, "waktu_utc": datetime.now(UTC).isoformat(timespec="seconds")})
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(entries, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+
+def scrape_all(urls: list[str], session: Any, run: str) -> tuple[list[dict], list[dict]]:
+    """Ambil semua URL; tiap kegagalan langsung dicatat ke buku gagal dengan label jalan `run`."""
     articles: list[dict] = []
     failures: list[dict] = []
     for i, url in enumerate(urls, 1):
-        art, from_network, reason = scrape_with_reason(url, session)
+        art, from_network, reason, retries = scrape_with_reason(url, session)
+        RETRIES["artikel"] += retries
         if art is None:
-            failures.append({"url": url, "article_id": article_id_of(url), "alasan": reason})
+            failure = {"url": url, "article_id": article_id_of(url), "alasan": reason, "retry": retries}
+            failures.append(failure)
+            record_failure(failure, run)
         else:
             articles.append(art)
         print(f"[{i}/{len(urls)}] {article_id_of(url)} {'ok' if art else 'GAGAL: ' + reason}")
@@ -218,11 +257,12 @@ def run_forward(state: dict[str, Any], max_pages: int) -> int:
     print(f"=== Mode maju: {len(known)} id sudah dimiliki ===")
     urls, stop = collect_new_urls(session, known, max_pages)
     print(f"{len(urls)} URL baru; titik henti {stop['url']} (halaman {stop['halaman']})")
-    articles, failures = scrape_all(urls, session)
+    articles, failures = scrape_all(urls, session, run=f"forward_{tag}")
     stats = batch_stats(articles, failures, len(urls))
     EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
-    report = {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop, "statistik": stats, "gagal": failures}
+    report = {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop, "statistik": stats,
+              "retry": dict(RETRIES), "gagal": failures}
     (EXPANSION_DIR / f"forward_{tag}_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
@@ -260,19 +300,19 @@ def main() -> int:
     urls, last_page = collect_urls(session, state["anchor_url"], start_page, args.batch_size, known)
     print(f"{len(urls)} URL terkumpul (halaman daftar s.d. {last_page})")
 
-    articles, failures = scrape_all(urls, session)
+    articles, failures = scrape_all(urls, session, run=f"batch_{batch_no:02d}")
     stats = batch_stats(articles, failures, len(urls))
     EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
     (EXPANSION_DIR / f"batch_{batch_no:02d}.json").write_text(
         json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
     report = {"kelompok": batch_no, "jangkar_awal": state["anchor_url"], "halaman_daftar_terakhir": last_page,
-              "statistik": stats, "gagal": failures}
+              "statistik": stats, "retry": dict(RETRIES), "gagal": failures}
     (EXPANSION_DIR / f"batch_{batch_no:02d}_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     state.update({"batch": batch_no, "anchor_url": urls[-1] if urls else state["anchor_url"],
                   "start_page": last_page, "known_ids": sorted(known | {article_id_of(u) for u in urls})})
     STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps(stats, ensure_ascii=False, indent=2))
+    print(json.dumps({**stats, "retry": dict(RETRIES)}, ensure_ascii=False, indent=2))
     if stats["tingkat_gagal"] > MAX_FAILURE_RATE:
         print(f"BERHENTI: tingkat gagal {stats['tingkat_gagal']:.1%} > {MAX_FAILURE_RATE:.0%}")
         return 3
