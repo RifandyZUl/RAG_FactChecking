@@ -60,3 +60,20 @@ def test_committed_article_list_is_metadata_only_and_matches_archive_fingerprint
     recorded = meta["arsip_indeks_v1_2026-09-25"]["sidik_jari_isi"]["sha256_daftar_artikel"]
     assert hashlib.sha256("\n".join(ids).encode("utf-8")).hexdigest() == recorded == data["sha256_daftar_artikel"]
     assert all(a["url"].startswith("https://turnbackhoax.id/articles/") for a in data["artikel"])
+
+
+def test_expansion_manifest_is_metadata_only_and_disjoint_from_v1() -> None:
+    """manifests/expansion_article_ids.json: hanya metadata, id unik, tidak beririsan dengan arsip v1."""
+    import re
+
+    data = json.loads((ROOT / "manifests" / "expansion_article_ids.json").read_text(encoding="utf-8"))
+    arts = data["artikel"]
+    assert data["jumlah"] == len(arts)
+    assert all(set(a) == {"article_id", "url", "date", "label", "kelompok"} for a in arts), "isi seksi dilarang"
+    ids = [a["article_id"] for a in arts]
+    assert len(set(ids)) == len(ids)
+    assert hashlib.sha256("\n".join(ids).encode("utf-8")).hexdigest() == data["sha256_daftar_id"]
+    v1 = json.loads((ROOT / "archive" / "v1" / "article_ids.json").read_text(encoding="utf-8"))
+    assert not set(ids) & {a["article_id"] for a in v1["artikel"]}
+    assert all(a["url"].startswith(f"https://turnbackhoax.id/articles/{a['article_id']}-") for a in arts)
+    assert not [a["url"] for a in arts if re.search(r"\d{6,}|wa-me|bit-ly", a["url"].split("/articles/")[1])]
