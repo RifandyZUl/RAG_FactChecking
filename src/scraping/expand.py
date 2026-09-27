@@ -14,8 +14,15 @@ data/articles.json dilakukan TERPISAH setelah seluruh kelompok lolos pemeriksaan
 
 Ketentuan jaringan mengikuti scraping.client: timeout 45 dtk, retry terbatas, jeda 1,5 dtk.
 
+Mode maju (--forward): artikel LEBIH BARU dari yang dimiliki. Mulai dari halaman daftar terbaru,
+bergerak ke halaman lebih tua, dan berhenti pada artikel pertama (urutan daftar) yang sudah dimiliki
+(data/articles.json, kelompok mundur di state.json, atau hasil maju sebelumnya). Keluaran:
+data/expansion/forward_YYYY-MM-DD.json dan forward_YYYY-MM-DD_report.json; state.json (jangkar mode
+mundur) tidak diubah. Mode ini adalah dasar pembaruan berkala: logikanya sama, hanya perlu dijadwalkan.
+
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m scraping.expand --batch-size 250
+  PYTHONPATH=src python -m scraping.expand --forward
 """
 
 import argparse
@@ -25,8 +32,9 @@ import json
 import re
 import sys
 import time
-from datetime import date
+from datetime import date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from paths import ARTICLES_PATH, DATA_DIR
 from scraping.client import DELAY, make_session
@@ -134,6 +142,43 @@ def collect_urls(session: Any, anchor_url: str, start_page: int, n: int, known_i
     return urls[:n], page
 
 
+def collect_new_urls(session: Any, known_ids: set[str], max_pages: int = 30
+                     ) -> tuple[list[str], dict[str, Any]]:
+    """
+    Kumpulkan URL yang BELUM dimiliki dari halaman 1 ke belakang, berhenti pada artikel pertama yang
+    sudah dimiliki. Mengembalikan (url_baru, titik_henti). Sisa URL pada halaman titik henti yang
+    tidak dikenal TIDAK diambil, hanya dilaporkan (penanda urutan daftar tidak rapi).
+    """
+    urls: list[str] = []
+    for page in range(1, max_pages + 1):
+        page_urls = fetch_list_page(page, session)
+        time.sleep(DELAY)
+        if page_urls is None:
+            raise RuntimeError(f"halaman daftar {page} gagal diambil")
+        for i, u in enumerate(page_urls):
+            aid = article_id_of(u)
+            if aid is None or u in urls:
+                continue
+            if aid in known_ids:
+                rest = [r for r in page_urls[i + 1:] if (article_id_of(r) or "") not in known_ids]
+                print(f"[daftar] halaman {page}: titik henti {u}")
+                return urls, {"url": u, "article_id": aid, "halaman": page,
+                              "tak_dikenal_setelah_titik_henti": rest}
+            urls.append(u)
+        print(f"[daftar] halaman {page}: {len(urls)} URL baru sejauh ini")
+    raise RuntimeError(f"tidak bertemu artikel yang sudah dimiliki dalam {max_pages} halaman")
+
+
+def forward_known_ids(state: dict[str, Any]) -> set[str]:
+    """Id yang sudah dimiliki: basis, kelompok mundur (state), dan hasil mode maju sebelumnya."""
+    known = {a["article_id"] for a in json.loads(ARTICLES_PATH.read_text(encoding="utf-8"))}
+    known |= set(state.get("known_ids", []))
+    for f in sorted(EXPANSION_DIR.glob("forward_*.json")):
+        if not f.name.endswith("_report.json"):
+            known |= {a["article_id"] for a in json.loads(f.read_text(encoding="utf-8"))}
+    return known
+
+
 def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str]:
     """scrape_article + alasan gagal (diambil dari keluaran fetch_html; modul klien tidak diubah)."""
     buf = io.StringIO()
@@ -148,6 +193,45 @@ def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str]:
     return None, from_network, (m.group(1).strip() if m else "HTML sah tetapi parse_article mengembalikan None")
 
 
+def scrape_all(urls: list[str], session: Any) -> tuple[list[dict], list[dict]]:
+    articles: list[dict] = []
+    failures: list[dict] = []
+    for i, url in enumerate(urls, 1):
+        art, from_network, reason = scrape_with_reason(url, session)
+        if art is None:
+            failures.append({"url": url, "article_id": article_id_of(url), "alasan": reason})
+        else:
+            articles.append(art)
+        print(f"[{i}/{len(urls)}] {article_id_of(url)} {'ok' if art else 'GAGAL: ' + reason}")
+        if from_network:
+            time.sleep(DELAY)
+    return articles, failures
+
+
+def run_forward(state: dict[str, Any], max_pages: int) -> int:
+    session = make_session()
+    known = forward_known_ids(state)
+    tag = datetime.now(ZoneInfo("Asia/Jakarta")).date().isoformat()  # tanggal WIB, zona situs sumber
+    out = EXPANSION_DIR / f"forward_{tag}.json"
+    if out.exists():
+        raise RuntimeError(f"{out} sudah ada; hapus atau tunggu hari berikutnya")
+    print(f"=== Mode maju: {len(known)} id sudah dimiliki ===")
+    urls, stop = collect_new_urls(session, known, max_pages)
+    print(f"{len(urls)} URL baru; titik henti {stop['url']} (halaman {stop['halaman']})")
+    articles, failures = scrape_all(urls, session)
+    stats = batch_stats(articles, failures, len(urls))
+    EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
+    report = {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop, "statistik": stats, "gagal": failures}
+    (EXPANSION_DIR / f"forward_{tag}_report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    if stats["tingkat_gagal"] > MAX_FAILURE_RATE:
+        print(f"BERHENTI: tingkat gagal {stats['tingkat_gagal']:.1%} > {MAX_FAILURE_RATE:.0%}")
+        return 3
+    return 0
+
+
 def load_state() -> dict[str, Any]:
     if STATE_PATH.exists():
         return json.loads(STATE_PATH.read_text(encoding="utf-8"))
@@ -160,9 +244,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--batch-size", type=int, default=250)
     ap.add_argument("--start-page", type=int, default=None, help="halaman awal pencarian jangkar (bawaan: dari status)")
+    ap.add_argument("--forward", action="store_true", help="mode maju: artikel lebih baru dari yang dimiliki")
+    ap.add_argument("--max-pages", type=int, default=30, help="mode maju: batas halaman daftar yang dibaca")
     args = ap.parse_args()
 
     state = load_state()
+    if args.forward:
+        return run_forward(state, args.max_pages)
     known = set(state["known_ids"])
     batch_no = state["batch"] + 1
     start_page = args.start_page or state["start_page"]
@@ -172,17 +260,7 @@ def main() -> int:
     urls, last_page = collect_urls(session, state["anchor_url"], start_page, args.batch_size, known)
     print(f"{len(urls)} URL terkumpul (halaman daftar s.d. {last_page})")
 
-    articles, failures = [], []
-    for i, url in enumerate(urls, 1):
-        art, from_network, reason = scrape_with_reason(url, session)
-        if art is None:
-            failures.append({"url": url, "article_id": article_id_of(url), "alasan": reason})
-        else:
-            articles.append(art)
-        print(f"[{i}/{len(urls)}] {article_id_of(url)} {'ok' if art else 'GAGAL: ' + reason}")
-        if from_network:
-            time.sleep(DELAY)
-
+    articles, failures = scrape_all(urls, session)
     stats = batch_stats(articles, failures, len(urls))
     EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
     (EXPANSION_DIR / f"batch_{batch_no:02d}.json").write_text(

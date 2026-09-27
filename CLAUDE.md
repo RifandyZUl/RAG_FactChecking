@@ -31,6 +31,12 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     PARODI 2, TIDAK DIKETAHUI 2. Dua yang terakhir (34929, 35383) karena kurung siku judul di
     SUMBER tidak lengkap (`[SALAH Purbaya ...`, `PENIPUAN] Tautan ...`), bukan label baru;
     `parse_title` tidak diubah (menunggu keputusan).
+  - **Mode maju (`--forward`, 2026-09-27):** dari halaman daftar 1 ke belakang, berhenti pada
+    artikel pertama yang sudah dimiliki; keluaran `forward_YYYY-MM-DD[_report].json` (tanggal WIB),
+    `state.json` tidak diubah. **Dasar pembaruan berkala nanti** -- logikanya sama, hanya perlu
+    dijadwalkan (penjadwalan BELUM dibangun, sengaja). Jalan pertama: 22/22 berhasil, 0 seksi
+    kosong, 2026-09-19 s.d. 2026-09-27, SALAH 11 / PENIPUAN 11; titik henti 36738 (artikel terbaru
+    basis, halaman daftar 3). Cakupan kini bersambung 26 Mei-27 Sep 2026.
   - **Cakupan waktu (koreksi 2026-09-27):** kelompok 1 = ~71 hari untuk 250 artikel (~3,5 artikel/
     hari), jadi 1.000 artikel ~9-10 bulan ke belakang, bukan ~13 bulan seperti perkiraan awal.
     Laju bisa berbeda di periode lain.

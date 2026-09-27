@@ -6,6 +6,7 @@ from scraping import expand
 from scraping.expand import (
     article_id_of,
     batch_stats,
+    collect_new_urls,
     collect_urls,
     scrape_with_reason,
     urls_after_anchor,
@@ -66,6 +67,28 @@ def test_collect_urls_fails_when_anchor_missing_or_page_fails(monkeypatch: pytes
     _fake_pages(monkeypatch, {1: None})
     with pytest.raises(RuntimeError, match="gagal diambil"):
         collect_urls(None, u(99), 1, n=5, known_ids=set())
+
+
+def test_collect_new_urls_stops_at_first_known(monkeypatch: pytest.MonkeyPatch) -> None:
+    # id tidak monoton; titik henti = artikel dimiliki PERTAMA dalam urutan daftar
+    fetched = _fake_pages(monkeypatch, {1: [u(60), u(58), u(61)], 2: [u(57), u(50), u(56), u(49)],
+                                        3: [u(48)]})
+    urls, stop = collect_new_urls(None, known_ids={"50", "49", "48"})
+    assert urls == [u(60), u(58), u(61), u(57)]
+    assert stop["article_id"] == "50" and stop["halaman"] == 2
+    assert stop["tak_dikenal_setelah_titik_henti"] == [u(56)], "dilaporkan, tidak diambil"
+    assert fetched == [1, 2], "tidak menelusuri halaman setelah titik henti"
+
+
+def test_collect_new_urls_nothing_new_and_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    _fake_pages(monkeypatch, {1: [u(50), u(49)]})
+    assert collect_new_urls(None, known_ids={"50"})[0] == []
+    _fake_pages(monkeypatch, {1: [u(60)], 2: [u(59)]})
+    with pytest.raises(RuntimeError, match="tidak bertemu"):
+        collect_new_urls(None, known_ids={"1"}, max_pages=2)
+    _fake_pages(monkeypatch, {1: None})
+    with pytest.raises(RuntimeError, match="gagal diambil"):
+        collect_new_urls(None, known_ids={"1"})
 
 
 def test_batch_stats() -> None:
