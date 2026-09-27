@@ -35,12 +35,37 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     (halaman daftar 43-68; 0 id tumpang tindih dengan kelompok 1). Label: SALAH 159, PENIPUAN 88,
     TIDAK DIKETAHUI 2 (33422, 33355: sama-sama `[SALAH` tanpa `]` di sumber), PARODI 1.
     Laju ~4,5 artikel/hari (56 hari), lebih cepat dari kelompok 1.
-  - **Kelompok 3 (2026-09-27; scraping saja, BELUM digabung/di-ingest, menunggu izin):** 250/250
+  - **Penggabungan kelompok 3 (2026-09-27, atas izin pemilik proyek):** reparse kelompok 3 dari
+    cache (6 artikel berubah, hanya Kesimpulan; selisihnya persis efek CR CR LF di cache lama, sama
+    dengan 10 artikel sebelumnya), digabung di akhir `articles.json` -> **922 artikel**; 672 lama
+    identik; reparse penuh 922 dari cache identik. Cadangan sebelum ingest:
+    `data/backups/pre_batch03_2026-09-27/` (29 MB: `chroma/` + `articles.json`; di-gitignore, terpisah
+    dari arsip). Ingest INKREMENTAL (bukan `--rebuild`): 750 chunk baru, 2016 dilewati, 10 mnt 13 dtk
+    (0,8 dtk/chunk), tidak terhenti. `index_check` produksi: SEGAR, 2766 chunk. Arsip v1 diperiksa pada
+    SALINAN byte (agar arsip tidak dibuka; lihat temuan ChromaDB): `--expect-v1-archive` SIDIK JARI
+    COCOK, SEGAR; hash byte 11 berkas `archive/v1/` sebelum = sesudah. Chunk terpotong kini 10/2766
+    (Penjelasan 9, **Narasi 1 -- pertama kali ada Narasi terpotong**, 532 token).
+    **Cakupan: 922 artikel, 2766 chunk, 2026-02-02 s.d. 2026-09-27** (SALAH 562, PENIPUAN 353,
+    PARODI 7). Menuju ~1.000: kurang 78 -> 1 kelompok lagi (`--batch-size 78`, atau 250 bila target
+    dinaikkan).
+  - **Kelompok 3 (2026-09-27; scraping):** 250/250
     berhasil, 0 seksi kosong, 2026-02-02 s.d. 2026-03-31 (halaman daftar 68-93; 0 id tumpang tindih
     dengan 672 artikel). Label: SALAH 175, PENIPUAN 73, PARODI 2, TIDAK DIKETAHUI 0. Retry: artikel
     0, halaman daftar 1 (halaman galat, berhasil pada percobaan ke-2). `failed_ids.json` tidak
     dibuat (0 gagal). 6 artikel masih memuat `\r` (diambil dengan parser lama) -> wajib reparse
     sebelum digabung.
+  - **Agenda (dicatat 2026-09-27, JANGAN diterapkan terpisah; keputusan pemilik proyek):**
+    (a) *Chunk terpotong 512 token:* yang terpotong hanya INPUT embedding (`model.max_seq_length`);
+    teks chunk tersimpan utuh. Usulan: pecah seksi > 510 token di batas paragraf menjadi
+    `{id}_{seksi}_1`, `_2`, ... (metadata `section` sama + nomor bagian, tumpang tindih satu kalimat;
+    agregasi per artikel tidak berubah). Mengubah id chunk -> wajib `--rebuild`, dan agenda Versi 2
+    masih menimbang menghapus Penjelasan dari indeks, jadi **keduanya diputuskan bersama**.
+    (b) *Coba ulang artikel gagal:* langkah terpisah yang membaca `failed_ids.json` dan mengambil
+    ulang dari URL tersimpan (bukan lewat penelusuran daftar); "terbuka" = gagal dan belum pernah
+    berhasil; batas 3 percobaan antar-jalan, 404 langsung permanen (tinjau manusia); hasil ke
+    `retry_YYYY-MM-DD.json`. `state.json.known_ids` tetap berarti "sudah dicoba" (kursor mode
+    mundur); "dimiliki = berhasil" dihitung dari `articles.json` + berkas hasil. Titik henti mode maju
+    tidak berubah; tanpa langkah ini artikel gagal di mode maju tak pernah terjangkau lagi.
   - **Mode maju (`--forward`, 2026-09-27):** dari halaman daftar 1 ke belakang, berhenti pada
     artikel pertama yang sudah dimiliki; keluaran `forward_YYYY-MM-DD[_report].json` (tanggal WIB),
     `state.json` tidak diubah. **Dasar pembaruan berkala nanti** -- logikanya sama, hanya perlu
