@@ -72,7 +72,10 @@ def fetch_html(
                     # berisi HTML terpotong bila proses terhenti di tengah jalan
                     cache_path.parent.mkdir(parents=True, exist_ok=True)
                     tmp = cache_path.with_suffix(".tmp")
-                    tmp.write_text(resp.text, encoding="utf-8")
+                    # newline="": simpan apa adanya. Mode teks biasa di Windows mengubah CRLF dari
+                    # server menjadi CR CR LF, yang terbaca kembali sebagai dua baris baru (baris
+                    # kosong palsu; 14 berkas cache lama, ditemukan 2026-09-27, sengaja tidak diubah).
+                    tmp.write_text(resp.text, encoding="utf-8", newline="")
                     tmp.replace(cache_path)
                 return resp.text, True
             reason = "halaman galat (HTML tidak lolos validasi)"

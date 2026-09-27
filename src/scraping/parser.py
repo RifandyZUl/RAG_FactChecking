@@ -183,13 +183,21 @@ def extract_claim_sources(container) -> list[str]:
     return sources
 
 
+def normalize_newlines(text: str) -> str:
+    """
+    CRLF dan CR tunggal -> LF. HTML dari jaringan memuat CRLF, sedangkan HTML yang dibaca dari cache
+    (mode teks) sudah LF; tanpa ini hasil parse keduanya berbeda.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def parse_article(html: str, url: str) -> dict | None:
     """
     Parse HTML mentah satu artikel menjadi dict terstruktur (tanpa jaringan).
 
     Dipisah dari scrape_article() agar bisa diuji dengan HTML nyata dari cache.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(normalize_newlines(html), "html.parser")
 
     h1 = soup.find("h1")
     if h1 is None:
