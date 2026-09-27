@@ -10,12 +10,30 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-09-25)*
+*(2026-09-27)*
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
-SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); berikutnya (2) perluasan basis
-data, (3) Versi 2.** Rincian tahap berikutnya
-akan disampaikan pemilik proyek; belum ada rancangan.
+SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
+data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) Versi 2.**
+
+- **Perluasan basis data (sejak 2026-09-26): scraping HTML**, keputusan pemilik proyek -- API key
+  Yudistira belum diberikan; tetap scraping sampai key ada. Alat: `src/scraping/expand.py`
+  (`PYTHONPATH=src python -m scraping.expand --batch-size 250`; uji offline `tests/test_expand.py`).
+  Mode mundur: kelompok artikel LEBIH TUA dari artikel tertua yang dimiliki, dicari lewat URL
+  jangkar (halaman daftar bergeser dan id tidak monoton). Keluaran di `data/expansion/`
+  (`batch_NN.json`, `batch_NN_report.json`, `state.json`; **di-gitignore** karena berisi teks
+  artikel dan kontak penipu -- lihat "Cara Kerja"). HTML mentah tetap di-cache di `data/raw_html/`.
+  **Ketentuan:** JANGAN gabungkan ke `data/articles.json` dan JANGAN ingest sampai seluruh kelompok
+  selesai dan lolos pemeriksaan kualitas; `archive/v1/` tidak disentuh. Ambang berhenti tingkat
+  gagal 5% (`MAX_FAILURE_RATE`, pilihan pemilik proyek, bukan berbasis data).
+  - **Kelompok 1 (2026-09-26):** 250/250 berhasil, 0 seksi kosong, tanggal 2026-05-26 s.d.
+    2026-08-05 (bersambung dengan basis 5 Agu-18 Sep 2026). Label: SALAH 127, PENIPUAN 119,
+    PARODI 2, TIDAK DIKETAHUI 2. Dua yang terakhir (34929, 35383) karena kurung siku judul di
+    SUMBER tidak lengkap (`[SALAH Purbaya ...`, `PENIPUAN] Tautan ...`), bukan label baru;
+    `parse_title` tidak diubah (menunggu keputusan).
+  - **Cakupan waktu (koreksi 2026-09-27):** kelompok 1 = ~71 hari untuk 250 artikel (~3,5 artikel/
+    hari), jadi 1.000 artikel ~9-10 bulan ke belakang, bukan ~13 bulan seperti perkiraan awal.
+    Laju bisa berbeda di periode lain.
 
 - **Demo lokal (2026-09-25):** `src/app.py` (Streamlit, adapter tipis; tidak ada logika
   retrieval/generasi sendiri) + `src/presentation.py` (data tampilan, tanpa Streamlit, diuji
@@ -348,7 +366,8 @@ RAG_FactChecking/
 │   │   ├── parser.py     #   parsing HTML artikel -> dict terstruktur
 │   │   ├── pipeline.py   #   orkestrasi + CLI (python -m scraping)
 │   │   ├── reparse.py    #   parse ulang dari cache TANPA jaringan (python -m scraping.reparse)
-│   │   └── restore.py    #   pulihkan articles.json arsip dari daftar artikel (cache/jaringan)
+│   │   ├── restore.py    #   pulihkan articles.json arsip dari daftar artikel (cache/jaringan)
+│   │   └── expand.py     #   perluasan basis data per kelompok -> data/expansion/ (python -m scraping.expand)
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id

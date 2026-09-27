@@ -30,3 +30,6 @@ archive/*
 archive/v1/*
 # Kecuali daftar artikel (metadata saja, tanpa isi seksi; aman dipublikasikan):
 !archive/v1/article_ids.json
+
+# Hasil perluasan basis data (teks artikel pihak ketiga, termasuk kontak penipu)
+data/expansion/
