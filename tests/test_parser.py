@@ -12,12 +12,13 @@ dan tidak menangkap dua cacat pada artikel nyata: kontainer salah dan tautan hoa
 daftar referensi.
 """
 
+import pytest
 from bs4 import BeautifulSoup
 
 from _fakes import FIXTURE_DIR, read_fixture
 from scraping.discovery import is_valid_list_html
 from scraping.links import blocked_reason
-from scraping.parser import extract_sections, is_valid_article_html, parse_article
+from scraping.parser import extract_sections, is_valid_article_html, parse_article, parse_title
 
 
 # id artikel -> URL asli (id dipakai sebagai nama berkas fixture)
@@ -189,3 +190,19 @@ def test_nested_section_markers_are_separated() -> None:
     assert a["kesimpulan"].startswith("Wames mafakuwod karaholodac coli picado mehuwori")
     assert a["kesimpulan"] not in a["narasi"] and a["kesimpulan"] not in a["penjelasan"]
     assert a["narasi"].startswith("Faja Sepomigu") and a["penjelasan"].startswith("Toc Bebodemar Fakta Wudotek")
+
+
+@pytest.mark.parametrize("title,expected", [
+    ("[SALAH] Judul Contoh", ("SALAH", "Judul Contoh")),
+    ("[Label Baru] Judul Contoh", ("LABEL BARU", "Judul Contoh")),  # kurung lengkap: perilaku lama
+    ("[SALAH Judul Contoh", ("SALAH", "Judul Contoh")),  # kurung tutup hilang di sumber
+    ("PENIPUAN] Judul Contoh", ("PENIPUAN", "Judul Contoh")),  # kurung buka hilang di sumber
+    ("[PARODI Judul Contoh", ("PARODI", "Judul Contoh")),
+    ("[LABELBARU Judul Contoh", ("TIDAK DIKETAHUI", "[LABELBARU Judul Contoh")),  # tak dikenal: jangan tebak
+    ("Salah Kaprah soal Contoh", ("TIDAK DIKETAHUI", "Salah Kaprah soal Contoh")),
+    ("SALAH Judul Tanpa Kurung", ("TIDAK DIKETAHUI", "SALAH Judul Tanpa Kurung")),
+    ("[Salah Judul Contoh", ("TIDAK DIKETAHUI", "[Salah Judul Contoh")),  # hanya huruf besar
+])
+def test_parse_title_broken_brackets_only_for_known_labels(title: str, expected: tuple[str, str]) -> None:
+    """Aturan Wajib #7: kurung rusak diterima hanya untuk KNOWN_LABELS; judul tetap sumber label."""
+    assert parse_title(title) == expected

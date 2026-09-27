@@ -23,7 +23,7 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
   jangkar (halaman daftar bergeser dan id tidak monoton). Keluaran di `data/expansion/`
   (`batch_NN.json`, `batch_NN_report.json`, `state.json`; **di-gitignore** karena berisi teks
   artikel dan kontak penipu -- lihat "Cara Kerja"). HTML mentah tetap di-cache di `data/raw_html/`.
-  **Ketentuan:** JANGAN gabungkan ke `data/articles.json` dan JANGAN ingest sampai seluruh kelompok
+  **Ketentuan:** JANGAN gabungkan ke `data/articles.json` dan JANGAN ingest kelompok BARU sampai seluruh kelompok
   selesai dan lolos pemeriksaan kualitas; `archive/v1/` tidak disentuh. Ambang berhenti tingkat
   gagal 5% (`MAX_FAILURE_RATE`, pilihan pemilik proyek, bukan berbasis data).
   - **Kelompok 1 (2026-09-26):** 250/250 berhasil, 0 seksi kosong, tanggal 2026-05-26 s.d.
@@ -41,6 +41,26 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     dijadwalkan (penjadwalan BELUM dibangun, sengaja). Jalan pertama: 22/22 berhasil, 0 seksi
     kosong, 2026-09-19 s.d. 2026-09-27, SALAH 11 / PENIPUAN 11; titik henti 36738 (artikel terbaru
     basis, halaman daftar 3). Cakupan kini bersambung 26 Mei-27 Sep 2026.
+  - **Validasi ujung-ke-ujung (2026-09-27, atas permintaan pemilik proyek, SEBELUM kelompok 3):**
+    672 artikel (mode maju 22 + basis 150 + kelompok 1-2 500) digabung ke `data/articles.json`
+    (urutan: maju, basis, kelompok 1, kelompok 2), di-parse ulang dari cache (`scraping.reparse`,
+    menerapkan Aturan Wajib #7), lalu di-ingest inkremental (1566 chunk baru; 26 mnt CPU). 0 artikel
+    gagal, 0 tidak sesuai skema (kunci/tipe sama dengan basis), 0 duplikat id. `index_check`: INDEKS
+    SEGAR, 2016 chunk, kosinus sampel 1,000000. Chunk terpotong 512 token: 8 (semua Penjelasan).
+    Label: SALAH 387, PENIPUAN 280, PARODI 5, TIDAK DIKETAHUI 0. Uji retrieval 4 kueri (lama dan
+    baru): artikel benar di peringkat 1 semua. Proses ingest sempat dihentikan Claude Code (memori
+    sistem rendah) SETELAH semua chunk tersimpan; hanya ringkasan akhir yang hilang. **Demo kini
+    memakai indeks 672 artikel**; pembandingan baseline tetap wajib lewat `archive/v1` (#6).
+    - Reparse mengubah 10 artikel kelompok baru hanya pada `\r` -> `\n` (teks dari jaringan memuat
+      `\r`, dari cache tidak). **Hasil scraping wajib lewat `scraping.reparse` sebelum digabung.**
+    - Cadangan metadata: `manifests/expansion_article_ids.json` (522 artikel: id, url, tanggal,
+      label, kelompok; di-commit). Pemulihan dari cache diuji: 522/522 identik dengan `articles.json`.
+  - **Perilaku gagal (diperiksa 2026-09-27):** retry (`scraping.client`: 3x, backoff 2/4/8 dtk,
+    hanya timeout/connection error/halaman galat) TERCETAK di log (`[retry i/3]`), tidak
+    tersembunyi; log kelompok 1-2 dan mode maju: 0 retry, 0 gagal. Tetapi laporan kelompok tidak
+    menghitung retry. **Celah:** artikel yang gagal TIDAK dicoba ulang di jalan berikutnya (mode
+    mundur memasukkannya ke `known_ids`; mode maju berhenti di artikel dimiliki yang lebih baru).
+    Halaman daftar gagal -> RuntimeError (keras). Belum diperbaiki.
   - **Cakupan waktu (koreksi 2026-09-27):** kelompok 1 = ~71 hari untuk 250 artikel (~3,5 artikel/
     hari), jadi 1.000 artikel ~9-10 bulan ke belakang, bukan ~13 bulan seperti perkiraan awal.
     Laju bisa berbeda di periode lain.
@@ -295,6 +315,28 @@ Remove-Item Env:RAG_INDEX_DIR               # kembali ke indeks utama
 dan `ingest` menolak menulis ke `archive/` kecuali `--allow-archive`. Nilai yang tidak berisi
 indeks lengkap langsung gagal (tidak membuat indeks kosong). Jangan jalankan `ingest` dengan
 `--allow-archive` kecuali untuk membangun ulang arsip yang hilang (README, "Arsip indeks Versi 1").
+
+### 7. Sumber label kebenaran: judul artikel otoritatif (ditetapkan 2026-09-27)
+
+**Label diambil dari judul** (`[SALAH] ...`, `[PENIPUAN] ...`, `[PARODI] ...`), bukan dari seksi
+**Hasil Periksa Fakta** di isi artikel. Seksi itu dibaca hanya sebagai pemeriksaan silang dan dicatat
+bila janggal; ia tidak pernah menimpa label judul.
+
+Dasar (672 artikel: basis + kelompok 1-2 + mode maju, diperiksa dari cache HTML 2026-09-27): seksi
+Hasil Periksa Fakta berbunyi "Salah" pada **670/672**, termasuk **279/279 PENIPUAN dan 5/5 PARODI**.
+Jadi seksi itu adalah nilai kebenaran kasar, bukan kategori, dan PENIPUAN/PARODI adalah jenis
+"Salah". Kasus seperti 35383 (judul PENIPUAN, isi "Salah") karenanya **tidak bertentangan**. Dua
+kejanggalan sejati: 36224 (basis; isi "Benar") dan 35176 (kelompok 1; isi "Dalam Proses"). Pada
+keduanya Kesimpulan menyatakan klaimnya keliru, sehingga judul (SALAH) yang benar dan isian seksi
+itulah yang keliru.
+
+Kurung siku rusak di judul sumber (`[SALAH Judul`, `PENIPUAN] Judul`; 4 kasus: 34929, 35383,
+33422, 33355) diterima **hanya bila kata labelnya salah satu label yang sudah dikenal**
+(`KNOWN_LABELS` di `scraping/parser.py`, huruf besar, tepat satu kurung). Label di luar daftar itu
+tetap `TIDAK DIKETAHUI` dan wajib dilaporkan untuk ditinjau manusia, **bukan** ditebak dari isi
+artikel. Label baru yang muncul dengan kurung lengkap (`[X] ...`) tetap diterima apa adanya (perilaku
+lama), lalu diputuskan terpisah cara menampilkannya (`presentation.py` memakai gaya SALAH untuk
+label tak dikenal).
 
 ---
 
