@@ -54,6 +54,22 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     0, halaman daftar 1 (halaman galat, berhasil pada percobaan ke-2). `failed_ids.json` tidak
     dibuat (0 gagal). 6 artikel masih memuat `\r` (diambil dengan parser lama) -> wajib reparse
     sebelum digabung.
+  - **Metrik dipantau: chunk terpotong 512 token per seksi** -- laporkan SETIAP kali indeks
+    ditambah atau dibangun ulang (`ingest.py` mencetaknya di awal lewat `truncation_report`).
+    Riwayat (Narasi / Penjelasan / Kesimpulan dari total chunk): 150 artikel 0/3/0 dari 450; 672
+    artikel 0/8/0 dari 2016; **922 artikel 1/9/0 dari 2766** (Narasi pertama yang terpotong: 532
+    token). Pemecahan sub-chunk TIDAK diterapkan; diputuskan di Versi 2 bersama agenda penghapusan
+    Penjelasan (agenda (a) di bawah).
+  - **Dampak perluasan pada retrieval set uji v1 (2026-09-27; tanpa API):** ablasi pada salinan
+    arsip identik dengan `testset/retrieval_ablation.json` (pembanding sah). Produksi 922:
+    `testset/retrieval_ablation_prod922.json`/`_report.txt`; per butir:
+    `testset/v1_perbandingan_indeks_922.json` (`evaluation.index_comparison`). Recall@1/3/5/10/20
+    arsip -> produksi: **positif 19,20,20,20,20 -> 18,20,20,20,20 (dari 20)**; negatif sulit (sasaran
+    = artikel tetangga) 14,16,18,19,20 -> 9,11,13,15,18; non-batas 33,36,38,39,40 -> 27,31,33,35,38
+    (dari 40). Negatif: 16 -> 23 dari 30 punya kandidat top-3 > 0,5739; **artikel asal 4 butir negatif
+    (v1-021, v1-022, v1-043, v1-049) kini ADA di basis data** (peringkat 1). Label negatif set uji v1
+    tidak otomatis berlaku pada indeks besar (`v1.meta.json`, `keterikatan_basis_data_150_2026-09-27`).
+    Kelompok 4 MENUNGGU keputusan pemilik proyek setelah melihat hasil ini.
   - **Agenda (dicatat 2026-09-27, JANGAN diterapkan terpisah; keputusan pemilik proyek):**
     (a) *Chunk terpotong 512 token:* yang terpotong hanya INPUT embedding (`model.max_seq_length`);
     teks chunk tersimpan utuh. Usulan: pecah seksi > 510 token di batas paragraf menjadi

@@ -702,5 +702,28 @@
       "Bila struktur respons tidak memisahkan seksi, strategi chunking per seksi (Aturan Wajib #2) tidak dapat diterapkan langsung pada data API; hal itu wajib dievaluasi lebih dulu sebelum dipakai.",
       "Sumber data Versi 1 (scraping HTML, articles.json 150 artikel) dan indeks arsip archive/v1 TIDAK BOLEH diganti dalam keadaan apa pun, termasuk bila data API tersedia (Aturan Wajib #6)."
     ]
+  },
+  "keterikatan_basis_data_150_2026-09-27": {
+    "pernyataan": "Set uji v1 terikat pada basis data 150 artikel (arsip archive/v1). Label negatifnya (expected_verdict=belum_ditemukan) ditetapkan relatif terhadap 150 artikel itu dan TIDAK otomatis berlaku pada basis data yang lebih besar: artikel baru bisa memuat klaim yang sama. Label positif tetap sah sebagai sasaran retrieval karena 150 artikel itu ada di setiap perluasan.",
+    "konsekuensi_versi_2": "Set uji Versi 2 harus menyatakan basis data acuannya (daftar id + sidik jari), dan setiap butir negatif wajib diperiksa ulang terhadap basis data itu sebelum dibekukan. Pembandingan dengan baseline Versi 1 tetap wajib pada archive/v1 (Aturan Wajib #6).",
+    "bukti_2026-09-27": {
+      "indeks": "produksi 922 artikel / 2766 chunk vs salinan byte archive/v1 (150 / 450); tanpa panggilan API",
+      "artikel_asal_butir_negatif_kini_ada": {
+        "butir": [
+          "v1-021",
+          "v1-022",
+          "v1-043",
+          "v1-049"
+        ],
+        "keterangan": "url_asal keempat butir menunjuk artikel TurnBackHoax (35310, 35850, 32490, 35833) yang kini ada di basis data produksi; masing-masing muncul di peringkat 1 (skor 0,8713; 0,7732; 0,8488; 0,8266). Butir bersumber non-TurnBackHoax tidak dapat diperiksa dengan cara ini."
+      },
+      "negatif_dengan_kandidat_top3_di_atas_0_5739": {
+        "arsip": 16,
+        "produksi": 23,
+        "dari": 30,
+        "catatan": "0,5739 = positif terendah set PENGEMBANGAN pada 150 artikel; pengamatan, bukan kesimpulan."
+      },
+      "rincian": "testset/v1_perbandingan_indeks_922.json (evaluation.index_comparison), testset/retrieval_ablation_prod922.json"
+    }
   }
 }
