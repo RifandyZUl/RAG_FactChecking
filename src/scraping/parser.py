@@ -26,15 +26,28 @@ def is_valid_article_html(html: str) -> bool:
     ) is not None
 
 
+# Label yang sudah teramati di judul TurnBackHoax (Aturan Wajib #7). Hanya dipakai untuk menerima
+# judul dengan kurung siku rusak; label berkurung lengkap di luar daftar ini tetap diterima.
+KNOWN_LABELS = ("SALAH", "PENIPUAN", "PARODI")
+_LABELS_RE = "|".join(KNOWN_LABELS)
+# Tepat satu kurung: "[LABEL Judul" atau "LABEL] Judul" (huruf besar, agar "Salah kaprah ..." tidak cocok).
+_BROKEN_BRACKET = re.compile(rf"^\s*(?:\[({_LABELS_RE})\s+|({_LABELS_RE})\]\s*)(.+)$")
+
+
 def parse_title(title: str) -> tuple[str, str]:
     """
     Pisahkan label kebenaran dari judul.
 
     "[SALAH] Malaysia Laporkan ..." -> ("SALAH", "Malaysia Laporkan ...")
+    Kurung siku rusak di sumber ("[SALAH Judul", "PENIPUAN] Judul") hanya diterima untuk label di
+    KNOWN_LABELS (Aturan Wajib #7); selain itu "TIDAK DIKETAHUI".
     """
     m = re.match(r"^\s*\[([^\]]+)\]\s*(.+)$", title)
     if m:
         return m.group(1).strip().upper(), m.group(2).strip()
+    m = _BROKEN_BRACKET.match(title)
+    if m:
+        return m.group(1) or m.group(2), m.group(3).strip()
     return "TIDAK DIKETAHUI", title.strip()
 
 
