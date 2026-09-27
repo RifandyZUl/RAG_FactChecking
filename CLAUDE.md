@@ -35,6 +35,12 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     (halaman daftar 43-68; 0 id tumpang tindih dengan kelompok 1). Label: SALAH 159, PENIPUAN 88,
     TIDAK DIKETAHUI 2 (33422, 33355: sama-sama `[SALAH` tanpa `]` di sumber), PARODI 1.
     Laju ~4,5 artikel/hari (56 hari), lebih cepat dari kelompok 1.
+  - **Kelompok 3 (2026-09-27; scraping saja, BELUM digabung/di-ingest, menunggu izin):** 250/250
+    berhasil, 0 seksi kosong, 2026-02-02 s.d. 2026-03-31 (halaman daftar 68-93; 0 id tumpang tindih
+    dengan 672 artikel). Label: SALAH 175, PENIPUAN 73, PARODI 2, TIDAK DIKETAHUI 0. Retry: artikel
+    0, halaman daftar 1 (halaman galat, berhasil pada percobaan ke-2). `failed_ids.json` tidak
+    dibuat (0 gagal). 6 artikel masih memuat `\r` (diambil dengan parser lama) -> wajib reparse
+    sebelum digabung.
   - **Mode maju (`--forward`, 2026-09-27):** dari halaman daftar 1 ke belakang, berhenti pada
     artikel pertama yang sudah dimiliki; keluaran `forward_YYYY-MM-DD[_report].json` (tanggal WIB),
     `state.json` tidak diubah. **Dasar pembaruan berkala nanti** -- logikanya sama, hanya perlu
