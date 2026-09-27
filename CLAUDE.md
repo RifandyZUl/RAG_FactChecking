@@ -31,6 +31,10 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     PARODI 2, TIDAK DIKETAHUI 2. Dua yang terakhir (34929, 35383) karena kurung siku judul di
     SUMBER tidak lengkap (`[SALAH Purbaya ...`, `PENIPUAN] Tautan ...`), bukan label baru;
     `parse_title` tidak diubah (menunggu keputusan).
+  - **Kelompok 2 (2026-09-27):** 250/250 berhasil, 0 seksi kosong, 2026-03-31 s.d. 2026-05-26
+    (halaman daftar 43-68; 0 id tumpang tindih dengan kelompok 1). Label: SALAH 159, PENIPUAN 88,
+    TIDAK DIKETAHUI 2 (33422, 33355: sama-sama `[SALAH` tanpa `]` di sumber), PARODI 1.
+    Laju ~4,5 artikel/hari (56 hari), lebih cepat dari kelompok 1.
   - **Mode maju (`--forward`, 2026-09-27):** dari halaman daftar 1 ke belakang, berhenti pada
     artikel pertama yang sudah dimiliki; keluaran `forward_YYYY-MM-DD[_report].json` (tanggal WIB),
     `state.json` tidak diubah. **Dasar pembaruan berkala nanti** -- logikanya sama, hanya perlu
