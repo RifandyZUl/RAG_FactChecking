@@ -14,11 +14,14 @@ artikel, rujukan tetap dari `references` (Aturan Wajib #1 dan #3), dan
 `claim_sources` tidak pernah disentuh.
 """
 
+import json
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
 from generator import MAX_FORMAT_RETRIES, Answer
+from paths import PROJECT_ROOT
 
 # --------------------------------------------------------------------------
 # Salinan antarmuka (Bahasa Indonesia, tanpa istilah teknis di bagian utama)
@@ -93,17 +96,24 @@ _TRUE_VALUES = {"1", "true", "ya", "yes", "on"}
 
 # "Belum ditemukan": artikel bertopik dekat ditampilkan sebagai rujukan baca, TANPA
 # mengubah vonis (Aturan Wajib #4). Hanya kandidat dengan skor >= ambang.
-# Dasar ambang 0,57 (hasil evaluasi set uji v1, retrieval identik di 3 run; dicek
-# silang pada 10 kueri set pengembangan):
-#   - skor kandidat TERTINGGI pada 10 negatif mudah (topik tak terkait) = 0,5680,
-#     jadi pada ambang 0,57 tidak satu pun negatif mudah memunculkan daftar ini;
-#   - artikel tetangga topik yang dipasangkan dengan negatif sulit (16 yang ada di
-#     top-3) berskor 0,5419-0,8256; 13 dari 16 lolos ambang;
-#   - set pengembangan: 36729 (0,5739, "malaysia marah soal asap") dan 36214 (0,6671,
-#     "vaksin flu") tampil; negatif jauh (gas melon, megathrust, daun sirsak, bumi
-#     datar; tertinggi 0,5353) tidak tampil. Ambang 0,58 akan membuang 36729.
-# Marginnya tipis (0,002 di atas negatif mudah tertinggi) dan sampelnya kecil.
-RELATED_SCORE_THRESHOLD = 0.57
+#
+# AMBANG INI BERGANTUNG PADA UKURAN BASIS DATA. Makin banyak artikel, makin besar peluang
+# klaim yang tak terkait tetap menemukan artikel yang agak mirip, sehingga skor kandidat
+# teratas naik (terukur: 6 negatif mudah yang benar-benar tak terkait, maks 0,5351 pada
+# 150 artikel -> 0,5666 pada 922). Karena itu ambang TIDAK berupa konstanta, melainkan
+# dibaca per indeks dari `config/related_threshold.json`, lengkap dengan jumlah chunk
+# indeks tempat ia dikalibrasi. Bila indeks tidak punya entri, atau jumlah chunk-nya
+# berbeda dari saat kalibrasi (basis data sudah diperbesar), atau ambangnya `null` (kalibrasi
+# tidak menemukan ambang yang memisahkan), fitur ini DIMATIKAN:
+# lebih baik tidak menampilkan apa pun daripada artikel yang tidak relevan. Dasar tiap
+# angka dicatat di berkas konfigurasi itu.
+#
+# Indeks `data` 922 artikel (2026-09-28): DIMATIKAN karena pada set pengembangan tidak ada
+# ambang yang memisahkan -- kueri tak terkait "NASA ngaku bumi datar" (0,6385) berskor LEBIH
+# TINGGI daripada kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang
+# menyingkirkannya hanya bermargin 0,0015. Bukan karena artikel bertopik jauh lolos pada set
+# uji v1: enam negatif mudah yang benar-benar tak terkait tetap di bawah 0,57 (maks 0,5666).
+RELATED_THRESHOLD_CONFIG = PROJECT_ROOT / "config" / "related_threshold.json"
 RELATED_HEADING = "Mungkin terkait, tapi klaimnya berbeda"
 RELATED_NOTE = (
     "Artikel berikut membahas topik yang mirip, tetapi klaim yang diperiksa di "
@@ -332,7 +342,8 @@ class Diagnostics:
     # (retriever memotong ke MAX_SEQ_LENGTH), walau LLM tetap membaca klaim utuh.
     query_tokens: int | None = None
     query_token_limit: int | None = None
-    related_threshold: float = RELATED_SCORE_THRESHOLD
+    related_threshold: float | None = None  # None = fitur "mungkin terkait" mati
+    related_status: str = ""  # alasan ambang dipakai/dimatikan (untuk penguji)
 
 
 @dataclass
@@ -418,8 +429,61 @@ def failure_view(kind: FailureKind, diagnostics: Diagnostics | None = None) -> R
     )
 
 
+@dataclass(frozen=True)
+class RelatedThreshold:
+    """Ambang "mungkin terkait" untuk indeks aktif; `value` None berarti fiturnya mati."""
+
+    value: float | None
+    status: str
+
+
+RELATED_DISABLED_NO_CONFIG = RelatedThreshold(None, "mati: ambang tidak dikonfigurasi")
+
+
+def index_key(index_dir: Path, root: Path = PROJECT_ROOT) -> str:
+    """Kunci indeks di berkas konfigurasi: jalur relatif ke root proyek ("data", "archive/v1")."""
+    resolved = index_dir.resolve()
+    if resolved.is_relative_to(root.resolve()):
+        return resolved.relative_to(root.resolve()).as_posix()
+    return resolved.as_posix()
+
+
+def load_related_threshold_config(path: Path = RELATED_THRESHOLD_CONFIG) -> dict:
+    """
+    Baca konfigurasi ambang per indeks. Berkas tidak ada -> {} (fitur mati untuk semua indeks).
+
+    Berkas rusak (JSON tidak sah) sengaja TIDAK ditelan: galatnya dilempar ke pemanggil.
+    """
+    if not path.is_file():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def resolve_related_threshold(config: dict, key: str, chunk_count: int) -> RelatedThreshold:
+    """
+    Ambang untuk indeks `key` yang kini berisi `chunk_count` chunk.
+
+    Ambang hanya berlaku pada indeks berukuran SAMA dengan saat dikalibrasi; bila berbeda,
+    fitur dimatikan sampai ambang dikalibrasi ulang (lihat komentar RELATED_THRESHOLD_CONFIG).
+    """
+    entry = config.get("indeks", {}).get(key)
+    if entry is None:
+        return RelatedThreshold(None, f"mati: tidak ada entri untuk indeks '{key}'")
+    calibrated = int(entry["chunk"])
+    if calibrated != chunk_count:
+        return RelatedThreshold(
+            None,
+            f"mati: dikalibrasi pada {calibrated} chunk, indeks kini {chunk_count} chunk "
+            "(kalibrasi ulang)",
+        )
+    if entry["ambang"] is None:  # dimatikan dengan sengaja setelah kalibrasi (tak ada pemisah)
+        return RelatedThreshold(None, f"mati: tidak ada ambang yang memisahkan ({entry['tanggal']})")
+    value = float(entry["ambang"])
+    return RelatedThreshold(value, f"aktif: dikalibrasi pada {calibrated} chunk ({entry['tanggal']})")
+
+
 def related_articles(
-    candidates: list[dict], article_urls: dict[str, str], threshold: float = RELATED_SCORE_THRESHOLD
+    candidates: list[dict], article_urls: dict[str, str], threshold: float
 ) -> list[RelatedArticle]:
     """
     Kandidat retrieval dengan skor >= ambang, urut skor, sebagai judul + tautan artikel.
@@ -441,17 +505,21 @@ def build_view(
     article_urls: dict[str, str] | None = None,
     query_tokens: int | None = None,
     query_token_limit: int | None = None,
+    related_threshold: RelatedThreshold = RELATED_DISABLED_NO_CONFIG,
 ) -> ResultView:
     """
     Ubah `Answer` generator menjadi `ResultView`. Fungsi murni: tanpa UI dan tanpa API.
 
     `article_urls` (article_id -> URL artikel, dari hasil retrieval) hanya dipakai untuk
-    daftar "mungkin terkait" pada hasil "belum ditemukan"; vonisnya tidak berubah.
+    daftar "mungkin terkait" pada hasil "belum ditemukan"; vonisnya tidak berubah. Daftar itu
+    kosong bila `related_threshold.value` None (ambang tak dikonfigurasi atau sudah basi).
     """
     failure = classify_failure(ans)
     diag = build_diagnostics(ans, model, failure)
     diag.query_tokens = query_tokens
     diag.query_token_limit = query_token_limit
+    diag.related_threshold = related_threshold.value
+    diag.related_status = related_threshold.status
 
     if failure is not None:
         return failure_view(failure, diag)
@@ -487,7 +555,11 @@ def build_view(
         status_color=NOT_FOUND_STYLE.color,
         status_icon=NOT_FOUND_STYLE.icon,
         summary=NOT_FOUND_STYLE.summary,
-        related=related_articles(ans.candidates, article_urls or {}),
+        related=(
+            related_articles(ans.candidates, article_urls or {}, related_threshold.value)
+            if related_threshold.value is not None
+            else []
+        ),
         diagnostics=diag,
     )
 

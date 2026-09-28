@@ -32,6 +32,7 @@ from chunker import MAX_SEQ_LENGTH
 from generator import AnswerGenerator
 from llm import LLMConfigError, LLMProvider, get_provider
 from llm.secrets import redact
+from paths import INDEX_DIR
 from presentation import (
     ADVICE_HEADING,
     ARTICLE_LINK_PREFIX,
@@ -62,13 +63,17 @@ from presentation import (
     TESTER_MODE_SECRET,
     Diagnostics,
     FailureKind,
+    RelatedThreshold,
     ResultView,
     build_view,
     escape_markdown,
     failure_view,
+    index_key,
     is_long_claim,
+    load_related_threshold_config,
     markdown_link,
     parse_flag,
+    resolve_related_threshold,
     validate_claim,
 )
 from retriever import ArticleHit, retrieve
@@ -126,6 +131,12 @@ def load_collection() -> Any:
     if collection.count() == 0:
         raise IndexUnavailableError(f"koleksi '{COLLECTION_NAME}' kosong")
     return collection
+
+
+@st.cache_resource(show_spinner=False)
+def load_related_threshold(chunk_count: int) -> RelatedThreshold:
+    """Ambang "mungkin terkait" untuk indeks aktif; mati bila tak dikonfigurasi atau basi."""
+    return resolve_related_threshold(load_related_threshold_config(), index_key(INDEX_DIR), chunk_count)
 
 
 @st.cache_resource(show_spinner=False)
@@ -227,6 +238,7 @@ def check_claim(claim: str, on_step: Callable[[str], None]) -> ResultView:
         article_urls={h.article_id: h.url for h in hits},
         query_tokens=count_query_tokens(embedder, claim),
         query_token_limit=MAX_SEQ_LENGTH,
+        related_threshold=load_related_threshold(collection.count()),
     )
 
 
@@ -319,7 +331,8 @@ def render_diagnostics(diag: Diagnostics) -> None:
                 f"- Token klaim untuk retrieval: {diag.query_tokens} "
                 f"(batas {diag.query_token_limit}){cut}"
             )
-        lines.append(f"- Ambang \"mungkin terkait\": {_fmt_number(diag.related_threshold)}")
+        threshold = "-" if diag.related_threshold is None else _fmt_number(diag.related_threshold)
+        lines.append(f"- Ambang \"mungkin terkait\": {threshold} ({diag.related_status or '-'})")
         st.markdown("\n".join(lines))
         if diag.candidates:
             rows = [

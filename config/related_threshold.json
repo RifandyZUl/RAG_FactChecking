@@ -1,0 +1,26 @@
+{
+  "_catatan": "Ambang skor daftar \"Mungkin terkait\" di demo (src/presentation.py), per indeks. Kunci = jalur indeks relatif ke root proyek (paths.INDEX_DIR). Ambang BERGANTUNG PADA UKURAN BASIS DATA: hanya berlaku bila jumlah chunk indeks sama dengan `chunk`; bila berbeda, demo mematikan fitur ini sampai dikalibrasi ulang. `ambang: null` = sudah dikalibrasi tetapi sengaja dimatikan (tidak ada ambang yang memisahkan). Aturan kalibrasi: sedikit di atas skor kandidat teratas tertinggi pada butir negatif mudah set uji v1 yang BENAR-BENAR tak terkait pada indeks itu (butir yang artikel asalnya atau klaim yang sama kini ada di basis data dikeluarkan dari acuan). Lapisan tampilan saja; retrieval dan vonis tidak berubah.",
+  "indeks": {
+    "archive/v1": {
+      "ambang": 0.57,
+      "artikel": 150,
+      "chunk": 450,
+      "tanggal": "2026-09-25",
+      "dasar": "Negatif mudah v1 (10 butir): skor top-1 tertinggi 0,5680 -> 0 dari 10 lolos. Negatif sulit: 13 dari 16 tetangga di top-3 lolos. Set pengembangan: 36729 (0,5739) dan 36214 (0,6671) tampil; negatif jauh (maks 0,5353) tidak."
+    },
+    "data": {
+      "ambang": null,
+      "artikel": 922,
+      "chunk": 2766,
+      "tanggal": "2026-09-28",
+      "keputusan": "DIMATIKAN (arahan pemilik proyek: lebih baik mati daripada menampilkan artikel tak relevan). Alasan dimatikan: pada set pengembangan tidak ada ambang yang memisahkan, karena kueri tidak terkait ('NASA ngaku bumi datar', 0,6385) berskor LEBIH TINGGI daripada kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang menyingkirkannya hanya bermargin 0,0015. BUKAN karena ambang meloloskan artikel bertopik jauh pada set uji v1: enam negatif mudah yang benar-benar tak terkait tetap di bawah 0,57 (maks 0,5666).",
+      "dasar": [
+        "Skor set uji v1: testset/v1_perbandingan_indeks_922.json; set pengembangan: diukur 2026-09-28 (retrieval saja, top-3, tanpa LLM).",
+        "10 negatif mudah v1 pada 0,57 (bukan dasar keputusan mematikan): 4 lolos (40%), dan keempatnya BUKAN topik jauh: v1-043 (0,8488) dan v1-049 (0,8266) artikel asalnya kini di basis data; v1-050 (0,6330) ke 36775 'Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah' (klaim tampak sama; perlu tinjauan manusia); v1-044 (0,5781) ke 33460 'Pigai Klaim Kematian Prajurit TNI di Lebanon Bukan Pelanggaran HAM' (topik dekat). 6 sisanya benar-benar tak terkait: maks 0,5666 (v1-048); pada arsip 150 maks 0,5351.",
+        "Set pengembangan, negatif jauh: 'NASA ngaku bumi datar' -> 32186 'Agustus 2026 Gravitasi Bumi Berhenti 7 Detik' 0,6385 (tak terkait, di atas 0,57); daun sirsak 0,5573; gas melon 0,5377. Megathrust -> 32702 'BMKG Prediksi Potensi Tsunami dan Megathrust 8,7' 0,5963 (kini topik yang sama ada di basis data).",
+        "Yang layak ditampilkan berskor mulai 0,5739 (36729, 'malaysia marah soal asap'), 0,5781 (Pigai), 0,62-0,63 (artikel tetangga yang dipasangkan dengan negatif sulit, di peringkat 1: v1-030 0,6218, v1-039 0,6289, v1-034 0,6319, v1-037 0,6327). Tak terkait tertinggi 0,6385 berada di atas semuanya: rentang tumpang tindih.",
+        "Alternatif yang ditimbang: 0,57 (1 dari 9 tak terkait lolos: bumi datar); 0,64 (0 dari 9 lolos dengan margin 0,0015, tetapi 36729, Pigai, v1-050, megathrust, dan 4 tetangga negatif sulit itu hilang; sampel tak terkait hanya 9)."
+      ]
+    }
+  }
+}

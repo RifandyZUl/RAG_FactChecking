@@ -725,5 +725,56 @@
       },
       "rincian": "testset/v1_perbandingan_indeks_922.json (evaluation.index_comparison), testset/retrieval_ablation_prod922.json"
     }
+  },
+  "butir_negatif_berubah_status_indeks_922_2026-09-28": {
+    "pernyataan": "Label negatif (expected_verdict=belum_ditemukan) butir v1-021, v1-022, v1-043, dan v1-049 TIDAK BERLAKU pada indeks produksi 922 artikel. Keempatnya dibuat dari artikel arsip TurnBackHoax (url_asal: 35310, 35850, 32490, 35833) yang kini ada di basis data produksi, dan artikel asalnya muncul di peringkat 1 (skor 0,8713; 0,7732; 0,8488; 0,8266). Pada archive/v1 (150 artikel) labelnya tetap sah.",
+    "yang_tidak_diubah": "testset/v1.jsonl TIDAK diubah (label, butir, dan hash tetap; uji kunci tests/test_testset_locks.py lolos). Set uji v1 tetap beku dan hanya sah pada archive/v1 (Aturan Wajib #6; keterikatan_basis_data_150_2026-09-27).",
+    "rincian_butir": [
+      {
+        "id": "v1-021",
+        "tipe": "negatif_sulit",
+        "subtipe": "pola_sama_entitas_beda",
+        "artikel_asal": "35310",
+        "skor_peringkat_1": 0.8713
+      },
+      {
+        "id": "v1-022",
+        "tipe": "negatif_sulit",
+        "subtipe": "pola_sama_entitas_beda",
+        "artikel_asal": "35850",
+        "skor_peringkat_1": 0.7732
+      },
+      {
+        "id": "v1-043",
+        "tipe": "negatif_mudah",
+        "subtipe": null,
+        "artikel_asal": "32490",
+        "skor_peringkat_1": 0.8488
+      },
+      {
+        "id": "v1-049",
+        "tipe": "negatif_mudah",
+        "subtipe": null,
+        "artikel_asal": "35833",
+        "skor_peringkat_1": 0.8266
+      }
+    ],
+    "pengamatan_tambahan_perlu_tinjauan_manusia": {
+      "v1-050": "Butir negatif_mudah bersumber liputan6 (hoaks 'Menkeu Suahasil terlibat korupsi 500 triliun'). Pada indeks 922 kandidat peringkat 1 = 36775 'Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah' (skor 0,6330; didapat lewat mode maju, 21 Sep 2026). Klaimnya TAMPAK sama; diperiksa sendiri oleh pemilik proyek menurut ANNOTATION_GUIDE.md (Aturan Wajib #5). APA PUN hasilnya, v1.jsonl tidak diubah: temuan ini dicatat sebagai bukti tambahan keterikatan label negatif pada snapshot basis data. Ini menunjukkan butir dari situs cek fakta LAIN juga bisa kehilangan status negatif bila TurnBackHoax kemudian memeriksa hoaks yang sama.",
+      "perluasan_ke_september_2025": "Artikel asal v1-029 (30089, 16/11/2025, negatif_sulit) berada dalam rentang perluasan yang direncanakan (mundur sampai akhir September 2025), jadi label negatifnya juga akan tidak berlaku pada indeks hasil perluasan itu. Artikel asal v1-042 (28638, 27/08/2025) tepat di luar batas; sumber arsip lain (23531, 23544, 26646, 26669, 26671) bertanggal Okt 2024-Apr 2025. Tanggal dari data/candidates/archive.jsonl.",
+    "set_pengembangan_megathrust": "Kueri set pengembangan 'BMKG bilang bakal ada gempa megathrust besar di Jawa minggu ini' (negatif_sedang, kata kunci absen 'megathrust') kini menemukan 32702 'BMKG Prediksi Potensi Tsunami dan Megathrust 8,7' (0,5963). Set pengembangan bukan bukti mutu; dicatat agar tidak dipakai sebagai negatif pada indeks produksi tanpa diperiksa ulang."
+    },
+    "persyaratan_set_uji_versi_2": [
+      "Setiap butir negatif WAJIB diverifikasi terhadap snapshot basis data yang dipakai (daftar id artikel + sidik jari isi), bukan terhadap basis data lain.",
+      "Set uji WAJIB diberi versi bersama snapshot itu: identitas set uji mencakup snapshot basis datanya, dan hasil hanya sah pada snapshot tersebut.",
+      "Butir negatif yang berasal dari artikel arsip TurnBackHoax TIDAK BOLEH dipakai bila artikel itu berpotensi masuk basis data (mis. berada dalam rentang tanggal perluasan yang direncanakan).",
+      "Butir negatif dari hoaks nyata yang diperiksa situs cek fakta LAIN juga wajib diperiksa ulang terhadap snapshot, karena TurnBackHoax dapat memeriksa hoaks yang sama belakangan (dasar: v1-050). Disetujui pemilik proyek 2026-09-28 sebagai persyaratan set uji Versi 2, bukan pekerjaan sekarang."
+    ],
+    "ambang_mungkin_terkait_demo": {
+      "keputusan": "Fitur 'Mungkin terkait' di demo DIMATIKAN untuk indeks produksi 922 artikel (config/related_threshold.json). Lapisan tampilan saja; vonis dan retrieval tidak berubah.",
+      "alasan": "Alasan dimatikan: pada set pengembangan tidak ada ambang yang memisahkan, karena kueri tidak terkait ('NASA ngaku bumi datar', 0,6385) berskor LEBIH TINGGI daripada kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang menyingkirkannya hanya bermargin 0,0015. BUKAN karena ambang meloloskan artikel bertopik jauh pada set uji v1: enam negatif mudah yang benar-benar tak terkait tetap di bawah 0,57 (maks 0,5666).",
+      "koreksi": "Dugaan awal bahwa ambang 0,57 meloloskan hampir semua artikel bertopik jauh (skor maks negatif mudah 0,849) tidak didukung data: skor 0,849 berasal dari v1-043, yang artikel asalnya kini ada di basis data."
+    },
+    "sumber": "testset/v1_perbandingan_indeks_922.json (butir, top-3 per indeks); set pengembangan diukur 2026-09-28 (retrieval saja, tanpa LLM). Dicatat atas permintaan pemilik proyek 2026-09-28."
   }
 }
