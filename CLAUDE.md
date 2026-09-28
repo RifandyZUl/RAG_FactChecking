@@ -48,6 +48,17 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     **Cakupan: 922 artikel, 2766 chunk, 2026-02-02 s.d. 2026-09-27** (SALAH 562, PENIPUAN 353,
     PARODI 7). Menuju ~1.000: kurang 78 -> 1 kelompok lagi (`--batch-size 78`, atau 250 bila target
     dinaikkan).
+  - **Kelompok 4 (2026-09-28; scraping SAJA, belum digabung/di-ingest -- menunggu memori dibebaskan):**
+    250/250 berhasil, 0 seksi kosong, 2025-12-17 s.d. 2026-02-02 (halaman daftar s.d. 118; id 30876-32104;
+    0 id tumpang tindih dengan 922 artikel). Label: SALAH 199, PENIPUAN 48, PARODI 1, **SATIRE 1 (31118),
+    SATIR 1 (30924)** -- label BARU berkurung lengkap, diterima apa adanya (Aturan Wajib #7); cara
+    menampilkan: **diputuskan 2026-09-28** -- SATIRE dan SATIR = satu kategori, ditampilkan dengan gaya
+    PARODI (`STATUS_ALIASES` di `presentation.py`, lapisan tampilan saja; label tersimpan tidak diubah). Retry: artikel 1 (halaman galat, berhasil),
+    halaman daftar 0; `failed_ids.json` tidak dibuat. 0 artikel memuat `\r`. Laju ~5,3 artikel/hari
+    (47 hari). **30089 (artikel asal v1-029, 16 Nov 2025) BELUM masuk** (di luar rentang kelompok ini);
+    sisa ke akhir Sep 2025 = 78 hari -> **perkiraan ~400 artikel lagi (2 kelompok), total ~1.570
+    artikel** pada laju 5,3/hari (bukan ~486/1.408). Laju bervariasi antar-periode (kelompok 1: ~3,5/hari;
+    kelompok 2: ~4,5; kelompok 4: ~5,3), jadi angka ini perkiraan.
   - **Kelompok 3 (2026-09-27; scraping):** 250/250
     berhasil, 0 seksi kosong, 2026-02-02 s.d. 2026-03-31 (halaman daftar 68-93; 0 id tumpang tindih
     dengan 672 artikel). Label: SALAH 175, PENIPUAN 73, PARODI 2, TIDAK DIKETAHUI 0. Retry: artikel
@@ -73,8 +84,10 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     **2026-09-28:** status 4 butir itu dicatat (`v1.meta.json`
     `butir_negatif_berubah_status_indeks_922_2026-09-28`, `v1_temuan_untuk_v2.md` bagian 8, termasuk
     persyaratan set uji Versi 2: butir negatif diverifikasi dan diberi versi bersama snapshot basis
-    data). Juga: v1-050 tampak cocok dengan 36775 (tinjauan manusia), dan artikel asal v1-029 (30089,
-    Nov 2025) akan masuk saat perluasan ke Sep 2025.
+    data). **v1-050 = butir kelima (terverifikasi):** 36775 (mode maju, 21 Sep) di peringkat 1 top-3
+    retriever produksi (0,6330); Narasinya mengutip teks butir persis ("Suhasasil"). Bersumber Liputan6
+    (17 Sep), bukan arsip -> butir dari situs cek fakta lain pun bisa berubah status; pemeriksaannya kini
+    WAJIB untuk set uji Versi 2. Artikel asal v1-029 (30089, Nov 2025) akan masuk saat perluasan ke Sep 2025.
   - **Agenda (dicatat 2026-09-27, JANGAN diterapkan terpisah; keputusan pemilik proyek):**
     (a) *Chunk terpotong 512 token:* yang terpotong hanya INPUT embedding (`model.max_seq_length`);
     teks chunk tersimpan utuh. Usulan: pecah seksi > 510 token di batas paragraf menjadi
@@ -407,7 +420,7 @@ Kurung siku rusak di judul sumber (`[SALAH Judul`, `PENIPUAN] Judul`; 4 kasus: 3
 tetap `TIDAK DIKETAHUI` dan wajib dilaporkan untuk ditinjau manusia, **bukan** ditebak dari isi
 artikel. Label baru yang muncul dengan kurung lengkap (`[X] ...`) tetap diterima apa adanya (perilaku
 lama), lalu diputuskan terpisah cara menampilkannya (`presentation.py` memakai gaya SALAH untuk
-label tak dikenal).
+label tak dikenal; SATIRE/SATIR ditampilkan sebagai PARODI lewat `STATUS_ALIASES`, 2026-09-28).
 
 ---
 

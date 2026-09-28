@@ -759,8 +759,20 @@
         "skor_peringkat_1": 0.8266
       }
     ],
-    "pengamatan_tambahan_perlu_tinjauan_manusia": {
-      "v1-050": "Butir negatif_mudah bersumber liputan6 (hoaks 'Menkeu Suahasil terlibat korupsi 500 triliun'). Pada indeks 922 kandidat peringkat 1 = 36775 'Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah' (skor 0,6330; didapat lewat mode maju, 21 Sep 2026). Klaimnya TAMPAK sama; diperiksa sendiri oleh pemilik proyek menurut ANNOTATION_GUIDE.md (Aturan Wajib #5). APA PUN hasilnya, v1.jsonl tidak diubah: temuan ini dicatat sebagai bukti tambahan keterikatan label negatif pada snapshot basis data. Ini menunjukkan butir dari situs cek fakta LAIN juga bisa kehilangan status negatif bila TurnBackHoax kemudian memeriksa hoaks yang sama.",
+    "pengamatan_tambahan": {
+      "v1-050": {
+        "status": "Label negatif TIDAK BERLAKU pada indeks produksi 922 artikel (terverifikasi 2026-09-28; butir kelima setelah v1-021, v1-022, v1-043, v1-049). Tetap sah pada archive/v1.",
+        "verifikasi": {
+          "asal_36775_di_indeks_produksi": "Mode maju 2026-09-27 (22 artikel, 19-27 Sep 2026): tercantum di data/expansion/forward_2026-09-27.json (date 21/09/2026) dan manifests/expansion_article_ids.json (kelompok 'forward_2026-09-27'). Tidak ada di kelompok mundur 1-4.",
+          "top3_retrieval_922": "36775 berada di PERINGKAT 1 top-3 retriever produksi (retriever.retrieve, top_k = generator.TOP_K = 3; indeks data/, 2766 chunk): 36775 0,6330; 33076 0,5232; 32952 0,4910. Identik dengan top-3 pencarian eksak di testset/v1_perbandingan_indeks_922.json. Pada archive/v1 36775 tidak ada (top-3: 36139 0,4217; 36086 0,4162; 36140 0,4122).",
+          "tipe_butir": "Terdaftar sebagai negatif_mudah (subtipe null, kekhususan 'jauh', sumber liputan6) di v1.jsonl baris 50. Riwayat: kandidat liputan6-8293491, tinjauan tahap 1 'tidak_sama' dengan subtipe_usulan negatif_mudah (pasangan 36140); semula CADANGAN strata negatif_mudah_teks_nyata (cadangan_disisihkan), lalu dipakai mengisi kekurangan negatif_mudah (hasil_penyusunan_testset_v1_2026-09-23, keputusan 1). Tidak pernah menjadi kandidat/cadangan subtipe pola_sama_entitas_beda.",
+          "bukti_teks": "Narasi 36775 mengutip unggahan TikTok 'IDN GELAP' (16/9/2026): \"MenKeu Suhasasil Terlibat Korupsi 500 Triliun\". Teks butir v1-050: \"Menkeu Suhasasil Terlibat Korupsi 500 Triliun\" -- identik termasuk salah ketik 'Suhasasil' (beda hanya kapitalisasi 'MenKeu'). Kesimpulan 36775: konten hasil manipulasi pemberitaan detik.com; klaim 'Menkeu Suahasil terlibat korupsi ratusan triliun rupiah' adalah konten yang dimanipulasi."
+        },
+        "beda_dari_empat_butir_lain": "Empat butir lain dibuat dari artikel ARSIP TurnBackHoax yang kemudian masuk basis data. v1-050 bersumber Liputan6, yang diutamakan justru sebagai sumber independen (penukaran_bersyarat_liputan6_2026-09-22: 'satu-satunya sumber independen dari kita'; bukan dari arsip Mafindo/TurnBackHoax). TurnBackHoax memeriksa hoaks yang sama 4 hari setelah Liputan6. Jadi butir negatif dari situs cek fakta lain pun tidak aman dari perubahan status.",
+        "linimasa": "Unggahan TikTok 16/9/2026; Liputan6 terbit 17/9/2026 11:00 WIB (article:published_time di cache data/candidates_cache/liputan6/8293491.html); basis data 150 artikel berakhir 18/9/2026 (archive/v1/article_ids.json); TurnBackHoax 36775 terbit 21/9/2026; halaman Liputan6 di-cache 22/9/2026 10:40 WIB saat pengumpulan kandidat.",
+        "penilaian_prosedur": "Verifikasi awal benar pada saatnya: butir diperiksa terhadap basis data 150 artikel, yang berakhir 18/9/2026, dan 36775 memang belum ada di dalamnya. Ini bukan kesalahan prosedur, melainkan konsekuensi jeda waktu antar-situs cek fakta. Catatan kejujuran: pada saat halaman Liputan6 di-cache (22/9), 36775 SUDAH terbit di situs TurnBackHoax sehari sebelumnya; prosedur saat itu memang hanya memeriksa terhadap basis data, bukan terhadap situs.",
+        "v1_jsonl": "Tidak diubah. Temuan ini adalah bukti tambahan keterikatan label negatif pada snapshot basis data."
+      },
       "perluasan_ke_september_2025": "Artikel asal v1-029 (30089, 16/11/2025, negatif_sulit) berada dalam rentang perluasan yang direncanakan (mundur sampai akhir September 2025), jadi label negatifnya juga akan tidak berlaku pada indeks hasil perluasan itu. Artikel asal v1-042 (28638, 27/08/2025) tepat di luar batas; sumber arsip lain (23531, 23544, 26646, 26669, 26671) bertanggal Okt 2024-Apr 2025. Tanggal dari data/candidates/archive.jsonl.",
     "set_pengembangan_megathrust": "Kueri set pengembangan 'BMKG bilang bakal ada gempa megathrust besar di Jawa minggu ini' (negatif_sedang, kata kunci absen 'megathrust') kini menemukan 32702 'BMKG Prediksi Potensi Tsunami dan Megathrust 8,7' (0,5963). Set pengembangan bukan bukti mutu; dicatat agar tidak dipakai sebagai negatif pada indeks produksi tanpa diperiksa ulang."
     },
@@ -768,7 +780,7 @@
       "Setiap butir negatif WAJIB diverifikasi terhadap snapshot basis data yang dipakai (daftar id artikel + sidik jari isi), bukan terhadap basis data lain.",
       "Set uji WAJIB diberi versi bersama snapshot itu: identitas set uji mencakup snapshot basis datanya, dan hasil hanya sah pada snapshot tersebut.",
       "Butir negatif yang berasal dari artikel arsip TurnBackHoax TIDAK BOLEH dipakai bila artikel itu berpotensi masuk basis data (mis. berada dalam rentang tanggal perluasan yang direncanakan).",
-      "Butir negatif dari hoaks nyata yang diperiksa situs cek fakta LAIN juga wajib diperiksa ulang terhadap snapshot, karena TurnBackHoax dapat memeriksa hoaks yang sama belakangan (dasar: v1-050). Disetujui pemilik proyek 2026-09-28 sebagai persyaratan set uji Versi 2, bukan pekerjaan sekarang."
+      "WAJIB: butir negatif dari hoaks nyata yang diperiksa situs cek fakta LAIN juga diperiksa ulang terhadap snapshot, karena TurnBackHoax dapat memeriksa hoaks yang sama belakangan. Bukti konkret: v1-050 (Liputan6 17/9/2026 -> TurnBackHoax 36775 21/9/2026, peringkat 1 pada indeks 922). Persyaratan wajib set uji Versi 2 (keputusan pemilik proyek 2026-09-28), bukan pekerjaan sekarang."
     ],
     "ambang_mungkin_terkait_demo": {
       "keputusan": "Fitur 'Mungkin terkait' di demo DIMATIKAN untuk indeks produksi 922 artikel (config/related_threshold.json). Lapisan tampilan saja; vonis dan retrieval tidak berubah.",

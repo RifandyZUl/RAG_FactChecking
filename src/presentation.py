@@ -170,7 +170,20 @@ STATUS_STYLES: dict[str, StatusStyle] = {
     ),
 }
 
-# Label di luar tiga yang dikenal: gaya SALAH, label asli dari metadata.
+# Alias TAMPILAN saja (label tersimpan di data tidak diubah): SATIRE dan SATIR (muncul pertama kali
+# di kelompok 4 perluasan, 2026-09-28: 31118 dan 30924) diperlakukan sebagai satu kategori dengan
+# PARODI -- satire bukan upaya menipu, dan PARODI adalah status paling lunak. Keputusan pemilik
+# proyek 2026-09-28. Ringkasan PARODI sudah menyebut "parodi atau satire".
+STATUS_ALIASES: dict[str, str] = {"SATIRE": "PARODI", "SATIR": "PARODI"}
+
+
+def status_style_key(label: str) -> str:
+    """Kunci STATUS_STYLES untuk label metadata (huruf besar, alias tampilan diterapkan)."""
+    key = label.strip().upper()
+    return STATUS_ALIASES.get(key, key)
+
+
+# Label di luar tiga yang dikenal (dan aliasnya): gaya SALAH, label asli dari metadata.
 FALLBACK_STATUS_COLOR = "orange"
 FALLBACK_STATUS_ICON = ":material/report:"
 FALLBACK_STATUS_SUMMARY = "Klaim ini sudah diperiksa TurnBackHoax.id dengan hasil: {label}."
@@ -526,7 +539,7 @@ def build_view(
 
     if ans.verdict == "ditemukan":
         label = (ans.status_label or "").strip()
-        style = STATUS_STYLES.get(label.upper())
+        style = STATUS_STYLES.get(status_style_key(label))
         if style is None:
             style = StatusStyle(
                 label=label.capitalize() or "Sudah diperiksa",

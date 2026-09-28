@@ -37,6 +37,7 @@ from presentation import (
     parse_flag,
     related_articles,
     resolve_related_threshold,
+    status_style_key,
     validate_claim,
 )
 
@@ -89,6 +90,16 @@ def test_found_uses_status_style_from_metadata_label(label: str) -> None:
     assert view.article_title == "Judul Artikel"  # label dalam kurung siku dibuang
     assert view.clarification == "Faktanya, klaim itu tidak benar."
     assert view.references == REFS
+
+
+@pytest.mark.parametrize("label", ["SATIRE", "SATIR", "satire", " Satir "])
+def test_satire_labels_use_parodi_style(label: str) -> None:
+    view = build_view(_found(label))
+    style = STATUS_STYLES["PARODI"]
+    assert (view.status_label, view.status_color, view.status_icon, view.summary) == (
+        style.label, style.color, style.icon, style.summary)
+    assert view.advice == ""
+    assert status_style_key(label) == "PARODI"
 
 
 def test_status_colors_are_distinct_and_never_success_green() -> None:
