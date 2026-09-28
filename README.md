@@ -185,6 +185,30 @@ Pemisahan ini memetakan langsung kebutuhan Versi 2.
 4. **Ukuran sampel.** 50 butir non-batas hanya mampu mendeteksi kegagalan yang
    jelas; angka ini tidak mendukung klaim akurasi di atas 95%.
 
+### Cakupan evaluasi: angka di atas berlaku untuk basis data 150 artikel
+
+Seluruh angka di atas, termasuk akurasi **48/50**, diukur pada basis data **150
+artikel** (indeks arsip `archive/v1/`). Demo berjalan pada **indeks produksi yang
+lebih besar** (sedang diperluas; 922 artikel saat pengukuran di bawah), dan indeks
+itu **belum pernah dievaluasi dengan menjalankan generator**.
+
+Yang sudah diukur pada indeks besar hanya **retrieval**: perbandingan ablasi arsip
+(150 artikel, 450 chunk) versus indeks produksi 922 artikel (2766 chunk), tanpa
+panggilan LLM. Recall@k butir positif (artikel yang benar berada di k teratas), dari 20:
+
+| Indeks | @1 | @3 | @5 | @10 | @20 |
+| --- | --- | --- | --- | --- | --- |
+| Arsip, 150 artikel | 19/20 | 20/20 | 20/20 | 20/20 | 20/20 |
+| Produksi, 922 artikel | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
+
+Dua butir positif turun peringkat: v1-002 dari 2 ke 3 dan v1-019 dari 1 ke 2.
+Angka ini **hanya mengukur retrieval**; **akurasi akhir sistem pada indeks besar
+belum terukur**. Label negatif set uji v1 juga tidak otomatis berlaku pada indeks
+besar (lima butir negatif kini menemukan klaim yang sama di basis data), sehingga
+set uji v1 tetap sah hanya pada `archive/v1/`. Rincian:
+`testset/retrieval_ablation_prod922_report.txt` dan
+`testset/v1_temuan_untuk_v2.md` bagian 8.
+
 ---
 
 ## Keterbatasan

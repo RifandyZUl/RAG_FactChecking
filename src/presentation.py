@@ -37,6 +37,16 @@ LIMITATION_NOTE = (
     "sehingga pesan yang baru beredar mungkin belum ada di dalamnya. "
     "Hasil “belum ditemukan” tidak berarti klaimnya benar."
 )
+# Cakupan evaluasi (catatan jujur, bukan peringatan): akurasi 48/50 diukur pada archive/v1
+# (150 artikel); indeks produksi yang dipakai demo lebih besar dan baru diukur retrieval-nya
+# (testset/retrieval_ablation_prod922_report.txt, butir positif). Angka di sini wajib ikut
+# diperbarui bila pengukuran diulang.
+EVALUATION_SCOPE_NOTE = (
+    "Akurasi 48 dari 50 diukur pada basis data versi awal (150 artikel). Demo ini memakai basis "
+    "data yang lebih besar, yang baru diukur bagian pencarian artikelnya: saat berisi 922 artikel, "
+    "artikel yang benar berada di urutan pertama untuk 18 dari 20 klaim uji dan di tiga teratas "
+    "untuk 20 dari 20. Akurasi akhir pada basis data yang lebih besar belum diukur."
+)
 INPUT_LABEL = "Pesan atau klaim yang ingin dicek"
 INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"
 SUBMIT_LABEL = "Periksa"

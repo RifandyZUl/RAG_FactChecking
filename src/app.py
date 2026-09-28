@@ -39,6 +39,7 @@ from presentation import (
     CLARIFICATION_HEADING,
     CLARIFICATION_LINE_HEIGHT,
     DIAGNOSTICS_LABEL,
+    EVALUATION_SCOPE_NOTE,
     INPUT_LABEL,
     INPUT_PLACEHOLDER,
     LIMITATION_NOTE,
@@ -248,10 +249,11 @@ def check_claim(claim: str, on_step: Callable[[str], None]) -> ResultView:
 
 
 def render_header() -> None:
-    """Judul, satu kalimat pengantar, dan catatan keterbatasan yang selalu terlihat."""
+    """Judul, satu kalimat pengantar, catatan keterbatasan, dan cakupan evaluasi (selalu terlihat)."""
     st.title(PAGE_TITLE, anchor=False)
     st.markdown(PAGE_SUBTITLE)
     st.caption(LIMITATION_NOTE)
+    st.caption(EVALUATION_SCOPE_NOTE)
 
 
 def render_status(view: ResultView) -> None:

@@ -346,10 +346,20 @@ indeks 922**, tetapi jalurnya berbeda dari empat butir di atas:
   prosedur memang memeriksa terhadap basis data, bukan situs.)
 - `v1.jsonl` tidak diubah; set uji tetap sah hanya pada `archive/v1/`.
 
-- **Perluasan ke September 2025 akan menambah satu kasus lagi:** artikel asal v1-029 (30089,
-  16 Nov 2025, negatif_sulit) berada di dalam rentang itu. Artikel asal v1-042 (28638,
-  27 Agu 2025) tepat di luar batas akhir September 2025. Sumber arsip lain (23531, 23544, 26646,
-  26669, 26671) bertanggal Okt 2024-Apr 2025.
+**Rekap (2026-09-28): lima butir negatif tidak berlaku pada indeks 922** -- v1-021, v1-022,
+v1-043, v1-049, dan v1-050. Kelimanya diverifikasi dengan top-3 retrieval (artikel berisi klaim
+yang sama di peringkat 1), bukan sekadar keberadaan artikel di basis data.
+
+- **v1-029 (berikutnya diperiksa):** artikel asalnya (30089, 16 Nov 2025, negatif_sulit)
+  berpotensi masuk pada kelompok perluasan berikutnya (mundur ke akhir September 2025). Setelah
+  masuk, **verifikasi dulu apakah 30089 benar-benar masuk top-3 retrieval untuk klaim v1-029**
+  sebelum menyimpulkan labelnya gugur -- prosedur yang sama dengan v1-050. Artikel asal v1-042
+  (28638, 27 Agu 2025) tepat di luar batas akhir September 2025. Sumber arsip lain (23531, 23544,
+  26646, 26669, 26671) bertanggal Okt 2024-Apr 2025.
+- **Pengamatan (bukan kesimpulan):** jumlah label negatif yang gugur tampak bertambah seiring basis
+  data membesar (0 pada 150 artikel, 5 pada 922). Lima kasus belum cukup untuk disimpulkan sebagai
+  pola yang terukur; jumlahnya juga bergantung pada cara butir dibuat (4 dari 5 berasal dari arsip
+  TurnBackHoax), bukan hanya pada ukuran basis data.
 
 **Persyaratan set uji Versi 2:**
 
