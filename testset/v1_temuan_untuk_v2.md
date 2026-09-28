@@ -274,6 +274,26 @@ Ambang tampilan `RELATED_SCORE_THRESHOLD = 0,57` di `src/presentation.py` **rapu
   basis data diperluas, dan laporkan margin serta sebarannya. Karena ambang ini hanya
   memengaruhi tampilan, bukan vonis, ia tidak memengaruhi hasil evaluasi Versi 1.
 
+**Pembaruan 2026-09-28 (indeks 922 artikel):** ambang kini dibaca per indeks dari
+`config/related_threshold.json` beserta jumlah chunk tempat ia dikalibrasi; bila indeks berubah
+ukuran, fitur mati sampai dikalibrasi ulang. Pada indeks 922 fitur **dimatikan** untuk indeks
+`data` (arsip `archive/v1` tetap 0,57). **Alasannya:** pada set pengembangan tidak ada ambang yang
+memisahkan -- kueri tak terkait "NASA ngaku bumi datar" (0,6385) berskor lebih tinggi daripada
+kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang menyingkirkannya hanya bermargin
+0,0015. **Bukan** karena artikel bertopik jauh lolos pada set uji v1 (lihat butir pertama).
+
+- Negatif mudah v1 yang lolos 0,57: 4 dari 10 (40%), tetapi keempatnya bukan topik jauh (v1-043
+  dan v1-049: artikel asalnya kini di basis data; v1-050: klaim tampak sama dengan 36775; v1-044:
+  topik dekat, Pigai soal HAM). Enam sisanya yang benar-benar tak terkait: maks 0,5666 (arsip:
+  0,5351) -- skor tak terkait naik seiring basis data membesar.
+- Set pengembangan: "NASA ngaku bumi datar" (tak terkait) kini 0,6385 ke "Gravitasi Bumi Berhenti
+  7 Detik", di atas kandidat yang layak tampil (36729 0,5739; Pigai 0,5781; tetangga negatif
+  sulit di peringkat 1: 0,62-0,63). Rentangnya tumpang tindih.
+- Ambang 0,64 menyingkirkan 9 dari 9 tak terkait yang teramati (margin 0,0015) tetapi juga
+  seluruh kandidat layak di atas; sampel tak terkait hanya 9. Rincian: `config/related_threshold.json`.
+- Implikasi Versi 2: skor kosinus saja tidak cukup untuk daftar ini pada basis data besar;
+  kandidat yang lebih pantas adalah keluaran grader (topik sama, klaim berbeda).
+
 ---
 
 ## 7. Pemetaan komponen Versi 2 (diperbarui 2026-09-25)
@@ -287,7 +307,43 @@ Ambang tampilan `RELATED_SCORE_THRESHOLD = 0,57` di `src/presentation.py` **rapu
 
 Agenda eksperimen terkait (bagian 5): menghapus seksi Penjelasan dari indeks; skema chunking,
 batas token indeks, dan model embedding lain (butuh pembangunan ulang indeks); penyetelan ulang
-ambang tampilan 0,57 dari data terpisah (bagian 6).
+ambang tampilan 0,57 dari data terpisah (bagian 6; pada indeks 922 fitur dimatikan). Persyaratan
+set uji Versi 2 terkait snapshot basis data: bagian 8.
+
+---
+
+## 8. Keterikatan set uji pada snapshot basis data (dicatat 2026-09-28)
+
+**Empat butir negatif berubah status pada indeks produksi 922 artikel.** v1-021, v1-022
+(negatif_sulit, pola_sama_entitas_beda), v1-043, dan v1-049 (negatif_mudah) dibuat dari artikel
+arsip TurnBackHoax (35310, 35850, 32490, 35833) yang kini ada di basis data produksi; artikel
+asalnya muncul di **peringkat 1** (skor 0,8713; 0,7732; 0,8488; 0,8266). **Label negatif keempat
+butir itu tidak berlaku pada indeks 922.** `v1.jsonl` tidak diubah: set uji v1 tetap beku dan hanya
+sah pada `archive/v1/` (Aturan Wajib #6). Rincian: `v1.meta.json`
+(`butir_negatif_berubah_status_indeks_922_2026-09-28`).
+
+Pengamatan yang perlu tinjauan manusia (label hanya oleh pemilik proyek, Aturan Wajib #5):
+
+- **v1-050** (negatif_mudah, sumber liputan6, "Menkeu Suahasil terlibat korupsi 500 triliun"):
+  peringkat 1 pada indeks 922 = 36775 "Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah"
+  (0,6330). Klaimnya tampak sama; diperiksa sendiri oleh pemilik proyek, dan apa pun hasilnya
+  `v1.jsonl` tidak diubah (bukti tambahan keterikatan label negatif pada snapshot). Jadi butir dari situs cek fakta **lain** juga bisa kehilangan
+  status negatif bila TurnBackHoax kemudian memeriksa hoaks yang sama.
+- **Perluasan ke September 2025 akan menambah satu kasus lagi:** artikel asal v1-029 (30089,
+  16 Nov 2025, negatif_sulit) berada di dalam rentang itu. Artikel asal v1-042 (28638,
+  27 Agu 2025) tepat di luar batas akhir September 2025. Sumber arsip lain (23531, 23544, 26646,
+  26669, 26671) bertanggal Okt 2024-Apr 2025.
+
+**Persyaratan set uji Versi 2:**
+
+1. Setiap butir negatif **wajib diverifikasi terhadap snapshot basis data yang dipakai** (daftar id
+   artikel + sidik jari isi).
+2. Set uji **wajib diberi versi bersama snapshot itu**; hasilnya hanya sah pada snapshot tersebut.
+3. Butir negatif yang berasal dari artikel arsip **tidak boleh dipakai** bila artikel itu
+   berpotensi masuk basis data (mis. berada dalam rentang tanggal perluasan yang direncanakan).
+4. Butir negatif dari hoaks nyata yang diperiksa situs cek fakta **lain** juga wajib diperiksa
+   ulang terhadap snapshot (dasar: v1-050; disetujui pemilik proyek 2026-09-28 sebagai persyaratan
+   Versi 2, bukan pekerjaan sekarang).
 
 ---
 

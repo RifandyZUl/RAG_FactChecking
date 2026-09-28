@@ -70,6 +70,11 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     (v1-021, v1-022, v1-043, v1-049) kini ADA di basis data** (peringkat 1). Label negatif set uji v1
     tidak otomatis berlaku pada indeks besar (`v1.meta.json`, `keterikatan_basis_data_150_2026-09-27`).
     Kelompok 4 MENUNGGU keputusan pemilik proyek setelah melihat hasil ini.
+    **2026-09-28:** status 4 butir itu dicatat (`v1.meta.json`
+    `butir_negatif_berubah_status_indeks_922_2026-09-28`, `v1_temuan_untuk_v2.md` bagian 8, termasuk
+    persyaratan set uji Versi 2: butir negatif diverifikasi dan diberi versi bersama snapshot basis
+    data). Juga: v1-050 tampak cocok dengan 36775 (tinjauan manusia), dan artikel asal v1-029 (30089,
+    Nov 2025) akan masuk saat perluasan ke Sep 2025.
   - **Agenda (dicatat 2026-09-27, JANGAN diterapkan terpisah; keputusan pemilik proyek):**
     (a) *Chunk terpotong 512 token:* yang terpotong hanya INPUT embedding (`model.max_seq_length`);
     teks chunk tersimpan utuh. Usulan: pecah seksi > 510 token di batas paragraf menjadi
@@ -131,6 +136,12 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
   `.streamlit/secrets.toml`, di-gitignore; bawaan mati). Hasil "belum ditemukan" menampilkan
   artikel "mungkin terkait" (skor >= 0,57; dasar ambang di komentar `RELATED_SCORE_THRESHOLD`)
   TANPA mengubah vonis. Demo berbagi kuota harian (RPD 500) dengan evaluasi.
+  **Sejak 2026-09-28 ambang dibaca per indeks dari `config/related_threshold.json`** (dengan jumlah
+  chunk saat kalibrasi; ukuran berbeda -> fitur mati sampai dikalibrasi ulang). Indeks `data` (922):
+  **DIMATIKAN** -- pada set pengembangan tak ada ambang pemisah (kueri tak terkait "bumi datar"
+  0,6385 di atas kandidat layak 0,5739-0,63; ambang 0,64 bermargin 0,0015), BUKAN karena topik jauh
+  lolos pada set uji v1 (6 negatif mudah tak terkait tetap < 0,57);
+  `archive/v1`: 0,57.
   `generator.py`, prompt, `retriever.py`, dan `v1.jsonl` tidak disentuh (uji kunci lolos).
 - **Eksperimen ablasi retrieval (2026-09-25; pengukuran, BUKAN penyetelan -- parameter produksi
   tidak diubah):** `src/evaluation/retrieval_ablation.py`, hasil `testset/retrieval_ablation.json`

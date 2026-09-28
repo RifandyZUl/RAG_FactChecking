@@ -16,22 +16,27 @@ from presentation import (
     LONG_CLAIM_WARNING,
     MAX_INPUT_CHARS,
     NOT_FOUND_STYLE,
+    RELATED_DISABLED_NO_CONFIG,
     RELATED_NOTE,
-    RELATED_SCORE_THRESHOLD,
+    RELATED_THRESHOLD_CONFIG,
     SCAM_ADVICE,
     STATUS_STYLES,
     FailureKind,
     RelatedArticle,
+    RelatedThreshold,
     build_view,
     classify_call_error,
     classify_failure,
     display_title,
     escape_markdown,
     failure_view,
+    index_key,
     is_long_claim,
+    load_related_threshold_config,
     markdown_link,
     parse_flag,
     related_articles,
+    resolve_related_threshold,
     validate_claim,
 )
 
@@ -270,13 +275,17 @@ URLS = {
 }
 
 
+THRESHOLD = 0.57
+ACTIVE = RelatedThreshold(THRESHOLD, "aktif")
+
+
 def test_related_articles_filtered_by_threshold_sorted_and_without_scores() -> None:
     cands = [
         {"article_id": "36577", "title": "[SALAH] Cacar Air", "label": "SALAH", "score": 0.61},
-        {"article_id": "36053", "title": "Link", "label": "PENIPUAN", "score": RELATED_SCORE_THRESHOLD - 0.001},
+        {"article_id": "36053", "title": "Link", "label": "PENIPUAN", "score": THRESHOLD - 0.001},
         {"article_id": "36214", "title": "[SALAH] Vaksin HPV", "label": "SALAH", "score": 0.6671},
     ]
-    related = related_articles(cands, URLS)
+    related = related_articles(cands, URLS, THRESHOLD)
     assert related == [
         RelatedArticle("Vaksin HPV", URLS["36214"]),
         RelatedArticle("Cacar Air", URLS["36577"]),
@@ -285,23 +294,59 @@ def test_related_articles_filtered_by_threshold_sorted_and_without_scores() -> N
 
 
 def test_threshold_is_inclusive_and_candidates_without_url_are_skipped() -> None:
-    cands = [{"article_id": "1", "title": "A", "label": "SALAH", "score": RELATED_SCORE_THRESHOLD},
+    cands = [{"article_id": "1", "title": "A", "label": "SALAH", "score": THRESHOLD},
              {"article_id": "2", "title": "B", "label": "SALAH", "score": 0.9}]
-    assert related_articles(cands, {"1": "https://turnbackhoax.id/articles/1-a"}) == [
+    assert related_articles(cands, {"1": "https://turnbackhoax.id/articles/1-a"}, THRESHOLD) == [
         RelatedArticle("A", "https://turnbackhoax.id/articles/1-a")]
 
 
-def test_threshold_value_documented_basis() -> None:
-    """Ambang 0,57 dari sebaran skor evaluasi v1 (lihat komentar di presentation.py)."""
-    assert RELATED_SCORE_THRESHOLD == 0.57
-    assert RELATED_SCORE_THRESHOLD > 0.5680  # skor kandidat tertinggi negatif mudah v1
-    assert RELATED_SCORE_THRESHOLD < 0.5739  # 36729 pada "malaysia marah soal asap" (set pengembangan)
+CONFIG = {"indeks": {"data": {"ambang": 0.6, "artikel": 10, "chunk": 30, "tanggal": "2026-09-28"}}}
+
+
+def test_threshold_applies_only_to_calibrated_index_size() -> None:
+    assert resolve_related_threshold(CONFIG, "data", 30).value == 0.6
+    grown = resolve_related_threshold(CONFIG, "data", 33)  # basis data diperbesar -> basi
+    assert grown.value is None and "30" in grown.status and "33" in grown.status
+    assert resolve_related_threshold(CONFIG, "archive/v1", 30).value is None  # tanpa entri
+    assert resolve_related_threshold({}, "data", 30).value is None
+
+
+def test_missing_config_file_disables_feature(tmp_path: Path) -> None:
+    assert load_related_threshold_config(tmp_path / "tidak_ada.json") == {}
+
+
+def test_index_key_relative_to_project_root(tmp_path: Path) -> None:
+    assert index_key(tmp_path / "data", root=tmp_path) == "data"
+    assert index_key(tmp_path / "archive" / "v1", root=tmp_path) == "archive/v1"
+
+
+def test_committed_config_matches_documented_calibration() -> None:
+    """Angka kalibrasi tercatat (dasar lengkap di config/related_threshold.json)."""
+    indeks = load_related_threshold_config(RELATED_THRESHOLD_CONFIG)["indeks"]
+    v1 = indeks["archive/v1"]
+    assert (v1["ambang"], v1["artikel"], v1["chunk"]) == (0.57, 150, 450)
+    assert 0.5680 < v1["ambang"] < 0.5739  # negatif mudah v1 tertinggi < ambang < 36729 (set pengembangan)
+    prod = indeks["data"]
+    assert (prod["artikel"], prod["chunk"]) == (922, 2766)
+    # 922 artikel: tak ada pemisah (bumi datar 0,6385 di atas 36729 0,5739) -> sengaja dimatikan
+    assert prod["ambang"] is None
+    assert resolve_related_threshold({"indeks": indeks}, "data", 2766).value is None
+    assert resolve_related_threshold({"indeks": indeks}, "archive/v1", 450).value == 0.57
+
+
+def test_disabled_threshold_shows_no_related() -> None:
+    ans = Answer(claim="vaksin flu bikin mandul", verdict="tidak_ditemukan",
+                 candidates=list(CANDIDATES), calls=[_ok_call()])
+    view = build_view(ans, article_urls=URLS)  # bawaan: tidak dikonfigurasi -> mati
+    assert view.related == []
+    assert view.diagnostics.related_threshold is None
+    assert view.diagnostics.related_status == RELATED_DISABLED_NO_CONFIG.status
 
 
 def test_not_found_view_lists_related_but_keeps_neutral_verdict() -> None:
     ans = Answer(claim="vaksin flu bikin mandul", verdict="tidak_ditemukan",
                  candidates=list(CANDIDATES), calls=[_ok_call()])
-    view = build_view(ans, article_urls=URLS)
+    view = build_view(ans, article_urls=URLS, related_threshold=ACTIVE)
     assert view.kind == "not_found" and view.status_color == "gray"
     assert [a.url for a in view.related] == [URLS["36214"], URLS["36577"], URLS["36053"]]
     assert view.references == [] and view.clarification == ""
@@ -309,14 +354,14 @@ def test_not_found_view_lists_related_but_keeps_neutral_verdict() -> None:
 
 
 def test_related_only_for_not_found() -> None:
-    assert build_view(_found(), article_urls=URLS).related == []
+    assert build_view(_found(), article_urls=URLS, related_threshold=ACTIVE).related == []
     failed = _failed(error="x", calls=[_failed_call("ServerError status=503")])
-    assert build_view(failed, article_urls=URLS).related == []
+    assert build_view(failed, article_urls=URLS, related_threshold=ACTIVE).related == []
 
 
 def test_not_found_without_urls_shows_no_related() -> None:
     ans = Answer(claim="x", verdict="tidak_ditemukan", candidates=list(CANDIDATES))
-    assert build_view(ans).related == []
+    assert build_view(ans, related_threshold=ACTIVE).related == []
 
 
 # -- masukan dan setelan -----------------------------------------------------
@@ -345,9 +390,9 @@ def test_parse_flag(value: object, expected: bool) -> None:
 
 
 def test_query_token_diagnostics_passed_through() -> None:
-    d = build_view(_found(), query_tokens=700, query_token_limit=512).diagnostics
+    d = build_view(_found(), query_tokens=700, query_token_limit=512, related_threshold=ACTIVE).diagnostics
     assert (d.query_tokens, d.query_token_limit) == (700, 512)
-    assert d.related_threshold == RELATED_SCORE_THRESHOLD
+    assert d.related_threshold == THRESHOLD
 
 
 # -- peringatan pesan panjang -------------------------------------------------
