@@ -9,6 +9,7 @@ from generator import MAX_FORMAT_RETRIES, Answer
 from llm import CallRecord
 from presentation import (
     EMPTY_INPUT_MESSAGE,
+    EVALUATION_SCOPE_NOTE,
     FAILURE_MESSAGES,
     LONG_CLAIM_CONFIRM,
     LONG_CLAIM_WARN_CHARS,
@@ -425,3 +426,11 @@ def test_warning_threshold_is_below_input_limit() -> None:
     """Peringatan harus bisa muncul untuk masukan yang masih diizinkan."""
     assert LONG_CLAIM_WARN_CHARS < MAX_INPUT_CHARS
     assert "inti klaim" in LONG_CLAIM_WARNING and "{button}" in LONG_CLAIM_CONFIRM
+
+
+def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
+    """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya retrieval (18/20 @1, 20/20 @3)."""
+    note = EVALUATION_SCOPE_NOTE
+    assert "48 dari 50" in note and "150 artikel" in note
+    assert "18 dari 20" in note and "20 dari 20" in note and "922 artikel" in note
+    assert "belum diukur" in note
