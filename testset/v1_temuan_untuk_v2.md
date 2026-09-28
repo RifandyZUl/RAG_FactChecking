@@ -283,7 +283,7 @@ kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang menyingkirkannya 
 0,0015. **Bukan** karena artikel bertopik jauh lolos pada set uji v1 (lihat butir pertama).
 
 - Negatif mudah v1 yang lolos 0,57: 4 dari 10 (40%), tetapi keempatnya bukan topik jauh (v1-043
-  dan v1-049: artikel asalnya kini di basis data; v1-050: klaim tampak sama dengan 36775; v1-044:
+  dan v1-049: artikel asalnya kini di basis data; v1-050: klaim yang sama kini ada, 36775; v1-044:
   topik dekat, Pigai soal HAM). Enam sisanya yang benar-benar tak terkait: maks 0,5666 (arsip:
   0,5351) -- skor tak terkait naik seiring basis data membesar.
 - Set pengembangan: "NASA ngaku bumi datar" (tak terkait) kini 0,6385 ke "Gravitasi Bumi Berhenti
@@ -322,13 +322,30 @@ butir itu tidak berlaku pada indeks 922.** `v1.jsonl` tidak diubah: set uji v1 t
 sah pada `archive/v1/` (Aturan Wajib #6). Rincian: `v1.meta.json`
 (`butir_negatif_berubah_status_indeks_922_2026-09-28`).
 
-Pengamatan yang perlu tinjauan manusia (label hanya oleh pemilik proyek, Aturan Wajib #5):
+**Butir kelima: v1-050 (terverifikasi 2026-09-28).** Label negatifnya juga **tidak berlaku pada
+indeks 922**, tetapi jalurnya berbeda dari empat butir di atas:
 
-- **v1-050** (negatif_mudah, sumber liputan6, "Menkeu Suahasil terlibat korupsi 500 triliun"):
-  peringkat 1 pada indeks 922 = 36775 "Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah"
-  (0,6330). Klaimnya tampak sama; diperiksa sendiri oleh pemilik proyek, dan apa pun hasilnya
-  `v1.jsonl` tidak diubah (bukti tambahan keterikatan label negatif pada snapshot). Jadi butir dari situs cek fakta **lain** juga bisa kehilangan
-  status negatif bila TurnBackHoax kemudian memeriksa hoaks yang sama.
+- **Tipe:** negatif_mudah (subtipe null, kekhususan "jauh"), `v1.jsonl` baris 50, sumber Liputan6
+  (kandidat `liputan6-8293491`; semula cadangan strata negatif_mudah_teks_nyata, lalu dipakai
+  mengisi kekurangan negatif_mudah -- tidak pernah terkait subtipe pola_sama_entitas_beda).
+- **Asal 36775 di indeks produksi:** mode maju 2026-09-27 (`forward_2026-09-27.json`, 21/9/2026),
+  bukan kelompok mundur.
+- **Top-3:** 36775 di **peringkat 1** retriever produksi (top_k = `generator.TOP_K` = 3): 0,6330;
+  berikutnya 33076 (0,5232) dan 32952 (0,4910). Tidak ada di `archive/v1`.
+- **Bukti teks:** Narasi 36775 mengutip unggahan TikTok: "MenKeu Suhasasil Terlibat Korupsi 500
+  Triliun"; teks butir: "Menkeu Suhasasil Terlibat Korupsi 500 Triliun" -- identik termasuk salah
+  ketik "Suhasasil".
+- **Mengapa berbeda:** empat butir lain dibuat dari artikel arsip TurnBackHoax. v1-050 bersumber
+  Liputan6, yang diutamakan justru sebagai sumber independen (bukan arsip Mafindo/TurnBackHoax),
+  namun TurnBackHoax memeriksa hoaks yang sama 4 hari kemudian. **Butir negatif dari situs cek
+  fakta lain pun tidak aman dari perubahan status.**
+- **Linimasa:** unggahan 16/9; Liputan6 17/9/2026; basis data 150 artikel berakhir 18/9/2026;
+  TurnBackHoax 36775 21/9/2026. **Verifikasi awal benar pada saatnya:** 36775 belum ada di basis
+  data 150 artikel. Ini bukan kesalahan prosedur, melainkan konsekuensi jeda waktu antar-situs cek
+  fakta. (Catatan: saat halaman Liputan6 di-cache, 22/9, 36775 sudah terbit di situs TurnBackHoax;
+  prosedur memang memeriksa terhadap basis data, bukan situs.)
+- `v1.jsonl` tidak diubah; set uji tetap sah hanya pada `archive/v1/`.
+
 - **Perluasan ke September 2025 akan menambah satu kasus lagi:** artikel asal v1-029 (30089,
   16 Nov 2025, negatif_sulit) berada di dalam rentang itu. Artikel asal v1-042 (28638,
   27 Agu 2025) tepat di luar batas akhir September 2025. Sumber arsip lain (23531, 23544, 26646,
@@ -341,9 +358,9 @@ Pengamatan yang perlu tinjauan manusia (label hanya oleh pemilik proyek, Aturan 
 2. Set uji **wajib diberi versi bersama snapshot itu**; hasilnya hanya sah pada snapshot tersebut.
 3. Butir negatif yang berasal dari artikel arsip **tidak boleh dipakai** bila artikel itu
    berpotensi masuk basis data (mis. berada dalam rentang tanggal perluasan yang direncanakan).
-4. Butir negatif dari hoaks nyata yang diperiksa situs cek fakta **lain** juga wajib diperiksa
-   ulang terhadap snapshot (dasar: v1-050; disetujui pemilik proyek 2026-09-28 sebagai persyaratan
-   Versi 2, bukan pekerjaan sekarang).
+4. **Wajib:** butir negatif dari hoaks nyata yang diperiksa situs cek fakta **lain** juga
+   diperiksa ulang terhadap snapshot. Bukti konkret: v1-050 (Liputan6 17/9 -> TurnBackHoax 36775
+   21/9, peringkat 1 pada indeks 922). Persyaratan set uji Versi 2, bukan pekerjaan sekarang.
 
 ---
 
