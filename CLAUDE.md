@@ -76,11 +76,25 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     artikel, jadi seluruh jalan gugur. **Tidak ada yang rusak:** `state.json` tidak maju (masih `batch`
     5, jangkar 29646), `batch_06.json` tidak ditulis, `failed_ids.json` tidak berubah; 81 HTML
     (termasuk 29437) sudah di cache (total 1.503), jadi jalan ulang hanya mengambil 29 artikel dari
-    jaringan. **Menunggu keputusan pemilik proyek** (logika `links.py` tervalidasi, tidak diubah
-    tanpa persetujuan): usulan = URL yang tidak dapat diurai DISARING dari `references` dengan alasan
-    tercatat di `references_filtered` (tetap ada di `references_raw`), tidak diperbaiki/ditebak; dan
-    galat tak terduga saat parse satu artikel dicatat sebagai kegagalan artikel itu (non-jaringan),
-    bukan menggugurkan jalan.
+    jaringan. **Diperbaiki 2026-10-03 (disetujui pemilik proyek):**
+    (1) *URL tidak dapat diurai* (`links.py`): `blocked_reason` mengembalikan alasan `"URL tidak sah"`
+    (`INVALID_URL_REASON`) sehingga URL itu disaring ke `references_filtered` dan tetap apa adanya di
+    `references_raw` -- TIDAK diperbaiki (itu menebak isi sumber). Titik pengurai URL lain diperiksa:
+    `normalize_url` (`urldefrag` melempar galat yang sama bila URL cacat memuat `#`) kini
+    mengembalikan URL apa adanya; `discovery.find_article_urls` (`urljoin`) hanya memproses jalur
+    `/articles/...` dan tidak melempar (diuji). Tidak ada pengurai URL lain di `src/`.
+    (2) *Exception tak terduga saat mengambil/mem-parse satu artikel* (`expand.scrape_with_reason`):
+    menjadi kegagalan artikel itu, jalan berlanjut; alasan `galat tak terduga: <Jenis>: <pesan>
+    (<berkas>:<baris> <fungsi>)` dan jejak lengkap tercetak di log. **Setiap kegagalan kini berbidang
+    `jenis`** di `failed_ids.json` dan laporan: `jaringan` | `galat_kode` (+ bidang `exception`) |
+    `halaman_galat` | `parse_kosong` | `http_atau_lain`; laporan memuat `gagal_per_jenis` dan
+    `exception_galat_kode`, `--failed-status` memuat `terbuka_per_jenis`, log menulis
+    `GAGAL [jenis]: ...`. `galat_kode` tidak dihitung pemutus sirkuit. **Celah yang tetap ada:** jalan
+    yang selesai dengan kegagalan non-jaringan tetap memajukan `state.json`, jadi artikel `galat_kode`
+    tidak dicoba ulang mode mundur (HTML-nya ada di cache; terlihat sebagai "terbuka" di
+    `--failed-status`).
+    **Bukti (parse ulang 1.422 artikel dari cache, kode `00c4fb5` vs kode baru): 1.422/1.422 identik
+    (hash keluaran sama); 0 artikel memuat URL tidak sah.** Indeks tidak perlu dibangun ulang.
   - **Kelompok 5, JALAN ULANG (2026-10-02 ~17:45-17:59 WIB; scraping SAJA, belum digabung/di-ingest):
     250/250 berhasil, 0 gagal, 0 retry (artikel 0, halaman daftar 0), kode keluar Python 0** (dicatat
     di baris terakhir `batch_05.log`, diperiksa dari berkas). Sebelumnya: catatan kejadian disalin ke

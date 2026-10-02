@@ -44,9 +44,25 @@ ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
 )
 
 
+# Alasan penyaringan untuk URL yang tidak dapat diurai `urllib` (mis. "http://kemenag.go.id]" di
+# seksi Referensi artikel 29437: kurung siku nyasar di sumber). URL seperti itu TIDAK diperbaiki
+# (itu menebak isi sumber): ia tetap apa adanya di `references_raw`, disaring dari `references`,
+# dan tercatat di `references_filtered` dengan alasan ini.
+INVALID_URL_REASON = "URL tidak sah"
+
+
 def normalize_url(url: str) -> str:
-    """Bersihkan URL: buang spasi di ujung dan fragmen (bagian setelah #)."""
-    return urldefrag(url.strip())[0]
+    """
+    Bersihkan URL: buang spasi di ujung dan fragmen (bagian setelah #).
+
+    URL yang tidak dapat diurai dikembalikan apa adanya (hanya spasi di ujung dibuang), tidak
+    diperbaiki; `blocked_reason` yang kemudian menandainya tidak sah.
+    """
+    stripped = url.strip()
+    try:
+        return urldefrag(stripped)[0]
+    except ValueError:
+        return stripped
 
 
 def unique_urls(urls: list[str]) -> list[str]:
@@ -67,8 +83,12 @@ def blocked_reason(url: str) -> str | None:
 
     Pencocokan mencakup subdomain (vt.tiktok.com, web.archive.org) dan tidak
     memperhatikan path: postingan maupun beranda akun sama-sama disaring.
+    URL yang tidak dapat diurai disaring dengan alasan INVALID_URL_REASON.
     """
-    host = (urlparse(url).hostname or "").lower()
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return INVALID_URL_REASON
     for domain in ALWAYS_BLOCKED_DOMAINS:
         if host == domain or host.endswith("." + domain):
             return f"domain daftar-blokir: {domain}"
@@ -84,7 +104,8 @@ def filter_references(
     Dua kriteria berlaku sekaligus (sebuah URL bisa memenuhi keduanya):
       (a) URL juga ada di claim_sources, dan
       (b) domainnya masuk ALWAYS_BLOCKED_DOMAINS (media sosial, arsip,
-          atau hosting gambar), apa pun path-nya.
+          atau hosting gambar), apa pun path-nya; URL yang tidak dapat
+          diurai ikut dibuang (INVALID_URL_REASON).
 
     Mengembalikan (references, references_filtered); tiap elemen yang
     dibuang berbentuk {"url": ..., "reasons": [...]} agar bisa diaudit.

@@ -1,7 +1,13 @@
 """Uji kebijakan penyaringan tautan (scraping.links).
 """
 
-from scraping.links import blocked_reason, normalize_url
+from scraping.links import (
+    INVALID_URL_REASON,
+    blocked_reason,
+    filter_references,
+    normalize_url,
+    unique_urls,
+)
 
 
 def test_normalize_and_domain() -> None:
@@ -49,3 +55,30 @@ def test_normalize_and_domain() -> None:
     assert blocked_reason("https://www.netflix.com/id") is None
     assert blocked_reason("https://www.cnnindonesia.com/a") is None
     assert blocked_reason("https://box.com/status/1") is None
+
+
+# URL cacat di sumber (bentuk kasus 29437: kurung siku nyasar di akhir host). Domain contoh.
+BAD_URLS = ["http://contoh.go.id]", "http://contoh.go.id]#bagian", "http://[contoh.go.id/x", "https://a.id]/x?p=1"]
+
+
+def test_unparseable_url_is_filtered_as_invalid_not_repaired() -> None:
+    for bad in BAD_URLS:
+        assert blocked_reason(bad) == INVALID_URL_REASON == "URL tidak sah", bad
+        assert normalize_url(f"  {bad}  ") == bad, "tidak diperbaiki; hanya spasi di ujung dibuang"
+    assert unique_urls(["http://contoh.go.id]", " http://contoh.go.id] ", "https://a.id/x#f"]) == [
+        "http://contoh.go.id]", "https://a.id/x"]
+
+    raw = ["https://www.contoh.go.id/rilis", "http://contoh.go.id]", "https://x.com/a/status/1", "http://b.id]#f"]
+    kept, filtered = filter_references(raw, claim_sources=["http://b.id]#f"])
+    assert kept == ["https://www.contoh.go.id/rilis"], "URL cacat tidak tampil sebagai rujukan"
+    assert filtered == [
+        {"url": "http://contoh.go.id]", "reasons": ["URL tidak sah"]},
+        {"url": "https://x.com/a/status/1", "reasons": ["domain daftar-blokir: x.com"]},
+        {"url": "http://b.id]#f", "reasons": ["cocok dengan claim_sources", "URL tidak sah"]},
+    ]
+
+
+def test_valid_urls_are_unaffected_by_invalid_url_handling() -> None:
+    assert blocked_reason("https://www.contoh.go.id/a?b=[1]#c") is None  # kurung di query/fragmen sah
+    assert blocked_reason("http://[2001:db8::1]/x") is None  # IPv6 sah
+    assert normalize_url("https://www.contoh.go.id/a?b=[1]#c") == "https://www.contoh.go.id/a?b=[1]"

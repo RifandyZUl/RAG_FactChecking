@@ -42,12 +42,13 @@ import json
 import re
 import sys
 import time
+import traceback
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from paths import ARTICLES_PATH, DATA_DIR
+from paths import ARTICLES_PATH, DATA_DIR, RAW_HTML_DIR
 from scraping.client import DELAY, make_session
 from scraping.discovery import LIST_URL, find_article_urls, get_soup
 from scraping.pipeline import scrape_article
@@ -92,6 +93,27 @@ def is_network_failure(reason: str) -> bool:
     return _NETWORK_FAILURE.match(reason) is not None
 
 
+# Jenis kegagalan artikel, dicatat di failed_ids.json dan laporan agar bug kode tidak tercampur
+# dengan gangguan koneksi. "galat_kode" = exception tak terduga saat mengambil/mem-parse satu
+# artikel (bug di kode kita atau HTML yang tidak diantisipasi): bila jumlahnya banyak, itu bug
+# sistematis, bukan masalah jaringan.
+UNEXPECTED_PREFIX = "galat tak terduga: "
+PARSE_NONE_REASON = "HTML sah tetapi parse_article mengembalikan None"
+
+
+def failure_kind(reason: str) -> str:
+    """jaringan | galat_kode | halaman_galat | parse_kosong | http_atau_lain (dari alasan gagal)."""
+    if is_network_failure(reason):
+        return "jaringan"
+    if reason.startswith(UNEXPECTED_PREFIX):
+        return "galat_kode"
+    if reason.startswith("halaman galat"):
+        return "halaman_galat"
+    if reason == PARSE_NONE_REASON:
+        return "parse_kosong"
+    return "http_atau_lain"
+
+
 def article_id_of(url: str) -> str | None:
     m = re.search(r"/articles/(\d+)-", url)
     return m.group(1) if m else None
@@ -123,12 +145,15 @@ def batch_stats(articles: list[dict], failures: list[dict], attempted: int) -> d
     reasons: dict[str, int] = {}
     for f in failures:
         reasons[f["alasan"]] = reasons.get(f["alasan"], 0) + 1
+    kinds = _count(f.get("jenis") or failure_kind(f["alasan"]) for f in failures)
     return {
         "dicoba": attempted,
         "berhasil": len(articles),
         "gagal": len(failures),
         "tingkat_gagal": round(len(failures) / attempted, 4) if attempted else 0.0,
         "alasan_gagal": reasons,
+        "gagal_per_jenis": kinds,
+        "exception_galat_kode": _count(f["exception"] for f in failures if f.get("exception")),
         "artikel_seksi_kosong": len(empty),
         "seksi_kosong_per_seksi": empty_by_section,
         "id_seksi_kosong": empty,
@@ -240,13 +265,35 @@ def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str, 
     """
     scrape_article + alasan gagal + jumlah retry (keduanya dibaca dari keluaran fetch_html; modul
     klien tidak diubah). Mengembalikan (artikel, dari_jaringan, alasan, retry).
+
+    Exception tak terduga (mis. bug parsing pada HTML yang tidak diantisipasi) TIDAK menggugurkan
+    jalan: ia menjadi kegagalan artikel itu dengan alasan "galat tak terduga: <Jenis>: <pesan>
+    (<berkas>:<baris> <fungsi>)", dan jejak lengkapnya dicetak ke log. `dari_jaringan` pada kasus
+    itu diperkirakan dari ada/tidaknya cache sebelum pengambilan.
     """
-    (art, from_network), log = _captured(scrape_article, url, session)
+    aid = article_id_of(url)
+    cached_before = aid is not None and (RAW_HTML_DIR / f"{aid}.html").exists()
+    buf = io.StringIO()
+    error: Exception | None = None
+    art, from_network = None, not cached_before
+    try:
+        with contextlib.redirect_stdout(buf):
+            art, from_network = scrape_article(url, session)
+    except Exception as e:  # noqa: BLE001 -- sengaja luas; dicatat lengkap di bawah, tidak ditelan
+        error = e
+    log = buf.getvalue()
+    if log:
+        print(log, end="")
     retries = len(_RETRY_LINE.findall(log))
+    if error is not None:
+        frame = traceback.extract_tb(error.__traceback__)[-1]
+        where = f"{Path(frame.filename).name}:{frame.lineno} {frame.name}"
+        print("".join(traceback.format_exception(error)), end="")
+        return None, from_network, f"{UNEXPECTED_PREFIX}{type(error).__name__}: {error} ({where})", retries
     if art is not None:
         return art, from_network, "", retries
     m = _FAIL_LINE.search(log)
-    reason = m.group(1).strip() if m else "HTML sah tetapi parse_article mengembalikan None"
+    reason = m.group(1).strip() if m else PARSE_NONE_REASON
     return None, from_network, reason, retries
 
 
@@ -300,6 +347,7 @@ def failure_status(entries: list[dict[str, Any]], owned: set[str]) -> dict[str, 
         "teratasi": len(last) - len(open_ids),
         "terbuka": len(open_ids),
         "id_terbuka": open_ids,
+        "terbuka_per_jenis": _count(last[aid].get("jenis") or failure_kind(last[aid]["alasan"]) for aid in open_ids),
         "rincian_terbuka": [{"article_id": aid, "url": last[aid]["url"], "kali_gagal": count[aid],
                              "alasan_terakhir": last[aid]["alasan"], "jalan_terakhir": last[aid]["jalan"],
                              "waktu_utc_terakhir": last[aid]["waktu_utc"]} for aid in open_ids],
@@ -327,12 +375,16 @@ def scrape_all(urls: list[str], session: Any, run: str,
         art, from_network, reason, retries = scrape_with_reason(url, session)
         RETRIES["artikel"] += retries
         if art is None:
-            failure = {"url": url, "article_id": article_id_of(url), "alasan": reason, "retry": retries}
+            failure = {"url": url, "article_id": article_id_of(url), "alasan": reason, "retry": retries,
+                       "jenis": failure_kind(reason)}
+            if failure["jenis"] == "galat_kode":
+                failure["exception"] = reason.removeprefix(UNEXPECTED_PREFIX).split(":", 1)[0]
             failures.append(failure)
             record_failure(failure, run)
         else:
             articles.append(art)
-        print(f"[{i}/{len(urls)}] {article_id_of(url)} {'ok' if art else 'GAGAL: ' + reason}")
+        status = "ok" if art else f"GAGAL [{failure_kind(reason)}]: {reason}"
+        print(f"[{i}/{len(urls)}] {article_id_of(url)} {status}")
         if art is None and is_network_failure(reason):
             consecutive += 1
             if consecutive >= max_network_failures:

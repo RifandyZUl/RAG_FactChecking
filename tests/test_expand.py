@@ -387,3 +387,84 @@ def test_rerun_resolves_earlier_failures_in_report_and_status(
     status = json.loads(capsys.readouterr().out)
     assert (status["id_unik"], status["teratasi"], status["terbuka"]) == (20, 19, 1)
     assert status["rincian_terbuka"][0]["kali_gagal"] == 2
+
+
+# -- galat tak terduga saat parse: kegagalan artikel itu, jenisnya terpisah dari jaringan -----
+
+@pytest.mark.parametrize(("reason", "kind"), [
+    (NET, "jaringan"), (TIMEOUT, "jaringan"),
+    ("galat tak terduga: ValueError: Invalid IPv6 URL (links.py:71 blocked_reason)", "galat_kode"),
+    (ERROR_PAGE, "halaman_galat"), (PARSE_NONE, "parse_kosong"), (NOT_FOUND, "http_atau_lain"),
+])
+def test_failure_kind_separates_code_errors_from_network(reason: str, kind: str) -> None:
+    assert expand.failure_kind(reason) == kind
+
+
+def test_scrape_with_reason_turns_unexpected_exception_into_article_failure(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr(expand, "RAW_HTML_DIR", tmp_path)
+
+    def boom(url: str, session: object) -> tuple[dict, bool]:
+        print("  [retry 1/3] ReadTimeout; menunggu 2 dtk")
+        raise ValueError("Invalid IPv6 URL")
+
+    monkeypatch.setattr(expand, "scrape_article", boom)
+    art, from_network, reason, retries = scrape_with_reason(u(7), None)
+    assert art is None and retries == 1
+    assert from_network is True, "tidak ada cache sebelum pengambilan: dianggap dari jaringan"
+    assert reason.startswith("galat tak terduga: ValueError: Invalid IPv6 URL (test_expand.py:")
+    assert reason.endswith(" boom)") and not expand.is_network_failure(reason)
+    out = capsys.readouterr().out
+    assert "Traceback" in out and "[retry 1/3]" in out, "jejak lengkap dan log klien tetap tercetak"
+
+    (tmp_path / "7.html").write_text("<html></html>", encoding="utf-8")
+    assert scrape_with_reason(u(7), None)[1] is False, "cache sudah ada: bukan dari jaringan"
+
+    def interrupted(url: str, session: object) -> tuple[dict, bool]:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(expand, "scrape_article", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        scrape_with_reason(u(7), None)
+
+
+CODE_ERR = "galat tak terduga: ValueError: Invalid IPv6 URL (links.py:71 blocked_reason)"
+
+
+def test_one_unparseable_article_does_not_abort_the_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # bentuk kejadian kelompok 6: 80 ok, artikel ke-81 melempar galat parse, sisanya ok
+    tried = _scripted(monkeypatch, tmp_path, [("", True)] * 80 + [(CODE_ERR, False)] + [("", True)] * 29)
+    arts, fails = scrape_all(_urls(110), None, run="batch_06")
+    assert len(tried) == 110 and len(arts) == 109
+    assert fails == [{"url": u(81), "article_id": "81", "alasan": CODE_ERR, "retry": 0,
+                      "jenis": "galat_kode", "exception": "ValueError"}]
+    ledger = json.loads((tmp_path / "failed_ids.json").read_text(encoding="utf-8"))
+    assert (ledger[0]["jenis"], ledger[0]["exception"]) == ("galat_kode", "ValueError")
+    stats = batch_stats(arts, fails, 110)
+    assert stats["gagal_per_jenis"] == {"galat_kode": 1} and stats["exception_galat_kode"] == {"ValueError": 1}
+
+
+def test_systematic_parse_bug_is_visible_and_not_mistaken_for_network(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    # semua artikel gagal di-parse (bug kode) + 2 gagal jaringan terpisah: pemutus sirkuit TIDAK terpicu,
+    # jalan selesai dengan kode 3, dan laporan memisahkan kedua jenis
+    state = {"batch": 5, "anchor_url": u(100), "start_page": 144, "known_ids": ["100"]}
+    exp, _ = _fake_run_dir(monkeypatch, tmp_path, state)
+    _scripted(monkeypatch, tmp_path, [(CODE_ERR, True)] * 9 + [(NET, True)] * 2 + [(CODE_ERR, True)] * 9)
+    monkeypatch.setattr(expand, "FAILED_PATH", exp / "failed_ids.json")
+
+    assert expand.main() == 3
+    stats = json.loads((exp / "batch_06_report.json").read_text(encoding="utf-8"))["statistik"]
+    assert stats["gagal_per_jenis"] == {"galat_kode": 18, "jaringan": 2}
+    assert stats["exception_galat_kode"] == {"ValueError": 18}
+    out = capsys.readouterr().out
+    assert out.count("GAGAL [galat_kode]") == 18 and out.count("GAGAL [jaringan]") == 2
+    monkeypatch.setattr(expand.sys, "argv", ["expand", "--failed-status"])
+    assert expand.main() == 0
+    assert json.loads(capsys.readouterr().out)["terbuka_per_jenis"] == {"galat_kode": 18, "jaringan": 2}
+
+
+def test_batch_stats_classifies_old_ledger_entries_without_kind() -> None:
+    fails = [{"url": u(1), "article_id": "1", "alasan": NET}, {"url": u(2), "article_id": "2", "alasan": NOT_FOUND}]
+    stats = batch_stats([], fails, 2)
+    assert stats["gagal_per_jenis"] == {"jaringan": 1, "http_atau_lain": 1} and stats["exception_galat_kode"] == {}
