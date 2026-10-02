@@ -12,15 +12,19 @@ from urllib.parse import urldefrag, urlparse
 # ditemukan kebocoran pada artikel lain.
 
 # Domain yang disaring dari `references`, apa pun path-nya (postingan maupun
-# beranda akun). Tiga kelompok: media sosial (tempat hoaks beredar; akun resmi
+# beranda akun). Empat kelompok: media sosial (tempat hoaks beredar; akun resmi
 # instansi tidak bisa dibedakan dari akun penyebar hoaks tanpa penilaian
-# kredibilitas, ditunda ke Versi 2), arsip (salinan unggahan hoaks), dan
-# hosting gambar (tangkapan layar yang tidak bisa diverifikasi pengguna).
+# kredibilitas, ditunda ke Versi 2), arsip (salinan unggahan hoaks), hosting
+# gambar (tangkapan layar yang tidak bisa diverifikasi pengguna), dan pemendek
+# URL (tujuannya tidak bisa diverifikasi pengguna sebelum diklik, bahkan bila
+# rujukannya sah; ditambahkan 2026-10-03 setelah tautan pendek sumber hoaks
+# ditemukan tampil sebagai rujukan pada 7 artikel).
 ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
     # media sosial
     "tiktok.com",
     "facebook.com",
     "fb.watch",  # pemendek resmi Facebook
+    "fb.me",  # pemendek resmi Facebook (ditemukan di data)
     "instagram.com",
     "x.com",
     "twitter.com",
@@ -41,6 +45,15 @@ ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
     # hosting gambar
     "ibb.co.com",
     "ibb.co",  # domain asli imgbb; ibb.co.com adalah cerminannya
+    # pemendek URL: enam pertama ditetapkan pemilik proyek; sisanya ditemukan di data
+    "tinyurl.com",
+    "shorturl.at",
+    "short-url.org",
+    "bit.ly",
+    "s.id",
+    "cutt.ly",
+    "surl.li",
+    "g.co",  # pemendek resmi Google; tetap tidak bisa diverifikasi sebelum diklik
 )
 
 

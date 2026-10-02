@@ -39,6 +39,22 @@ def test_compare_index_detects_missing_extra_and_metadata_drift() -> None:
     assert len(drift) == 1 and "n_tokens" in drift[0]
 
 
+def test_compare_index_detects_stale_references_when_text_is_identical() -> None:
+    """
+    Kasus yang TIDAK tertangkap ingest inkremental (ia hanya membandingkan teks): kebijakan
+    penyaringan rujukan diperketat, teks chunk sama, tetapi rujukan tersimpan di indeks masih lama.
+    """
+    stale = '["https://www.contoh.go.id/rilis", "https://tinyurl.com/contoh1"]'
+    fresh = '["https://www.contoh.go.id/rilis"]'
+    sections = ("narasi", "penjelasan", "kesimpulan")
+    new = [_chunk(f"1_{s}", s, references=fresh) for s in sections]
+    old = [_chunk(f"1_{s}", s, references=stale) for s in sections]
+    problems = compare_index(new, *_stored(old))
+    assert len(problems) == 3, "setiap chunk artikel itu dilaporkan"
+    assert all("metadata 'references' beda" in p for p in problems)
+    assert compare_index(new, *_stored(new)) == []
+
+
 def test_reset_collection_removes_stale_content(tmp_path) -> None:
     """--rebuild: koleksi lama beserta seluruh isinya (termasuk id usang) hilang; koleksi baru kosong."""
     from ingest import get_collection, reset_collection

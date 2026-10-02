@@ -82,3 +82,20 @@ def test_valid_urls_are_unaffected_by_invalid_url_handling() -> None:
     assert blocked_reason("https://www.contoh.go.id/a?b=[1]#c") is None  # kurung di query/fragmen sah
     assert blocked_reason("http://[2001:db8::1]/x") is None  # IPv6 sah
     assert normalize_url("https://www.contoh.go.id/a?b=[1]#c") == "https://www.contoh.go.id/a?b=[1]"
+
+
+def test_url_shorteners_are_always_filtered() -> None:
+    """Tautan pendek tidak bisa diverifikasi pengguna sebelum diklik (ditetapkan 2026-10-03)."""
+    for url in [
+        "https://tinyurl.com/contoh1", "https://shorturl.at/AbCdE", "https://short-url.org/1abCd",
+        "https://bit.ly/contoh", "http://bit.ly/contoh", "https://s.id/contoh", "https://cutt.ly/contoh",
+        "https://surl.li/contoh", "https://g.co/contoh", "https://fb.me/contoh", "https://www.tinyurl.com/x",
+    ]:
+        assert blocked_reason(url), f"seharusnya disaring: {url}"
+    # domain yang hanya berakhiran mirip tidak ikut tersaring
+    for url in [
+        "https://news.id/a", "https://bisnis.id/a", "https://www.contoh.go.id/a", "https://rabbit.ly/a",
+        "https://blog.co/a", "https://www.bing.co/a", "https://mytinyurl.com.example.org/a", "https://kompas.id/a",
+        "https://tirto.id/a", "https://www.ojk.go.id/a",
+    ]:
+        assert blocked_reason(url) is None, f"tidak boleh disaring: {url}"

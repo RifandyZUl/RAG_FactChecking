@@ -18,9 +18,11 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > di-reparse, belum digabung, belum di-ingest -- pemilik proyek memulai ingest ketiganya SEKALIGUS
 > setelah membebaskan memori** (urutan: `scraping.reparse` per kelompok -> gabung di akhir
 > `articles.json` -> cadangan -> ingest inkremental -> `index_check`). 30089 ada di kelompok 5;
-> verifikasi top-3 v1-029 dilakukan SETELAH ingest. **Menunggu keputusan (lihat butir "Temuan
-> Aturan Wajib #1" di bawah): URL "Sumber:" dari seksi Hasil Periksa Fakta tampil sebagai rujukan
-> pada 10 artikel, 8 di antaranya sudah ada di indeks produksi.**
+> verifikasi top-3 v1-029 dilakukan SETELAH ingest. **Aturan Wajib #1 (butir "Temuan Aturan
+> Wajib #1" di bawah): demo SUDAH diamankan untuk tautan pendek (daftar domain + penyaringan ulang
+> saat tampil). Perubahan parser untuk baris "Sumber:" BELUM dikerjakan -- BERHENTI menunggu
+> keputusan pemilik proyek, karena pada 3 artikel baris itu memuat situs resmi/media, bukan
+> unggahan hoaks. `articles.json` BELUM di-reparse (indeks dan `articles.json` masih cocok).**
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
@@ -108,6 +110,45 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     kedua sehingga kriteria (a) menyaringnya -- ini perubahan logika parsing yang mengubah
     `claim_sources`/`references` banyak artikel (metadata chunk), jadi perlu bukti reparse dan
     keputusan soal ingest ulang.
+  - **Tindak lanjut temuan Aturan Wajib #1 (2026-10-03, keputusan pemilik proyek; tanpa membuka
+    tautan apa pun):**
+    (a) *Pemendek URL masuk `ALWAYS_BLOCKED_DOMAINS`* (`links.py`): `tinyurl.com`, `shorturl.at`,
+    `short-url.org`, `bit.ly`, `s.id`, `cutt.ly` (ditetapkan pemilik proyek) + `surl.li`, `g.co`, dan
+    `fb.me` (pemendek Facebook, kelompok media sosial) yang ditemukan di data. Alasan: tujuan tautan
+    pendek tidak bisa diverifikasi pengguna sebelum diklik, bahkan bila rujukannya sah. **Bukti
+    (parse ulang 1.532 artikel dari cache, kode `89ad36a` vs baru): 1.507 identik, 25 berubah, hanya
+    bidang `references_filtered` (25) dan `references` (13)**; `references_raw`/`claim_sources` tidak
+    berubah; tidak ada rujukan yang bertambah. 13 URL tersaring: bit.ly 4, short-url.org 3,
+    tinyurl.com 2, shorturl.at 2, g.co 2. Per sumber: 922 = 18 artikel (8 di antaranya kehilangan
+    rujukan tampil: 36089, 35112, 34994, 34980, 34647, 33802, 33794, 33308), kelompok 4 = 4, 5 = 1,
+    6 = 2. Rujukan menjadi kosong: 34994, 32091. **Arsip v1: 36089 terdampak (bit.ly di
+    `references`); `archive/v1/` TIDAK disentuh** -- lapisan tampilan menyaringnya bila demo
+    diarahkan ke arsip.
+    (b) *Penyaringan ulang di lapisan tampilan* (`presentation.display_references`, dipanggil
+    `build_view`): rujukan dari metadata indeks disaring lagi dengan `links.blocked_reason` tepat
+    sebelum ditampilkan, dan tiap rujukan terbuang dicatat `logger.warning` (alasan + id artikel,
+    bukan tautannya). Dasar: ingest inkremental hanya membandingkan TEKS chunk, jadi metadata
+    `references` yang basi tidak pernah diperbarui olehnya. Lapisan ini tidak mengenal
+    `claim_sources` (tidak dibawa ke metadata), jadi hanya menutup kebocoran berbasis domain.
+    `generator.py` tidak disentuh (uji kunci lolos): keluaran teks `generator` (CLI/evaluasi) dan
+    konteks LLM masih memuat rujukan dari metadata apa adanya.
+    (c) *`index_check` sudah mendeteksi metadata basi:* `compare_index` membandingkan `references`
+    tiap chunk dengan hasil chunking `articles.json` (uji baru: teks sama, rujukan beda -> dilaporkan).
+    Saat ini indeks MASIH cocok dengan `articles.json` karena `articles.json` belum di-reparse;
+    setelah reparse, `index_check` akan gagal pada chunk 18 artikel itu sampai metadata diperbarui.
+    (d) **Baris "Sumber:" -- BERHENTI, menunggu keputusan.** Letak: seksi Hasil Periksa Fakta
+    (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
+    Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
+    itu dibaca sebagai sumber klaim, KECUALI bila ada artikel yang "Sumber:"-nya jelas bukan unggahan
+    hoaks -> lapor dan berhenti. **Itu terjadi pada 3 artikel:** 32110 (`bpjs-kesehatan.go.id`, situs
+    resmi yang juga satu-satunya rujukan tampil), 31532 (`cekbansos.kemensos.go.id`, situs resmi,
+    satu-satunya rujukan tampil), 33497 (dua berita media arus utama, keduanya rujukan tampil).
+    Menyaring semua URL "Sumber:" akan membuang rujukan sah itu. Lainnya di luar daftar-blokir:
+    arsip (`arsip.cekfakta.com` 76, `megalodon.jp` 7, `perma.cc` 4, `archive.cob.web.id` 1), pemendek,
+    `turnbackhoax.id` (3, tangkapan layar; sudah dikecualikan parser), Google Docs/Drive (33554,
+    32772), satu domain penipuan (34525, sudah di `claim_sources`), `videotourl.com` (36622).
+    **Masih tampil sebagai rujukan setelah (a)-(b):** arsip di luar daftar-blokir (`arsip.cekfakta.com`
+    9 URL termasuk 35161 yang merupakan "Sumber:", `archive.fo` 2, `perma.cc` 1) -- belum diputuskan.
   - **Kelompok 6, JALAN PERTAMA (2026-10-02 ~23:30 WIB; riwayat): jalan berhenti dengan
     galat parse (kode keluar Python 1), BUKAN galat jaringan.** Jangkar 29646 ditemukan di halaman
     daftar 144; 110 URL terkumpul (s.d. halaman 155); 80 artikel berhasil (0 retry), lalu artikel
@@ -1482,7 +1523,7 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   batas berarti embedding ulang semua chunk: `python src/ingest.py --rebuild`).
 - Penyaringan `references` bersifat konservatif dan berbasis domain:
   semua tautan ke media sosial (Instagram, Facebook, TikTok, X/Twitter,
-  Threads, YouTube), arsip, dan hosting gambar dibuang, tanpa membedakan
+  Threads, YouTube), arsip, hosting gambar, dan (sejak 2026-10-03) pemendek URL dibuang, tanpa membedakan
   postingan dari beranda akun. Akibatnya sebagian artikel (16 dari 150
   pada scraping awal) berakhir dengan `references` kosong padahal
   Referensi aslinya berisi tautan. Tautan yang dibuang tetap tersimpan di
