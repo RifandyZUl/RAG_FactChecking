@@ -10,7 +10,13 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-09-27)*
+*(2026-10-02)*
+
+> **PERHATIAN (2026-10-02): KELOMPOK 5 GAGAL SEBAGIAN BESAR (40/250) -- JANGAN jalankan
+> `scraping.expand` mode mundur (kelompok 6) sebelum 210 artikel gagal ditangani.** `state.json`
+> sudah maju melewati 210 artikel itu (termasuk 30089); menjalankan kelompok berikutnya akan
+> melompatinya secara permanen. Rincian di butir "Kelompok 5" di bawah. Indeks produksi tetap 922
+> artikel / 2766 chunk; kelompok 4 (250) dan kelompok 5 (40) belum digabung dan belum di-ingest.
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
@@ -59,6 +65,43 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     sisa ke akhir Sep 2025 = 78 hari -> **perkiraan ~400 artikel lagi (2 kelompok), total ~1.570
     artikel** pada laju 5,3/hari (bukan ~486/1.408). Laju bervariasi antar-periode (kelompok 1: ~3,5/hari;
     kelompok 2: ~4,5; kelompok 4: ~5,3), jadi angka ini perkiraan.
+  - **Kelompok 5 (dijalankan 2026-09-28 ~19:00-20:40 WIB; diperiksa 2026-10-02 dari berkas, tanpa
+    jaringan; scraping SAJA, belum digabung/di-ingest): 40/250 berhasil, 210 GAGAL (84%).** Log
+    berakhir `BERHENTI: tingkat gagal 84.0% > 5%`; menurut kode jalur itu mengembalikan kode keluar
+    **3**, bukan 0 (kode keluar 0 yang teramati pemilik proyek tidak dapat diverifikasi dari berkas;
+    dugaan: yang terbaca adalah kode keluar pipa/pengalihan log, belum diuji). Ambang 5% hanya
+    diperiksa SETELAH seluruh 250 dicoba, jadi jalan tidak berhenti lebih awal.
+    - *Yang berhasil (40):* urutan 1-38, 40, 41; id 30595-30875; 2025-12-08 s.d. 2025-12-17
+      (bersambung dengan kelompok 4); 0 seksi kosong; 0 duplikat; 0 tumpang tindih dengan 922 artikel
+      maupun kelompok 4; 0 memuat `\r`. Label: SALAH 30, PENIPUAN 6, PARODI 2, SATIR 1 (30644),
+      **KOMEDI 1 (30793) -- label BARU berkurung lengkap** (`[KOMEDI] ...` di `<h1>` cache), diterima
+      apa adanya (Aturan Wajib #7); **cara menampilkannya BELUM diputuskan** (tidak ada di
+      `STATUS_ALIASES`, jadi saat ini akan tampil dengan gaya SALAH).
+    - *Yang gagal (210):* id 29646-30600; ConnectionError 209, ReadTimeout 1, semuanya setelah 4
+      percobaan (retry artikel 630 = 210 x 3; halaman daftar 0). Waktu di `failed_ids.json`:
+      2026-09-28 12:10:09 s.d. 13:40:16 UTC (19:10-20:40 WIB), beruntun dari urutan 42 sampai 250
+      tanpa satu pun keberhasilan -> jaringan putus total, bukan putus-nyambung. `failed_ids.json`
+      (210 entri, semuanya `batch_05`, id unik 210) sama persis dengan `id_gagal` di laporan.
+      **30089 (artikel asal v1-029) termasuk yang GAGAL** (12:52:36 UTC, ConnectionError); tidak ada
+      di cache. Verifikasi top-3 v1-029 belum dapat dilakukan.
+    - *Halaman galat lolos validasi: tidak ditemukan.* 40 cache lolos `is_valid_article_html`, 0
+      memuat teks "Terjadi kesalahan saat mengambil data" (juga 0 pada seluruh 1.212 berkas cache),
+      ukuran terkecil 37 KB, median 42,6 KB (median seluruh cache 42,8 KB), reparse dari cache identik dengan
+      `batch_05.json` (40/40). Tidak ada artikel gagal yang punya cache; tidak ada `.tmp` tersisa.
+      Panjang seksi dibanding 1.172 artikel acuan (922 + kelompok 4): tidak ada yang di bawah
+      minimum acuan; satu di bawah persentil-1: 30875 Penjelasan 364 karakter (p1 acuan 430, minimum
+      acuan 226) -- pendek tetapi artikel sah. `references` kosong 8/40 (penyaringan domain, perilaku
+      yang sudah dikenal).
+    - **`state.json` SUDAH MAJU:** `batch` 5, jangkar 29646, `start_page` 143, `known_ids` 1.400
+      (memuat 210 id gagal). Ini celah yang sudah dicatat di "Perilaku gagal": mode mundur tidak
+      pernah mencoba ulang id di `known_ids`. **Menunggu keputusan pemilik proyek**, dua jalan:
+      (1) kembalikan `state.json` ke keadaan setelah kelompok 4 (`batch` 4, jangkar 30876,
+      `start_page` 118, `known_ids` dikurangi 250 id kelompok 5 -> 1.150) lalu jalankan ulang
+      kelompok 5 (40 artikel terbaca dari cache, 210 dari jaringan; `batch_05.*` tertimpa,
+      `failed_ids.json` hanya bertambah); atau (2) bangun langkah coba-ulang agenda (b) yang membaca
+      `failed_ids.json`. Belum ada yang dikerjakan; `state.json` tidak diubah.
+    - Cakupan tanggal 210 artikel gagal tidak diketahui (tidak terambil), jadi perkiraan sisa
+      artikel pada butir kelompok 4 belum dapat diperbarui.
   - **Kelompok 3 (2026-09-27; scraping):** 250/250
     berhasil, 0 seksi kosong, 2026-02-02 s.d. 2026-03-31 (halaman daftar 68-93; 0 id tumpang tindih
     dengan 672 artikel). Label: SALAH 175, PENIPUAN 73, PARODI 2, TIDAK DIKETAHUI 0. Retry: artikel
