@@ -10,15 +10,17 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-10-02)*
+*(2026-10-03)*
 
-> **KEADAAN (2026-10-02 malam): kelompok 5 SUDAH LENGKAP (250/250) setelah dijalankan ulang;
-> jalan pertama 28 Sep gagal 210/250 karena jaringan putus (catatan kejadian disimpan).** Indeks
-> produksi tetap 922 artikel / 2766 chunk. **Kelompok 4 (250) dan kelompok 5 (250) belum di-reparse,
-> belum digabung, belum di-ingest -- menunggu pemilik proyek membebaskan memori.** Sebelum
-> penggabungan ada tiga hal yang menunggu keputusan (butir "Kelompok 5": 3 judul `TIDAK DIKETAHUI`,
-> 2 artikel berseksi kosong di sumber). 30089 sudah ada di kelompok 5; verifikasi top-3 v1-029
-> dilakukan SETELAH ingest.
+> **KEADAAN (2026-10-03): SCRAPING PERLUASAN SELESAI sampai 30 Sep 2025. Kelompok 4 (250),
+> 5 (250), dan 6 (110) lengkap, 0 gagal -- total dimiliki 1.532 artikel, 2025-09-30 s.d.
+> 2026-09-27.** Indeks produksi tetap 922 artikel / 2766 chunk. **Kelompok 4-6 (610 artikel) belum
+> di-reparse, belum digabung, belum di-ingest -- pemilik proyek memulai ingest ketiganya SEKALIGUS
+> setelah membebaskan memori** (urutan: `scraping.reparse` per kelompok -> gabung di akhir
+> `articles.json` -> cadangan -> ingest inkremental -> `index_check`). 30089 ada di kelompok 5;
+> verifikasi top-3 v1-029 dilakukan SETELAH ingest. **Menunggu keputusan (lihat butir "Temuan
+> Aturan Wajib #1" di bawah): URL "Sumber:" dari seksi Hasil Periksa Fakta tampil sebagai rujukan
+> pada 10 artikel, 8 di antaranya sudah ada di indeks produksi.**
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
@@ -67,7 +69,46 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     sisa ke akhir Sep 2025 = 78 hari -> **perkiraan ~400 artikel lagi (2 kelompok), total ~1.570
     artikel** pada laju 5,3/hari (bukan ~486/1.408). Laju bervariasi antar-periode (kelompok 1: ~3,5/hari;
     kelompok 2: ~4,5; kelompok 4: ~5,3), jadi angka ini perkiraan.
-  - **Kelompok 6 (2026-10-02 ~23:30 WIB, `--batch-size 110`): BELUM SELESAI -- jalan berhenti dengan
+  - **Kelompok 6, JALAN ULANG (2026-10-03 ~00:07 WIB, `--batch-size 110`; scraping SAJA): 110/110
+    berhasil, 0 gagal, 0 retry, 0 seksi kosong, kode keluar Python 0** (baris terakhir
+    `batch_06.log`). Jangkar 29646 di halaman daftar 144; halaman daftar s.d. 155; id 29324-29645;
+    80 artikel pertama sama dengan jalan yang gugur (terbaca dari cache). **2025-09-30 s.d.
+    2025-10-23** (23 hari, ~4,8 artikel/hari; Sep 2025: 8 artikel, semuanya 30 Sep; Okt: 102). Tiga
+    artikel terakhir dalam urutan daftar bertanggal 30 Sep, jadi **30 Sep 2025 mungkin belum
+    lengkap** (belum diperiksa apakah ada artikel 30 Sep lain setelah jangkar baru 29324). Label:
+    SALAH 91, PENIPUAN 16, PARODI 3; tidak ada label baru, `TIDAK DIKETAHUI` 0, 0 judul berkarakter
+    tak terlihat. 0 duplikat, 0 tumpang tindih dengan 1.422 artikel lain, 0 memuat `\r`; 110 cache
+    lolos validasi, 0 teks galat, reparse dari cache identik 110/110; total cache 1.532.
+    **29437 MASUK** (PENIPUAN, 07/10/2025): `http://kemenag.go.id]` tersaring dengan alasan "URL tidak
+    sah" dan tetap di `references_raw`; `http://kemenag.go.id` yang sah menjadi satu-satunya rujukan.
+    `state.json`: `batch` 6, jangkar 29324, `start_page` 155, 1.510 `known_ids`. `failed_ids.json`
+    tetap 210 entri; status turunan 210 teratasi / 0 terbuka. `references` kosong 20/110.
+    **`claim_sources` kosong 110/110** -- lihat butir "Temuan Aturan Wajib #1". Kesimpulan median 136
+    karakter, hanya 4/110 diawali "Faktanya" (keterbatasan klarifikasi tipis berlaku juga di sini).
+    **Label 1.532 artikel setelah reparse:** SALAH 1.057, PENIPUAN 456, PARODI 15, SATIR 2, SATIRE 1,
+    KOMEDI 1. Log jalan yang gugur disimpan sebagai `batch_06_gugur_2026-10-02.log`.
+  - **Temuan Aturan Wajib #1 (2026-10-03; DILAPORKAN, BELUM DIPERBAIKI -- menunggu keputusan pemilik
+    proyek; ditemukan saat memeriksa `claim_sources` kelompok 6):**
+    (1) *Sumber hoaks sebelum ~akhir Okt 2025 tidak ada di Narasi.* Pada artikel lama, Narasi di
+    sumber berupa teks polos tanpa tautan; tautan unggahan hoaks hanya ada di seksi **Hasil Periksa
+    Fakta, baris "Sumber:"**, yang TIDAK dibaca `extract_claim_sources`. `claim_sources` kosong per
+    bulan: Sep 2025 8/8, **Okt 2025 115/156**, Nov 9/126, lalu 1-13 per bulan. Akibatnya kriteria (a)
+    penyaringan `references` ("cocok dengan `claim_sources`") tidak bekerja untuk artikel itu; yang
+    menjaga hanya daftar domain.
+    (2) *Baris "Sumber:" ada di SEMUA 1.532 artikel* dan pada artikel baru umumnya sama dengan tautan
+    Narasi (ada di `claim_sources` pada 807/922, 212/250, 218/250, 0/110).
+    (3) **URL "Sumber:" yang TAMPIL di `references`: 11 URL pada 10 artikel** (pencocokan string
+    ternormalisasi): 9 URL / 8 artikel di **indeks produksi 922** (35161 `arsip.cekfakta.com`; 34994,
+    34980, 34647 `short-url.org`; 33802 `tinyurl.com`; 33794, 33308 `shorturl.at`; 33497 dua tautan
+    media arus utama), 1 di kelompok 4 (31532 `cekbansos.kemensos.go.id`), 1 di kelompok 5 (29858
+    `tinyurl.com`), 0 di kelompok 6. Tujuh di antaranya pemendek URL pada artikel PENIPUAN/SALAH:
+    **ke mana pemendek itu mengarah TIDAK diperiksa** (tidak dibuka; bisa arsip, bisa tautan penipuan).
+    Tautan media/pemerintah (33497, 31532) kemungkinan sah (sumber yang dikutip keliru oleh hoaks),
+    belum diverifikasi. Usulan (belum dikerjakan): baca baris "Sumber:" sebagai sumber `claim_sources`
+    kedua sehingga kriteria (a) menyaringnya -- ini perubahan logika parsing yang mengubah
+    `claim_sources`/`references` banyak artikel (metadata chunk), jadi perlu bukti reparse dan
+    keputusan soal ingest ulang.
+  - **Kelompok 6, JALAN PERTAMA (2026-10-02 ~23:30 WIB; riwayat): jalan berhenti dengan
     galat parse (kode keluar Python 1), BUKAN galat jaringan.** Jangkar 29646 ditemukan di halaman
     daftar 144; 110 URL terkumpul (s.d. halaman 155); 80 artikel berhasil (0 retry), lalu artikel
     ke-81, **29437**, melempar `ValueError: Invalid IPv6 URL` dari `urlparse` di
@@ -1398,8 +1439,8 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   pada 1.172 artikel acuan; 18 Kesimpulan lebih pendek dari yang terpendek di acuan (114), terpendek
   91 karakter. Faktanya sendiri ada di Penjelasan, yang tidak dikirim ke LLM. **Masukan Versi 2:**
   penyusunan/gaya bahasa klarifikasi perlu sumber selain Kesimpulan untuk artikel seperti ini (ikut
-  ditimbang bersama agenda menghapus Penjelasan dari indeks). Apakah periode sebelum Okt 2025 sama
-  belum diketahui.
+  ditimbang bersama agenda menghapus Penjelasan dari indeks). Kelompok 6 (30 Sep-23 Okt 2025) sama: median
+  136 karakter, hanya 4/110 Kesimpulan diawali "Faktanya". Periode sebelum 30 Sep 2025 belum diketahui.
 - **Dua artikel berseksi kosong di sumber** (kelompok 5; digabung apa adanya, keputusan 2026-10-02):
   29687 tanpa Penjelasan; 29670 (PARODI) tanpa Narasi dan Penjelasan, sehingga hanya terjangkau
   lewat chunk Kesimpulan.
