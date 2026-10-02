@@ -12,11 +12,13 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-02)*
 
-> **PERHATIAN (2026-10-02): KELOMPOK 5 GAGAL SEBAGIAN BESAR (40/250) -- JANGAN jalankan
-> `scraping.expand` mode mundur (kelompok 6) sebelum 210 artikel gagal ditangani.** `state.json`
-> sudah maju melewati 210 artikel itu (termasuk 30089); menjalankan kelompok berikutnya akan
-> melompatinya secara permanen. Rincian di butir "Kelompok 5" di bawah. Indeks produksi tetap 922
-> artikel / 2766 chunk; kelompok 4 (250) dan kelompok 5 (40) belum digabung dan belum di-ingest.
+> **KEADAAN (2026-10-02 malam): kelompok 5 SUDAH LENGKAP (250/250) setelah dijalankan ulang;
+> jalan pertama 28 Sep gagal 210/250 karena jaringan putus (catatan kejadian disimpan).** Indeks
+> produksi tetap 922 artikel / 2766 chunk. **Kelompok 4 (250) dan kelompok 5 (250) belum di-reparse,
+> belum digabung, belum di-ingest -- menunggu pemilik proyek membebaskan memori.** Sebelum
+> penggabungan ada tiga hal yang menunggu keputusan (butir "Kelompok 5": 3 judul `TIDAK DIKETAHUI`,
+> 2 artikel berseksi kosong di sumber). 30089 sudah ada di kelompok 5; verifikasi top-3 v1-029
+> dilakukan SETELAH ingest.
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
@@ -65,8 +67,43 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     sisa ke akhir Sep 2025 = 78 hari -> **perkiraan ~400 artikel lagi (2 kelompok), total ~1.570
     artikel** pada laju 5,3/hari (bukan ~486/1.408). Laju bervariasi antar-periode (kelompok 1: ~3,5/hari;
     kelompok 2: ~4,5; kelompok 4: ~5,3), jadi angka ini perkiraan.
-  - **Kelompok 5 (dijalankan 2026-09-28 ~19:00-20:40 WIB; diperiksa 2026-10-02 dari berkas, tanpa
-    jaringan; scraping SAJA, belum digabung/di-ingest): 40/250 berhasil, 210 GAGAL (84%).** Log
+  - **Kelompok 5, JALAN ULANG (2026-10-02 ~17:45-17:59 WIB; scraping SAJA, belum digabung/di-ingest):
+    250/250 berhasil, 0 gagal, 0 retry (artikel 0, halaman daftar 0), kode keluar Python 0** (dicatat
+    di baris terakhir `batch_05.log`, diperiksa dari berkas). Sebelumnya: catatan kejadian disalin ke
+    `data/expansion/insiden_2026-09-28_batch05/` (salinan byte `state.json`, `batch_05.json`,
+    `batch_05_report.json`, `batch_05.log`, `failed_ids.json`; jangan diubah), `state.json`
+    dikembalikan ke keadaan setelah kelompok 4 (`batch` 4, jangkar 30876, `start_page` 118, 1.150
+    `known_ids`), koneksi diuji (200, 2,2 dtk), dijalankan dengan `--start-page 116`.
+    - Jangkar 30876 ditemukan di halaman daftar **119** (28 Sep: 118); halaman daftar s.d. 144. Himpunan
+      250 id sama persis dengan jalan 28 Sep (id 29646-30875); 40 artikel yang dulu berhasil terbaca
+      dari cache dan identik. 0 duplikat; 0 tumpang tindih dengan 922 artikel dan kelompok 4.
+    - **2025-10-23 s.d. 2025-12-17** (55 hari, ~4,5 artikel/hari). Label: SALAH 202, PENIPUAN 39,
+      PARODI 4, KOMEDI 1 (30793), SATIR 1 (30644), **TIDAK DIKETAHUI 3 -- MENUNGGU KEPUTUSAN,
+      `parse_title` tidak diubah:** 29847 `[SALAH} ...` (kurung kurawal penutup; tidak tercakup pola
+      kurung rusak Aturan Wajib #7), 29812 dan 29787 `[SALAH] ...` berkurung LENGKAP tetapi diawali
+      U+200B (spasi lebar-nol) sehingga `^\s*\[` tidak cocok. Kesimpulan ketiganya menyatakan klaimnya
+      palsu/menyesatkan. Tidak ada judul ber-U+200B pada 1.172 artikel lain.
+    - **Seksi kosong: 2 artikel, kosong DI SUMBER (bukan galat parse/halaman galat):** 29687
+      (Penjelasan hanya judul seksi) dan 29670 (PARODI; Narasi DAN Penjelasan hanya judul seksi, yang
+      ada Kesimpulan saja). `chunker` melewati seksi kosong; 29670 tidak akan punya chunk Narasi.
+      **Menunggu keputusan: ikut digabung atau dikecualikan.**
+    - Halaman galat lolos validasi: tidak ditemukan (250 cache lolos validasi, 0 teks galat, ukuran
+      35-50 KB, reparse dari cache identik 250/250, 0 artikel memuat `\r`, 0 `.tmp`; total cache 1.422).
+      Kesimpulan lebih pendek pada Okt-Nov 2025 (median 140/137 karakter; Des 243; acuan 239): gaya
+      redaksi periode itu (satu kalimat "Unggahan berisi klaim ... merupakan konten palsu", tanpa
+      kalimat "Faktanya"), 18 Kesimpulan di bawah minimum acuan 114 (terpendek 91). `references` kosong
+      33/250, `claim_sources` kosong 23/250 (acuan 145 dan 73 dari 1.172).
+    - **30089 MASUK** (SALAH, 16/11/2025; Narasi 1.027 / Penjelasan 519 / Kesimpulan 244 karakter;
+      `references` kosong setelah penyaringan). Verifikasi top-3 v1-029 menunggu ingest.
+    - `state.json`: `batch` 5, jangkar 29646, `start_page` 144, 1.400 `known_ids`. `failed_ids.json`
+      tidak berubah (210 entri kejadian 28 Sep); status turunan: **210 teratasi, 0 terbuka**;
+      `gagal_terbuka` di laporan `[]`. Dimiliki total 1.422 artikel (922 + 250 + 250).
+    - Di bilah samping situs terlihat label `[BELUM TERBUKTI]` (belum ada di data kita); bila kelak
+      masuk, ia akan jatuh ke tampilan netral dan tercatat di log.
+    - Sisa menuju akhir Sep 2025: ~23 hari (23 Okt -> 30 Sep) -> ~100 artikel pada 4,5/hari (perkiraan).
+  - **Kelompok 5, JALAN PERTAMA / KEJADIAN (2026-09-28 ~19:00-20:40 WIB; diperiksa 2026-10-02 dari
+    berkas; butir di bawah ini riwayat -- keadaan `state.json` dan 30089 sudah digantikan jalan ulang
+    di atas): 40/250 berhasil, 210 GAGAL (84%).** Log
     berakhir `BERHENTI: tingkat gagal 84.0% > 5%`; menurut kode jalur itu mengembalikan kode keluar
     **3**, bukan 0 (kode keluar 0 yang teramati pemilik proyek tidak dapat diverifikasi dari berkas;
     dugaan: yang terbaca adalah kode keluar pipa/pengalihan log, belum diuji). Ambang 5% hanya
