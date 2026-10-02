@@ -177,3 +177,213 @@ def test_fetch_list_page_counts_list_retries(monkeypatch: pytest.MonkeyPatch) ->
 
 def test_failure_threshold_is_the_owner_choice() -> None:
     assert expand.MAX_FAILURE_RATE == 0.05
+
+
+# -- pemutus sirkuit ---------------------------------------------------------
+
+NET = "ConnectionError setelah 4 percobaan"
+TIMEOUT = "ReadTimeout setelah 4 percobaan"
+NOT_FOUND = "404 Client Error: Not Found for url: x"
+ERROR_PAGE = "halaman galat (HTML tidak lolos validasi) setelah 4 percobaan"
+PARSE_NONE = "HTML sah tetapi parse_article mengembalikan None"
+
+
+@pytest.mark.parametrize(("reason", "expected"), [
+    (NET, True), (TIMEOUT, True), ("ConnectTimeout setelah 4 percobaan", True),
+    ("SSLError setelah 4 percobaan", True),
+    (NOT_FOUND, False), (ERROR_PAGE, False), (PARSE_NONE, False),
+    ("503 Server Error: Service Unavailable for url: x", False), ("", False),
+])
+def test_is_network_failure_only_counts_network_errors(reason: str, expected: bool) -> None:
+    assert expand.is_network_failure(reason) is expected
+
+
+def _scripted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, outcomes: list[tuple[str, bool]]) -> list[str]:
+    """
+    Skenario scrape_all: outcomes[i] = (alasan, dari_jaringan); alasan "" berarti berhasil.
+    Mengembalikan daftar URL yang benar-benar dicoba (diisi selama jalan).
+    """
+    monkeypatch.setattr(expand, "FAILED_PATH", tmp_path / "failed_ids.json")
+    monkeypatch.setattr(expand, "RETRIES", {"artikel": 0, "halaman_daftar": 0})
+    monkeypatch.setattr(expand.time, "sleep", lambda s: None)
+    by_url = {u(i): o for i, o in enumerate(outcomes, 1)}
+    tried: list[str] = []
+
+    def fake(url: str, session: object) -> tuple[dict | None, bool, str, int]:
+        tried.append(url)
+        reason, from_network = by_url[url]
+        art = None if reason else _art(article_id_of(url) or "")
+        return art, from_network, reason, 3 if expand.is_network_failure(reason) else 0
+
+    monkeypatch.setattr(expand, "scrape_with_reason", fake)
+    return tried
+
+
+def _urls(n: int) -> list[str]:
+    return [u(i) for i in range(1, n + 1)]
+
+
+def test_circuit_breaker_stops_on_total_network_outage(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # bentuk kejadian kelompok 5: 38 ok, 1 gagal, 2 ok, lalu jaringan putus total sampai akhir
+    outcomes = [("", True)] * 38 + [(TIMEOUT, True)] + [("", True)] * 2 + [(NET, True)] * 209
+    tried = _scripted(monkeypatch, tmp_path, outcomes)
+    with pytest.raises(expand.NetworkDownError) as exc:
+        scrape_all(_urls(250), None, run="batch_05")
+    limit = expand.MAX_CONSECUTIVE_NETWORK_FAILURES
+    assert len(tried) == 41 + limit, "berhenti setelah ambang, bukan mencoba 209 artikel"
+    err = exc.value
+    assert (err.attempted, err.total, err.consecutive) == (41 + limit, 250, limit)
+    assert len(err.articles) == 40 and len(err.failures) == 1 + limit
+    ledger = json.loads((tmp_path / "failed_ids.json").read_text(encoding="utf-8"))
+    assert len(ledger) == 1 + limit, "yang tercatat gagal hanya yang benar-benar dicoba"
+
+
+def test_circuit_breaker_ignores_broken_articles_on_healthy_network(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # 12 artikel rusak BERUNTUN (404, halaman galat, gagal parse) saat jaringan normal: tidak memutus
+    broken = [(NOT_FOUND, True), (ERROR_PAGE, True), (PARSE_NONE, True), (PARSE_NONE, False)] * 3
+    tried = _scripted(monkeypatch, tmp_path, [("", True)] * 3 + broken + [("", True)] * 3)
+    arts, fails = scrape_all(_urls(18), None, run="batch_09")
+    assert len(tried) == 18 and len(arts) == 6 and len(fails) == 12
+
+
+def test_circuit_breaker_resets_when_server_is_reachable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # gangguan putus-nyambung: 4 gagal jaringan, lalu bukti server terjangkau (berhasil ATAU 404), berulang
+    outcomes = [(NET, True)] * 4 + [("", True)] + [(TIMEOUT, True)] * 4 + [(NOT_FOUND, True)] + [(NET, True)] * 4
+    tried = _scripted(monkeypatch, tmp_path, outcomes)
+    arts, fails = scrape_all(_urls(14), None, run="batch_09", max_network_failures=5)
+    assert len(tried) == 14 and len(arts) == 1 and len(fails) == 13
+
+
+def test_circuit_breaker_cache_hits_do_not_reset_the_count(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # artikel dari cache bukan bukti jaringan hidup (jalan ulang: sebagian artikel sudah ter-cache)
+    outcomes = [(NET, True)] * 3 + [("", False)] * 2 + [(NET, True)] * 2 + [("", True)] * 5
+    tried = _scripted(monkeypatch, tmp_path, outcomes)
+    with pytest.raises(expand.NetworkDownError):
+        scrape_all(_urls(12), None, run="batch_09", max_network_failures=5)
+    assert len(tried) == 7
+
+
+def test_circuit_breaker_threshold_is_configurable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    tried = _scripted(monkeypatch, tmp_path, [(NET, True)] * 10)
+    with pytest.raises(expand.NetworkDownError):
+        scrape_all(_urls(10), None, run="batch_09", max_network_failures=2)
+    assert len(tried) == 2
+
+
+def _fake_run_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, state: dict) -> tuple[Path, Path]:
+    exp = tmp_path / "expansion"
+    exp.mkdir()
+    state_path = exp / "state.json"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    monkeypatch.setattr(expand, "EXPANSION_DIR", exp)
+    monkeypatch.setattr(expand, "STATE_PATH", state_path)
+    monkeypatch.setattr(expand, "ARTICLES_PATH", tmp_path / "articles.json")  # tidak ada: basis kosong
+    monkeypatch.setattr(expand, "make_session", lambda: None)
+    monkeypatch.setattr(expand, "collect_urls", lambda *a, **k: (_urls(20), 120))
+    monkeypatch.setattr(expand.sys, "argv", ["expand", "--batch-size", "20"])
+    return exp, state_path
+
+
+def test_main_leaves_state_and_batch_untouched_when_breaker_trips(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    state = {"batch": 4, "anchor_url": u(100), "start_page": 118, "known_ids": ["100", "101"]}
+    exp, state_path = _fake_run_dir(monkeypatch, tmp_path, state)
+    _scripted(monkeypatch, tmp_path, [("", True)] * 2 + [(NET, True)] * 18)
+    monkeypatch.setattr(expand, "FAILED_PATH", exp / "failed_ids.json")
+
+    assert expand.main() == expand.EXIT_NETWORK_DOWN == 4
+    assert json.loads(state_path.read_text(encoding="utf-8")) == state, "state.json tidak maju"
+    assert not (exp / "batch_05.json").exists() and not (exp / "batch_05_report.json").exists()
+    reports = list(exp.glob("batch_05_terputus_*_report.json"))
+    assert len(reports) == 1
+    report = json.loads(reports[0].read_text(encoding="utf-8"))
+    limit = expand.MAX_CONSECUTIVE_NETWORK_FAILURES
+    assert report["terputus"] is True and report["belum_dicoba"] == 18 - limit
+    assert (report["statistik"]["berhasil"], report["statistik"]["gagal"]) == (2, limit)
+    assert "TERPUTUS" in capsys.readouterr().out
+
+
+def test_main_completes_normally_with_broken_articles(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # kontrol: tanpa galat jaringan, jalur lama tidak berubah (berkas ditulis, state maju, ambang 5% berlaku)
+    state = {"batch": 4, "anchor_url": u(100), "start_page": 118, "known_ids": ["100"]}
+    exp, state_path = _fake_run_dir(monkeypatch, tmp_path, state)
+    _scripted(monkeypatch, tmp_path, [("", True)] * 12 + [(NOT_FOUND, True)] * 8)
+    monkeypatch.setattr(expand, "FAILED_PATH", exp / "failed_ids.json")
+
+    assert expand.main() == 3, "8/20 gagal > 5%: kode keluar lama"
+    assert len(json.loads((exp / "batch_05.json").read_text(encoding="utf-8"))) == 12
+    new_state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert new_state["batch"] == 5 and new_state["anchor_url"] == u(20)
+    assert not list(exp.glob("*_terputus_*"))
+
+
+def test_forward_breaker_writes_no_articles_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    exp, _ = _fake_run_dir(monkeypatch, tmp_path, {})
+    monkeypatch.setattr(expand, "forward_known_ids", lambda state: {"100"})
+    monkeypatch.setattr(expand, "collect_new_urls",
+                        lambda s, known, max_pages: (_urls(10), {"url": u(100), "article_id": "100", "halaman": 2}))
+    _scripted(monkeypatch, tmp_path, [("", True)] * 3 + [(NET, True)] * 7)
+    monkeypatch.setattr(expand, "FAILED_PATH", exp / "failed_ids.json")
+
+    assert expand.run_forward({}, max_pages=5) == expand.EXIT_NETWORK_DOWN
+    forward_files = sorted(p.name for p in exp.glob("forward_*"))
+    assert len(forward_files) == 1 and "_terputus_" in forward_files[0], "hanya laporan kejadian"
+
+
+# -- status turunan buku gagal ------------------------------------------------
+
+def _entry(aid: int, run: str, reason: str = NET) -> dict:
+    return {"url": u(aid), "article_id": str(aid), "alasan": reason, "retry": 3, "jalan": run,
+            "waktu_utc": f"2026-09-28T12:00:{aid:02d}+00:00"}
+
+
+def test_failure_status_derives_open_and_resolved_without_touching_ledger() -> None:
+    entries = [_entry(1, "batch_05"), _entry(2, "batch_05"), _entry(3, "batch_05", NOT_FOUND),
+               _entry(2, "batch_05b", TIMEOUT)]
+    before = json.dumps(entries)
+    status = expand.failure_status(entries, owned={"1", "9"})
+    assert (status["entri"], status["id_unik"], status["teratasi"], status["terbuka"]) == (4, 3, 1, 2)
+    assert status["id_terbuka"] == ["2", "3"]
+    two = status["rincian_terbuka"][0]
+    assert (two["kali_gagal"], two["alasan_terakhir"], two["jalan_terakhir"]) == (2, TIMEOUT, "batch_05b")
+    assert json.dumps(entries) == before, "buku gagal tidak diubah"
+    assert expand.failure_status([], set())["terbuka"] == 0
+
+
+def test_owned_ids_reads_articles_and_result_files_but_not_reports(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    exp, _ = _fake_run_dir(monkeypatch, tmp_path, {})
+    (tmp_path / "articles.json").write_text(json.dumps([_art("1")]), encoding="utf-8")
+    (exp / "batch_04.json").write_text(json.dumps([_art("2")]), encoding="utf-8")
+    (exp / "forward_2026-09-27.json").write_text(json.dumps([_art("3")]), encoding="utf-8")
+    # laporan (termasuk laporan kejadian) berbentuk dict, bukan daftar artikel: tidak boleh dibaca
+    for name in ("batch_04_report.json", "batch_05_terputus_20261002T000000Z_report.json",
+                 "forward_2026-09-27_report.json"):
+        (exp / name).write_text(json.dumps({"gagal": [{"article_id": "99"}]}), encoding="utf-8")
+    assert expand.owned_ids() == {"1", "2", "3"}
+
+
+def test_rerun_resolves_earlier_failures_in_report_and_status(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    # jalan ulang kelompok: artikel 1-19 yang dulu gagal kini berhasil; artikel 20 tetap gagal (404)
+    state = {"batch": 4, "anchor_url": u(100), "start_page": 118, "known_ids": ["100"]}
+    exp, _ = _fake_run_dir(monkeypatch, tmp_path, state)
+    ledger = exp / "failed_ids.json"
+    old = [_entry(i, "batch_05") for i in range(1, 21)]
+    ledger.write_text(json.dumps(old), encoding="utf-8")
+    _scripted(monkeypatch, tmp_path, [("", True)] * 19 + [(NOT_FOUND, True)])
+    monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+
+    assert expand.main() == 0  # 1/20 = 5%, tidak melebihi ambang
+    report = json.loads((exp / "batch_05_report.json").read_text(encoding="utf-8"))
+    assert report["gagal_terbuka"] == ["20"]
+    entries = json.loads(ledger.read_text(encoding="utf-8"))
+    assert entries[:20] == old and len(entries) == 21, "entri lama utuh; hanya kegagalan baru ditambahkan"
+
+    capsys.readouterr()
+    monkeypatch.setattr(expand.sys, "argv", ["expand", "--failed-status"])
+    assert expand.main() == 0
+    status = json.loads(capsys.readouterr().out)
+    assert (status["id_unik"], status["teratasi"], status["terbuka"]) == (20, 19, 1)
+    assert status["rincian_terbuka"][0]["kali_gagal"] == 2

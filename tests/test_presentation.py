@@ -1,5 +1,6 @@
 """Uji penyiapan data tampilan demo (offline: `Answer` tiruan, tanpa API, tanpa model)."""
 
+import logging
 import re
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from presentation import (
     EMPTY_INPUT_MESSAGE,
     EVALUATION_SCOPE_NOTE,
     FAILURE_MESSAGES,
+    FALLBACK_STATUS_LABEL,
     LONG_CLAIM_CONFIRM,
     LONG_CLAIM_WARN_CHARS,
     LONG_CLAIM_WARN_TOKENS,
@@ -93,14 +95,19 @@ def test_found_uses_status_style_from_metadata_label(label: str) -> None:
     assert view.references == REFS
 
 
-@pytest.mark.parametrize("label", ["SATIRE", "SATIR", "satire", " Satir "])
-def test_satire_labels_use_parodi_style(label: str) -> None:
+@pytest.mark.parametrize("label", ["SATIRE", "SATIR", "satire", " Satir ", "KOMEDI", "komedi"])
+def test_humor_labels_use_parodi_style(label: str) -> None:
     view = build_view(_found(label))
     style = STATUS_STYLES["PARODI"]
     assert (view.status_label, view.status_color, view.status_icon, view.summary) == (
         style.label, style.color, style.icon, style.summary)
     assert view.advice == ""
     assert status_style_key(label) == "PARODI"
+
+
+def test_parodi_summary_names_every_aliased_category() -> None:
+    summary = STATUS_STYLES["PARODI"].summary.lower()
+    assert all(word in summary for word in ("parodi", "satire", "komedi"))
 
 
 def test_status_colors_are_distinct_and_never_success_green() -> None:
@@ -119,13 +126,39 @@ def test_scam_advice_only_for_penipuan_and_always_identical() -> None:
     assert build_view(_found("PARODI")).advice == ""
 
 
-def test_unknown_label_falls_back_without_crashing() -> None:
-    view = build_view(_found("MENYESATKAN"))
+def test_unknown_label_is_neutral_in_style_and_wording(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="presentation"):
+        view = build_view(_found("MENYESATKAN"))
     assert view.kind == "found"
-    assert view.status_label == "Menyesatkan"
-    assert view.status_color == STATUS_STYLES["SALAH"].color
-    assert "MENYESATKAN" in view.summary
+    assert view.status_label == FALLBACK_STATUS_LABEL
+    assert "“MENYESATKAN”" in view.summary, "label asli ditampilkan apa adanya"
+    assert "sudah diperiksa" in view.summary
+    # netral: bukan warna/ikon/kalimat status yang dikenal, dan tidak menyatakan klaimnya salah
+    known = STATUS_STYLES.values()
+    assert view.status_color == "gray" and view.status_color not in {s.color for s in known}
+    assert view.status_icon not in {s.icon for s in known} | {NOT_FOUND_STYLE.icon}
+    assert not re.search(r"\b(salah|penipuan|parodi|hoaks|keliru)\b", view.summary.lower())
     assert view.advice == ""
+    assert view.article_url and view.references == REFS, "artikel dan rujukan tetap ditampilkan"
+    # dicatat ke log setiap kali muncul, dengan label dan id artikel
+    assert [(r.levelname, r.name) for r in caplog.records] == [("WARNING", "presentation")]
+    assert "MENYESATKAN" in caplog.text and "36214" in caplog.text
+
+
+@pytest.mark.parametrize("label", ["", "TIDAK DIKETAHUI"])
+def test_unreadable_label_is_not_quoted_as_a_label(label: str, caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="presentation"):
+        view = build_view(_found(label))
+    assert view.status_label == FALLBACK_STATUS_LABEL and view.status_color == "gray"
+    assert "tidak terbaca" in view.summary and "“" not in view.summary
+    assert len(caplog.records) == 1
+
+
+@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "SATIR", "KOMEDI"])
+def test_known_labels_are_not_logged_as_unknown(label: str, caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="presentation"):
+        build_view(_found(label))
+    assert caplog.records == []
 
 
 def test_article_without_references_has_empty_reference_list() -> None:
