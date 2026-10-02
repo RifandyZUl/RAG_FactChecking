@@ -67,6 +67,20 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     sisa ke akhir Sep 2025 = 78 hari -> **perkiraan ~400 artikel lagi (2 kelompok), total ~1.570
     artikel** pada laju 5,3/hari (bukan ~486/1.408). Laju bervariasi antar-periode (kelompok 1: ~3,5/hari;
     kelompok 2: ~4,5; kelompok 4: ~5,3), jadi angka ini perkiraan.
+  - **Kelompok 6 (2026-10-02 ~23:30 WIB, `--batch-size 110`): BELUM SELESAI -- jalan berhenti dengan
+    galat parse (kode keluar Python 1), BUKAN galat jaringan.** Jangkar 29646 ditemukan di halaman
+    daftar 144; 110 URL terkumpul (s.d. halaman 155); 80 artikel berhasil (0 retry), lalu artikel
+    ke-81, **29437**, melempar `ValueError: Invalid IPv6 URL` dari `urlparse` di
+    `links.blocked_reason`: seksi Referensi di sumber memuat tautan cacat `http://kemenag.go.id]`
+    (kurung siku nyasar). Galat di dalam `parse_article` tidak tertangkap sebagai kegagalan per
+    artikel, jadi seluruh jalan gugur. **Tidak ada yang rusak:** `state.json` tidak maju (masih `batch`
+    5, jangkar 29646), `batch_06.json` tidak ditulis, `failed_ids.json` tidak berubah; 81 HTML
+    (termasuk 29437) sudah di cache (total 1.503), jadi jalan ulang hanya mengambil 29 artikel dari
+    jaringan. **Menunggu keputusan pemilik proyek** (logika `links.py` tervalidasi, tidak diubah
+    tanpa persetujuan): usulan = URL yang tidak dapat diurai DISARING dari `references` dengan alasan
+    tercatat di `references_filtered` (tetap ada di `references_raw`), tidak diperbaiki/ditebak; dan
+    galat tak terduga saat parse satu artikel dicatat sebagai kegagalan artikel itu (non-jaringan),
+    bukan menggugurkan jalan.
   - **Kelompok 5, JALAN ULANG (2026-10-02 ~17:45-17:59 WIB; scraping SAJA, belum digabung/di-ingest):
     250/250 berhasil, 0 gagal, 0 retry (artikel 0, halaman daftar 0), kode keluar Python 0** (dicatat
     di baris terakhir `batch_05.log`, diperiksa dari berkas). Sebelumnya: catatan kejadian disalin ke
