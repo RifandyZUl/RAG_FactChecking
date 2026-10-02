@@ -75,8 +75,8 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
       (bersambung dengan kelompok 4); 0 seksi kosong; 0 duplikat; 0 tumpang tindih dengan 922 artikel
       maupun kelompok 4; 0 memuat `\r`. Label: SALAH 30, PENIPUAN 6, PARODI 2, SATIR 1 (30644),
       **KOMEDI 1 (30793) -- label BARU berkurung lengkap** (`[KOMEDI] ...` di `<h1>` cache), diterima
-      apa adanya (Aturan Wajib #7); **cara menampilkannya BELUM diputuskan** (tidak ada di
-      `STATUS_ALIASES`, jadi saat ini akan tampil dengan gaya SALAH).
+      apa adanya (Aturan Wajib #7); **diputuskan 2026-10-02:** ditampilkan dengan gaya PARODI
+      (`STATUS_ALIASES`, bersama SATIRE/SATIR).
     - *Yang gagal (210):* id 29646-30600; ConnectionError 209, ReadTimeout 1, semuanya setelah 4
       percobaan (retry artikel 630 = 210 x 3; halaman daftar 0). Waktu di `failed_ids.json`:
       2026-09-28 12:10:09 s.d. 13:40:16 UTC (19:10-20:40 WIB), beruntun dari urutan 42 sampai 250
@@ -102,6 +102,36 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
       `failed_ids.json`. Belum ada yang dikerjakan; `state.json` tidak diubah.
     - Cakupan tanggal 210 artikel gagal tidak diketahui (tidak terambil), jadi perkiraan sisa
       artikel pada butir kelompok 4 belum dapat diperbarui.
+  - **Pemutus sirkuit di `expand.py` (2026-10-02, setelah kejadian kelompok 5):** jalan berhenti
+    (kode keluar **4**) setelah `MAX_CONSECUTIVE_NETWORK_FAILURES` artikel BERUNTUN gagal karena
+    jaringan (alasan `<Timeout|ConnectionError|SSLError|ProxyError> setelah N percobaan`). 404,
+    halaman galat, dan gagal parse TIDAK dihitung dan justru mengembalikan hitungan ke nol bila
+    berasal dari jaringan (server terbukti terjangkau), begitu juga artikel yang berhasil diambil
+    dari jaringan; artikel dari cache tidak mengubah hitungan. **Nilai 5 disetujui pemilik
+    proyek 2026-10-02** (5 artikel = 20 permintaan gagal beruntun, ~2 menit pada laju
+    kelompok 5; dapat ditimpa `--max-network-failures`). Jalan yang terputus TIDAK menulis
+    `batch_NN.json`/`forward_*.json` dan TIDAK memajukan `state.json` (perintah yang sama dapat
+    dijalankan ulang; yang sudah berhasil terbaca dari cache); yang ditulis hanya
+    `<jalan>_terputus_<waktu UTC>_report.json` dan entri `failed_ids.json`. Jalur lama tidak berubah:
+    ambang 5% tetap diperiksa di akhir dan pada jalur itu `state.json` TETAP maju (celah lama untuk
+    kegagalan non-jaringan, belum diperbaiki). Uji: `tests/test_expand.py` (putus total berbentuk
+    kelompok 5, artikel rusak beruntun pada jaringan normal, putus-nyambung, cache, `main`, mode
+    maju); dua mutasi kontrol menggagalkan uji yang sesuai.
+    **`failed_ids.json` adalah catatan KEJADIAN, bukan status:** entri tidak dihapus saat artikelnya
+    kemudian berhasil. Statusnya DITURUNKAN, tidak disimpan (disetujui 2026-10-02): "terbuka" = pernah
+    gagal dan tidak ada di `articles.json`/`batch_*.json`/`forward_*.json`; "teratasi" = pernah gagal
+    tetapi kini dimiliki. Lihat dengan `python -m scraping.expand --failed-status` (tanpa jaringan);
+    setiap laporan kelompok/maju memuat `gagal_terbuka`. Ini BUKAN alat coba-ulang agenda (b).
+  - **Tampilan label tak dikenal kini NETRAL (2026-10-02, keputusan pemilik proyek):** label di luar
+    SALAH/PENIPUAN/PARODI dan aliasnya tampil abu-abu, ikon `label`, judul "Sudah diperiksa", dengan
+    kalimat yang hanya menyatakan klaim sudah diperiksa dan diberi label aslinya (dikutip apa
+    adanya) -- tidak lagi bergaya atau berkalimat SALAH. Label kosong/`TIDAK DIKETAHUI` memakai
+    kalimat "label ... tidak terbaca". Setiap kemunculan dicatat `logger.warning` (logger
+    `presentation`, dengan label dan id artikel). KOMEDI -> gaya PARODI; ringkasan PARODI diubah
+    menjadi "konten humor (parodi, satire, atau komedi), bukan berita sungguhan" agar pas untuk
+    ketiga alias (judul status tetap "Parodi"). **Label unik seluruh data (1.212 artikel: 922 +
+    kelompok 4 + 40 kelompok 5):** SALAH 791, PENIPUAN 407, PARODI 10, SATIR 2, SATIRE 1, KOMEDI 1;
+    0 `TIDAK DIKETAHUI`; tidak ada label yang jatuh ke tampilan netral saat ini.
   - **Kelompok 3 (2026-09-27; scraping):** 250/250
     berhasil, 0 seksi kosong, 2026-02-02 s.d. 2026-03-31 (halaman daftar 68-93; 0 id tumpang tindih
     dengan 672 artikel). Label: SALAH 175, PENIPUAN 73, PARODI 2, TIDAK DIKETAHUI 0. Retry: artikel
@@ -462,8 +492,9 @@ Kurung siku rusak di judul sumber (`[SALAH Judul`, `PENIPUAN] Judul`; 4 kasus: 3
 (`KNOWN_LABELS` di `scraping/parser.py`, huruf besar, tepat satu kurung). Label di luar daftar itu
 tetap `TIDAK DIKETAHUI` dan wajib dilaporkan untuk ditinjau manusia, **bukan** ditebak dari isi
 artikel. Label baru yang muncul dengan kurung lengkap (`[X] ...`) tetap diterima apa adanya (perilaku
-lama), lalu diputuskan terpisah cara menampilkannya (`presentation.py` memakai gaya SALAH untuk
-label tak dikenal; SATIRE/SATIR ditampilkan sebagai PARODI lewat `STATUS_ALIASES`, 2026-09-28).
+lama), lalu diputuskan terpisah cara menampilkannya (`presentation.py` memakai tampilan NETRAL
+untuk label tak dikenal dan mencatatnya ke log, sejak 2026-10-02 -- sebelumnya gaya SALAH;
+SATIRE/SATIR/KOMEDI ditampilkan sebagai PARODI lewat `STATUS_ALIASES`).
 
 ---
 

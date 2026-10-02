@@ -15,6 +15,7 @@ artikel, rujukan tetap dari `references` (Aturan Wajib #1 dan #3), dan
 """
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -22,6 +23,8 @@ from pathlib import Path
 
 from generator import MAX_FORMAT_RETRIES, Answer
 from paths import PROJECT_ROOT
+
+logger = logging.getLogger("presentation")
 
 # --------------------------------------------------------------------------
 # Salinan antarmuka (Bahasa Indonesia, tanpa istilah teknis di bagian utama)
@@ -174,8 +177,8 @@ STATUS_STYLES: dict[str, StatusStyle] = {
         color="yellow",
         icon=":material/theater_comedy:",
         summary=(
-            "Konten ini sudah diperiksa TurnBackHoax.id dan merupakan parodi atau "
-            "satire, bukan berita sungguhan."
+            "Konten ini sudah diperiksa TurnBackHoax.id dan merupakan konten humor "
+            "(parodi, satire, atau komedi), bukan berita sungguhan."
         ),
     ),
 }
@@ -183,8 +186,9 @@ STATUS_STYLES: dict[str, StatusStyle] = {
 # Alias TAMPILAN saja (label tersimpan di data tidak diubah): SATIRE dan SATIR (muncul pertama kali
 # di kelompok 4 perluasan, 2026-09-28: 31118 dan 30924) diperlakukan sebagai satu kategori dengan
 # PARODI -- satire bukan upaya menipu, dan PARODI adalah status paling lunak. Keputusan pemilik
-# proyek 2026-09-28. Ringkasan PARODI sudah menyebut "parodi atau satire".
-STATUS_ALIASES: dict[str, str] = {"SATIRE": "PARODI", "SATIR": "PARODI"}
+# proyek 2026-09-28. KOMEDI (kelompok 5, 30793) digabung ke kategori yang sama, keputusan pemilik
+# proyek 2026-10-02. Ringkasan PARODI menyebut ketiganya ("parodi, satire, atau komedi").
+STATUS_ALIASES: dict[str, str] = {"SATIRE": "PARODI", "SATIR": "PARODI", "KOMEDI": "PARODI"}
 
 
 def status_style_key(label: str) -> str:
@@ -193,10 +197,41 @@ def status_style_key(label: str) -> str:
     return STATUS_ALIASES.get(key, key)
 
 
-# Label di luar tiga yang dikenal (dan aliasnya): gaya SALAH, label asli dari metadata.
-FALLBACK_STATUS_COLOR = "orange"
-FALLBACK_STATUS_ICON = ":material/report:"
-FALLBACK_STATUS_SUMMARY = "Klaim ini sudah diperiksa TurnBackHoax.id dengan hasil: {label}."
+# Label di luar tiga yang dikenal (dan aliasnya): tampilan NETRAL (keputusan pemilik proyek
+# 2026-10-02). Arti label asing tidak kita ketahui, jadi tidak boleh ditampilkan dengan warna
+# maupun kalimat SALAH; yang dinyatakan hanya bahwa klaimnya sudah diperiksa, dengan label asli
+# dari metadata apa adanya. Setiap kemunculan dicatat ke log (`build_view`) agar label baru
+# ditinjau manusia (Aturan Wajib #7), bukan ditebak.
+FALLBACK_STATUS_LABEL = "Sudah diperiksa"
+FALLBACK_STATUS_COLOR = "gray"
+FALLBACK_STATUS_ICON = ":material/label:"
+FALLBACK_STATUS_SUMMARY = (
+    "Klaim ini sudah diperiksa TurnBackHoax.id dan diberi label “{label}”. Aplikasi ini belum "
+    "mengenali label tersebut, jadi artinya tidak ditafsirkan di sini. Baca artikelnya untuk "
+    "mengetahui hasil pemeriksaannya."
+)
+# Label kosong atau penanda parser "TIDAK DIKETAHUI" (`scraping.parser.parse_title`: judul sumber
+# tanpa label terbaca) bukan label dari TurnBackHoax, jadi tidak dikutip sebagai label.
+UNREADABLE_LABELS = frozenset({"", "TIDAK DIKETAHUI"})
+FALLBACK_STATUS_SUMMARY_NO_LABEL = (
+    "Klaim ini sudah diperiksa TurnBackHoax.id, tetapi label hasil pemeriksaannya tidak terbaca. "
+    "Baca artikelnya untuk mengetahui hasil pemeriksaannya."
+)
+
+
+def fallback_status_style(label: str) -> StatusStyle:
+    """Tampilan netral untuk label yang tidak dikenal; label asli dikutip apa adanya."""
+    if label.upper() in UNREADABLE_LABELS:
+        summary = FALLBACK_STATUS_SUMMARY_NO_LABEL
+    else:
+        summary = FALLBACK_STATUS_SUMMARY.format(label=label)
+    return StatusStyle(
+        label=FALLBACK_STATUS_LABEL,
+        color=FALLBACK_STATUS_COLOR,
+        icon=FALLBACK_STATUS_ICON,
+        summary=summary,
+    )
+
 
 # Netral: bukan kegagalan dan bukan pernyataan bahwa klaimnya benar.
 NOT_FOUND_STYLE = StatusStyle(
@@ -551,12 +586,11 @@ def build_view(
         label = (ans.status_label or "").strip()
         style = STATUS_STYLES.get(status_style_key(label))
         if style is None:
-            style = StatusStyle(
-                label=label.capitalize() or "Sudah diperiksa",
-                color=FALLBACK_STATUS_COLOR,
-                icon=FALLBACK_STATUS_ICON,
-                summary=FALLBACK_STATUS_SUMMARY.format(label=label or "tidak diketahui"),
+            logger.warning(
+                "label status tidak dikenal %r pada artikel %s: ditampilkan netral, perlu ditinjau",
+                label, ans.article_id,
             )
+            style = fallback_status_style(label)
         return ResultView(
             kind="found",
             status_label=style.label,
