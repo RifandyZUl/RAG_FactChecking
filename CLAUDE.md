@@ -78,15 +78,25 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
       250 id sama persis dengan jalan 28 Sep (id 29646-30875); 40 artikel yang dulu berhasil terbaca
       dari cache dan identik. 0 duplikat; 0 tumpang tindih dengan 922 artikel dan kelompok 4.
     - **2025-10-23 s.d. 2025-12-17** (55 hari, ~4,5 artikel/hari). Label: SALAH 202, PENIPUAN 39,
-      PARODI 4, KOMEDI 1 (30793), SATIR 1 (30644), **TIDAK DIKETAHUI 3 -- MENUNGGU KEPUTUSAN,
-      `parse_title` tidak diubah:** 29847 `[SALAH} ...` (kurung kurawal penutup; tidak tercakup pola
-      kurung rusak Aturan Wajib #7), 29812 dan 29787 `[SALAH] ...` berkurung LENGKAP tetapi diawali
-      U+200B (spasi lebar-nol) sehingga `^\s*\[` tidak cocok. Kesimpulan ketiganya menyatakan klaimnya
-      palsu/menyesatkan. Tidak ada judul ber-U+200B pada 1.172 artikel lain.
+      PARODI 4, KOMEDI 1 (30793), SATIR 1 (30644), TIDAK DIKETAHUI 3 di `batch_05.json`/laporan jalan:
+      29847 `[SALAH} ...` (penutup kurung kurawal), 29812 dan 29787 `[SALAH] ...` berkurung lengkap
+      tetapi diawali U+200B (spasi lebar-nol). **Diperbaiki 2026-10-02 di `parse_title` (keputusan
+      pemilik proyek; Aturan Wajib #7):** karakter tak terlihat dibuang dari JUDUL sebelum dicocokkan
+      (isi seksi TIDAK dinormalkan; `title_raw` tetap asli), dan pola kurung rusak menerima penutup
+      `}` tepat setelah label yang dikenal. **Bukti (parse ulang 1.422 artikel dari cache, parser lama
+      vs baru): 1.419 identik, 3 berubah, hanya bidang `title` dan `label` (ketiganya -> SALAH);
+      data tersimpan == parser lama 1.422/1.422.** Jadi `articles.json` (922) dan indeks TIDAK
+      berubah -- tidak perlu `--rebuild`. `batch_05.json` di disk BELUM ditulis ulang (masih memuat 3
+      `TIDAK DIKETAHUI`); `scraping.reparse` sebelum penggabungan akan menerapkannya. Label kelompok
+      5 setelah reparse: SALAH 205, PENIPUAN 39, PARODI 4, KOMEDI 1, SATIR 1.
     - **Seksi kosong: 2 artikel, kosong DI SUMBER (bukan galat parse/halaman galat):** 29687
       (Penjelasan hanya judul seksi) dan 29670 (PARODI; Narasi DAN Penjelasan hanya judul seksi, yang
-      ada Kesimpulan saja). `chunker` melewati seksi kosong; 29670 tidak akan punya chunk Narasi.
-      **Menunggu keputusan: ikut digabung atau dikecualikan.**
+      ada Kesimpulan saja). **Keputusan pemilik proyek 2026-10-02: keduanya IKUT DIGABUNG apa
+      adanya** (data sah; PARODI sudah sangat sedikit). `chunker` melewati seksi kosong, jadi 29687
+      punya 2 chunk dan **29670 hanya punya chunk Kesimpulan -- hanya terjangkau retrieval lewat
+      Kesimpulan** (seksi yang pada ablasi v1 paling lemah untuk pencocokan klaim), dan konteks LLM
+      untuknya tanpa Narasi. Saat ingest, pemeriksaan "0 seksi kosong" akan melaporkan 2 artikel ini:
+      itu diharapkan.
     - Halaman galat lolos validasi: tidak ditemukan (250 cache lolos validasi, 0 teks galat, ukuran
       35-50 KB, reparse dari cache identik 250/250, 0 artikel memuat `\r`, 0 `.tmp`; total cache 1.422).
       Kesimpulan lebih pendek pada Okt-Nov 2025 (median 140/137 karakter; Des 243; acuan 239): gaya
@@ -526,7 +536,13 @@ itulah yang keliru.
 
 Kurung siku rusak di judul sumber (`[SALAH Judul`, `PENIPUAN] Judul`; 4 kasus: 34929, 35383,
 33422, 33355) diterima **hanya bila kata labelnya salah satu label yang sudah dikenal**
-(`KNOWN_LABELS` di `scraping/parser.py`, huruf besar, tepat satu kurung). Label di luar daftar itu
+(`KNOWN_LABELS` di `scraping/parser.py`, huruf besar, tepat satu kurung). **Perluasan 2026-10-02:**
+penutup salah ketik `[SALAH} Judul` (29847) diterima dengan syarat yang sama, dan HANYA untuk `}`
+(penutup lain seperti `)` atau `>`, serta pembuka salah seperti `{SALAH]`, tetap `TIDAK DIKETAHUI`);
+pola ini baru dicoba setelah pola kurung lengkap gagal, sehingga judul yang sudah terbaca benar tidak
+terpengaruh. Karakter tak terlihat (U+200B-U+200F, U+2060, U+FEFF, U+00AD) dibuang dari **judul**
+sebelum dicocokkan (29812, 29787); isi seksi sengaja tidak dinormalkan agar teks chunk yang sudah
+di-embed tidak berubah. Label di luar daftar itu
 tetap `TIDAK DIKETAHUI` dan wajib dilaporkan untuk ditinjau manusia, **bukan** ditebak dari isi
 artikel. Label baru yang muncul dengan kurung lengkap (`[X] ...`) tetap diterima apa adanya (perilaku
 lama), lalu diputuskan terpisah cara menampilkannya (`presentation.py` memakai tampilan NETRAL
@@ -1346,6 +1362,19 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   5.000 sebelumnya ditetapkan tanpa pengukuran). Perbaikan sebenarnya adalah
   agenda Versi 2 (rewriter tugas 1).
 
+- **Klarifikasi lebih tipis untuk hoaks Oktober-November 2025** (dicatat 2026-10-02). Klarifikasi
+  disusun dari seksi Kesimpulan, dan pada periode itu Kesimpulan TurnBackHoax umumnya hanya satu
+  kalimat ("Unggahan berisi klaim ... merupakan konten palsu (fabricated content)") tanpa kalimat
+  "Faktanya ..." yang memuat fakta sebenarnya. Terukur pada kelompok 5: median Kesimpulan 140
+  karakter (Okt 2025, 54 artikel) dan 137 (Nov 2025, 126 artikel), dibanding 243 (Des 2025) dan 239
+  pada 1.172 artikel acuan; 18 Kesimpulan lebih pendek dari yang terpendek di acuan (114), terpendek
+  91 karakter. Faktanya sendiri ada di Penjelasan, yang tidak dikirim ke LLM. **Masukan Versi 2:**
+  penyusunan/gaya bahasa klarifikasi perlu sumber selain Kesimpulan untuk artikel seperti ini (ikut
+  ditimbang bersama agenda menghapus Penjelasan dari indeks). Apakah periode sebelum Okt 2025 sama
+  belum diketahui.
+- **Dua artikel berseksi kosong di sumber** (kelompok 5; digabung apa adanya, keputusan 2026-10-02):
+  29687 tanpa Penjelasan; 29670 (PARODI) tanpa Narasi dan Penjelasan, sehingga hanya terjangkau
+  lewat chunk Kesimpulan.
 - **Tidak ada mekanisme untuk menyegarkan artikel lama yang isinya berubah di sumber** (dicatat
   2026-09-27). Artikel yang sudah ada di cache `data/raw_html/` tidak pernah diambil ulang (mode maju
   berhenti pada artikel pertama yang sudah dimiliki; cache dipakai tanpa memeriksa perubahan), jadi

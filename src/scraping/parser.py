@@ -30,8 +30,17 @@ def is_valid_article_html(html: str) -> bool:
 # judul dengan kurung siku rusak; label berkurung lengkap di luar daftar ini tetap diterima.
 KNOWN_LABELS = ("SALAH", "PENIPUAN", "PARODI")
 _LABELS_RE = "|".join(KNOWN_LABELS)
-# Tepat satu kurung: "[LABEL Judul" atau "LABEL] Judul" (huruf besar, agar "Salah kaprah ..." tidak cocok).
-_BROKEN_BRACKET = re.compile(rf"^\s*(?:\[({_LABELS_RE})\s+|({_LABELS_RE})\]\s*)(.+)$")
+# Tepat satu kurung: "[LABEL Judul" atau "LABEL] Judul" (huruf besar, agar "Salah kaprah ..." tidak cocok),
+# atau kurung tutup salah ketik "[LABEL} Judul" (29847). Penutup salah ketik yang diterima HANYA "}"
+# (tombol yang sama dengan "]" + Shift), tepat setelah label yang dikenal; penutup lain tetap
+# "TIDAK DIKETAHUI" dan dilaporkan. Pola ini baru dicoba SETELAH pola kurung lengkap gagal, jadi
+# judul yang sudah terbaca benar tidak pernah melewatinya.
+_BROKEN_BRACKET = re.compile(rf"^\s*(?:\[({_LABELS_RE})(?:\s+|\}}\s*)|({_LABELS_RE})\]\s*)(.+)$")
+# Karakter tak terlihat (lebar nol) yang terselip di judul sumber: U+200B-U+200F (spasi/penyambung
+# lebar-nol, penanda arah), U+2060 (word joiner), U+FEFF (BOM), U+00AD (soft hyphen). Dibuang dari
+# JUDUL sebelum dicocokkan (29812, 29787: U+200B di depan "[SALAH]"). Sengaja TIDAK diterapkan pada
+# isi seksi: itu mengubah teks chunk yang sudah di-embed. `title_raw` tetap menyimpan judul asli.
+_INVISIBLE = re.compile("[\u200b-\u200f\u2060\ufeff\u00ad]")
 
 
 def parse_title(title: str) -> tuple[str, str]:
@@ -39,9 +48,11 @@ def parse_title(title: str) -> tuple[str, str]:
     Pisahkan label kebenaran dari judul.
 
     "[SALAH] Malaysia Laporkan ..." -> ("SALAH", "Malaysia Laporkan ...")
-    Kurung siku rusak di sumber ("[SALAH Judul", "PENIPUAN] Judul") hanya diterima untuk label di
-    KNOWN_LABELS (Aturan Wajib #7); selain itu "TIDAK DIKETAHUI".
+    Karakter tak terlihat dibuang lebih dulu. Kurung siku rusak di sumber ("[SALAH Judul",
+    "PENIPUAN] Judul", "[SALAH} Judul") hanya diterima untuk label di KNOWN_LABELS (Aturan Wajib #7);
+    selain itu "TIDAK DIKETAHUI".
     """
+    title = _INVISIBLE.sub("", title)
     m = re.match(r"^\s*\[([^\]]+)\]\s*(.+)$", title)
     if m:
         return m.group(1).strip().upper(), m.group(2).strip()
