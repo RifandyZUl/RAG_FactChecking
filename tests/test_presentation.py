@@ -30,6 +30,7 @@ from presentation import (
     build_view,
     classify_call_error,
     classify_failure,
+    display_references,
     display_title,
     escape_markdown,
     failure_view,
@@ -467,3 +468,39 @@ def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
     assert "48 dari 50" in note and "150 artikel" in note
     assert "18 dari 20" in note and "20 dari 20" in note and "922 artikel" in note
     assert "belum diukur" in note
+
+
+# -- penyaringan ulang rujukan di lapisan tampilan (Aturan Wajib #1) ---------
+
+STALE_REFS = [
+    "https://www.contoh.go.id/rilis", "https://tinyurl.com/contoh1", "https://short-url.org/1abCd",
+    "https://cekfakta.example.org/a", "https://www.facebook.com/share/contoh", "http://contoh.go.id]",
+    "https://archive.ph/contoh",
+]
+
+
+def test_references_are_refiltered_at_display_time(caplog: pytest.LogCaptureFixture) -> None:
+    """Metadata indeks basi (rujukan tersimpan sebelum kebijakan diperketat) tidak boleh sampai ke layar."""
+    with caplog.at_level(logging.WARNING, logger="presentation"):
+        view = build_view(_found("PENIPUAN", references=list(STALE_REFS)))
+    assert view.references == ["https://www.contoh.go.id/rilis", "https://cekfakta.example.org/a"], "urutan dijaga"
+    assert len(caplog.records) == 5 and all("36214" in r.getMessage() for r in caplog.records)
+    text = caplog.text
+    assert "tinyurl.com" in text and "URL tidak sah" in text and "facebook.com" in text
+    assert "contoh1" not in text and "1abCd" not in text, "log memuat alasan, bukan tautannya"
+
+
+def test_display_references_keeps_clean_list_untouched_and_silent(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="presentation"):
+        assert display_references(list(REFS), "1") == REFS
+        assert display_references([], "1") == []
+        assert build_view(_found("SALAH")).references == REFS
+    assert caplog.records == []
+
+
+def test_display_filter_uses_the_same_policy_as_the_parser() -> None:
+    """Satu kebijakan, dua lapisan: yang ditolak parser juga ditolak tampilan."""
+    from scraping.links import blocked_reason
+
+    for url in STALE_REFS:
+        assert (display_references([url]) == []) == (blocked_reason(url) is not None)

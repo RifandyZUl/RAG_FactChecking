@@ -23,6 +23,7 @@ from pathlib import Path
 
 from generator import MAX_FORMAT_RETRIES, Answer
 from paths import PROJECT_ROOT
+from scraping.links import blocked_reason
 
 logger = logging.getLogger("presentation")
 
@@ -430,6 +431,31 @@ class ResultView:
     diagnostics: Diagnostics = field(default_factory=Diagnostics)
 
 
+def display_references(references: list[str], article_id: str = "") -> list[str]:
+    """
+    Saring ULANG rujukan tepat sebelum ditampilkan (Aturan Wajib #1, lapisan kedua).
+
+    `references` berasal dari metadata indeks, yang disaring saat artikel di-parse. Metadata itu
+    bisa BASI: ingest inkremental hanya membandingkan teks chunk, jadi perubahan kebijakan
+    penyaringan (mis. domain baru di daftar blokir) tidak sampai ke indeks tanpa pembaruan metadata
+    atau `--rebuild`. Karena itu kebijakan terkini (`scraping.links.blocked_reason`: media sosial,
+    arsip, hosting gambar, pemendek URL, URL tidak sah) diterapkan lagi di sini. Rujukan yang
+    terbuang dicatat ke log (penanda indeks basi), tidak ditampilkan, dan tidak pernah diganti.
+    Lapisan ini TIDAK mengenal `claim_sources` (sengaja tidak dibawa ke metadata), jadi sumber hoaks
+    di luar daftar domain hanya tersaring di parser.
+    """
+    kept: list[str] = []
+    for url in references:
+        reason = blocked_reason(url)
+        if reason is None:
+            kept.append(url)
+        else:
+            logger.warning(
+                "rujukan dari metadata indeks disaring saat tampil (artikel %s): %s -- metadata indeks "
+                "tidak sesuai kebijakan penyaringan terkini", article_id or "?", reason)
+    return kept
+
+
 _TITLE_LABEL_PREFIX = re.compile(r"^\s*\[[^\]]*\]\s*")
 
 
@@ -601,7 +627,8 @@ def build_view(
             article_url=ans.article_url,
             clarification=ans.klarifikasi,
             advice=SCAM_ADVICE if label.upper() == "PENIPUAN" else "",
-            references=list(ans.references),  # dari metadata, bukan dari LLM
+            # dari metadata, bukan dari LLM; disaring ulang dengan kebijakan terkini
+            references=display_references(list(ans.references), str(ans.article_id or "")),
             diagnostics=diag,
         )
 
