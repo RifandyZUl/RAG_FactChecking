@@ -208,6 +208,62 @@ def test_parse_title_broken_brackets_only_for_known_labels(title: str, expected:
     assert parse_title(title) == expected
 
 
+@pytest.mark.parametrize("title,expected", [
+    # tiga kasus kelompok 5 (bentuk judul sumber; teks judulnya contoh)
+    ("[SALAH} Judul Contoh", ("SALAH", "Judul Contoh")),  # 29847: penutup salah ketik
+    ("\u200b[SALAH] Judul Contoh", ("SALAH", "Judul Contoh")),  # 29812, 29787: spasi lebar-nol di depan
+    ("\ufeff[PENIPUAN] Judul Contoh", ("PENIPUAN", "Judul Contoh")),
+    ("\u200b [Label Baru] Judul Contoh", ("LABEL BARU", "Judul Contoh")),  # kurung lengkap tetap apa adanya
+    ("[SALAH]\u200b Judul\u200d Contoh", ("SALAH", "Judul Contoh")),  # dibuang di mana pun dalam judul
+    ("[PENIPUAN}Judul Contoh", ("PENIPUAN", "Judul Contoh")),
+    ("\u200b[SALAH} Judul Contoh", ("SALAH", "Judul Contoh")),  # keduanya sekaligus
+    # tetap ketat: penutup lain, label tak dikenal, huruf kecil, atau kurung buka salah TIDAK ditebak
+    ("[SALAH) Judul Contoh", ("TIDAK DIKETAHUI", "[SALAH) Judul Contoh")),
+    ("[SALAH> Judul Contoh", ("TIDAK DIKETAHUI", "[SALAH> Judul Contoh")),
+    ("{SALAH] Judul Contoh", ("TIDAK DIKETAHUI", "{SALAH] Judul Contoh")),
+    ("{SALAH} Judul Contoh", ("TIDAK DIKETAHUI", "{SALAH} Judul Contoh")),
+    ("SALAH} Judul Contoh", ("TIDAK DIKETAHUI", "SALAH} Judul Contoh")),
+    ("[LABELBARU} Judul Contoh", ("TIDAK DIKETAHUI", "[LABELBARU} Judul Contoh")),
+    ("[Salah} Judul Contoh", ("TIDAK DIKETAHUI", "[Salah} Judul Contoh")),
+    ("[SALAHKAN} Judul Contoh", ("TIDAK DIKETAHUI", "[SALAHKAN} Judul Contoh")),
+    ("\u200bSalah Kaprah soal Contoh", ("TIDAK DIKETAHUI", "Salah Kaprah soal Contoh")),
+])
+def test_parse_title_invisible_characters_and_mistyped_closing_bracket(title: str, expected: tuple[str, str]) -> None:
+    """Normalisasi karakter tak terlihat di judul, dan penutup "}" hanya untuk label yang dikenal."""
+    assert parse_title(title) == expected
+
+
+@pytest.mark.parametrize("title,expected", [
+    ("[SALAH] Judul {dengan} kurung kurawal", ("SALAH", "Judul {dengan} kurung kurawal")),
+    ("[SALAH] Judul [Bagian] Dua", ("SALAH", "Judul [Bagian] Dua")),
+    ("[PENIPUAN] Tautan } aneh", ("PENIPUAN", "Tautan } aneh")),
+    ("[SALAH DAN MENYESATKAN] Judul Contoh", ("SALAH DAN MENYESATKAN", "Judul Contoh")),
+    ("[SATIR] Judul Contoh", ("SATIR", "Judul Contoh")),
+    ("  [PARODI]  Judul Contoh ", ("PARODI", "Judul Contoh")),
+    ("Judul Tanpa Label", ("TIDAK DIKETAHUI", "Judul Tanpa Label")),
+])
+def test_parse_title_unchanged_for_titles_that_were_already_read_correctly(
+        title: str, expected: tuple[str, str]) -> None:
+    """Perluasan tidak menyentuh judul berkurung lengkap, termasuk yang memuat "}" atau "[" di badan judul."""
+    assert parse_title(title) == expected
+
+
+def test_invisible_characters_are_stripped_from_title_only_not_from_sections() -> None:
+    """Normalisasi hanya di judul: isi seksi tidak disentuh (teks chunk yang sudah di-embed tidak berubah)."""
+    html = (FIXTURE_DIR / "36730.html").read_text(encoding="utf-8")
+    base = load("36730")
+    start = base["kesimpulan"][:12]
+    assert "[SALAH]" in html and start in html
+    dirty = html.replace("[SALAH]", "\u200b[SALAH]").replace(start, "\u200b" + start)
+    art = parse_article(dirty, ARTICLE_URLS["36730"])
+    assert art is not None
+    assert (art["label"], art["title"]) == (base["label"], base["title"]), "judul dinormalkan"
+    assert art["title_raw"].startswith("\u200b"), "judul asli tetap disimpan apa adanya"
+    assert art["kesimpulan"] == "\u200b" + base["kesimpulan"], "isi seksi tidak dinormalkan"
+    assert (art["narasi"], art["penjelasan"]) == (base["narasi"], base["penjelasan"])
+
+
+
 def test_parse_article_same_for_crlf_and_lf_html() -> None:
     """HTML jaringan (CRLF, CR) dan HTML cache (LF) harus memberi hasil parse identik, tanpa reparse."""
     lf = read_fixture("36738.html")
