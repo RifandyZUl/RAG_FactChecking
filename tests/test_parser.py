@@ -273,3 +273,18 @@ def test_parse_article_same_for_crlf_and_lf_html() -> None:
     cr_only = lf.replace("\n", "\r")
     assert parse_article(cr_only, url) == parse_article(lf, url)
     assert not any("\r" in v for v in parse_article(crlf, url).values() if isinstance(v, str))
+
+
+@pytest.mark.parametrize("bad", ["http://contoh.go.id]", "http://contoh.go.id]#bagian"])
+def test_unparseable_reference_url_does_not_crash_and_is_filtered(bad: str) -> None:
+    """Bentuk kasus 29437: tautan cacat di seksi Referensi. Tersaring, tetap di references_raw, tidak diperbaiki."""
+    html = (FIXTURE_DIR / "36730.html").read_text(encoding="utf-8")
+    base = load("36730")
+    at = html.index("</section>", html.index("article-references"))
+    art = parse_article(html[:at] + f'<p><a href="{bad}">{bad}</a></p>' + html[at:], ARTICLE_URLS["36730"])
+    assert art is not None
+    assert bad in art["references_raw"], "tetap tersimpan apa adanya"
+    assert bad not in art["references"] and art["references"] == base["references"]
+    assert {"url": bad, "reasons": ["URL tidak sah"]} in art["references_filtered"]
+    changed = {k for k in base if art[k] != base[k]}
+    assert changed == {"references_raw", "references_filtered"}, "bidang lain tidak terpengaruh"
