@@ -207,11 +207,11 @@ Dua butir positif turun peringkat sejak indeks 922 artikel dan tidak berubah lag
 pada 1.532: v1-002 dari 2 ke 3 dan v1-019 dari 1 ke 2. Angka ini **hanya mengukur
 retrieval**; **akurasi akhir sistem pada indeks besar belum terukur**. Label negatif
 set uji v1 juga tidak otomatis berlaku pada indeks besar (enam butir negatif kini
-menemukan klaim yang sama di basis data, termasuk v1-029 yang artikel asalnya masuk
-pada perluasan terakhir), sehingga set uji v1 tetap sah hanya pada `archive/v1/`.
+menemukan klaim yang sama atau artikel asalnya di basis data, termasuk v1-029 yang
+artikel asalnya masuk pada perluasan terakhir), sehingga set uji v1 tetap sah hanya pada `archive/v1/`.
 Rincian: `testset/v1_perbandingan_indeks_1532.json`,
-`testset/retrieval_ablation_prod922_report.txt` (ablasi lengkap terakhir, pada 922
-artikel), dan `testset/v1_temuan_untuk_v2.md` bagian 8.
+`testset/retrieval_ablation_prod1532_report.txt` (ablasi lengkap pada 1.532 artikel),
+dan `testset/v1_temuan_untuk_v2.md` bagian 8.
 
 ---
 
