@@ -279,15 +279,18 @@ pipeline.
 
 ## Rencana Versi 2
 
-Setiap komponen menargetkan kelemahan yang terukur di Versi 1, bukan mengikuti
-tren arsitektur.
+Rancangannya ada di [`docs/rancangan_v2.md`](docs/rancangan_v2.md); belum ada kode. Rencana awal
+(Corrective RAG lengkap: penulis ulang kueri, grader relevansi, penilaian kredibilitas sumber)
+**dipersempit** setelah tiap komponen diperiksa terhadap buktinya. Sebuah komponen masuk hanya bila
+masalahnya terukur.
 
-| Komponen | Menargetkan | Bukti dari Versi 1 |
+| Komponen | Status | Bukti |
 | --- | --- | --- |
-| **Query rewriter** — (1) ekstraksi inti klaim dari pesan panjang sebelum retrieval | Klaim terdorong keluar jendela 512 token | 18 dari 20 butir positif gagal Recall@3 pada pesan ~5.000 karakter (dampak paling terukur) |
-| **Query rewriter** — (2) penulisan ulang kueri saat retrieval gagal | Kegagalan retrieval | 4 butir dengan artikel benar di luar top-3, dua di antaranya nyaris masuk (peringkat 4) |
-| **Grader relevansi** | Kegagalan penilaian generator | 2 kesalahan + 6 keputusan tidak bulat, seluruhnya dengan artikel benar sudah tersedia di top-3 |
-| **Penilaian kredibilitas sumber** | Penyaringan rujukan yang terlalu konservatif | Tidak ada temuan langsung dari evaluasi; berasal dari keterbatasan desain Versi 1 |
+| **Penanganan pesan panjang** (klaim terdorong keluar jendela 512 token) | Masuk, **menunggu pengukuran pada pesan berantai asli** | Mekanismenya terukur: Recall@3 butir positif pada pesan ~5.000 karakter 2/20 (150 artikel) dan 0/20 (1.532 artikel), tetapi teks pengganggunya sintetis; besar dampaknya pada pesan nyata belum diketahui |
+| **Pengukuran kebersihan rujukan** | Masuk | Evaluasi Versi 1 tidak pernah mengukur kebersihan rujukan yang berasal dari data |
+| Penulisan ulang kueri saat retrieval gagal | **Dicoret** | Tidak ada bukti masalah: empat kegagalan Recall@3 Versi 1 seluruhnya butir negatif (yang di luar tiga besar adalah artikel tetangga); untuk butir positif Recall@3 20/20 pada semua ukuran indeks |
+| Grader relevansi | **Tidak masuk** | Buktinya lemah (2 kesalahan dan 5 keputusan tidak bulat dari 50 butir), generator sudah menilai kesamaan klaim, dan tidak ada bukti bahwa grader terpisah menilai lebih baik |
+| Penilaian kredibilitas sumber oleh LLM | **Tidak masuk** | Semua dokumen berasal dari satu sumber; masalah rujukan ditangani dengan aturan penyaringan yang dapat diaudit |
 
 Evaluasi Versi 2 akan memakai set uji baru — set uji v1 sudah dibekukan dan
 tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
