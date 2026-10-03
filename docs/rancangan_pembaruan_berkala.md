@@ -168,3 +168,25 @@ sedang berlangsung.
 
 **Menunggu pemilik proyek:** jam penjadwalan dan persetujuan pendaftaran ke Task Scheduler; keputusan
 untuk label `BELUM TERBUKTI`; cadangan mana yang dihapus.
+
+---
+
+## Catatan 2026-10-03 (setelah pemeriksaan pemilik proyek)
+
+- **Berkas penanda adalah pemberitahuan UTAMA; notifikasi Windows hanya pelengkap.** Ketiga
+  notifikasi percobaan memang masuk ke Notification Center (19.59), tetapi karena mode *Do not
+  disturb* aktif, tidak satu pun muncul sebagai sembulan -- hanya masuk diam-diam ke panel. Jadi
+  notifikasi tidak bisa diandalkan untuk menarik perhatian; `PERHATIAN_PEMBARUAN.txt` di root proyek
+  yang menjamin kegagalan terlihat.
+- **Label `BELUM TERBUKTI` sudah diputuskan** (gaya ungu sendiri), sehingga dua artikel berlabel itu
+  di antrean dianggap sudah ditinjau; pemeriksaan antrean dijalankan ulang tanpa scraping -> kode 0,
+  penanda terhapus. Antrean 16 artikel tetap belum digabung (penggabungan dan ingest manual).
+- **Cadangan:** `pre_batch03_2026-09-27` dan `pre_metadata_update_2026-10-03` dihapus atas perintah
+  pemilik proyek. Tersisa `pre_batch04-06_2026-10-03` (35 MB) dan `pre_ef_search_2026-10-03` (54 MB).
+- **Penjadwalan (ditetapkan pemilik proyek):** setiap hari pukul 13.00; boleh mulai dan terus
+  berjalan saat memakai baterai (scraping hanya sekitar satu menit; ingest yang berat tetap manual);
+  berjalan tanpa jendela (pukul 13.00 laptop biasanya sedang dipakai, jendela yang muncul bisa
+  merebut fokus ketikan); notifikasi tetap berfungsi. Pendaftaran ke Task Scheduler menunggu
+  persetujuan atas perintah finalnya; setelah terdaftar, tugas dipicu sekali lewat Task Scheduler
+  dan berkas status serta kode keluarnya diperiksa (lingkungan Task Scheduler bisa berbeda dari
+  terminal: direktori kerja, variabel lingkungan).
