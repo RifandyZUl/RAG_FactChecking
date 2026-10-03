@@ -73,3 +73,48 @@ memori cukup.
 **Urutan pengerjaan yang ditetapkan:** (1) rancangan ini disimpan; (2) perbaikan `ef_search` di indeks
 produksi dan alat pemeriksaan retriever lawan pencarian eksak; (3) dua celah prasyarat (butir 1);
 laporan; baru kemudian penjadwalan.
+
+---
+
+## Kemajuan dan usulan lanjutan (2026-10-03)
+
+**Butir 1 (dua celah prasyarat): SELESAI**, di `src/scraping/expand.py`, uji di `tests/test_expand.py`.
+
+- *Jalan dengan kegagalan tidak memajukan batas "sudah dimiliki".* Selama masih ada kegagalan yang
+  bisa dicoba lagi, jalan DITAHAN: berkas artikel tidak ditulis dan `state.json` tidak diubah, sehingga
+  perintah yang sama mengulang seluruhnya (yang sudah berhasil terbaca dari cache). Berlaku untuk
+  mode mundur dan mode maju. Aturannya:
+  - kegagalan sistematis (>= 2 artikel gagal dan tingkat gagal > 5%): ditahan, kode keluar 3, sampai
+    manusia turun tangan (memperbaiki penyebabnya, atau `--accept-failures`);
+  - masih ada kegagalan yang bisa dicoba lagi: ditahan, kode keluar 5;
+  - semua kegagalan permanen (HTTP 404/410, atau sudah gagal 3 kali antar-jalan): ditulis dan batas
+    maju, kode keluar 6, artikelnya ditandai "perlu tinjauan".
+- *Coba ulang dari `failed_ids.json`:* `python -m scraping.expand --retry-failed` mengambil ulang
+  kegagalan terbuka langsung dari URL tersimpannya; hasil ke `data/expansion/retry_YYYY-MM-DD.json`
+  (terhitung "dimiliki"); `--include-permanent` untuk yang perlu tinjauan, setelah penyebabnya
+  diperbaiki. `--failed-status` kini memisahkan `id_bisa_dicoba_ulang` dari `id_perlu_tinjauan`.
+- Kode keluar proses Python: 0 bersih | 3 ditahan (sistematis) | 4 jaringan putus | 5 ditahan (akan
+  dicoba lagi) | 6 ditulis, ada yang perlu ditinjau. Pembungkus terjadwal cukup membaca kode ini.
+
+**Butir 2 (pemberitahuan) -- usulan, belum dibangun.** Dua lapis, tanpa memasang apa pun:
+
+1. *Berkas penanda di root proyek*, mis. `PERHATIAN_PEMBARUAN.txt`, ditulis pembungkus setiap kali
+   jalan berakhir dengan kode selain 0 (isi: waktu, kode keluar dan artinya, jumlah gagal per jenis,
+   jalur laporan), dan DIHAPUS pada jalan bersih berikutnya. Terlihat begitu proyek dibuka di IDE
+   atau `git status` dijalankan (berkasnya di-gitignore). Ini lapis yang tidak bisa terlewat.
+2. *Notifikasi Windows (toast)* dari pembungkus lewat PowerShell bawaan
+   (`Windows.UI.Notifications`), hanya saat gagal dan saat ada artikel yang perlu ditinjau. Bisa
+   terlewat bila laptop sedang tidak dipakai, karena itu bukan satu-satunya lapis.
+
+Tambahan murah: setelah tiga jalan gagal beruntun, penanda menyebut bahwa pembaruan berhenti mencoba.
+
+**Butir 4 (cadangan) -- perkiraan ukuran.** Satu cadangan = `data/chroma` + `articles.json`. Pada
+indeks 1.532 artikel: sekitar 54 MB (indeks 49 MB, `articles.json` 5 MB). Tiga cadangan terakhir:
+sekitar 160 MB sekarang; bertambah kira-kira 35 MB per 1.000 artikel per cadangan. Saat ini ada empat
+cadangan (29 + 36 + 35 + 54 = 154 MB); belum ada yang dihapus -- aturan "tiga terakhir" berlaku
+untuk cadangan otomatis yang akan dibangun, dan penghapusan cadangan lama menunggu perintah pemilik
+proyek.
+
+**Yang belum dikerjakan:** penjadwalan (Task Scheduler, jalankan sekali saat menyala bila terlewat),
+pembungkus dan pemberitahuan, rotasi cadangan, catatan cakupan demo dengan jumlah artikel otomatis,
+dan lapisan pengambilan data yang bisa diganti. Menunggu laporan ini ditinjau.

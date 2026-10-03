@@ -29,10 +29,28 @@ bergerak ke halaman lebih tua, dan berhenti pada artikel pertama (urutan daftar)
 data/expansion/forward_YYYY-MM-DD.json dan forward_YYYY-MM-DD_report.json; state.json (jangkar mode
 mundur) tidak diubah. Mode ini adalah dasar pembaruan berkala: logikanya sama, hanya perlu dijadwalkan.
 
+Jalan yang selesai dengan kegagalan TIDAK memajukan batas "sudah dimiliki" (2026-10-03). Artikel gagal
+tidak pernah terjangkau lagi oleh penelusuran daftar (mode mundur sudah melewati jangkarnya; mode maju
+berhenti di artikel dimiliki yang lebih baru), jadi selama masih ada kegagalan yang bisa dicoba lagi,
+jalan DITAHAN: berkas artikel tidak ditulis, state.json tidak diubah, dan perintah yang sama diulang
+(yang sudah berhasil terbaca dari cache). Aturannya (`hold_decision`):
+  - kegagalan SISTEMATIS (>= 2 artikel gagal dan tingkat gagal > MAX_FAILURE_RATE): ditahan, kode keluar
+    3, sampai manusia turun tangan (perbaiki penyebabnya, atau --accept-failures);
+  - masih ada kegagalan yang bisa dicoba lagi: ditahan, kode keluar 5;
+  - semua kegagalan PERMANEN (HTTP 404/410, atau sudah gagal MAX_ATTEMPTS kali antar-jalan): ditulis dan
+    batas maju, kode keluar 6; artikel itu ditandai "perlu tinjauan" dan hanya diambil lagi lewat
+    --retry-failed --include-permanent.
+Coba ulang (--retry-failed): ambil ulang kegagalan TERBUKA di failed_ids.json langsung dari URL
+tersimpannya (bukan lewat penelusuran daftar); hasil ke data/expansion/retry_YYYY-MM-DD.json.
+
+Kode keluar: 0 bersih | 3 ditahan (sistematis) | 4 jaringan putus | 5 ditahan (akan dicoba lagi) |
+6 ditulis, ada kegagalan permanen yang perlu ditinjau.
+
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m scraping.expand --batch-size 250
   PYTHONPATH=src python -m scraping.expand --forward
   PYTHONPATH=src python -m scraping.expand --failed-status
+  PYTHONPATH=src python -m scraping.expand --retry-failed [--include-permanent]
 """
 
 import argparse
@@ -72,6 +90,14 @@ RETRIES = {"artikel": 0, "halaman_daftar": 0}
 # ditimpa lewat --max-network-failures.
 MAX_CONSECUTIVE_NETWORK_FAILURES = 5
 EXIT_NETWORK_DOWN = 4
+EXIT_HELD_SYSTEMATIC = 3  # ditahan: kegagalan sistematis (tingkat gagal > MAX_FAILURE_RATE)
+EXIT_HELD_RETRY = 5  # ditahan: masih ada kegagalan yang bisa dicoba lagi
+EXIT_NEEDS_REVIEW = 6  # ditulis, tetapi ada kegagalan permanen yang perlu ditinjau manusia
+# Batas percobaan satu artikel ANTAR-JALAN (dihitung dari failed_ids.json). Setelah itu kegagalannya
+# dianggap permanen: tidak lagi menahan jalan, ditandai perlu tinjauan. Pilihan rancangan (agenda (b),
+# 2026-09-27), bukan berbasis data.
+MAX_ATTEMPTS = 3
+_PERMANENT_HTTP = re.compile(r"^(?:404|410) ")  # halaman memang tidak ada: mengulang tidak membantu
 # Alasan gagal dari scraping.client untuk galat yang di-retry: "<NamaGalat> setelah N percobaan".
 # Hanya galat jaringan (ReadTimeout, ConnectTimeout, ConnectionError, SSLError, ProxyError) yang
 # cocok; "halaman galat (...) setelah N percobaan", galat HTTP (404, 5xx), dan gagal parse tidak.
@@ -112,6 +138,40 @@ def failure_kind(reason: str) -> str:
     if reason == PARSE_NONE_REASON:
         return "parse_kosong"
     return "http_atau_lain"
+
+
+def attempts_by_id(entries: list[dict[str, Any]]) -> dict[str, int]:
+    """Berapa kali tiap artikel tercatat gagal di buku gagal (antar-jalan)."""
+    counts: dict[str, int] = {}
+    for e in entries:
+        counts[e["article_id"]] = counts.get(e["article_id"], 0) + 1
+    return counts
+
+
+def is_permanent_failure(reason: str, attempts: int) -> bool:
+    """Kegagalan yang tidak layak dicoba lagi otomatis: HTTP 404/410, atau sudah MAX_ATTEMPTS kali gagal."""
+    return _PERMANENT_HTTP.match(reason) is not None or attempts >= MAX_ATTEMPTS
+
+
+def hold_decision(failures: list[dict[str, Any]], attempted: int, attempts: dict[str, int],
+                  accept: bool = False) -> tuple[str, list[str], list[str]]:
+    """
+    Putuskan apakah hasil jalan boleh ditulis (batas "sudah dimiliki" maju).
+
+    Mengembalikan (keputusan, id_bisa_dicoba_lagi, id_permanen); keputusan: "tulis" |
+    "tahan_sistematis" | "tahan_coba_lagi". `attempts` = jumlah kegagalan per artikel di buku gagal,
+    SUDAH termasuk jalan ini. `accept` (--accept-failures) = manusia memutuskan menulis apa adanya.
+    """
+    permanent = [f["article_id"] for f in failures if is_permanent_failure(f["alasan"], attempts.get(f["article_id"], 1))]
+    retryable = [f["article_id"] for f in failures if f["article_id"] not in permanent]
+    if accept or not failures:
+        return "tulis", retryable, permanent
+    rate = len(failures) / attempted if attempted else 0.0
+    if len(failures) >= 2 and rate > MAX_FAILURE_RATE:
+        return "tahan_sistematis", retryable, permanent
+    if retryable:
+        return "tahan_coba_lagi", retryable, permanent
+    return "tulis", retryable, permanent
 
 
 def article_id_of(url: str) -> str | None:
@@ -255,9 +315,10 @@ def forward_known_ids(state: dict[str, Any]) -> set[str]:
     """Id yang sudah dimiliki: basis, kelompok mundur (state), dan hasil mode maju sebelumnya."""
     known = {a["article_id"] for a in json.loads(ARTICLES_PATH.read_text(encoding="utf-8"))}
     known |= set(state.get("known_ids", []))
-    for f in sorted(EXPANSION_DIR.glob("forward_*.json")):
-        if not f.name.endswith("_report.json"):
-            known |= {a["article_id"] for a in json.loads(f.read_text(encoding="utf-8"))}
+    for pattern in ("forward_*.json", "retry_*.json"):
+        for f in sorted(EXPANSION_DIR.glob(pattern)):
+            if not f.name.endswith("_report.json"):
+                known |= {a["article_id"] for a in json.loads(f.read_text(encoding="utf-8"))}
     return known
 
 
@@ -323,7 +384,7 @@ def owned_ids() -> set[str]:
     data/expansion/ (bukan laporan). Berbeda dari state.json.known_ids, yang berarti "sudah dicoba".
     """
     files = [ARTICLES_PATH] if ARTICLES_PATH.exists() else []
-    files += [f for pattern in ("batch_*.json", "forward_*.json") for f in sorted(EXPANSION_DIR.glob(pattern))
+    files += [f for pattern in ("batch_*.json", "forward_*.json", "retry_*.json") for f in sorted(EXPANSION_DIR.glob(pattern))
               if not f.name.endswith("_report.json")]
     return {a["article_id"] for f in files for a in json.loads(f.read_text(encoding="utf-8"))}
 
@@ -341,12 +402,17 @@ def failure_status(entries: list[dict[str, Any]], owned: set[str]) -> dict[str, 
         last[aid] = e
         count[aid] = count.get(aid, 0) + 1
     open_ids = [aid for aid in last if aid not in owned]
+    review = [aid for aid in open_ids if is_permanent_failure(last[aid]["alasan"], count[aid])]
     return {
         "entri": len(entries),
         "id_unik": len(last),
         "teratasi": len(last) - len(open_ids),
         "terbuka": len(open_ids),
         "id_terbuka": open_ids,
+        # terbuka dan masih layak dicoba otomatis (--retry-failed) vs perlu tinjauan manusia
+        # (404/410 atau sudah MAX_ATTEMPTS kali gagal; --retry-failed --include-permanent)
+        "id_bisa_dicoba_ulang": [aid for aid in open_ids if aid not in review],
+        "id_perlu_tinjauan": review,
         "terbuka_per_jenis": _count(last[aid].get("jenis") or failure_kind(last[aid]["alasan"]) for aid in open_ids),
         "rincian_terbuka": [{"article_id": aid, "url": last[aid]["url"], "kali_gagal": count[aid],
                              "alasan_terakhir": last[aid]["alasan"], "jalan_terakhir": last[aid]["jalan"],
@@ -416,8 +482,85 @@ def write_interrupted_report(run: str, err: NetworkDownError, extra: dict[str, A
     return path
 
 
+def write_held_report(run: str, decision: str, articles: list[dict], failures: list[dict], attempted: int,
+                      retryable: list[str], permanent: list[str], extra: dict[str, Any]) -> Path:
+    """Laporan untuk jalan yang DITAHAN (ada kegagalan): nama memuat waktu UTC, tidak menimpa apa pun."""
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    path = EXPANSION_DIR / f"{run}_tertahan_{stamp}_report.json"
+    report = {**extra, "tertahan": True, "keputusan": decision,
+              "statistik": batch_stats(articles, failures, attempted), "retry": dict(RETRIES), "gagal": failures,
+              "gagal_bisa_dicoba_lagi": retryable, "gagal_permanen": permanent,
+              "catatan": ("berkas artikel tidak ditulis dan batas 'sudah dimiliki' tidak maju; artikel yang berhasil "
+                          "ada di cache. Ulangi perintah yang sama.")}
+    EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    kinds = report["statistik"]["gagal_per_jenis"]
+    if decision == "tahan_sistematis":
+        print(f"DITAHAN (kegagalan sistematis): {len(failures)} dari {attempted} gagal > {MAX_FAILURE_RATE:.0%}; "
+              f"per jenis {kinds}. Perlu ditangani manusia (atau --accept-failures). Laporan: {path}")
+    else:
+        print(f"DITAHAN: {len(retryable)} artikel gagal dan akan dicoba lagi pada jalan berikutnya "
+              f"(per jenis {kinds}; batas {MAX_ATTEMPTS} percobaan antar-jalan). Laporan: {path}")
+    print("Berkas artikel tidak ditulis dan batas 'sudah dimiliki' tidak maju.")
+    return path
+
+
+def finish_or_hold(run: str, articles: list[dict], failures: list[dict], attempted: int, accept: bool,
+                   extra: dict[str, Any]) -> tuple[int | None, list[str]]:
+    """(kode keluar bila ditahan, else None; id gagal permanen). Dipanggil sebelum menulis hasil jalan."""
+    decision, retryable, permanent = hold_decision(failures, attempted, attempts_by_id(load_failures()), accept)
+    if decision == "tulis":
+        return None, permanent + (retryable if accept else [])
+    write_held_report(run, decision, articles, failures, attempted, retryable, permanent, extra)
+    return (EXIT_HELD_SYSTEMATIC if decision == "tahan_sistematis" else EXIT_HELD_RETRY), permanent
+
+
+def run_retry(include_permanent: bool, max_network_failures: int = MAX_CONSECUTIVE_NETWORK_FAILURES) -> int:
+    """
+    Coba ulang kegagalan TERBUKA di failed_ids.json langsung dari URL tersimpannya. Bawaan: hanya yang
+    masih layak dicoba otomatis; `include_permanent` ikut mengambil yang perlu tinjauan (setelah
+    penyebabnya diperbaiki manusia). Tiap artikel berdiri sendiri, jadi hasil sebagian tetap ditulis.
+    """
+    status = failure_status(load_failures(), owned_ids())
+    targets = status["id_bisa_dicoba_ulang"] + (status["id_perlu_tinjauan"] if include_permanent else [])
+    url_of = {r["article_id"]: r["url"] for r in status["rincian_terbuka"]}
+    print(f"=== Coba ulang: {len(targets)} artikel terbuka (perlu tinjauan, tidak diambil: "
+          f"{0 if include_permanent else len(status['id_perlu_tinjauan'])}) ===")
+    if not targets:
+        return EXIT_NEEDS_REVIEW if status["id_perlu_tinjauan"] else 0
+    tag = datetime.now(ZoneInfo("Asia/Jakarta")).date().isoformat()
+    run = f"retry_{tag}"
+    out = EXPANSION_DIR / f"{run}.json"
+    existing = json.loads(out.read_text(encoding="utf-8")) if out.exists() else []
+    interrupted = False
+    try:
+        articles, failures = scrape_all([url_of[i] for i in targets], make_session(), run, max_network_failures)
+    except NetworkDownError as e:
+        articles, failures, interrupted = e.articles, e.failures, True
+        print(f"TERPUTUS: {e}")
+    have = {a["article_id"] for a in existing}
+    merged = existing + [a for a in articles if a["article_id"] not in have]
+    EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
+    if merged:
+        out.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    after = failure_status(load_failures(), owned_ids())  # SETELAH hasil ditulis
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    report = {"mode": "coba_ulang", "tanggal_jalan": tag, "sasaran": targets, "termasuk_permanen": include_permanent,
+              "terputus": interrupted, "statistik": batch_stats(articles, failures, len(articles) + len(failures)),
+              "retry": dict(RETRIES), "gagal": failures, "berhasil": [a["article_id"] for a in articles],
+              "gagal_terbuka": after["id_terbuka"], "bisa_dicoba_ulang": after["id_bisa_dicoba_ulang"],
+              "perlu_tinjauan": after["id_perlu_tinjauan"]}
+    (EXPANSION_DIR / f"retry_{stamp}_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps({k: report[k] for k in ("berhasil", "bisa_dicoba_ulang", "perlu_tinjauan", "terputus")}, ensure_ascii=False))
+    if interrupted:
+        return EXIT_NETWORK_DOWN
+    if after["id_bisa_dicoba_ulang"]:
+        return EXIT_HELD_RETRY
+    return EXIT_NEEDS_REVIEW if after["id_perlu_tinjauan"] else 0
+
+
 def run_forward(state: dict[str, Any], max_pages: int,
-                max_network_failures: int = MAX_CONSECUTIVE_NETWORK_FAILURES) -> int:
+                max_network_failures: int = MAX_CONSECUTIVE_NETWORK_FAILURES, accept: bool = False) -> int:
     session = make_session()
     known = forward_known_ids(state)
     tag = datetime.now(ZoneInfo("Asia/Jakarta")).date().isoformat()  # tanggal WIB, zona situs sumber
@@ -434,17 +577,24 @@ def run_forward(state: dict[str, Any], max_pages: int,
         # titik henti jalan berikutnya, sehingga artikel lebih tua yang belum terambil terlewat.
         write_interrupted_report(f"forward_{tag}", e, {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop})
         return EXIT_NETWORK_DOWN
+    # Jalan dengan kegagalan yang masih bisa dicoba lagi TIDAK ditulis: artikel terbaru yang tercatat
+    # "dimiliki" akan menjadi titik henti jalan berikutnya, sehingga artikel gagal di bawahnya terlewat.
+    held, permanent = finish_or_hold(f"forward_{tag}", articles, failures, len(urls), accept,
+                                     {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop})
+    if held is not None:
+        return held
     stats = batch_stats(articles, failures, len(urls))
     EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
     report = {"mode": "maju", "tanggal_jalan": tag, "titik_henti": stop, "statistik": stats,
-              "retry": dict(RETRIES), "gagal": failures, "gagal_terbuka": open_failure_ids()}
+              "retry": dict(RETRIES), "gagal": failures, "gagal_permanen": permanent,
+              "gagal_terbuka": open_failure_ids()}
     (EXPANSION_DIR / f"forward_{tag}_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    if stats["tingkat_gagal"] > MAX_FAILURE_RATE:
-        print(f"BERHENTI: tingkat gagal {stats['tingkat_gagal']:.1%} > {MAX_FAILURE_RATE:.0%}")
-        return 3
+    if failures:
+        print(f"DITULIS dengan {len(failures)} kegagalan yang PERLU DITINJAU: {permanent}")
+        return EXIT_NEEDS_REVIEW
     return 0
 
 
@@ -464,6 +614,12 @@ def main() -> int:
     ap.add_argument("--max-pages", type=int, default=30, help="mode maju: batas halaman daftar yang dibaca")
     ap.add_argument("--failed-status", action="store_true",
                     help="cetak status turunan failed_ids.json (terbuka/teratasi) lalu keluar; tanpa jaringan")
+    ap.add_argument("--retry-failed", action="store_true",
+                    help="coba ulang kegagalan terbuka di failed_ids.json dari URL tersimpannya -> retry_YYYY-MM-DD.json")
+    ap.add_argument("--include-permanent", action="store_true",
+                    help="dengan --retry-failed: ikut mengambil kegagalan permanen (perlu tinjauan)")
+    ap.add_argument("--accept-failures", action="store_true",
+                    help="tulis hasil dan majukan batas walau ada kegagalan (keputusan manusia; bawaan: ditahan)")
     ap.add_argument("--max-network-failures", type=int, default=MAX_CONSECUTIVE_NETWORK_FAILURES,
                     help="pemutus sirkuit: berhenti setelah sekian artikel beruntun gagal karena jaringan")
     args = ap.parse_args()
@@ -471,9 +627,11 @@ def main() -> int:
     if args.failed_status:
         print(json.dumps(failure_status(load_failures(), owned_ids()), ensure_ascii=False, indent=2))
         return 0
+    if args.retry_failed:
+        return run_retry(args.include_permanent, args.max_network_failures)
     state = load_state()
     if args.forward:
-        return run_forward(state, args.max_pages, args.max_network_failures)
+        return run_forward(state, args.max_pages, args.max_network_failures, args.accept_failures)
     known = set(state["known_ids"])
     batch_no = state["batch"] + 1
     start_page = args.start_page or state["start_page"]
@@ -489,12 +647,18 @@ def main() -> int:
         write_interrupted_report(f"batch_{batch_no:02d}", e, {
             "kelompok": batch_no, "jangkar_awal": state["anchor_url"], "halaman_daftar_terakhir": last_page})
         return EXIT_NETWORK_DOWN
+    # Mode mundur sudah melewati jangkar artikel yang gagal dan tidak pernah kembali, jadi selama ada
+    # kegagalan yang bisa dicoba lagi state.json TIDAK dimajukan (perintah yang sama diulang).
+    held, permanent = finish_or_hold(f"batch_{batch_no:02d}", articles, failures, len(urls), args.accept_failures, {
+        "kelompok": batch_no, "jangkar_awal": state["anchor_url"], "halaman_daftar_terakhir": last_page})
+    if held is not None:
+        return held
     stats = batch_stats(articles, failures, len(urls))
     EXPANSION_DIR.mkdir(parents=True, exist_ok=True)
     (EXPANSION_DIR / f"batch_{batch_no:02d}.json").write_text(
         json.dumps(articles, ensure_ascii=False, indent=2), encoding="utf-8")
     report = {"kelompok": batch_no, "jangkar_awal": state["anchor_url"], "halaman_daftar_terakhir": last_page,
-              "statistik": stats, "retry": dict(RETRIES), "gagal": failures,
+              "statistik": stats, "retry": dict(RETRIES), "gagal": failures, "gagal_permanen": permanent,
               "gagal_terbuka": open_failure_ids()}  # dihitung SETELAH batch_NN.json ditulis
     (EXPANSION_DIR / f"batch_{batch_no:02d}_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -502,9 +666,9 @@ def main() -> int:
                   "start_page": last_page, "known_ids": sorted(known | {article_id_of(u) for u in urls})})
     STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({**stats, "retry": dict(RETRIES)}, ensure_ascii=False, indent=2))
-    if stats["tingkat_gagal"] > MAX_FAILURE_RATE:
-        print(f"BERHENTI: tingkat gagal {stats['tingkat_gagal']:.1%} > {MAX_FAILURE_RATE:.0%}")
-        return 3
+    if failures:
+        print(f"DITULIS dengan {len(failures)} kegagalan yang PERLU DITINJAU: {permanent}")
+        return EXIT_NEEDS_REVIEW
     return 0
 
 

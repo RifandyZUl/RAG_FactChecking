@@ -22,8 +22,10 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > pada indeks 1.532, konfirmasi v1-029 lewat retriever produksi, dan pengukuran ulang set
 > pengembangan SUDAH dijalankan (butir (l) di bawah; jalan pertama ablasi sempat dihentikan karena
 > memori rendah). **v1-046 diputuskan pemilik proyek: TETAP NEGATIF**
-> (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya (pembaruan
-> berkala) BELUM dikerjakan -- baru usulan rancangan (2026-10-03), menunggu keputusan.** Cadangan:
+> (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya = pembaruan
+> berkala: rancangan DISETUJUI (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual). Dua
+> celah prasyarat SUDAH ditutup (butir (n)); PENJADWALAN BELUM DIBANGUN -- menunggu pemilik proyek
+> meninjau laporan 2026-10-03.** `ef_search` produksi kini 2000 (butir (m)). Cadangan:
 > `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
 > (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
@@ -271,6 +273,27 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     dari pencarian eksak; hasil terakhir `testset/retriever_exactness_1532.json`) -- WAJIB dijalankan
     setiap kali indeks bertambah. Catatan: `ef_search` baru berlaku pada proses yang membuka indeks
     SETELAH diubah (segmen di-cache per proses); demo yang sedang berjalan perlu dijalankan ulang.
+    (n) **Dua celah prasyarat pembaruan berkala DITUTUP (2026-10-03; `expand.py`, uji di
+    `tests/test_expand.py`, tiga mutasi kontrol menggagalkan uji yang sesuai):**
+    *(1) Jalan dengan kegagalan tidak memajukan batas "sudah dimiliki".* Dulu jalan yang selesai
+    dengan kegagalan tetap menulis hasil dan memajukan `state.json` (mundur) atau titik henti (maju),
+    sehingga artikel gagal tak pernah terjangkau lagi. Sekarang (`hold_decision`): kegagalan sistematis
+    (>= 2 gagal dan > 5%) -> DITAHAN, kode keluar 3, sampai manusia turun tangan (`--accept-failures`
+    untuk menulis apa adanya); masih ada kegagalan yang bisa dicoba lagi -> DITAHAN, kode 5; semua
+    kegagalan permanen (HTTP 404/410 atau sudah `MAX_ATTEMPTS` = 3 kali gagal antar-jalan) -> ditulis,
+    batas maju, kode 6, artikel ditandai "perlu tinjauan". Jalan yang ditahan tidak menulis berkas
+    artikel dan tidak mengubah `state.json`; yang ditulis hanya `<jalan>_tertahan_<waktu UTC>_report.json`
+    dan entri `failed_ids.json`. Perubahan perilaku: ambang 5% kini MENAHAN, bukan lagi "tulis lalu
+    kode 3".
+    *(2) Coba ulang (agenda (b)):* `python -m scraping.expand --retry-failed` mengambil ulang
+    kegagalan TERBUKA dari URL tersimpan di `failed_ids.json` (bukan lewat penelusuran daftar) ->
+    `data/expansion/retry_YYYY-MM-DD.json` + `retry_<waktu UTC>_report.json`; hasil sebagian tetap
+    disimpan bila jaringan putus; `--include-permanent` untuk yang perlu tinjauan. `owned_ids` dan
+    `forward_known_ids` menghitung `retry_*.json`. `--failed-status` memisahkan
+    `id_bisa_dicoba_ulang` dan `id_perlu_tinjauan`. **Penggabungan ke `articles.json` tetap manual:
+    berkas `retry_*.json` harus ikut digabung seperti kelompok lain.**
+    Kode keluar `expand`: 0 bersih | 3 ditahan sistematis | 4 jaringan putus | 5 ditahan, akan dicoba
+    lagi | 6 ditulis, ada yang perlu ditinjau. Data nyata saat ini: 210 entri, 0 terbuka.
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
