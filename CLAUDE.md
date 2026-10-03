@@ -20,8 +20,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > baru (~25 menit pada 0,8 dtk/chunk), lalu `index_check`. Cadangan sebelum perubahan hari ini:
 > `data/backups/pre_metadata_update_2026-10-03/` (`chroma/` + `articles.json` 922 sebelum reparse +
 > `articles_922_setelah_reparse.json`). 30089 ada di `articles.json`; verifikasi top-3 v1-029
-> dilakukan SETELAH ingest. Manifest `manifests/expansion_article_ids.json` BELUM memuat kelompok
-> 4-6 (perlu pemeriksaan PII judul seperti kelompok 1-3). **Aturan Wajib #1 (butir "Temuan Aturan
+> dilakukan SETELAH ingest. Manifest `manifests/expansion_article_ids.json` SUDAH memuat
+> kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
 > Wajib #1" di bawah): SELESAI untuk data dan indeks produksi -- pemendek URL dan
 > seluruh domain arsip disaring, baris "Sumber:" dibaca sebagai sumber klaim (kecuali pemerintah/
 > media tepercaya), rujukan disaring ulang saat tampil, metadata 922 artikel terindeks sudah
@@ -1576,6 +1576,23 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   pada scraping awal) berakhir dengan `references` kosong padahal
   Referensi aslinya berisi tautan. Tautan yang dibuang tetap tersimpan di
   `references_raw` dan `references_filtered`.
+- **Pengecualian baris "Sumber:" bertumpu pada daftar yang belum ditinjau dan pada `*.go.id`**
+  (dicatat 2026-10-03). (1) `links.TRUSTED_SOURCE_DOMAINS` (media dan cek fakta) disusun Claude Code
+  pada 2026-10-03 dari domain yang muncul sebagai rujukan di data -- **melingkar**, karena justru
+  kebersihan rujukan itulah yang sedang diperiksa; "klasifikasi domain" 2026-09-26 tidak pernah ada
+  sebagai daftar. **Daftar ini MENUNGGU tinjauan pemilik proyek**; pada data saat ini hanya dua URL
+  (33497) yang bergantung padanya. (2) Pengecualian `*.go.id` berisiko: situs pemerintah di Indonesia
+  cukup sering diretas dan disisipi halaman judi atau penipuan, sehingga URL `.go.id` di baris
+  "Sumber:" bisa saja memang halaman berbahaya. Tidak diubah sekarang (keputusan pemilik proyek);
+  pada data saat ini hanya dua URL (32110, 31532), keduanya beranda/layanan resmi yang disebut
+  Kesimpulan artikelnya. Penilaian kredibilitas per-URL adalah lingkup Versi 2.
+- **Penyaringan pemendek URL dan arsip ikut membuang sebagian rujukan yang benar -- harga yang
+  diterima dengan sadar** (keputusan pemilik proyek 2026-10-03). Contoh: 36089, yang tautan `bit.ly`-nya
+  menurut Kesimpulan adalah tautan pendaftaran resmi Kemnaker (tujuannya tidak diperiksa). Alasannya:
+  tujuan tautan pendek tidak dapat diverifikasi pengguna sebelum diklik, dan aturan pencegah tautan
+  hoaks berbawaan "saring kecuali terbukti sah". Terukur pada 1.532 artikel: 13 rujukan berpemendek
+  dan 27 rujukan arsip tersaring; artikel tanpa rujukan 200 -> 205. Tautan itu tetap ada di
+  `references_raw`/`references_filtered`.
 - **Ditunda ke Versi 2:** penyaringan berbasis kredibilitas sumber yang
   lebih cerdas, termasuk membedakan akun resmi instansi (mis.
   `instagram.com/kemensetneg.ri/`) dari akun penyebar hoaks. Alasan
