@@ -207,7 +207,7 @@ class StatusStyle:
     summary: str
 
 
-# Intensitas menurun: PENIPUAN (merugikan langsung) > SALAH > PARODI.
+# Intensitas menurun: PENIPUAN (merugikan langsung) > SALAH > PARODI. BELUM TERBUKTI di luar skala itu.
 STATUS_STYLES: dict[str, StatusStyle] = {
     "PENIPUAN": StatusStyle(
         label="Penipuan",
@@ -228,6 +228,19 @@ STATUS_STYLES: dict[str, StatusStyle] = {
         summary=(
             "Konten ini sudah diperiksa TurnBackHoax.id dan merupakan konten humor "
             "(parodi, satire, atau komedi), bukan berita sungguhan."
+        ),
+    ),
+    # Label sumber "[BELUM TERBUKTI]" (pertama muncul pada mode maju 2026-10-03: 36976, 36941). BUKAN
+    # jenis "salah": klaimnya belum didukung bukti. Gaya, judul, dan kalimat ditetapkan pemilik proyek
+    # 2026-10-03; sengaja tanpa saran (mis. medis) dan tanpa kalimat lain. Ungu berada di luar skala
+    # bahaya dan berbeda dari abu-abu "belum ditemukan" (klaim itu SUDAH diperiksa).
+    "BELUM TERBUKTI": StatusStyle(
+        label="Belum terbukti",
+        color="violet",
+        icon=":material/help:",
+        summary=(
+            "Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, "
+            "sehingga belum dapat dianggap benar."
         ),
     ),
 }

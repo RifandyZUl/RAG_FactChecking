@@ -61,7 +61,7 @@ EXIT_MEANING = {
 # Label yang sudah diputuskan cara menampilkannya: tiga label dasar + alias di presentation.STATUS_ALIASES
 # (uji menjaga keduanya tetap sama). Label lain menahan penggabungan sampai pemilik proyek memutuskannya;
 # menambahkannya ke STATUS_ALIASES (dan ke sini) adalah cara "meninjau" sebuah label baru.
-REVIEWED_LABELS = frozenset(KNOWN_LABELS) | {"SATIRE", "SATIR", "KOMEDI"}
+REVIEWED_LABELS = frozenset(KNOWN_LABELS) | {"SATIRE", "SATIR", "KOMEDI", "BELUM TERBUKTI"}
 INVALID_URL_REASON = "URL tidak sah"
 
 
