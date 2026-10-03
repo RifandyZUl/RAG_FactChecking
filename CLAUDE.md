@@ -708,7 +708,16 @@ Proyek dibangun bertahap dalam dua versi:
     top-3 -- kegagalan itu murni penilaian LLM, bukan retrieval.
   - Temuan lengkap untuk rancangan Versi 2 (kegagalan retrieval vs generator,
     dipetakan ke komponen target): `testset/v1_temuan_untuk_v2.md`.
-- **Versi 2 — Corrective RAG (BELUM DIMULAI, tahap berikutnya).** Menambahkan
+- **Versi 2 — RANCANGAN DISUSUN 2026-10-03, BELUM ADA KODE: `docs/rancangan_v2.md`** (menunggu
+  keputusan pemilik proyek atas 12 pertanyaan terbuka di bagian 9 dokumen itu). **Rancangan itu
+  MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
+  semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
+  (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
+  mekanismenya (2/20 arsip, 0/20 indeks 922 dan 1.532) tetapi pengganggunya sintetis; (iii) untuk
+  grader dan "Mungkin terkait" ada bukti masalah tetapi TIDAK ada bukti solusi; (iv) kredibilitas
+  DOKUMEN (tidak ada temuan) dipisah dari kredibilitas RUJUKAN (banyak temuan). Teks lama di bawah
+  dipertahankan sebagai riwayat.
+- **Versi 2 — Corrective RAG (rencana awal, lihat koreksi di atas).** Menambahkan
   node penilai relevansi dokumen (grader), penulis ulang kueri (query
   rewriter), dan penilaian kredibilitas sumber -- lihat
   `testset/v1_temuan_untuk_v2.md` untuk pemetaan temuan Versi 1 ke masing-

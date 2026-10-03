@@ -20,6 +20,16 @@ Latar (lihat CLAUDE.md, "Versi 2 — Corrective RAG"): komponen kandidat Versi 2
 
 ## 1. Kegagalan retrieval (4 butir)
 
+> **KOREKSI 2026-10-03 (pemilik proyek; berlaku untuk bagian ini dan baris "Rewriter (tugas 2)" di
+> bagian 7):** keempat butir di bawah (`v1-022`, `v1-024`, `v1-027`, `v1-033`) **semuanya butir
+> NEGATIF sulit** (`expected_verdict = belum_ditemukan`). Artikel yang "tidak terjangkau" adalah
+> artikel TETANGGA, dan jawaban yang benar untuk keempatnya memang "belum ditemukan". Jadi ini
+> **bukan bukti bahwa retrieval menggagalkan jawaban**, dan **bukan dasar untuk penulis ulang
+> kueri**: Recall@3 butir POSITIF adalah 20/20 pada arsip, indeks 922, dan indeks 1.532. Akibat
+> sebenarnya dari keempat butir ini adalah batas tafsir H1 (paragraf di bawah tabel). Paragraf
+> "Target Versi 2: node penulis ulang kueri" di akhir bagian ini dipertahankan sebagai riwayat,
+> tetapi TIDAK lagi berlaku; lihat `docs/rancangan_v2.md` bagian 1 dan 8.
+
 Artikel yang seharusnya terjangkau (`expected_retrieval_article`) tidak masuk top-3 hasil
 retrieval. Peringkat sebenarnya dicari dengan retrieval top_k=20 (kueri lokal, bukan panggilan
 API) pada indeks yang sama.
@@ -298,10 +308,17 @@ kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang menyingkirkannya 
 
 ## 7. Pemetaan komponen Versi 2 (diperbarui 2026-09-25)
 
+> **Catatan 2026-10-03:** tabel ini digantikan `docs/rancangan_v2.md`, yang memisahkan bukti untuk
+> MASALAH dari bukti untuk SOLUSI. Ringkasnya: bukti rewriter tugas 1 kuat untuk mekanismenya
+> tetapi pengganggunya sintetis (besar dampak pada pesan nyata belum diketahui); bukti grader
+> lemah dan tidak ada bukti bahwa grader menyelesaikannya; "kredibilitas sumber" dipisah menjadi
+> kredibilitas DOKUMEN (tidak ada temuan, satu sumber) dan kredibilitas RUJUKAN (banyak temuan,
+> bagian 9 dan CLAUDE.md "Temuan Aturan Wajib #1").
+
 | Komponen | Tugas | Bukti dari Versi 1 | Keterukuran dampak |
 |---|---|---|---|
 | **Rewriter** (tugas 1) | Mengekstrak inti klaim dari pesan panjang **sebelum** retrieval | 18 dari 20 butir positif gagal Recall@3 pada pesan ~5.000 karakter karena klaim di luar jendela 512 token (bagian 5.2, eksperimen 4) | **Paling terukur**: selisih -18/20, jauh di atas kebetulan |
-| **Rewriter** (tugas 2) | Menulis ulang kueri saat retrieval gagal | 4 butir dengan artikel benar di luar top-3: 2 nyaris (peringkat 4), 2 jauh (6 dan 19) (bagian 1) | Kecil: 4 butir |
+| ~~**Rewriter** (tugas 2)~~ | ~~Menulis ulang kueri saat retrieval gagal~~ | **DICORET 2026-10-03:** keempat butir itu negatif sulit (yang di luar top-3 adalah artikel tetangga), bukan bukti retrieval menggagalkan jawaban; positif 20/20 di semua indeks (bagian 1, koreksi) | Tidak ada bukti masalah |
 | **Grader** | Menilai apakah kandidat benar-benar klaim yang sama | 2 kesalahan + 6 ketidakbulatan, semua dengan artikel benar di top-3 (bagian 2) | 7 butir unik; murni penilaian LLM |
 | **Kredibilitas sumber** | Menyaring rujukan lebih cerdas dari per domain | Tidak ada temuan kuantitatif dari set uji v1 (bagian 3) | Belum terukur |
 
@@ -517,6 +534,8 @@ seperti ini saat masuk.
 
 - Recall@3 non-batas: 36/40 (90%) -- tapi hanya 17/20 butir negatif_sulit yang benar-benar
   "teruji" generatornya (lihat batas tafsir H1 di atas).
-- Dari 4 kegagalan retrieval: 2 nyaris (peringkat 4), 2 jauh (peringkat 6 dan 19).
+- Dari 4 kegagalan retrieval: 2 nyaris (peringkat 4), 2 jauh (peringkat 6 dan 19). Keempatnya
+  butir negatif sulit (artikel tetangga), bukan kegagalan menemukan artikel yang benar (koreksi
+  2026-10-03, bagian 1).
 - Dari 7 butir bermasalah di sisi generator (kesalahan + tidak bulat): 0 di antaranya
   disebabkan retrieval -- 100% murni penilaian LLM.
