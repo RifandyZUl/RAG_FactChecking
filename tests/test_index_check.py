@@ -172,3 +172,53 @@ def test_update_metadata_rewrites_only_metadata_of_chunks_with_identical_text(tm
     assert compare_index(new[:2] + new[3:4], *_stored([{"id": i, "text": by_id[i][0], "metadata": by_id[i][1]}
                                                        for i in ("1_narasi", "1_kesimpulan", "3_narasi")])) == []
     assert update_metadata(new, coll)["metadata_diperbarui"] == 0, "idempoten"
+
+
+def test_search_config_differs_between_archive_and_production(tmp_path, monkeypatch) -> None:
+    """Arsip tetap ef_search 100; indeks lain dibuat dengan nilai produksi; arsip menolak diubah."""
+    import pytest
+
+    import ingest
+    from evaluation.index_check import search_config_problems
+
+    assert (ingest.ARCHIVE_EF_SEARCH, ingest.PRODUCTION_EF_SEARCH) == (100, 2000)
+    monkeypatch.setattr(ingest, "is_archive_path", lambda p: "archive" in p.parts)
+    assert ingest.expected_ef_search(tmp_path / "archive" / "v1" / "chroma") == 100
+    assert ingest.expected_ef_search(tmp_path / "data" / "chroma") == 2000
+
+    new = ingest.get_collection(tmp_path / "data" / "chroma")
+    assert ingest.collection_ef_search(new) == 2000, "koleksi baru (mis. setelah --rebuild) langsung benar"
+    arch = ingest.get_collection(tmp_path / "archive" / "v1" / "chroma")
+    assert ingest.collection_ef_search(arch) == 100
+    with pytest.raises(PermissionError, match="archive"):
+        ingest.apply_search_config(tmp_path / "archive" / "v1" / "chroma")
+    assert ingest.collection_ef_search(ingest.get_collection(tmp_path / "archive" / "v1" / "chroma")) == 100
+
+    assert search_config_problems(2000, 2000) == [] and search_config_problems(100, 100) == []
+    assert "ef_search 100, seharusnya 2000" in search_config_problems(100, 2000)[0]
+    assert search_config_problems(None, 100) != []
+
+
+def test_apply_search_config_changes_only_the_parameter(tmp_path, monkeypatch) -> None:
+    """Koleksi lama (dibuat dengan bawaan 100) disetel ke nilai produksi; isi dan embedding tidak berubah."""
+    import chromadb
+    import numpy as np
+    from chromadb.config import Settings
+
+    import ingest
+
+    path = tmp_path / "chroma"
+    client = chromadb.PersistentClient(path=str(path), settings=Settings(anonymized_telemetry=False))
+    old = client.get_or_create_collection(name=ingest.COLLECTION_NAME, configuration={"hnsw": {"space": "cosine"}})
+    vectors = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    old.upsert(ids=["1_narasi", "2_narasi"], embeddings=vectors, documents=["a", "b"],
+               metadatas=[{"section": "narasi"}, {"section": "narasi"}])
+    assert ingest.collection_ef_search(old) == 100
+    assert ingest.collection_ef_search(ingest.get_collection(path)) == 100, "membuka koleksi lama tidak mengubahnya"
+
+    assert ingest.apply_search_config(path) == (100, 2000)
+    coll = ingest.get_collection(path)
+    assert ingest.collection_ef_search(coll) == 2000
+    got = coll.get(ids=["1_narasi", "2_narasi"], include=["documents", "metadatas", "embeddings"])
+    assert got["documents"] == ["a", "b"] and np.allclose(got["embeddings"], vectors)
+    assert ingest.apply_search_config(path) == (2000, 2000), "idempoten"

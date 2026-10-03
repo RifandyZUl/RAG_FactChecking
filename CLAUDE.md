@@ -251,9 +251,26 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     (0 top-3 berbeda) -> 35/1.920 pada 1.532 (1 top-3 berbeda); pada salinan dengan `ef_search` 200:
     10; 500: 1; 2.000: 0. Jadi selisihnya aproksimasi HNSW dan membesar bersama indeks. Konsekuensi
     demo: artikel yang benar kadang bisa tidak terambil (penolakan palsu dari indeks); pada 20 butir
-    positif tidak terjadi. **Parameter produksi TIDAK diubah**; usulan Versi 2 di
-    `v1_temuan_untuk_v2.md` bagian 10. Catatan: `ef_search` baru berlaku pada proses yang membuka
-    indeks SETELAH diubah (segmen di-cache per proses).
+    positif tidak terjadi.
+    **DIPERBAIKI di indeks produksi 2026-10-03 (keputusan pemilik proyek; perbaikan ketepatan, tanpa
+    embedding ulang): `ef_search` produksi 100 -> 2000** (`ingest.PRODUCTION_EF_SEARCH`; diterapkan
+    dengan `python src/ingest.py --apply-search-config`; cadangan
+    `data/backups/pre_ef_search_2026-10-03/`, 54 MB). Dipilih 2000 = nilai terkecil yang terukur tanpa
+    meleset (500 menyisakan 1 chunk); bukan "setara eksak" karena jumlah chunk terus bertambah.
+    Sebelum -> sesudah pada indeks produksi (64 kueri, proses baru): chunk terlewat 33/1.920 -> 0;
+    top-3 berbeda 1 (v1-048) -> 0; latensi `collection.query` median 4,1 -> 9,8 ms (p95 5,6 -> 11,9).
+    Isi indeks tidak berubah (sidik jari sama; `index_check` lengkap SEGAR).
+    **INDEKS PRODUKSI DAN ARSIP KINI SENGAJA MEMAKAI PARAMETER PENCARIAN BERBEDA: produksi
+    `ef_search` 2000, `archive/v1` tetap 100** (arsip tidak disentuh; hash byte sama). Alasan: arsip
+    adalah baseline yang dibangun dan dievaluasi dengan nilai bawaan; pada 450 chunk HNSW identik
+    dengan pencarian eksak, jadi pembandingan lewat arsip (Aturan Wajib #6) tidak terpengaruh.
+    `get_collection` hanya memakai konfigurasi saat koleksi DIBUAT (koleksi baru di luar `archive/`
+    langsung 2000, mis. setelah `--rebuild`); `index_check` gagal bila `ef_search` tersimpan tidak
+    sesuai (produksi 2000; arsip atau salinannya lewat `--expect-v1-archive` 100). **Alat pemeriksaan
+    rutin: `python -m evaluation.retriever_exactness`** (kode keluar 1 bila top-3 retriever berbeda
+    dari pencarian eksak; hasil terakhir `testset/retriever_exactness_1532.json`) -- WAJIB dijalankan
+    setiap kali indeks bertambah. Catatan: `ef_search` baru berlaku pada proses yang membuka indeks
+    SETELAH diubah (segmen di-cache per proses); demo yang sedang berjalan perlu dijalankan ulang.
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
@@ -874,6 +891,7 @@ RAG_FactChecking/
 │       ├── retrieval_eval.py   #   verifikasi retrieval pada kueri sehari-hari
 │       ├── gemma_json_check.py #   uji format JSON Gemma 4
 │       ├── probe_quota.py      #   probe tunggal ke server (1 permintaan)
+│       ├── retriever_exactness.py  # retriever (HNSW) vs pencarian eksak; wajib tiap indeks bertambah
 │       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
 ├── tests/                # Uji offline (pytest), satu berkas per modul
 │   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat anonymize_fixtures.py
@@ -1606,11 +1624,12 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   saja turun bermakna (Recall@3 non-batas 21/40 vs 29/40 pada indeks 1.532, p 0,008; positif 15/20
   vs 20/20), jadi klaim yang cocok dengan 29670 lebih mungkin tidak terambil
   (`v1_temuan_untuk_v2.md` bagian 11).
-- **Retriever produksi memakai pencarian perkiraan (HNSW, `ef_search` 100)** dan sejak indeks
-  1.532 artikel tidak lagi selalu sama dengan pencarian eksak (1 dari 64 kueri berbeda di top-3;
-  ~1,8% chunk dari 30 teratas terlewat). Artikel yang seharusnya masuk tiga besar kadang tidak
-  terambil; risikonya naik saat basis data bertambah. Tidak diubah di Versi 1
-  (`v1_temuan_untuk_v2.md` bagian 10).
+- **Retriever produksi memakai pencarian perkiraan (HNSW).** Dengan `ef_search` bawaan (100), sejak
+  indeks 1.532 artikel hasilnya tidak lagi selalu sama dengan pencarian eksak (1 dari 64 kueri
+  berbeda di top-3). Sejak 2026-10-03 indeks produksi memakai `ef_search` 2000 dan sama dengan
+  pencarian eksak pada 64 kueri tetap, tetapi itu **hanya terukur pada 4.593 chunk**: saat basis data
+  bertambah bisa meleset lagi, jadi `evaluation.retriever_exactness` wajib dijalankan setiap kali
+  indeks bertambah. Arsip tetap 100 (`v1_temuan_untuk_v2.md` bagian 10).
 - **Tidak ada mekanisme untuk menyegarkan artikel lama yang isinya berubah di sumber** (dicatat
   2026-09-27). Artikel yang sudah ada di cache `data/raw_html/` tidak pernah diambil ulang (mode maju
   berhenti pada artikel pertama yang sudah dimiliki; cache dipakai tanpa memeriksa perubahan), jadi

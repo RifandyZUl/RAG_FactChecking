@@ -54,16 +54,67 @@ CHROMA_DIR = INDEX_CHROMA_DIR
 COLLECTION_NAME = "turnbackhoax"
 BATCH_SIZE = 8  # batch kecil menahan puncak RAM (mesin dev hanya ~2,5 GB bebas)
 
+# Parameter pencarian HNSW (`ef_search`: jumlah kandidat yang ditelusuri per kueri). SENGAJA BERBEDA
+# antara arsip dan indeks produksi (keputusan pemilik proyek 2026-10-03):
+# - Arsip Versi 1 (`archive/`): 100, bawaan ChromaDB. Arsip dibangun dan dievaluasi dengan nilai ini
+#   dan tidak boleh berubah; pada 450 chunk hasil HNSW identik dengan pencarian eksak.
+# - Indeks produksi (`data/` dan indeks lain di luar `archive/`): 2000. Pada indeks 1.532 artikel
+#   (4.593 chunk) dengan ef_search 100, retriever tidak lagi selalu sama dengan pencarian eksak
+#   (64 kueri: 35 chunk teratas terlewat, satu top-3 berbeda -> artikel yang benar bisa tidak terambil
+#   dan demo menjawab "belum ditemukan" padahal artikelnya ada). Terukur pada salinan: 200 -> 10 chunk
+#   terlewat, 500 -> 1, 2000 -> 0. Dipilih 2000 (nilai terkecil yang terukur tanpa meleset), bukan
+#   "setara eksak" (ef >= jumlah chunk): jumlah chunk terus bertambah sehingga nilai seperti itu tidak
+#   stabil, dan jaminannya memang bukan dari angka ini melainkan dari pemeriksaan rutin
+#   `evaluation.retriever_exactness` setiap kali indeks bertambah. Tidak memerlukan embedding ulang.
+# ChromaDB hanya memakai konfigurasi saat koleksi DIBUAT; koleksi yang sudah ada diubah lewat
+# `apply_search_config` (--apply-search-config), dan nilainya baru berlaku bagi proses yang membuka
+# indeks sesudahnya. `evaluation.index_check` gagal bila nilai tersimpan tidak sesuai.
+ARCHIVE_EF_SEARCH = 100
+PRODUCTION_EF_SEARCH = 2000
+
+
+def expected_ef_search(path: Path) -> int:
+    """`ef_search` yang seharusnya untuk indeks di `path`: arsip 100, selain itu nilai produksi."""
+    return ARCHIVE_EF_SEARCH if is_archive_path(path) else PRODUCTION_EF_SEARCH
+
+
+def collection_ef_search(collection: Any) -> int | None:
+    """`ef_search` yang tersimpan pada koleksi (None bila tidak terbaca)."""
+    hnsw = (getattr(collection, "configuration_json", None) or {}).get("hnsw") or {}
+    return hnsw.get("ef_search")
+
 
 def get_collection(path: Path = CHROMA_DIR) -> Any:
-    """Buka (atau buat) koleksi ChromaDB persisten dengan jarak kosinus."""
+    """
+    Buka (atau buat) koleksi ChromaDB persisten dengan jarak kosinus.
+
+    Konfigurasi hanya dipakai bila koleksinya BARU dibuat; koleksi yang sudah ada dibuka dengan
+    parameter tersimpannya (jadi membuka arsip atau salinannya tidak mengubah apa pun).
+    """
     client = chromadb.PersistentClient(
         path=str(path), settings=Settings(anonymized_telemetry=False)
     )
     return client.get_or_create_collection(
         name=COLLECTION_NAME,
-        configuration={"hnsw": {"space": "cosine"}},
+        configuration={"hnsw": {"space": "cosine", "ef_search": expected_ef_search(path)}},
     )
+
+
+def apply_search_config(path: Path = CHROMA_DIR) -> tuple[int | None, int]:
+    """
+    Setel `ef_search` koleksi yang sudah ada ke nilai produksi. Mengembalikan (sebelum, sesudah).
+
+    Menolak indeks di dalam `archive/` (arsip tetap pada nilai bawaannya, tanpa pengecualian).
+    Tidak menyentuh teks, metadata, maupun embedding. Berlaku bagi proses yang membuka indeks
+    setelah ini.
+    """
+    if is_archive_path(path):
+        raise PermissionError(f"{path} berada di dalam archive/: parameter pencarian arsip tidak boleh diubah")
+    collection = get_collection(path)
+    before = collection_ef_search(collection)
+    if before != PRODUCTION_EF_SEARCH:
+        collection.modify(configuration={"hnsw": {"ef_search": PRODUCTION_EF_SEARCH}})
+    return before, PRODUCTION_EF_SEARCH
 
 
 def refuse_archive_write(path: Path, allow_archive: bool) -> None:
@@ -218,6 +269,9 @@ def main() -> None:
     parser.add_argument("--update-metadata", action="store_true",
                         help="perbarui metadata chunk yang teksnya sama tetapi metadatanya berbeda; "
                              "tanpa embedding dan tanpa memuat model. Cadangkan indeks lebih dulu.")
+    parser.add_argument("--apply-search-config", action="store_true",
+                        help=f"setel ef_search indeks (bukan arsip) ke {PRODUCTION_EF_SEARCH} lalu keluar; "
+                             "tanpa embedding ulang. Cadangkan indeks lebih dulu.")
     parser.add_argument("--allow-archive", action="store_true",
                         help="izinkan menulis ke indeks di dalam archive/ (hanya untuk membangun "
                              "ulang arsip yang hilang)")
@@ -228,6 +282,11 @@ def main() -> None:
                              "ulang indeks di lokasi yang belum berisi indeks, mis. arsip yang hilang")
     args = parser.parse_args()
     chroma_dir = args.chroma_dir.resolve() if args.chroma_dir else CHROMA_DIR
+    if args.apply_search_config:
+        before, after = apply_search_config(chroma_dir)
+        print(f"ef_search {chroma_dir}: {before} -> {after}. Berlaku bagi proses yang membuka indeks setelah "
+              "ini. Verifikasi: python -m evaluation.retriever_exactness dan python -m evaluation.index_check")
+        return
     refuse_archive_write(chroma_dir, args.allow_archive)
 
     articles = load_articles(args.articles) if args.articles else load_articles()
