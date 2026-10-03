@@ -373,10 +373,12 @@ def test_committed_config_matches_documented_calibration() -> None:
     assert (v1["ambang"], v1["artikel"], v1["chunk"]) == (0.57, 150, 450)
     assert 0.5680 < v1["ambang"] < 0.5739  # negatif mudah v1 tertinggi < ambang < 36729 (set pengembangan)
     prod = indeks["data"]
-    assert (prod["artikel"], prod["chunk"]) == (922, 2766)
-    # 922 artikel: tak ada pemisah (bumi datar 0,6385 di atas 36729 0,5739) -> sengaja dimatikan
+    assert (prod["artikel"], prod["chunk"]) == (1532, 4593)
+    # 922 lalu 1.532 artikel: tak ada pemisah (bumi datar >= 0,6385 di atas 36729 0,5739) -> sengaja dimatikan
     assert prod["ambang"] is None
-    assert resolve_related_threshold({"indeks": indeks}, "data", 2766).value is None
+    calibrated = resolve_related_threshold({"indeks": indeks}, "data", 4593)
+    assert calibrated.value is None and "tidak ada ambang yang memisahkan" in calibrated.status
+    assert resolve_related_threshold({"indeks": indeks}, "data", 2766).value is None  # ukuran lama: basi, mati
     assert resolve_related_threshold({"indeks": indeks}, "archive/v1", 450).value == 0.57
 
 
@@ -466,7 +468,7 @@ def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
     """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya retrieval (18/20 @1, 20/20 @3)."""
     note = EVALUATION_SCOPE_NOTE
     assert "48 dari 50" in note and "150 artikel" in note
-    assert "18 dari 20" in note and "20 dari 20" in note and "922 artikel" in note
+    assert "18 dari 20" in note and "20 dari 20" in note and "1.532 artikel" in note
     assert "belum diukur" in note
 
 
