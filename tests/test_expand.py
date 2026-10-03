@@ -839,6 +839,7 @@ def test_html_source_delegates_to_existing_scraping_code(monkeypatch: pytest.Mon
 def test_article_keys_match_the_html_parser_output() -> None:
     """Kontrak sumber = keluaran parser HTML yang sebenarnya (bukan daftar yang ditulis tangan lalu basi)."""
     from _fakes import FIXTURE_DIR
+
     from scraping.parser import parse_article
     from scraping.source import ARTICLE_KEYS, check_article_schema
 
