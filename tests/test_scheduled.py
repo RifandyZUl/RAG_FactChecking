@@ -125,10 +125,10 @@ def test_held_and_review_codes_are_passed_through(env: Env) -> None:
 
 
 def test_new_or_unreadable_label_holds_merging_and_notifies(env: Env) -> None:
-    env.forward_result = [_art("201"), _art("202", "BELUM TERBUKTI"), _art("203", "TIDAK DIKETAHUI"), _art("204", "KOMEDI")]
+    env.forward_result = [_art("201"), _art("202", "MENYESATKAN"), _art("203", "TIDAK DIKETAHUI"), _art("204", "KOMEDI")]
     assert scheduled.run_once() == expand.EXIT_NEEDS_REVIEW
     q = env.status()["kualitas"]
-    assert q["tahan_penggabungan"] and q["label_belum_ditinjau"] == ["BELUM TERBUKTI", "TIDAK DIKETAHUI"]
+    assert q["tahan_penggabungan"] and q["label_belum_ditinjau"] == ["MENYESATKAN", "TIDAK DIKETAHUI"]
     assert q["id_label_belum_ditinjau"] == ["202", "203"]
     assert "Penggabungan DITAHAN" in env.marker.read_text(encoding="utf-8") and len(env.toasts) == 1
 
@@ -215,14 +215,14 @@ def test_unreviewed_label_in_queue_keeps_marker_on_later_runs_until_merged(env: 
     Cacat yang ditemukan pada percobaan manual 2026-10-03: jalan kedua (tidak mengambil apa pun) dianggap
     bersih dan menghapus penanda, padahal artikel berlabel baru masih di antrean.
     """
-    env.forward_result = [_art("201"), _art("202", "BELUM TERBUKTI")]
+    env.forward_result = [_art("201"), _art("202", "MENYESATKAN")]
     assert scheduled.run_once() == expand.EXIT_NEEDS_REVIEW and env.marker.exists()
     assert scheduled.run_once() == expand.EXIT_NEEDS_REVIEW, "jalan susulan di hari yang sama: masih perlu ditinjau"
     assert env.marker.exists() and env.status()["kualitas"]["id_label_belum_ditinjau"] == ["202"]
     assert env.forward_calls == 1
 
     # setelah pemilik proyek menggabungkan antrean ke articles.json, jalan berikutnya bersih
-    merged = json.loads(expand.ARTICLES_PATH.read_text(encoding="utf-8")) + [_art("201"), _art("202", "BELUM TERBUKTI")]
+    merged = json.loads(expand.ARTICLES_PATH.read_text(encoding="utf-8")) + [_art("201"), _art("202", "MENYESATKAN")]
     expand.ARTICLES_PATH.write_text(json.dumps(merged), encoding="utf-8")
     assert scheduled.run_once() == 0 and not env.marker.exists()
     assert env.status()["antrean_belum_digabung"] == 0
@@ -240,3 +240,10 @@ def test_reviewed_labels_match_what_the_demo_knows_how_to_display() -> None:
     from presentation import STATUS_ALIASES, STATUS_STYLES
 
     assert scheduled.REVIEWED_LABELS == set(STATUS_STYLES) | set(STATUS_ALIASES)
+
+
+def test_reviewed_new_label_no_longer_holds_merging(env: Env) -> None:
+    """BELUM TERBUKTI sudah diputuskan tampilannya (2026-10-03): artikel berlabel itu tidak menahan penggabungan."""
+    env.forward_result = [_art("201"), _art("202", "BELUM TERBUKTI")]
+    assert scheduled.run_once() == 0 and not env.marker.exists()
+    assert env.status()["kualitas"]["label_belum_ditinjau"] == []

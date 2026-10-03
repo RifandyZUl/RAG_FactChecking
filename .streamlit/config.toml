@@ -36,6 +36,11 @@ yellowBackgroundColor = "#F8F5E6"
 grayColor = "#5B6168"
 grayTextColor = "#5B6168"
 grayBackgroundColor = "#F0F1EE"
+# "Belum terbukti": di luar skala bahaya (merah/jingga/kuning), bukan netral (abu-abu), bukan hijau
+# (terkesan "benar"), bukan biru (aksen). Kontras teks pada latar halaman 7,5:1 (AA; uji test_theme.py).
+violetColor = "#6A3A9A"
+violetTextColor = "#6A3A9A"
+violetBackgroundColor = "#F5F0FA"
 
 [client]
 toolbarMode = "minimal"

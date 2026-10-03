@@ -86,7 +86,7 @@ def _failed(**kw: object) -> Answer:
 
 # -- status ditemukan -------------------------------------------------------
 
-@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI"])
+@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "BELUM TERBUKTI"])
 def test_found_uses_status_style_from_metadata_label(label: str) -> None:
     view = build_view(_found(label), model="m")
     style = STATUS_STYLES[label]
@@ -157,7 +157,7 @@ def test_unreadable_label_is_not_quoted_as_a_label(label: str, caplog: pytest.Lo
     assert len(caplog.records) == 1
 
 
-@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "SATIR", "KOMEDI"])
+@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "SATIR", "KOMEDI", "BELUM TERBUKTI", "belum terbukti"])
 def test_known_labels_are_not_logged_as_unknown(label: str, caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="presentation"):
         build_view(_found(label))
@@ -545,3 +545,31 @@ def test_display_filter_uses_the_same_policy_as_the_parser() -> None:
 
     for url in STALE_REFS:
         assert (display_references([url]) == []) == (blocked_reason(url) is not None)
+
+
+# -- label BELUM TERBUKTI ---------------------------------------------------------
+
+def test_belum_terbukti_has_its_own_style_and_exact_wording() -> None:
+    view = build_view(_found("BELUM TERBUKTI", title="[BELUM TERBUKTI] Judul Artikel"))
+    assert view.kind == "found" and view.status_label == "Belum terbukti" and view.status_color == "violet"
+    assert view.summary == ("Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, "
+                            "sehingga belum dapat dianggap benar.")
+    assert view.advice == "", "tanpa saran (mis. medis) atau kalimat tambahan"
+    assert view.article_title == "Judul Artikel" and view.article_url and view.references == REFS
+    assert view.clarification == "Faktanya, klaim itu tidak benar.", "klarifikasi tetap dari artikel, tidak ditambah"
+
+
+def test_belum_terbukti_is_visibly_different_from_belum_ditemukan_and_other_statuses() -> None:
+    """'Belum terbukti' = klaim SUDAH diperiksa; 'belum ditemukan' = tidak ada artikelnya. Tidak boleh tertukar."""
+    proven = build_view(_found("BELUM TERBUKTI"))
+    not_found = build_view(Answer(claim="klaim", verdict="tidak_ditemukan", candidates=list(CANDIDATES), calls=[_ok_call()]))
+    assert not_found.kind == "not_found" and proven.kind == "found"
+    for field in ("status_label", "status_color", "status_icon", "summary"):
+        assert getattr(proven, field) != getattr(not_found, field), field
+    assert proven.status_color != "gray" and "sudah diperiksa" in proven.summary
+    assert "belum ditemukan" not in proven.summary.lower() and not_found.article_url == ""
+    style = STATUS_STYLES["BELUM TERBUKTI"]
+    others = [s for k, s in STATUS_STYLES.items() if k != "BELUM TERBUKTI"]
+    assert style.color not in {s.color for s in others} and style.icon not in {s.icon for s in others}
+    assert style.color not in {"green", "blue", "red", "orange", "yellow", "gray"}
+    assert not re.search(r"\b(salah|penipuan|hoaks|dokter|obat|medis)\b", style.summary.lower())
