@@ -429,6 +429,64 @@ Itu celah yang tidak terukur waktu itu, bukan temuan tentang perilaku LLM.
   rujukan jawaban di berkas hasil agar dapat diaudit. Ini juga masukan langsung untuk komponen
   penilaian kredibilitas sumber.
 
+## 10. Retriever produksi memakai pencarian PERKIRAAN (HNSW); selisihnya dari pencarian eksak membesar seiring indeks (dicatat 2026-10-03)
+
+Ditemukan lewat validasi kesetiaan ablasi pada indeks 1.532 artikel (top-3 eksak = retriever
+produksi pada 53/54 butir; pada 922 artikel 54/54; pada 150 artikel 200 kueri acak identik).
+Diselidiki pada **salinan** indeks (indeks produksi dan parameternya tidak diubah; hash byte
+indeks produksi sama sebelum dan sesudah), dengan 64 kueri (54 butir set uji v1 + 10 kueri set
+pengembangan), `n_results = CHUNK_FETCH = 30`.
+
+- **Apa persisnya bedanya pada v1-048** (negatif mudah; tidak memengaruhi angka mana pun):
+  eksak top-3 = 35244 (0,5666), **31975 (0,5546)**, 34690 (0,5478); retriever produksi = 35244,
+  34690, 36776 (0,5473). Artikel 31975 **hilang dari peringkat 2** karena chunk Narasi-nya tidak
+  dikembalikan HNSW sama sekali; 34690 naik ke peringkat 2 dan 36776 masuk di peringkat 3. Pada
+  kueri itu tiga chunk dari 30 teratas eksak tidak dikembalikan (peringkat eksak 2, 6, dan 13).
+- **Parameter yang berlaku (bawaan ChromaDB 1.5.9; kode hanya menetapkan `space: cosine`):**
+  `ef_search` 100, `ef_construction` 100, `max_neighbors` 16, `sync_threshold` 1000.
+- **Dugaan pemilik proyek terbukti pada salinan** (satu proses per pengukuran):
+
+  | Indeks (salinan) | `ef_search` | Kueri dengan chunk terlewat | Chunk terlewat (dari 1.920) | Top-3 artikel berbeda |
+  | --- | --- | --- | --- | --- |
+  | 922 artikel, 2.766 chunk | 100 (bawaan) | 16/64 | 20 | 0 |
+  | 1.532 artikel, 4.593 chunk | 100 (bawaan) | 26/64 | 35 | 1 (v1-048) |
+  | 1.532 artikel | 200 | 9/64 | 10 | 0 |
+  | 1.532 artikel | 500 | 1/64 | 1 | 0 |
+  | 1.532 artikel | 2.000 dan 5.000 | 0/64 | 0 | 0 |
+
+  Jadi selisihnya memang berasal dari aproksimasi HNSW (hilang saat `ef_search` dinaikkan), dan
+  pada parameter bawaan laju meleset naik bersama ukuran indeks (sekitar 1,0% -> 1,8% chunk dari
+  30 teratas). Bukan akibat `CHUNK_FETCH`: tiga artikel teratas selalu berada dalam 7 chunk
+  teratas. Angka berbeda tipis antar-jalan (mis. 16 atau 20 chunk pada 922): hasil HNSW tidak
+  sepenuhnya stabil antar-pembukaan indeks. Sampel hanya 64 kueri.
+- **Konsekuensi bagi demo:** pada indeks produksi, artikel yang seharusnya masuk tiga besar
+  kadang tidak terambil, sehingga LLM tidak pernah melihatnya. Bila itu menimpa artikel yang
+  benar, jawabannya menjadi "belum ditemukan" padahal artikelnya ada (penolakan palsu yang berasal
+  dari indeks, bukan dari model). Pada 20 butir positif set uji v1 hal ini TIDAK terjadi (20/20 di
+  tiga teratas, baik eksak maupun produksi); kejadian yang teramati 1 dari 64 kueri, pada butir
+  negatif. Risikonya membesar setiap kali basis data bertambah, dan `index_check` tidak
+  mendeteksinya (ia memeriksa isi, bukan mutu pencarian).
+- **Yang TIDAK dilakukan:** parameter produksi tidak diubah (keputusan pemilik proyek; mengubahnya
+  juga mengubah perilaku retrieval yang dibandingkan dengan baseline). Baseline Versi 1 pada
+  `archive/v1` (450 chunk) tidak terpengaruh: di ukuran itu HNSW identik dengan pencarian eksak.
+- **Usulan untuk Versi 2:** (1) naikkan `ef_search` (cukup lewat konfigurasi koleksi, tanpa
+  embedding ulang) atau pakai pencarian eksak -- pada ribuan chunk brute-force masih murah; (2)
+  jadikan "top-k retriever = top-k eksak pada set kueri tetap" pemeriksaan rutin setiap kali indeks
+  bertambah; (3) evaluasi Versi 2 melaporkan Recall dari retriever yang benar-benar dipakai, bukan
+  hanya dari pencarian eksak.
+
+## 11. Artikel yang hanya punya chunk Kesimpulan berada di jalur pencarian terlemah (dicatat 2026-10-03)
+
+Artikel 29670 (PARODI) tidak punya Narasi maupun Penjelasan di sumbernya, jadi di indeks ia hanya
+diwakili chunk Kesimpulan. Ablasi menunjukkan retrieval dengan Kesimpulan saja turun bermakna
+dibanding seluruh seksi: Recall@3 non-batas 24/40 vs 31/40 pada 922 artikel dan **21/40 vs 29/40
+pada 1.532 artikel (-8, p McNemar 0,008; butir positif 15/20 vs 20/20)**. Jadi klaim pengguna yang
+cocok dengan 29670 lebih mungkin tidak terambil daripada artikel lain. Ini satu artikel dari
+1.532 (dan 29687 kehilangan Penjelasan, yang pada ablasi tidak menyumbang recall). Relevan untuk
+agenda Versi 2 tentang seksi mana yang diindeks: artikel tanpa Narasi perlu jalur pencocokan lain
+(mis. judul sebagai teks pencocok), dan pemeriksaan kualitas data sebaiknya menandai artikel
+seperti ini saat masuk.
+
 ## Ringkasan angka
 
 - Recall@3 non-batas: 36/40 (90%) -- tapi hanya 17/20 butir negatif_sulit yang benar-benar
