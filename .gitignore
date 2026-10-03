@@ -36,3 +36,6 @@ data/expansion/
 
 # Cadangan indeks produksi sebelum operasi berisiko (tidak di-commit; terpisah dari archive/v1)
 data/backups/
+
+# Penanda pembaruan berkala (ditulis/dihapus otomatis oleh scraping.scheduled)
+PERHATIAN_PEMBARUAN.txt
