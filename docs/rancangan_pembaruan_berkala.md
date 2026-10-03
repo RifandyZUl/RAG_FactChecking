@@ -39,3 +39,37 @@ proyek dicatat di bagian sesudahnya.
 - *Label negatif set uji v1* makin sering tidak berlaku pada indeks produksi; evaluasi pembanding tetap wajib lewat `archive/v1`.
 
 Keputusan untuk Anda sebelum ini dibangun: apakah ingest boleh terjadwal atau tetap manual. Saya menyarankan manual, karena memori di mesin ini belum bisa diandalkan tanpa pengawas.
+
+---
+
+## Keputusan pemilik proyek (2026-10-03)
+
+Rancangan di atas **disetujui**, dengan ketentuan berikut. Bagian ini mengalahkan usulan di atas
+bila keduanya berbeda.
+
+**Ingest tetap MANUAL.** Tidak dijadwalkan; pemilik proyek yang memulainya setelah memastikan
+memori cukup.
+
+**Enam tambahan.**
+
+1. **Dua celah prasyarat dikerjakan lebih dulu, sebelum menyentuh penjadwalan**, lengkap dengan uji:
+   (a) jalan yang selesai dengan kegagalan non-jaringan tidak boleh memajukan batas "sudah
+   dimiliki"; (b) langkah coba-ulang dari `failed_ids.json`.
+2. **Pemberitahuan.** Kegagalan harus sampai ke pemilik proyek tanpa membuka berkas status. Cara
+   paling sederhana yang diusulkan (belum dibangun): notifikasi Windows saat jalan gagal, dan/atau
+   ringkasan yang muncul saat proyek dibuka.
+3. **Jadwal yang terlewat karena laptop tertidur dijalankan sekali begitu laptop menyala, bukan
+   dilewati.** Ini menggantikan butir "tanpa 'jalankan ulang bila terlewat' yang menumpuk" pada
+   usulan. Mode maju aman untuk itu karena berhenti di artikel pertama yang sudah dimiliki; yang
+   dijaga hanya agar tidak ada dua jalan bersamaan (berkas kunci).
+4. **Cadangan: simpan tiga yang terakhir saja**, dan laporkan perkiraan ukurannya.
+5. **Catatan cakupan demo: angkanya JANGAN dihapus.** Angka recall adalah hasil pengukuran pada
+   indeks tertentu, jadi ditulis bersama tanggal dan ukuran indeks saat diukur; jumlah artikel yang
+   sedang dipakai ditampilkan otomatis dari indeks. Ini menggantikan pilihan "diubah menjadi kalimat
+   yang tidak menyebut angka" pada usulan.
+6. **Lapisan pengambilan data dibuat bisa diganti**, karena permintaan API key Yudistira masih
+   menunggu jawaban. Integrasi API-nya TIDAK dibangun sekarang.
+
+**Urutan pengerjaan yang ditetapkan:** (1) rancangan ini disimpan; (2) perbaikan `ef_search` di indeks
+produksi dan alat pemeriksaan retriever lawan pencarian eksak; (3) dua celah prasyarat (butir 1);
+laporan; baru kemudian penjadwalan.
