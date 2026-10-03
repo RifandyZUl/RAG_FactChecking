@@ -196,8 +196,11 @@ def notify_windows(title: str, body: str) -> bool:
         return False
     env = {**os.environ, "RAG_TOAST_TITLE": title, "RAG_TOAST_BODY": body}
     try:
-        done = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", _TOAST_PS],
-                              env=env, capture_output=True, timeout=30, check=False)
+        # CREATE_NO_WINDOW: tanpa ini PowerShell membuka jendela konsol sekejap bila pemanggilnya
+        # tidak punya konsol (pythonw.exe dari Task Scheduler) dan bisa merebut fokus ketikan
+        done = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden",
+                               "-Command", _TOAST_PS], env=env, capture_output=True, timeout=30, check=False,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.TimeoutExpired) as e:
         print(f"[notifikasi] gagal dijalankan: {e}")
         return False
@@ -210,7 +213,8 @@ class _Tee(io.TextIOBase):
     """Tulis ke beberapa aliran sekaligus (konsol + berkas log)."""
 
     def __init__(self, *streams: Any) -> None:
-        self.streams = streams
+        # di bawah pythonw.exe (tanpa jendela) sys.stdout adalah None: lewati, tulis ke log saja
+        self.streams = [s for s in streams if s is not None]
 
     def write(self, text: str) -> int:
         for s in self.streams:
