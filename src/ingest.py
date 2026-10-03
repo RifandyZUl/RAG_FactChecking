@@ -11,9 +11,11 @@ Pemakaian:
     python src/ingest.py            # ingest semua chunk yang belum ada
     python src/ingest.py --force    # embed ulang semua
     python src/ingest.py --limit 16 # uji cepat pada 16 chunk
+    python src/ingest.py --update-metadata  # perbarui metadata saja (tanpa embedding, tanpa model)
 """
 
 import argparse
+import json
 import os
 import time
 from pathlib import Path
@@ -124,6 +126,42 @@ def upsert_chunks(collection: Any, chunks: list[Chunk], embeddings: Any) -> None
     )
 
 
+def update_metadata(chunks: list[Chunk], collection: Any) -> dict[str, Any]:
+    """
+    Pembaruan metadata TERARAH: tulis ulang metadata chunk yang TEKSNYA SAMA dengan yang tersimpan
+    tetapi metadatanya berbeda (mis. `references` setelah kebijakan penyaringan berubah). Embedding
+    dan teks tidak disentuh, model tidak dimuat.
+
+    Ingest inkremental tidak pernah melakukan ini (ia hanya membandingkan teks). Chunk yang teksnya
+    berbeda atau belum ada di indeks TIDAK disentuh di sini -- itu pekerjaan ingest (perlu embedding)
+    -- dan hanya dilaporkan. Mengembalikan ringkasan; verifikasi akhir tetap `evaluation.index_check`.
+    """
+    stored = collection.get(ids=[c["id"] for c in chunks], include=["documents", "metadatas"])
+    by_id = {i: (d, m) for i, d, m in zip(stored["ids"], stored["documents"], stored["metadatas"])}
+    todo: list[Chunk] = []
+    keys: dict[str, int] = {}
+    missing = text_differs = 0
+    for c in chunks:
+        if c["id"] not in by_id:
+            missing += 1
+            continue
+        doc, meta = by_id[c["id"]]
+        if doc != c["text"]:
+            text_differs += 1
+            continue
+        changed = [k for k in set(meta) | set(c["metadata"]) if meta.get(k) != c["metadata"].get(k)]
+        if changed:
+            todo.append(c)
+            for k in changed:
+                keys[k] = keys.get(k, 0) + 1
+    for start in range(0, len(todo), 200):
+        batch = todo[start:start + 200]
+        collection.update(ids=[c["id"] for c in batch], metadatas=[c["metadata"] for c in batch])
+    return {"chunk_diperiksa": len(chunks), "metadata_diperbarui": len(todo),
+            "artikel_terdampak": sorted({c["metadata"]["article_id"] for c in todo}),
+            "kunci_berubah": keys, "teks_berbeda_dilewati": text_differs, "belum_ada_di_indeks": missing}
+
+
 def fmt_duration(seconds: float) -> str:
     m, s = divmod(int(seconds), 60)
     return f"{m} mnt {s:02d} dtk"
@@ -177,6 +215,9 @@ def main() -> None:
                         help="hapus koleksi lama lalu bangun ulang dari nol (wajib setelah logika "
                              "parsing/chunking berubah); mencakup --force")
     parser.add_argument("--limit", type=int, default=None, help="batasi jumlah chunk (uji)")
+    parser.add_argument("--update-metadata", action="store_true",
+                        help="perbarui metadata chunk yang teksnya sama tetapi metadatanya berbeda; "
+                             "tanpa embedding dan tanpa memuat model. Cadangkan indeks lebih dulu.")
     parser.add_argument("--allow-archive", action="store_true",
                         help="izinkan menulis ke indeks di dalam archive/ (hanya untuk membangun "
                              "ulang arsip yang hilang)")
@@ -196,6 +237,14 @@ def main() -> None:
         chunks = chunks[: args.limit]
     print(f"{len(articles)} artikel -> {len(chunks)} chunk")
     print(truncation_report(chunks), "\n")
+
+    if args.update_metadata:
+        if args.rebuild or args.force:
+            parser.error("--update-metadata tidak digabung dengan --rebuild/--force")
+        summary = update_metadata(chunks, get_collection(chroma_dir))
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        print("Metadata diperbarui tanpa embedding ulang. Verifikasi: python -m evaluation.index_check")
+        return
 
     collection = (reset_collection(chroma_dir, allow_archive=args.allow_archive) if args.rebuild
                   else get_collection(chroma_dir))

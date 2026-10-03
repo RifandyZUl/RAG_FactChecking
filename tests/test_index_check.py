@@ -137,3 +137,38 @@ def test_v1_archive_fingerprint_recorded_in_meta() -> None:
     fp = meta[V1_ARCHIVE_META_KEY]["sidik_jari_isi"]
     assert set(FINGERPRINT_KEYS) <= set(fp)
     assert (fp["jumlah_artikel"], fp["jumlah_chunk"]) == (150, 450)
+
+
+def test_update_metadata_rewrites_only_metadata_of_chunks_with_identical_text(tmp_path) -> None:
+    """Pembaruan terarah: metadata basi diganti; embedding dan teks utuh; chunk berteks beda/tidak ada tak disentuh."""
+    import numpy as np
+
+    from ingest import get_collection, update_metadata
+
+    stale, fresh = '["https://www.contoh.go.id/rilis", "https://tinyurl.com/contoh1"]', '["https://www.contoh.go.id/rilis"]'
+    old = [_chunk("1_narasi", "n", references=stale), _chunk("1_kesimpulan", "k", references=stale),
+           _chunk("2_narasi", "teks lama", references=stale), _chunk("3_narasi", "c")]
+    vectors = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.6, 0.8, 0.0]]
+    coll = get_collection(tmp_path / "chroma")
+    coll.upsert(ids=[c["id"] for c in old], embeddings=vectors, documents=[c["text"] for c in old],
+                metadatas=[c["metadata"] for c in old])
+
+    new = [_chunk("1_narasi", "n", references=fresh), _chunk("1_kesimpulan", "k", references=fresh),
+           _chunk("2_narasi", "teks baru", references=fresh), _chunk("3_narasi", "c"), _chunk("4_narasi", "belum ada")]
+    assert len(compare_index(new[:2], *_stored(old[:2]))) == 2, "sebelum: index_check melihat metadata basi"
+    summary = update_metadata(new, coll)
+    assert summary["metadata_diperbarui"] == 2 and summary["artikel_terdampak"] == ["1"]
+    assert summary["kunci_berubah"] == {"references": 2}
+    assert (summary["teks_berbeda_dilewati"], summary["belum_ada_di_indeks"]) == (1, 1)
+
+    got = coll.get(ids=[c["id"] for c in old], include=["documents", "metadatas", "embeddings"])
+    by_id = {i: (d, m, e) for i, d, m, e in zip(got["ids"], got["documents"], got["metadatas"], got["embeddings"])}
+    for c, vec in zip(old, vectors):
+        doc, _, emb = by_id[c["id"]]
+        assert doc == c["text"] and np.allclose(emb, vec), f"{c['id']}: teks/embedding berubah"
+    assert by_id["1_narasi"][1]["references"] == fresh and by_id["1_kesimpulan"][1]["references"] == fresh
+    assert by_id["2_narasi"][1]["references"] == stale, "teks berbeda: bukan urusan pembaruan metadata"
+    assert coll.count() == 4, "tidak ada chunk yang ditambahkan"
+    assert compare_index(new[:2] + new[3:4], *_stored([{"id": i, "text": by_id[i][0], "metadata": by_id[i][1]}
+                                                       for i in ("1_narasi", "1_kesimpulan", "3_narasi")])) == []
+    assert update_metadata(new, coll)["metadata_diperbarui"] == 0, "idempoten"
