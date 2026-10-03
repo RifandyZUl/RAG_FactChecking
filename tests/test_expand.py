@@ -482,7 +482,7 @@ def test_batch_stats_classifies_old_ledger_entries_without_kind() -> None:
 @pytest.mark.parametrize(("reason", "attempts", "permanent"), [
     (NOT_FOUND, 1, True), ("410 Client Error: Gone for url: x", 1, True),
     (CODE_ERR, 1, False), (CODE_ERR, 2, False), (CODE_ERR, 3, True),
-    (NET, 2, False), (NET, 3, True), (ERROR_PAGE, 1, False), (PARSE_NONE, 3, True),
+    (NET, 0, False), (ERROR_PAGE, 1, False), (PARSE_NONE, 3, True),
     ("503 Server Error: Service Unavailable for url: x", 1, False),
 ])
 def test_is_permanent_failure(reason: str, attempts: int, permanent: bool) -> None:
@@ -498,7 +498,7 @@ def test_hold_decision_rules() -> None:
     assert hold([], 20, {}) == ("tulis", [], [])
     # satu artikel gagal dan masih bisa dicoba lagi: tahan
     assert hold([_fail(1, CODE_ERR)], 20, {"1": 1}) == ("tahan_coba_lagi", ["1"], [])
-    assert hold([_fail(1, NET)], 5, {"1": 2}) == ("tahan_coba_lagi", ["1"], [])
+    assert hold([_fail(1, NET)], 5, {}) == ("tahan_coba_lagi", ["1"], []), "jaringan: tidak pernah permanen"
     # sama, tetapi sudah MAX_ATTEMPTS kali gagal antar-jalan, atau 404: permanen -> tulis (perlu tinjauan)
     assert hold([_fail(1, CODE_ERR)], 20, {"1": 3}) == ("tulis", [], ["1"])
     assert hold([_fail(1, NOT_FOUND)], 5, {"1": 1}) == ("tulis", [], ["1"])
@@ -660,3 +660,73 @@ def test_retry_failed_with_nothing_open_does_nothing(monkeypatch: pytest.MonkeyP
     tried = _retry_outcomes(monkeypatch, tmp_path, exp, {1: ("", True)})
     monkeypatch.setattr(expand.sys, "argv", ["expand", "--retry-failed"])
     assert expand.main() == 0 and tried == [] and not list(exp.glob("retry_*"))
+
+
+# -- kegagalan jaringan tidak dihitung ke batas percobaan antar-jalan ---------
+
+def test_attempts_by_id_counts_only_non_network_failures() -> None:
+    entries = [_entry(1, "a", NET), _entry(1, "b", TIMEOUT), _entry(1, "c", NET), _entry(1, "d", CODE_ERR),
+               _entry(2, "a", CODE_ERR), _entry(2, "b", PARSE_NONE), _entry(2, "c", ERROR_PAGE),
+               {**_entry(3, "a", "apa saja"), "jenis": "jaringan"}, _entry(4, "a", NOT_FOUND)]
+    assert expand.attempts_by_id(entries) == {"1": 1, "2": 3, "4": 1}
+
+
+def test_internet_down_for_days_does_not_mark_healthy_articles_permanent(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """
+    Internet mati tiga hari: tiap hari lima artikel pertama gagal (jaringan) sebelum pemutus sirkuit
+    aktif. Dulu hitungan itu membuat kelimanya 'permanen' pada hari keempat.
+    """
+    state = {"batch": 5, "anchor_url": u(100), "start_page": 144, "known_ids": ["100"]}
+    exp, state_path = _fake_run_dir(monkeypatch, tmp_path, state)
+    ledger = exp / "failed_ids.json"
+    limit = expand.MAX_CONSECUTIVE_NETWORK_FAILURES
+    for day in (1, 2, 3):
+        _scripted(monkeypatch, tmp_path, [(NET, True)] * 20)
+        monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+        assert expand.main() == expand.EXIT_NETWORK_DOWN
+        assert len(json.loads(ledger.read_text(encoding="utf-8"))) == day * limit
+    status = expand.failure_status(expand.load_failures(ledger), expand.owned_ids())
+    assert status["id_perlu_tinjauan"] == [], "tidak ada yang ditandai permanen"
+    assert status["id_bisa_dicoba_ulang"] == [str(i) for i in range(1, limit + 1)]
+    assert all(r["kali_gagal"] == 3 and r["kali_gagal_non_jaringan"] == 0 for r in status["rincian_terbuka"])
+    assert json.loads(state_path.read_text(encoding="utf-8")) == state
+
+    # hari ke-4: internet kembali, tetapi artikel 1 gagal di-parse SEKALI -> ditahan (masih bisa dicoba
+    # lagi), bukan langsung permanen karena tiga kegagalan jaringan sebelumnya
+    _scripted(monkeypatch, tmp_path, [(CODE_ERR, True)] + [("", True)] * 19)
+    monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+    assert expand.main() == expand.EXIT_HELD_RETRY
+    held = sorted(exp.glob("batch_06_tertahan_*_report.json"))[-1]
+    report = json.loads(held.read_text(encoding="utf-8"))
+    assert report["gagal_bisa_dicoba_lagi"] == ["1"] and report["gagal_permanen"] == []
+
+    # hari ke-5: semuanya berhasil -> ditulis, batas maju, tidak ada yang terbuka
+    _scripted(monkeypatch, tmp_path, [("", True)] * 20)
+    monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+    assert expand.main() == 0
+    assert len(json.loads((exp / "batch_06.json").read_text(encoding="utf-8"))) == 20
+    assert expand.failure_status(expand.load_failures(ledger), expand.owned_ids())["terbuka"] == 0
+
+
+def test_isolated_network_failure_on_many_days_never_becomes_permanent(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Satu artikel gagal karena jaringan (di bawah pemutus sirkuit) lima hari berturut-turut: tetap ditahan."""
+    state = {"batch": 5, "anchor_url": u(100), "start_page": 144, "known_ids": ["100"]}
+    exp, state_path = _fake_run_dir(monkeypatch, tmp_path, state)
+    ledger = exp / "failed_ids.json"
+    for _ in range(5):
+        _scripted(monkeypatch, tmp_path, [("", True)] * 9 + [(TIMEOUT, True)] + [("", True)] * 10)
+        monkeypatch.setattr(expand, "FAILED_PATH", ledger)
+        assert expand.main() == expand.EXIT_HELD_RETRY
+    assert json.loads(state_path.read_text(encoding="utf-8")) == state and not (exp / "batch_06.json").exists()
+    status = expand.failure_status(expand.load_failures(ledger), expand.owned_ids())
+    assert status["id_bisa_dicoba_ulang"] == ["10"] and status["id_perlu_tinjauan"] == []
+
+
+def test_non_network_failures_still_become_permanent_even_with_network_failures_in_between(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    entries = [_entry(1, "a", CODE_ERR), _entry(1, "b", NET), _entry(1, "c", CODE_ERR), _entry(1, "d", NET)]
+    assert expand.hold_decision([_fail(1, CODE_ERR)], 20, expand.attempts_by_id(entries + [_entry(1, "e", CODE_ERR)])) == (
+        "tulis", [], ["1"])
+    assert expand.hold_decision([_fail(1, CODE_ERR)], 20, expand.attempts_by_id(entries))[0] == "tahan_coba_lagi"
