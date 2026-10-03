@@ -322,7 +322,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     ditulis. Cacat yang ditemukan dan diperbaiki: jalan susulan menghapus penanda padahal antrean
     masih menahan. **Meninjau label baru = memutuskan tampilannya di `presentation.STATUS_ALIASES`
     (atau `STATUS_STYLES`) DAN menambahkannya ke `scheduled.REVIEWED_LABELS` (uji menjaga keduanya
-    sama).** Rotasi cadangan "tiga terakhir" BELUM dibangun; lima cadangan di `data/backups/` tidak
+    sama).** Rotasi cadangan "tiga terakhir" BELUM dibangun; empat cadangan di `data/backups/` tidak
     dihapus.
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
