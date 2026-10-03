@@ -468,8 +468,12 @@ def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
     """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya retrieval (18/20 @1, 20/20 @3)."""
     note = EVALUATION_SCOPE_NOTE
     assert "48 dari 50" in note and "150 artikel" in note
-    assert "18 dari 20" in note and "20 dari 20" in note and "1.532 artikel" in note
-    assert "belum diukur" in note
+    assert "1.532 artikel" in note and "dari 20 butir uji" in note
+    assert "pertama hasil pencarian untuk 18 butir" in note and "tiga teratas untuk 20 butir" in note
+    # angka pencarian tidak boleh terbaca sebagai akurasi jawaban
+    assert "tahap pencarian artikel, bukan jawabannya" in note and "bukan ukuran akurasi jawaban" in note
+    assert "Akurasi jawaban akhir pada basis data ini belum diukur" in note
+    assert "20 dari 20" not in note and "100" not in note and "%" not in note
 
 
 # -- penyaringan ulang rujukan di lapisan tampilan (Aturan Wajib #1) ---------
