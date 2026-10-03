@@ -12,17 +12,20 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-03)*
 
-> **KEADAAN (2026-10-03): SCRAPING PERLUASAN SELESAI sampai 30 Sep 2025. Kelompok 4 (250),
-> 5 (250), dan 6 (110) lengkap, 0 gagal -- total dimiliki 1.532 artikel, 2025-09-30 s.d.
-> 2026-09-27.** Indeks produksi tetap 922 artikel / 2766 chunk. **Kelompok 4-6 (610 artikel) belum
-> di-reparse, belum digabung, belum di-ingest -- pemilik proyek memulai ingest ketiganya SEKALIGUS
-> setelah membebaskan memori** (urutan: `scraping.reparse` per kelompok -> gabung di akhir
-> `articles.json` -> cadangan -> ingest inkremental -> `index_check`). 30089 ada di kelompok 5;
-> verifikasi top-3 v1-029 dilakukan SETELAH ingest. **Aturan Wajib #1 (butir "Temuan Aturan
-> Wajib #1" di bawah): demo SUDAH diamankan untuk tautan pendek (daftar domain + penyaringan ulang
-> saat tampil). Perubahan parser untuk baris "Sumber:" BELUM dikerjakan -- BERHENTI menunggu
-> keputusan pemilik proyek, karena pada 3 artikel baris itu memuat situs resmi/media, bukan
-> unggahan hoaks. `articles.json` BELUM di-reparse (indeks dan `articles.json` masih cocok).**
+> **KEADAAN (2026-10-03 sore): `data/articles.json` = 1.532 ARTIKEL (922 + kelompok 4, 5, 6 sudah
+> di-reparse dan DIGABUNG), 2025-09-30 s.d. 2026-09-27. INDEKS MASIH 922 artikel / 2766 chunk --
+> INGEST BELUM DIJALANKAN, menunggu pemilik proyek membebaskan memori.** `index_check` saat ini
+> melaporkan BASI dengan tepat satu masalah, "1827 chunk belum ada di indeks": itu DIHARAPKAN sampai
+> ingest. Ingest berikutnya: INKREMENTAL (`python src/ingest.py`, bukan `--rebuild`): 1.827 chunk
+> baru (~25 menit pada 0,8 dtk/chunk), lalu `index_check`. Cadangan sebelum perubahan hari ini:
+> `data/backups/pre_metadata_update_2026-10-03/` (`chroma/` + `articles.json` 922 sebelum reparse +
+> `articles_922_setelah_reparse.json`). 30089 ada di `articles.json`; verifikasi top-3 v1-029
+> dilakukan SETELAH ingest. Manifest `manifests/expansion_article_ids.json` BELUM memuat kelompok
+> 4-6 (perlu pemeriksaan PII judul seperti kelompok 1-3). **Aturan Wajib #1 (butir "Temuan Aturan
+> Wajib #1" di bawah): SELESAI untuk data dan indeks produksi -- pemendek URL dan
+> seluruh domain arsip disaring, baris "Sumber:" dibaca sebagai sumber klaim (kecuali pemerintah/
+> media tepercaya), rujukan disaring ulang saat tampil, metadata 922 artikel terindeks sudah
+> diperbarui terarah dan `index_check` lolos sebelum penggabungan.**
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
@@ -136,7 +139,52 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     tiap chunk dengan hasil chunking `articles.json` (uji baru: teks sama, rujukan beda -> dilaporkan).
     Saat ini indeks MASIH cocok dengan `articles.json` karena `articles.json` belum di-reparse;
     setelah reparse, `index_check` akan gagal pada chunk 18 artikel itu sampai metadata diperbarui.
-    (d) **Baris "Sumber:" -- BERHENTI, menunggu keputusan.** Letak: seksi Hasil Periksa Fakta
+    (e) **Keputusan pemilik proyek atas (d), diterapkan 2026-10-03:** BAWAAN = SARING. Semua URL di
+    baris "Sumber:" masuk `claim_sources` (dan karenanya tersaring dari `references`), KECUALI
+    domain pemerintah (`*.go.id`) atau media/cek fakta pada daftar eksplisit
+    `links.TRUSTED_SOURCE_DOMAINS` (`is_trusted_source`). **Daftar itu disusun 2026-10-03 dari media
+    arus utama dan pemeriksa fakta yang muncul sebagai rujukan di data; "klasifikasi domain"
+    2026-09-26 tidak pernah disimpan sebagai daftar di repositori, jadi daftar ini BARU dan perlu
+    ditinjau pemilik proyek.** Pada data saat ini hanya 4 URL yang bergantung padanya (2 `.go.id`, 2
+    media). Ekstraksi (`parser.extract_factcheck_sources`) memecah per URL karena satu `<a href>` di
+    sumber bisa memuat beberapa URL (136/1.532 artikel). Lima domain arsip ditambahkan ke daftar
+    saring: `arsip.cekfakta.com`, `archive.fo`, `megalodon.jp`, `perma.cc`, `archive.cob.web.id`.
+    *Pemecahan 119 URL "Sumber:" di luar daftar lama:* arsip 88, pemendek 20, pemerintah 2 (32110,
+    31532), media 2 (33497), `turnbackhoax.id` 3 (dilewati parser), **domain lain 4**: 34525
+    (`*.emgy.top`, laman penipuan), 32772 (Google Drive), 33554 (Google Docs), 36622
+    (`videotourl.com`) -- keempatnya kini di `claim_sources`; tidak satu pun sebelumnya tampil sebagai
+    rujukan. Tiga artikel berujukan resmi (32110, 31532, 33497) tetap menampilkan rujukannya.
+    **Bukti (parse ulang 1.532 artikel, `11742a7` vs baru): 1.176 identik, 356 berubah, HANYA
+    `claim_sources` (268), `references_filtered` (309), `references` (25); `references_raw` tidak
+    berubah; tidak ada rujukan bertambah.** 27 rujukan tampil tersaring (megalodon.jp 15,
+    arsip.cekfakta.com 9, archive.fo 2, perma.cc 1); `claim_sources` kosong 206 -> 1 artikel (29505,
+    "Sumber:"-nya hanya PDF di turnbackhoax.id); artikel tanpa rujukan 200 -> 205. Setelah semua
+    perubahan: 0 rujukan tampil berdomain daftar-blokir, 0 rujukan tampil yang juga `claim_sources`.
+    (f) **Metadata 922 artikel terindeks diperbarui TERARAH (2026-10-03):** alat baru
+    `python src/ingest.py --update-metadata` (`ingest.update_metadata`: menulis ulang metadata chunk
+    yang teksnya sama; tanpa embedding, tanpa memuat model; chunk berteks beda/belum ada hanya
+    dilaporkan; uji dengan ChromaDB sementara). Urutan yang dijalankan: cadangan (salinan byte 10
+    berkas indeks cocok) -> `index_check` SEGAR -> `scraping.reparse` (922: 729 identik, 193 berubah,
+    hanya tiga bidang itu) -> `index_check` **BASI, 60 masalah, semuanya "metadata 'references'
+    beda"** (20 artikel x 3 chunk: bukti nyata bahwa ia memeriksa metadata, bukan hanya teks) ->
+    `--update-metadata` (60 chunk, kunci `references` saja, 0 teks berbeda) -> `index_check` SEGAR.
+    Sidik jari: `sha256_embedding_float32` SAMA sebelum/sesudah (`6a49aca4...`); `sha256_teks_metadata`
+    berubah. Semua `index_check` dijalankan dengan `--embed-sample 0` (model tidak dimuat; memori
+    bebas 2,3 GB). 20 artikel: 32314, 32378, 32772, 32827, 32861, 33308, 33426, 33461, 33651, 33653,
+    33658, 33794, 33802, 34471, 34647, 34980, 34994, 35112, 35161, 36089.
+    (g) **Arsip v1:** `archive/v1/` tidak disentuh. Hanya 36089 yang rujukan tersimpannya terdampak
+    (bit.ly); ia tidak pernah menjadi artikel jawaban pada evaluasi v1 (hanya kandidat top-3 untuk
+    v1-026 dan v1-029). Celah pengukuran dicatat di `testset/v1_temuan_untuk_v2.md` bagian 9.
+    (h) **Penggabungan kelompok 4-6 (2026-10-03):** masing-masing di-reparse dari cache (kelompok 4:
+    31 artikel berubah; 5: 39, termasuk `title`/`label` tiga judul yang diperbaiki; 6: 109 -- hanya
+    bidang `claim_sources`/`references`/`references_filtered` selain tiga judul itu), digabung di
+    akhir `articles.json` -> 1.532; 922 pertama identik; reparse penuh dari cache identik; 0
+    duplikat id; skema sama; 0 `\r`. Label: SALAH 1.057, PENIPUAN 456, PARODI 15, SATIR 2, SATIRE 1,
+    KOMEDI 1. Seksi kosong hanya 29670 (Narasi, Penjelasan) dan 29687 (Penjelasan) -> 4.593 chunk
+    (bukan 4.596). Chunk terpotong 512 token yang AKAN berlaku setelah ingest: **Narasi 4 /
+    Penjelasan 9 / Kesimpulan 0 dari 4.593** (922: 1/9/0 dari 2.766). Berkas `batch_0N.json` di
+    disk dibiarkan seperti hasil scraping (belum memuat perubahan reparse).
+    (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
     itu dibaca sebagai sumber klaim, KECUALI bila ada artikel yang "Sumber:"-nya jelas bukan unggahan
