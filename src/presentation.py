@@ -45,11 +45,14 @@ LIMITATION_NOTE = (
 # (150 artikel); indeks produksi yang dipakai demo lebih besar dan baru diukur retrieval-nya
 # (testset/v1_perbandingan_indeks_1532.json, butir positif; 2026-10-03). Angka di sini wajib ikut
 # diperbarui bila pengukuran diulang.
+# Kalimatnya sengaja memisahkan PENCARIAN (artikel yang benar ditemukan) dari AKURASI JAWABAN, agar
+# "20 dari 20" tidak terbaca sebagai akurasi seratus persen (arahan pemilik proyek 2026-10-03).
 EVALUATION_SCOPE_NOTE = (
-    "Akurasi 48 dari 50 diukur pada basis data versi awal (150 artikel). Demo ini memakai basis "
-    "data yang lebih besar, 1.532 artikel dari satu tahun terakhir, yang baru diukur bagian "
-    "pencarian artikelnya: artikel yang benar berada di urutan pertama untuk 18 dari 20 klaim uji "
-    "dan di tiga teratas untuk 20 dari 20. Akurasi akhir pada basis data yang lebih besar belum diukur."
+    "Akurasi jawaban 48 dari 50 diukur pada basis data versi awal (150 artikel). Demo ini memakai "
+    "basis data yang lebih besar, 1.532 artikel dari satu tahun terakhir. Pada basis data ini yang "
+    "diukur baru tahap pencarian artikel, bukan jawabannya: dari 20 butir uji, artikel yang benar "
+    "muncul di urutan pertama hasil pencarian untuk 18 butir dan di tiga teratas untuk 20 butir. "
+    "Itu bukan ukuran akurasi jawaban. Akurasi jawaban akhir pada basis data ini belum diukur."
 )
 INPUT_LABEL = "Pesan atau klaim yang ingin dicek"
 INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"

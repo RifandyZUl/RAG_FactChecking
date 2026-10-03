@@ -130,3 +130,30 @@ def test_trusted_source_is_government_or_listed_media_only() -> None:
         "http://contoh.go.id]",  # tidak dapat diurai: tidak pernah tepercaya
     ]:
         assert not is_trusted_source(url), f"tidak boleh tepercaya: {url}"
+
+
+def test_trusted_source_matches_on_domain_boundary_not_substring() -> None:
+    """
+    Situs penipuan sering meniru nama media. Pencocokan daftar tepercaya harus pada BATAS DOMAIN
+    (host persis atau subdomain sejati), bukan pencocokan teks.
+    """
+    for url in [
+        "https://kompas.com/a", "https://berita.kompas.com/a", "https://www.nasional.kompas.com/a",
+        "HTTPS://Berita.KOMPAS.com/a", "https://tempo.co/a", "https://cekfakta.tempo.co/a",
+        "https://kompas.com:443/a", "https://layanan.contoh.go.id/a",
+    ]:
+        assert is_trusted_source(url), f"seharusnya tepercaya: {url}"
+    for url in [
+        "https://kompas.com.situspalsu.xyz/a",  # nama media sebagai subdomain situs lain
+        "https://palsukompas.com/a",  # nama media sebagai akhiran teks, bukan batas domain
+        "https://tempo.co.id-palsu.net/a",
+        "https://tempo.co.id/a",  # domain lain yang hanya diawali nama media
+        "https://kompascom.xyz/a", "https://kompas.com-berita.top/a", "https://kompas-com.web.id/a",
+        "https://situspalsu.xyz/kompas.com/a",  # nama media di jalur
+        "https://situspalsu.xyz/?u=https://kompas.com/a",  # nama media di query
+        "https://kompas.com@situspalsu.xyz/a",  # nama media di bagian kredensial URL
+        "https://kompas.com.situspalsu.xyz:443/a",
+        "https://xn--kmpas-jua.com/a",  # punycode mirip
+        "https://go.id.situspalsu.xyz/a", "https://palsu-go.id/a", "https://contohgo.id/a", "https://go.id-palsu.top/a",
+    ]:
+        assert not is_trusted_source(url), f"tiruan tidak boleh tepercaya: {url}"

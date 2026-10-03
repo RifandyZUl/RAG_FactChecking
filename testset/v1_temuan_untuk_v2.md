@@ -374,6 +374,31 @@ yang sama di peringkat 1), bukan sekadar keberadaan artikel di basis data.
 
 ---
 
+### 6.1 Ambang skor untuk "mungkin terkait" tidak akan pernah berhasil seiring basis data membesar (dicatat 2026-10-03)
+
+Ini bukan soal kalibrasi yang belum ketemu, melainkan **keterbatasan struktural** pendekatannya:
+
+- Skor sebuah artikel adalah skor chunk terbaiknya. Saat basis data diperbesar, chunk lama dan
+  embedding-nya tetap ada, sehingga **skor kandidat teratas sebuah kueri tidak bisa turun, hanya
+  bisa naik**. Makin banyak artikel, makin besar peluang kueri yang tidak terkait menemukan
+  artikel yang agak mirip.
+- Sebaliknya, skor kandidat yang memang layak ditampilkan (artikel tetangga yang sudah ada) tidak
+  ikut naik. Jadi jarak antara "tak terkait" dan "layak tampil" hanya bisa menyempit atau
+  berbalik, tidak pernah melebar.
+- Terukur: negatif mudah yang benar-benar tak terkait pada set uji v1, skor top-1 tertinggi 0,5351
+  (150 artikel) -> 0,5666 (922) -> 0,6308 (1.532, v1-046, bila klaimnya dinilai berbeda); kueri set
+  pengembangan "bumi datar" 0,6385 pada 922 artikel. Kandidat layak tampil tetap 0,5739-0,63.
+  Ambang 0,57 hanya bekerja pada 150 artikel; sejak 922 artikel fiturnya dimatikan.
+
+**Implikasi untuk Versi 2:** fitur "mungkin terkait" sebaiknya **digantikan pendekatan lain,
+bukan menunggu kalibrasi ulang** tiap kali basis data bertambah. Kandidat paling alami adalah
+penilaian oleh grader (node penilai relevansi): grader yang sudah menilai apakah klaim pengguna
+sama dengan klaim artikel dapat sekaligus menyatakan "topik sama, klaim berbeda" -- persis
+kategori yang ingin ditampilkan fitur ini, dan juga kandidat verdict ketiga "artikel terkait".
+Skor kemiripan tetap berguna untuk mengurutkan kandidat, tidak untuk memutuskan tampil/tidak.
+Ini sejalan dengan temuan awal bahwa skor kemiripan tidak memisahkan klaim yang ada dari yang
+tidak ada (dasar Aturan Wajib #4 tidak diwujudkan dengan ambang skor).
+
 ## 9. Kebersihan rujukan dari DATA tidak diukur pada evaluasi Versi 1 (dicatat 2026-10-03)
 
 Evaluasi Versi 1 mengukur **URL karangan LLM** (URL pada keluaran LLM di luar metadata: 0), tetapi
