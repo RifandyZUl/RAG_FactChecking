@@ -247,3 +247,19 @@ def test_reviewed_new_label_no_longer_holds_merging(env: Env) -> None:
     env.forward_result = [_art("201"), _art("202", "BELUM TERBUKTI")]
     assert scheduled.run_once() == 0 and not env.marker.exists()
     assert env.status()["kualitas"]["label_belum_ditinjau"] == []
+
+
+def test_tee_tolerates_missing_console_stream() -> None:
+    """Di bawah pythonw.exe (tanpa jendela) sys.stdout adalah None; keluaran tetap masuk ke log."""
+    import io
+
+    buf = io.StringIO()
+    tee = scheduled._Tee(None, buf)
+    assert tee.write("baris\n") == 6 and buf.getvalue() == "baris\n"
+
+
+def test_run_once_works_without_a_console(env: Env, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(scheduled.sys, "stdout", None)
+    env.forward_result = expand.EXIT_NETWORK_DOWN
+    assert scheduled.run_once() == expand.EXIT_NETWORK_DOWN
+    assert env.marker.exists() and "selesai: kode 4" in Path(env.status()["log"]).read_text(encoding="utf-8")
