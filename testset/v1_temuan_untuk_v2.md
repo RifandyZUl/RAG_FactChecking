@@ -374,6 +374,36 @@ yang sama di peringkat 1), bukan sekadar keberadaan artikel di basis data.
 
 ---
 
+## 9. Kebersihan rujukan dari DATA tidak diukur pada evaluasi Versi 1 (dicatat 2026-10-03)
+
+Evaluasi Versi 1 mengukur **URL karangan LLM** (URL pada keluaran LLM di luar metadata: 0), tetapi
+**tidak pernah mengukur apakah rujukan yang berasal dari metadata itu sendiri layak ditampilkan**.
+Itu celah yang tidak terukur waktu itu, bukan temuan tentang perilaku LLM.
+
+- **Arsip indeks Versi 1 (`archive/v1`, 150 artikel):** satu artikel, **36089** (PENIPUAN, "Tautan
+  Lowongan Kerja untuk Lansia 2026"), menyimpan tautan pemendek `bit.ly` di metadata `references`.
+  Menurut Kesimpulan artikel itu, tautan tersebut adalah tautan pendaftaran program Kemnaker (jadi
+  kemungkinan rujukan sah), tetapi tujuannya **tidak diperiksa** dan tidak dapat diverifikasi
+  pengguna sebelum diklik. Dengan kebijakan penyaringan per 2026-10-03 (pemendek URL, seluruh domain
+  arsip, baris "Sumber:") hanya artikel ini yang rujukan tersimpannya berubah di arsip; 14 artikel
+  arsip lain hanya berubah pada `claim_sources`/`references_filtered`, yang tidak ada di indeks.
+- **Apakah tautan itu pernah tampil pada evaluasi:** pada `data/testset_v1_eval_gemini-3.5-flash-lite.jsonl`
+  (162 baris, 3 run), 36089 hanya muncul sebagai kandidat top-3 retrieval untuk v1-026 dan v1-029
+  (6 baris, semuanya dijawab "tidak ditemukan"); ia **tidak pernah menjadi artikel jawaban**. Jadi
+  tautan itu tidak pernah menjadi rujukan sebuah jawaban di evaluasi, tetapi ikut terkirim ke LLM
+  sebagai bagian konteks kandidat (konteks memuat rujukan). Berkas hasil evaluasi tidak menyimpan
+  daftar rujukan jawaban, sehingga kebersihan rujukan memang tidak dapat diaudit dari sana.
+- **`archive/v1/` tidak diubah** (Aturan Wajib #6); angka baseline tidak terpengaruh. Bila demo
+  diarahkan ke arsip, lapisan tampilan (`presentation.display_references`) menyaring tautan itu.
+- **Pada indeks produksi (922 artikel) celahnya lebih besar:** 20 artikel menyimpan rujukan yang
+  kini disaring (pemendek URL dan arsip di luar daftar lama), termasuk URL baris "Sumber:" -- sumber
+  hoaks -- pada 7 artikel; diperbaiki 2026-10-03 (lihat CLAUDE.md, "Temuan Aturan Wajib #1").
+- **Persyaratan untuk evaluasi Versi 2:** tambahkan metrik kebersihan rujukan DATA -- untuk setiap
+  jawaban "ditemukan", rujukan yang ditampilkan diperiksa terhadap kebijakan penyaringan terkini
+  dan terhadap sumber klaim artikel (`claim_sources`, termasuk baris "Sumber:") -- dan simpan daftar
+  rujukan jawaban di berkas hasil agar dapat diaudit. Ini juga masukan langsung untuk komponen
+  penilaian kredibilitas sumber.
+
 ## Ringkasan angka
 
 - Recall@3 non-batas: 36/40 (90%) -- tapi hanya 17/20 butir negatif_sulit yang benar-benar
