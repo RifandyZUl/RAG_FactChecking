@@ -727,7 +727,17 @@ Proyek dibangun bertahap dalam dua versi:
   Metode yang disetujui: "terkena" didefinisikan dari sisi kegagalan Versi 1 saja; kandidat artikel
   sasaran dicari dari judul, bukan dari pesan panjang; penandaan posisi klaim dan konfirmasi artikel
   sasaran dikerjakan pemilik proyek TANPA bantuan AI. **Berkas penandaan TIDAK disiapkan; cakupan
-  Versi 2 MENUNGGU keputusan pemilik proyek atas hasil ini.** **Rancangan itu
+  Versi 2 MENUNGGU keputusan pemilik proyek atas hasil ini.**
+  **Arah yang sedang ditimbang pemilik proyek (2026-10-03, BELUM ada rancangan, belum ada yang
+  dibangun): menangani klaim yang kini dijawab "belum ditemukan".** Langkah ukur: mencocokkan 100
+  artikel Liputan6 dari sampel di atas dengan 1.532 artikel basis data untuk mengetahui berapa yang
+  juga diperiksa TurnBackHoax. Kandidat dicari dari JUDUL Liputan6 (embedding top-5 + kata kunci pada
+  judul), bukan dari pesannya; **kecocokan dikonfirmasi pemilik proyek sendiri, dengan pilihan "tidak
+  ada yang cocok"**. Pengelompokan otomatis terbukti tidak dapat dipercaya ke dua arah, jadi keseratus
+  butir perlu dikonfirmasi (sekitar 660 baris kandidat bila dibatasi 5 + 3 per butir). Label Liputan6
+  pada sampel: tidak terstruktur; kata vonis di judul "Tidak Benar" 57, "Hoaks" 40, "Klarifikasi" 1,
+  tanpa kata vonis 2 -- TIDAK dipetakan ke label TurnBackHoax tanpa pasangan terkonfirmasi. Berkas
+  konfirmasi BELUM disiapkan (menunggu pemilik proyek). **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
