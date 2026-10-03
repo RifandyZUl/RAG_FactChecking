@@ -1,13 +1,40 @@
 # Rancangan Versi 2
 
-**Status: dokumen rancangan, 2026-10-03. Belum ada kode Versi 2 dan belum ada keputusan.** Semua
-angka di dokumen ini diambil dari berkas di repositori; sumbernya ditulis di samping tiap klaim
-(daftar berkas di bagian akhir). Bila datanya tidak cukup untuk disimpulkan, itu ditulis terus
-terang. Keputusan yang harus diambil pemilik proyek dikumpulkan di bagian 9.
+**Status: dokumen rancangan; belum ada kode Versi 2.** Disusun 2026-10-03 dari berkas di
+repositori (daftar di bagian akhir); diperbarui pada hari yang sama dengan keputusan pemilik
+proyek atas dua belas pertanyaan terbuka (bagian 0). Bila datanya tidak cukup untuk disimpulkan,
+itu ditulis terus terang.
 
-Dokumen ini mengoreksi pemetaan lama di `testset/v1_temuan_untuk_v2.md` bagian 7 (dan tabel
-"Rencana Versi 2" di README): beberapa komponen di sana dicantumkan dengan bukti yang, setelah
+**Rancangan ini BELUM boleh dilanjutkan ke pembangunan.** Langkah pertama yang ditetapkan pemilik
+proyek adalah mengukur apakah masalah pesan panjang memang terjadi pada pesan berantai ASLI
+(bagian 10). Bila ternyata jarang, cakupan Versi 2 dipikir ulang.
+
+Dokumen ini mengoreksi pemetaan lama di `testset/v1_temuan_untuk_v2.md` bagian 7 dan tabel
+"Rencana Versi 2" di README: beberapa komponen di sana dicantumkan dengan bukti yang, setelah
 diperiksa ulang, tidak mendukungnya.
+
+---
+
+## 0. Keputusan pemilik proyek (2026-10-03)
+
+| # | Pertanyaan | Keputusan |
+| --- | --- | --- |
+| 1 | Cakupan | **Dipersempit: penanganan pesan panjang + pengukuran kebersihan rujukan.** Komponen lain tidak masuk, bahkan sebagai eksperimen (kuota terbatas, tidak ada bukti). |
+| 2 | Grader | **Tidak masuk.** Generator sudah menilai kesamaan klaim; empat perbedaan yang mungkin dibawa grader tidak punya bukti. |
+| 3 | "Mungkin terkait", verdict ketiga | **Tetap mati; verdict ketiga di luar cakupan** (perubahan produk, bukan perbaikan yang dijawab data). |
+| 4 | Kerangka | **Pipeline Python biasa.** |
+| 5 | Snapshot | **Disetujui, tidak dikerjakan sekarang.** Bila rancangan dilanjutkan: antrean digabung dan di-ingest dulu (ingest dimulai pemilik proyek), baru snapshot dibekukan, sebelum set uji v2 dibangun. Aturan Wajib #6 ditambah (CLAUDE.md). |
+| 6 | Juri | **Tanpa juri LLM.** |
+| 7 | Ukuran set uji | **140 butir terlalu berat. Dua tujuan dipisah:** uji kemunduran memakai set uji v1 di atas `archive/v1`; uji kemampuan baru memakai butir pesan panjang baru (bagian 6). |
+| 8 | Sumber pesan panjang | **Positif: Liputan6 Cek Fakta** (sering mengutip pesan berantai utuh; `robots.txt`-nya mengizinkan), asalkan hoaksnya juga ada di basis data. **Negatif: arsip TurnBackHoax sebelum September 2025**, setelah diverifikasi tidak ada di basis data. Pemeriksaan data pribadi wajib untuk keduanya. |
+| 9 | Mutu klarifikasi | **Di luar cakupan** (mengubah prompt mencampur efeknya dengan perbaikan pesan panjang). |
+| 10 | Menghapus Penjelasan dari indeks | **Ditunda** (mengubah indeks dan snapshot; tidak berkaitan dengan masalah yang dijawab). |
+| 11 | `retriever.py` | **Dikunci dengan hash sebelum evaluasi**, karena Versi 2 mengimpornya. |
+| 12 | Pedoman anotasi | **Tambahan, bukan revisi: versi 1.1** untuk pesan berantai yang memuat beberapa klaim; dikunci sebelum pelabelan; aturan v1.0 lainnya tidak diubah (bagian 6.4). |
+
+Ketentuan tambahan: **hipotesis Versi 2 beserta ambangnya dikunci sebelum pelabelan dimulai**,
+seperti Versi 1; perhitungan ukuran sampel disimpan di repositori
+(`src/evaluation/sample_size.py`, `testset/v2_ukuran_sampel.json`).
 
 ---
 
@@ -117,7 +144,7 @@ per-URL oleh LLM (mis. membedakan akun resmi dari akun penyebar hoaks) **tidak a
 sekali**, dan percobaan meloloskan beranda akun pernah gagal diverifikasi (CLAUDE.md,
 "Keterbatasan": 11 beranda akun tidak dapat diperiksa dari klien HTTP).
 
-### M5. Mutu klarifikasi
+### M5. Mutu klarifikasi (di luar cakupan; keputusan 9)
 
 - **Bukti masalah: lemah.** Tiga contoh keluaran untuk satu artikel (36730) yang dinilai padat dan
   sulit diikuti (`v1_temuan_untuk_v2.md` bagian 4.1) -- pengamatan pemilik proyek, bukan
@@ -143,100 +170,56 @@ sekali**, dan percobaan meloloskan beranda akun pernah gagal diverifikasi (CLAUD
 
 ---
 
-## 2. Komponen yang diusulkan
+## 2. Komponen Versi 2 (setelah keputusan)
 
-Prinsip: komponen masuk hanya bila menjawab masalah di bagian 1, dan alternatif yang lebih
-sederhana ditimbang lebih dulu.
+Hanya dua, sesuai keputusan 1.
 
-### 2.1 Ekstraksi klaim dari pesan panjang (menjawab M1)
+### 2.1 Penanganan pesan panjang (menjawab M1)
 
-- **Tugas:** bila pesan melebihi ambang token, ambil klaim intinya lalu cari dengan klaim itu.
-  Hanya tugas ini; "menulis ulang kueri saat retrieval gagal" **dicoret** (lihat bagian 8).
-- **Alternatif yang lebih sederhana, tanpa LLM:** *pencarian per potongan pesan* -- pesan dipecah
-  menjadi jendela <= 512 token, tiap jendela di-embed dan dicari, skor artikel = maksimum
-  antar-jendela. Ini sudah disebut sebagai kemungkinan di `v1_temuan_untuk_v2.md` bagian 5.2.
-  Kelebihan: nol panggilan LLM, deterministik, tidak bisa mengarang klaim. Kekurangan yang perlu
-  diukur: pengganggu ikut dicari sehingga bisa memunculkan artikel yang mirip pengganggunya, dan
-  LLM generator tetap membaca pesan utuh.
-- **Belum diketahui mana yang lebih baik.** Keduanya belum pernah diukur. Rancangan ini mengusulkan
-  keduanya diukur pada retrieval saja (tanpa generator, murah) sebelum memilih; bila pencarian per
-  potongan menyamai ekstraksi LLM, yang dipilih pencarian per potongan.
-- **Risiko yang wajib diukur:** kemunduran pada klaim pendek (karena itu hanya aktif di atas
-  ambang token), dan klaim yang diubah maknanya oleh ekstraksi.
+- **Tugas:** bila pesan terkena pemotongan (definisi mekanistik di bagian 10), klaimnya tetap
+  ikut dicari.
+- **Dua kandidat, diukur dulu pada tahap retrieval (tanpa generator):**
+  - *Pencarian per potongan pesan, tanpa LLM:* pesan dipecah menjadi jendela <= 512 token, tiap
+    jendela di-embed dan dicari, skor artikel = maksimum antar-jendela. Nol panggilan LLM,
+    deterministik, tidak bisa mengarang klaim. Yang perlu diukur: pengganggu ikut dicari sehingga
+    bisa memunculkan artikel yang mirip pengganggunya.
+  - *Ekstraksi klaim oleh LLM:* satu panggilan tambahan untuk pesan yang terkena. Yang perlu
+    diukur: klaim yang berubah makna, dan biaya kuota.
+- **Aturan pemilihan (V2-H3):** bila pencarian per potongan menyamai ekstraksi LLM (selisih <= 2
+  butir), yang dipilih pencarian per potongan.
+- **Hanya aktif pada pesan yang terkena.** Untuk klaim di bawah batas token, jalur Versi 2 harus
+  identik dengan Versi 1 (kueri yang sama, kandidat yang sama). Ini yang diperiksa uji kemunduran.
+- Belum ada bukti untuk solusi mana pun (bagian 1, M1).
 
-### 2.2 Grader (menjawab M2 dan mungkin M3)
+### 2.2 Pengukuran kebersihan rujukan (menjawab M4)
 
-**Apa yang bisa dilakukan grader yang belum dilakukan generator sekarang?** Generator Versi 1
-sudah melakukan penilaian "klaim sama": prompt sistemnya memuat definisi resmi (KIA, unsur inti,
-uji dua arah, uji Kesimpulan), ia membaca tiga kandidat sekaligus, dan mengeluarkan `klaim_sama`
-serta `alasan` (CLAUDE.md, "Set uji Versi 1"; `src/generator.py`). Jadi grader **bukan kemampuan
-baru**. Yang secara konkret berbeda hanya:
+Bukan komponen LLM. Berkas hasil evaluasi menyimpan daftar rujukan tiap jawaban "ditemukan", dan
+metrik di bagian 5.4 dihitung untuk kedua versi. Kelemahan daftar domain (melingkar, `.go.id`)
+tetap dicatat sebagai keterbatasan, tidak diselesaikan Versi 2.
 
-1. *Satu kandidat per panggilan* (bukan tiga sekaligus) -- dugaan: perhatian lebih terfokus.
-2. *Keluaran terstruktur per unsur* (subjek, tindakan, objek/angka/waktu dibandingkan satu per satu)
-   -- dugaan: menangkap selisih angka/waktu seperti `v1-036`, `v1-039`, `v1-040`.
-3. *Kategori ketiga* "topik sama, klaim berbeda" -- yang dibutuhkan M3.
-4. *Pemungutan suara* atas beberapa panggilan.
+### 2.3 Yang ditimbang lalu tidak dimasukkan
 
-**Tidak satu pun dari keempatnya punya bukti.** Butir 1-2 adalah dugaan yang belum diuji. Butir 4
-punya satu data: modus 3 run memberi 48/50 sedangkan run tunggal 46-48/50, tetapi `v1-020` keliru
-di ketiga run (pemungutan suara tidak menolongnya) dan selisih 0-2 butir tidak dapat dibedakan
-dari kebetulan.
+- **Grader** (keputusan 2). Generator Versi 1 sudah menilai "klaim sama": prompt sistemnya memuat
+  definisi resmi (KIA, unsur inti, uji dua arah, uji Kesimpulan), ia membaca tiga kandidat
+  sekaligus, dan mengeluarkan `klaim_sama` serta `alasan`. Yang secara konkret bisa berbeda pada
+  grader hanya empat hal -- satu kandidat per panggilan, keluaran per unsur, kategori "topik sama,
+  klaim berbeda", dan pemungutan suara -- dan tidak satu pun punya bukti. Satu-satunya data:
+  modus 3 run 48/50 vs run tunggal 46-48/50, tetapi `v1-020` keliru di ketiga run dan selisih 0-2
+  butir tidak dapat dibedakan dari kebetulan.
+- **Penulis ulang kueri saat retrieval gagal, "Mungkin terkait" lewat grader, penilai kredibilitas
+  per-URL, perubahan gaya klarifikasi:** lihat bagian 8.
 
-**Alternatif yang lebih sederhana daripada node grader:**
+### 2.4 Kerangka: pipeline Python biasa (keputusan 4)
 
-- (a) *Tanpa grader.* Dasar: bukti M2 lemah, dan ukuran sampel yang layak tidak akan mampu
-  menunjukkan perbaikan atas 2 kesalahan dari 50 (bagian 6.3).
-- (b) *Pemungutan suara pada generator yang ada* (3 panggilan, modus) -- tanpa prompt baru, tetapi
-  melipat-tigakan panggilan.
-- (c) *Mengubah prompt generator* (keluaran per unsur) di salinan Versi 2 -- satu panggilan, tanpa
-  node baru.
-
-**Posisi rancangan:** grader **tidak direkomendasikan sebagai komponen wajib**. Bila M3 ("topik
-sama, klaim berbeda") tetap diinginkan, bentuk paling sederhana adalah (c): menambah satu nilai
-keluaran pada generator Versi 2, bukan node terpisah. Node grader terpisah hanya layak bila
-ablasi menunjukkan (c) tidak cukup. Ini keputusan pemilik proyek (bagian 9, pertanyaan 2).
-
-### 2.3 Rujukan (menjawab M4)
-
-- **Yang diusulkan: pengukuran, bukan komponen LLM.** Menyimpan rujukan tiap jawaban di berkas
-  hasil dan menghitung metrik kebersihan rujukan (bagian 5.4). Ini menutup celah evaluasi tanpa
-  panggilan LLM tambahan.
-- **Alternatif yang lebih berat:** penilai kredibilitas per-URL oleh LLM (membedakan akun resmi,
-  menilai media). Tidak diusulkan: tidak ada bukti solusi, LLM tidak dapat membuka tautan, dan
-  daftar domain eksplisit lebih mudah diaudit. Kelemahan daftar (melingkar, `.go.id`) dicatat
-  sebagai keterbatasan, bukan diselesaikan Versi 2.
-
-### 2.4 Mutu klarifikasi (menjawab M5)
-
-Hanya instruksi gaya bahasa pada prompt salinan Versi 2 (kalimat aktif, subjek jelas), **bila**
-pemilik proyek memutuskan M5 masuk cakupan. Catatan: ini mengubah dua hal sekaligus dengan
-komponen lain bila dijalankan bersamaan, jadi perlu kondisi ablasi sendiri (bagian 5.3).
-
-### 2.5 Kerangka: LangGraph atau pipeline Python biasa
-
-Alur yang benar-benar dibutuhkan komponen di atas:
+Alur yang dibutuhkan:
 
 ```
-klaim -> [bila panjang: ekstraksi / pencarian per potongan] -> retrieval -> generator (dgn/tanpa perubahan prompt) -> jawaban
+klaim -> [bila terkena pemotongan: pencarian per potongan / ekstraksi] -> retrieval -> generator Versi 1 (tak berubah) -> jawaban
 ```
 
-Alur ini linear dengan satu cabang bersyarat; tidak ada putaran. Satu-satunya putaran dalam
-rencana awal ("tulis ulang kueri lalu cari lagi bila retrieval gagal") dicoret karena tidak ada
-bukti masalahnya.
-
-| | Pipeline Python biasa | LangGraph |
-| --- | --- | --- |
-| Kebutuhan alur ini | Fungsi berurutan + satu `if` | Graf dengan simpul dan tepi bersyarat |
-| Dependensi baru | Tidak ada | Ya (`langgraph` tidak ada di `requirements.txt`) |
-| Kendali kuota/throttle | Lapisan `src/llm/` yang ada dipakai apa adanya | Harus dijembatani ke lapisan itu |
-| Pencatatan per langkah untuk ablasi | Ditulis sendiri (seperti `CallRecord` sekarang) | Tersedia, bentuknya ditentukan kerangka |
-| Menyala-matikan komponen untuk ablasi | Parameter fungsi | Menyusun graf berbeda |
-
-**Pilihan rancangan: pipeline Python biasa.** Alasannya hanya satu: alurnya tidak membutuhkan
-lebih. LangGraph layak ditimbang ulang bila kelak ada putaran atau banyak cabang. Bila nilai
-portofolio dari memakai kerangka itu dianggap penting, itu pertimbangan di luar bukti dan menjadi
-keputusan pemilik proyek (pertanyaan 4).
+Linear dengan satu cabang bersyarat, tanpa putaran. `langgraph` tidak ada di `requirements.txt`;
+lapisan `src/llm/` (throttle, kuota, pencatatan panggilan) dipakai apa adanya; komponen
+dinyalakan/dimatikan untuk ablasi lewat parameter fungsi.
 
 ---
 
@@ -244,236 +227,235 @@ keputusan pemilik proyek (pertanyaan 4).
 
 `src/generator.py` terkunci sejak tag `testset-v1`: `v1.meta.json` (`sidik_jari_generator_v1`)
 menyimpan hash seluruh berkas, hash prompt+skema, model (`gemini-3.5-flash-lite`), dan
-`thinking_level` (`medium`), dan `tests/test_testset_locks.py` gagal bila salah satunya berubah.
-Catatan: yang di-hash hanya `generator.py`; `retriever.py`, `chunker.py`, dan `ingest.py` tidak
-dikunci dengan hash, hanya dengan kebiasaan "tidak disentuh".
+`thinking_level` (`medium`); `tests/test_testset_locks.py` gagal bila salah satunya berubah. Yang
+di-hash saat ini hanya `generator.py`.
 
-Struktur yang diusulkan (belum dibuat):
+Karena cakupan dipersempit, **Versi 2 tidak punya prompt baru**: generator Versi 1 dipanggil apa
+adanya. Struktur yang diusulkan (belum dibuat):
 
 ```
 src/
   generator.py            # Versi 1 -- TIDAK disentuh; uji kunci tetap lolos
-  retriever.py            # dipakai bersama, tidak diubah
+  retriever.py            # dipakai bersama; DIKUNCI dengan hash sebelum evaluasi (keputusan 11)
   v2/
     __init__.py
-    pipeline.py           # orkestrasi Versi 2 (fungsi biasa); memanggil retriever yang sama
-    extract.py            # ekstraksi klaim / pencarian per potongan (2.1)
-    prompts.py            # prompt Versi 2 (salinan prompt v1 + perubahan); di-hash sendiri
-    answer.py             # jawaban Versi 2: bidang yang sama dengan Answer v1 + catatan per langkah
+    long_message.py       # deteksi pesan terkena pemotongan; pencarian per potongan; (bila terpilih) ekstraksi LLM
+    pipeline.py           # orkestrasi: klaim -> kandidat (v1 atau jalur pesan panjang) -> generator v1
   evaluation/
     testset_eval.py       # Versi 1 -- tidak diubah
-    v2_eval.py            # menjalankan V1 dan V2 pada set uji v2; satu berkas hasil per kondisi
+    v2_eval.py            # menjalankan kondisi K0..K2 pada set uji; satu berkas hasil per kondisi, memuat rujukan jawaban
 ```
 
 Ketentuan:
 
-1. Versi 2 **mengimpor** dari Versi 1 (retriever, lapisan `llm/`, penyaringan URL), tidak pernah
+1. Versi 2 mengimpor dari Versi 1 (retriever, generator, lapisan `llm/`, `links`), tidak pernah
    sebaliknya, dan tidak mengubah berkas Versi 1.
-2. Pengaman Versi 1 dipertahankan apa adanya di Versi 2: status dari metadata, rujukan hanya dari
-   metadata, `article_id` hanya dari kandidat, URL keluaran LLM dibuang (Aturan Wajib #3, #4).
-3. Versi 2 punya sidik jari sendiri (hash `src/v2/` + prompt) yang dikunci sebelum evaluasi, dengan
-   uji kunci terpisah.
+2. Pengaman Versi 1 berlaku tanpa perubahan karena generatornya sama: status dari metadata,
+   rujukan hanya dari metadata, `article_id` hanya dari kandidat, URL keluaran LLM dibuang.
+3. Sebelum evaluasi: hash `retriever.py` ditambahkan ke sidik jari terkunci, dan `src/v2/` mendapat
+   sidik jari serta uji kunci sendiri.
 4. Demo memilih versi lewat setelan; bawaannya tetap Versi 1 sampai Versi 2 terukur.
-5. **Yang perlu diputuskan:** apakah `retriever.py` ikut dikunci dengan hash sebelum evaluasi
-   Versi 2, supaya "retrieval yang sama" dijamin oleh uji, bukan oleh kebiasaan.
+5. Menyuntikkan kandidat tanpa mengubah `generator.py` dimungkinkan oleh kode yang ada:
+   `AnswerGenerator` menerima `retrieve_fn(claim, top_k)` sebagai parameter konstruktor
+   (`src/generator.py`), jadi Versi 2 cukup memberikan fungsi pencarian lain. Konsekuensinya:
+   generator tetap menerima pesan UTUH sebagai `claim` (dipakai `build_user_prompt`), sehingga LLM
+   membaca seluruh pesan panjang; pengaruhnya pada token masuk dan pada penilaian belum diukur.
 
 ---
 
-## 4. Hipotesis yang dipra-registrasi (usulan)
+## 4. Hipotesis yang dipra-registrasi (usulan; dikunci sebelum pelabelan)
 
-Bentuknya mengikuti H1 dan H3 Versi 1 (`v1.meta.json`, `ambang`): ukuran dan kriteria gugur
-ditetapkan sebelum data dilihat. "Komponen tidak memberi perbaikan" adalah hasil yang sah dan
-dilaporkan apa adanya. Aturan tafsir mengikuti ablasi Versi 1: selisih dianggap bermakna hanya
-bila McNemar eksak p < 0,05 **dan** selisih bersih >= 3 butir. Angka `n` di bawah bergantung pada
-ukuran set uji (bagian 6.3); ambang final ditulis ke `v2.meta.json` sebelum butir dibuat.
+Bentuknya mengikuti H1 dan H3 Versi 1 (`v1.meta.json`, `ambang`). "Komponen tidak memberi
+perbaikan" adalah hasil yang sah. Aturan tafsir mengikuti ablasi Versi 1: selisih bermakna hanya
+bila McNemar eksak dua sisi p < 0,05 **dan** selisih bersih >= 3 butir. McNemar memberi p < 0,05
+paling sedikit pada 6 perbaikan tanpa kemunduran (`testset/v2_ukuran_sampel.json`).
 
 | Kode | Hipotesis | Ukuran | Terdukung | Gugur |
 | --- | --- | --- | --- | --- |
-| V2-H1 | Pada pesan panjang ASLI, penanganan pesan panjang menaikkan Recall@3 butir positif | Recall@3 Versi 1 vs Versi 2 pada strata pesan panjang, berpasangan | McNemar p < 0,05 dan selisih bersih >= 6 butir | Selisih bersih <= 2 butir, atau pesan panjang asli ternyata sudah terjangkau Versi 1 (masalahnya tidak ada pada pesan nyata) |
-| V2-H2 | Penanganan pesan panjang tidak merusak klaim pendek | Recall@3 dan akurasi butir pendek, berpasangan | Kemunduran bersih <= 1 butir | Kemunduran bersih >= 3 butir |
-| V2-H3 | Ekstraksi oleh LLM lebih baik daripada pencarian per potongan tanpa LLM | Recall@3 strata pesan panjang, dua kondisi | LLM unggul bersih >= 3 butir, p < 0,05 | Selisih <= 2 butir -> **pilih yang tanpa LLM** |
-| V2-H4 | Perubahan penilaian klaim (2.2) menurunkan kesalahan tanpa memindahkannya | Kecocokan palsu dan penolakan palsu non-batas, dilaporkan terpisah | Kesalahan total turun bersih >= 3 butir, p < 0,05, dan tidak ada jenis kesalahan yang naik >= 3 butir | Tidak terdukung bila selisih <= 2 butir. **Perkiraan jujur: kemungkinan besar tidak terdukung** (bagian 6.3) |
-| V2-H5 | Perubahan penilaian klaim menaikkan kestabilan antar-run | Jumlah butir non-batas yang keputusannya bulat di 3 run (Versi 1: 45/50) | Naik bersih >= 6 butir | Selisih <= 2 butir |
-| V2-H6 | Rujukan yang ditampilkan bersih | Jumlah rujukan pada jawaban "ditemukan" yang melanggar kebijakan penyaringan atau termasuk sumber klaim | 0 pada kedua versi | >= 1 (dilaporkan per artikel; ini pemeriksaan sifat, bukan uji statistik) |
-| V2-H7 | Versi 2 tidak lebih lambat/mahal secara tak wajar | Panggilan LLM dan latensi per kueri | Dilaporkan; tanpa ambang | -- |
+| V2-H1 | Pada pesan panjang ASLI yang terkena pemotongan, penanganan pesan panjang menaikkan Recall@3 butir positif | Recall@3 Versi 1 vs Versi 2 pada butir positif pesan panjang, berpasangan | p < 0,05 dan selisih bersih >= 6 butir | Selisih bersih <= 2 butir |
+| V2-H2 | Versi 2 tidak lebih buruk pada klaim pendek | (a) deterministik: untuk 54 butir set uji v1 pada `archive/v1`, kueri dan top-3 Versi 2 identik dengan Versi 1; (b) akurasi modus 3 run non-batas | (a) 54/54 identik; (b) kemunduran bersih <= 2 butir terhadap 48/50 | (a) ada satu saja yang berbeda; (b) kemunduran bersih >= 3 butir |
+| V2-H3 | Ekstraksi oleh LLM lebih baik daripada pencarian per potongan tanpa LLM | Recall@3 butir positif pesan panjang, dua kondisi | LLM unggul bersih >= 3 butir, p < 0,05 | Selisih <= 2 butir -> **dipilih yang tanpa LLM** |
+| V2-H4 | Penanganan pesan panjang tidak menaikkan kecocokan palsu | Kecocokan palsu pada butir negatif pesan panjang, Versi 1 vs Versi 2 | Kenaikan bersih <= 1 butir | Kenaikan bersih >= 3 butir |
+| V2-H5 | Rujukan yang ditampilkan bersih | Rujukan pada jawaban "ditemukan" yang melanggar kebijakan penyaringan atau termasuk sumber klaim | 0 pada kedua versi | >= 1 (dilaporkan per artikel; pemeriksaan sifat, bukan uji statistik) |
+| V2-H6 | Biaya Versi 2 | Panggilan LLM dan latensi per kueri | Dilaporkan; tanpa ambang | -- |
 
-H4 (Gemma sebagai juri) dari Versi 1 tidak dibawa; lihat 5.5.
+**Batas tafsir V2-H2, ditulis eksplisit atas permintaan pemilik proyek:** set uji v1 **hanya sah
+untuk menunjukkan Versi 2 tidak lebih buruk, tidak untuk mengklaim perbaikan**. Set itu sudah
+dibedah berkali-kali; butir mana yang salah dan mengapa sudah diketahui, dan rancangan Versi 2
+disusun dengan pengetahuan itu. Selain itu seluruh klaim di set uji v1 pendek (terpanjang 749
+karakter / 152 token), jadi jalur pesan panjang tidak aktif di sana: yang diperiksa (a) adalah
+bahwa jalur klaim pendek memang tidak berubah, dan selisih pada (b) hanyalah variasi acak LLM
+(run tunggal Versi 1: 46, 47, 48 dari 50).
+
+Urutan pengunci: hipotesis dan ambang ditulis ke `testset/v2.meta.json` -> pedoman 1.1 dikunci ->
+baru pelabelan dimulai. Kode hipotesis lama H4 (Gemma sebagai juri) tidak dibawa (keputusan 6).
 
 ---
 
 ## 5. Rencana evaluasi
 
-### 5.1 Set uji, snapshot, dan parameter
+### 5.1 Dua tujuan, dua tempat
 
-Versi 1 dan Versi 2 dijalankan pada **set uji yang sama, snapshot indeks yang sama, dan parameter
-retrieval yang sama**. Tiga hal yang perlu ditetapkan:
+| Tujuan | Set uji | Indeks | Parameter retrieval |
+| --- | --- | --- | --- |
+| Uji kemunduran (V2-H2) | set uji v1 (54 butir, beku) | `archive/v1` (150 artikel) | milik arsip: `ef_search` 100 |
+| Uji kemampuan baru (V2-H1, H3, H4, H5) | butir pesan panjang baru (set uji v2) | snapshot baru yang dibekukan | `ef_search` 2000 |
 
-- **Set uji:** set uji v2 yang baru (bagian 6). Set uji v1 **tidak dapat menjadi bukti mutu Versi
-  2**: komponen Versi 2 dirancang setelah melihat kesalahan pada set itu, dan aturan pembekuannya
-  sendiri menyatakan perubahan sesudah pembekuan menuntut set uji baru. Set uji v1 tetap berguna
-  sebagai pemeriksaan regresi pada `archive/v1`.
-- **Snapshot:** *usulan* -- membekukan salinan indeks produksi pada satu tanggal sebagai
-  `archive/v2_snapshot/` (daftar id + sidik jari isi, seperti `archive/v1`), setelah antrean 16
-  artikel digabung atau diputuskan tidak digabung. Alasannya: (i) set uji v2 harus diverifikasi
-  terhadap satu snapshot tertentu (bagian 6); (ii) indeks produksi terus bertambah lewat pembaruan
-  berkala, jadi tidak bisa dijadikan acuan; (iii) arsip 150 artikel terlalu kecil dan tidak memuat
-  kasus yang ingin diuji (mis. artikel tanpa Narasi, label baru). Arsip `archive/v1` tetap dipakai
-  untuk mereproduksi baseline Versi 1 lama.
-- **Parameter retrieval:** `ef_search` sekarang berbeda antara produksi (2000) dan arsip (100)
-  (`v1_temuan_untuk_v2.md` bagian 10). *Usulan:* snapshot v2 dibekukan dengan `ef_search` 2000, dan
-  **kedua versi** dijalankan pada snapshot itu dengan nilai tersebut; `evaluation.retriever_exactness`
-  dijalankan pada kueri set uji v2 sebelum evaluasi, dan Recall dilaporkan dari retriever yang
-  benar-benar dipakai serta dari pencarian eksak. `top_k` = 3, `CHUNK_FETCH` = 30, agregasi
-  maksimum, model embedding dan `MAX_SEQ_LENGTH` tidak diubah.
-- **Konsekuensi untuk Aturan Wajib #6.** Aturan itu mewajibkan pembandingan dengan *baseline
-  Versi 1* lewat `archive/v1`. Rencana ini membandingkan *sistem* Versi 1 dengan *sistem* Versi 2
-  pada snapshot baru, sehingga angka 48/50 tidak dipakai sebagai pembanding langsung. Itu perlu
-  dinyatakan eksplisit dalam aturan (pertanyaan 5).
+- **Kedua versi selalu dijalankan pada set, indeks, dan parameter yang sama** di tiap baris.
+  `top_k` = 3, `CHUNK_FETCH` = 30, agregasi maksimum, model embedding dan `MAX_SEQ_LENGTH` tidak
+  diubah.
+- **Snapshot baru** (keputusan 5): belum dibuat. Urutannya bila rancangan dilanjutkan: antrean
+  digabung dan di-ingest (dimulai pemilik proyek) -> `index_check` dan `retriever_exactness` ->
+  indeks disalin sebagai snapshot beku dengan daftar id dan sidik jari isi -> set uji v2 dibangun
+  dan diverifikasi terhadapnya. `evaluation.retriever_exactness` dijalankan juga pada kueri set
+  uji v2; Recall dilaporkan dari retriever yang benar-benar dipakai dan dari pencarian eksak.
+- **Aturan Wajib #6 ditambah** (CLAUDE.md): perbandingan Versi 1 dan Versi 2 pada kemampuan baru
+  wajib memakai snapshot itu; angka asli Versi 1 (48/50, Recall@3 36/40, ablasi) tetap hanya lewat
+  `archive/v1`.
 
 ### 5.2 Metrik retrieval dipisah dari metrik jawaban
 
-- *Retrieval (tanpa LLM, kecuali ekstraksi):* Recall@1/3/5 per tipe butir, peringkat artikel
-  sasaran, dan untuk pesan panjang keterbacaan klaim (utuh/terpotong) seperti eksperimen 4.
+- *Retrieval:* Recall@1/3/5 per tipe butir, peringkat artikel sasaran, dan keterbacaan klaim
+  (utuh/terpotong).
 - *Jawaban:* keputusan modus 3 run (verdict + `article_id`); kecocokan palsu, penolakan palsu,
-  artikel salah, masing-masing dengan Wilson 95%, terpisah untuk batas dan non-batas; kesepakatan
-  antar-run; pelanggaran format; URL di luar metadata. Sama dengan pra-registrasi Versi 1
-  (`v1.meta.json`, `evaluasi`).
-- Butir tidak disaring berdasarkan hasil sistem; kegagalan retrieval dan kegagalan jawaban
-  dilaporkan sebagai dua hal.
+  artikel salah, masing-masing dengan Wilson 95%; kesepakatan antar-run; pelanggaran format; URL di
+  luar metadata -- sama dengan pra-registrasi Versi 1 (`v1.meta.json`, `evaluasi`).
+- Butir tidak disaring berdasarkan hasil sistem.
 
 ### 5.3 Ablasi per komponen
 
-Agar perbaikan bisa diatribusikan, tiap komponen dinyalakan sendiri:
+| Kondisi | Penanganan pesan panjang |
+| --- | --- |
+| K0 = Versi 1 (terkunci) | -- |
+| K1 | pencarian per potongan (tanpa LLM) |
+| K2 | ekstraksi LLM |
 
-| Kondisi | Penanganan pesan panjang | Perubahan penilaian klaim | Gaya bahasa |
-| --- | --- | --- | --- |
-| K0 = Versi 1 (terkunci) | -- | -- | -- |
-| K1 | pencarian per potongan (tanpa LLM) | -- | -- |
-| K2 | ekstraksi LLM | -- | -- |
-| K3 | -- | ya | -- |
-| K4 = Versi 2 lengkap | pilihan terbaik K1/K2 | ya | (bila masuk cakupan) |
+K1 vs K2 diputuskan lebih dulu pada tahap retrieval saja (V2-H3). Hanya kondisi yang terpilih
+dilanjutkan ke tahap jawaban; yang kalah tidak dijalankan generatornya.
 
-K1 vs K2 pada retrieval saja dapat diputuskan lebih dulu tanpa menjalankan generator. Kondisi yang
-tidak lolos tahap retrieval tidak dilanjutkan ke tahap jawaban (menghemat kuota; bagian 7).
+### 5.4 Kebersihan rujukan
 
-### 5.4 Kebersihan rujukan (belum pernah diukur)
+Per jawaban "ditemukan" dihitung: rujukan yang melanggar `links.blocked_reason` (kebijakan
+terkini), rujukan yang termasuk `claim_sources` artikel itu (termasuk baris "Sumber:"), jawaban
+tanpa rujukan, dan rujukan yang lolos hanya karena daftar tepercaya atau `.go.id`. Diukur untuk
+kedua versi pada indeks yang sama; deterministik, tanpa LLM. Pada `archive/v1` hasil yang
+diharapkan sudah diketahui sebagian: metadata 36089 masih memuat satu tautan pemendek
+(`v1_temuan_untuk_v2.md` bagian 9), jadi pada indeks itu metrik ini mengukur keadaan arsip, bukan
+mutu Versi 2.
 
-Berkas hasil menyimpan daftar rujukan tiap jawaban "ditemukan". Per jawaban dihitung: rujukan yang
-melanggar `links.blocked_reason` (kebijakan terkini), rujukan yang termasuk `claim_sources` artikel
-itu (termasuk baris "Sumber:"), jawaban tanpa rujukan, dan rujukan yang lolos hanya karena daftar
-tepercaya atau `.go.id`. Diukur untuk kedua versi pada snapshot yang sama. Ini pemeriksaan
-deterministik; tidak butuh LLM.
+### 5.5 Juri
 
-### 5.5 Juri (RAGAS + Gemma): tidak diperlukan untuk metrik utama
-
-- Metrik utama (verdict dan `article_id` terhadap label emas manusia) bersifat objektif; juri LLM
-  tidak menambah apa pun di sana.
-- Juri hanya relevan untuk **mutu klarifikasi** (M5): kesetiaan pada Kesimpulan dan keterbacaan.
-- Status H4 Versi 1: Gemma belum pernah diuji sebagai juri; yang diuji hanya format JSON (6/6
-  berhasil), dengan latensi **31-52 detik per panggilan** (CLAUDE.md, "Hipotesis dan status").
-  RAGAS belum dipasang; perkiraan 6-7 panggilan per sampel di CLAUDE.md adalah perkiraan yang tidak
-  pernah diverifikasi.
-- Hitungan kasar dengan angka itu: 150 butir x 3 run x 2 versi = 900 sampel; x 6-7 panggilan x
-  31-52 detik = **46-91 jam** berurutan. Selain itu Gemma dan Gemini berasal dari pengembang yang
-  sama (koreksi independensi 2026-09-22), jadi juri itu tidak independen.
-- **Usulan:** tidak memakai juri LLM. Bila M5 masuk cakupan, mutu klarifikasi dinilai pemilik
-  proyek pada sampel kecil dengan urutan diacak dan versi disamarkan, dan dilaporkan sebagai
-  penilaian satu orang. Kesetiaan diperiksa dengan cara yang sudah ada (klarifikasi diganti
-  Kesimpulan asli bila gagal; jumlahnya dilaporkan). Bila pemilik proyek tetap menginginkan juri,
-  itu menambah kendala waktu di atas (pertanyaan 6).
+Tidak dipakai (keputusan 6). Metrik utama objektif; juri hanya relevan untuk mutu klarifikasi,
+yang di luar cakupan. Sebagai catatan dasar keputusan: Gemma belum pernah diuji sebagai juri,
+latensinya 31-52 detik per panggilan, dan RAGAS belum pernah dipasang (CLAUDE.md, "Hipotesis dan
+status").
 
 ---
 
-## 6. Persyaratan set uji v2
+## 6. Set uji
 
-Dikumpulkan dari catatan yang sudah ada (`v1_temuan_untuk_v2.md` bagian 4, 5.2, 8, 9;
-`v1.meta.json`; caveat laporan analisis; CLAUDE.md Aturan Wajib #5).
+### 6.1 Uji kemunduran: set uji v1 pada `archive/v1`
 
-### 6.1 Persyaratan
+Dipakai apa adanya (54 butir beku; label sah pada arsip). Batas tafsirnya ada di bagian 4
+(V2-H2). Tidak ada butir baru, tidak ada pelabelan.
 
-1. **Diberi versi bersama snapshot basis data.** Hasil hanya sah pada snapshot itu (daftar id +
-   sidik jari isi). Dasar: enam butir negatif v1 gugur pada indeks yang lebih besar (`v1-021`,
-   `v1-022`, `v1-029`, `v1-043`, `v1-049`, `v1-050`; `v1.meta.json`).
-2. **Setiap butir negatif diverifikasi terhadap snapshot**, dengan top-3 retrieval, bukan sekadar
-   memeriksa keberadaan artikel. Butir dari artikel arsip tidak dipakai bila artikelnya berpotensi
-   masuk basis data.
-3. **Butir dari situs cek fakta lain diperiksa ulang terhadap snapshot** (bukti: `v1-050`,
-   Liputan6 17/9 -> TurnBackHoax 21/9).
+### 6.2 Uji kemampuan baru: butir pesan panjang (set uji v2)
+
+Persyaratan, dikumpulkan dari catatan yang ada (`v1_temuan_untuk_v2.md` bagian 4, 5.2, 8, 9;
+`v1.meta.json`; caveat laporan analisis; CLAUDE.md Aturan Wajib #5):
+
+1. **Diberi versi bersama snapshot basis data**; hasil hanya sah pada snapshot itu. Dasar: enam
+   butir negatif v1 gugur pada indeks yang lebih besar.
+2. **Positif** dari Liputan6 Cek Fakta, hanya bila hoaksnya juga ada di basis data (artikel
+   sasaran dipastikan manusia). **Negatif** dari arsip TurnBackHoax sebelum September 2025,
+   **diverifikasi terhadap snapshot dengan top-3 retrieval**, bukan sekadar memeriksa keberadaan
+   artikelnya. Butir dari situs cek fakta lain diperiksa ulang terhadap snapshot (bukti: `v1-050`).
+3. **Pesan asli, tidak disunting panjangnya**, dengan posisi klaim apa adanya. Tidak ada
+   pengganggu sintetis.
 4. **Label final ditetapkan manusia**; pemakaian draf AI pada tahap mana pun dicatat (Aturan Wajib
-   #5). Pedoman anotasi v1.0 dipakai lagi atau direvisi sebelum butir dibuat, lalu dikunci.
-5. **Pengendalian confound sumber.** Di v1, `angka_waktu_beda` 100% buatan model dan negatif mudah
-   0% buatan model (caveat 3). Di v2 tiap sel tipe x subtipe sebaiknya memuat lebih dari satu
-   sumber, atau perbandingannya tidak dibuat.
-6. **Pesan panjang yang ASLI**, dengan posisi klaim beragam (awal, tengah, akhir), bukan pengganggu
-   sintetis. **Datanya belum ada**: belum ada sumber pesan berantai asli yang dikumpulkan, dan
-   kepatuhan pengumpulannya (izin situs, data pribadi) harus diperiksa seperti pada v1.
-7. **Ketergantungan antar-butir dikurangi.** Di v1, 44% butir berbagi artikel jangkar (caveat 1).
-8. **Contoh yang sudah dicatat:** pasangan `v1-046`/30652 sebagai negatif sulit (`v1.meta.json`,
-   `keputusan_v1-046_2026-10-03`); artikel tanpa Narasi (29670); label baru (SATIR, KOMEDI, BELUM
-   TERBUKTI).
-9. **Butir tidak boleh bocor dari set uji v1 maupun set pengembangan**, karena keduanya sudah
-   dipakai merancang Versi 2.
-
-### 6.2 Yang tidak dapat ditetapkan dari data yang ada
-
-- Berapa proporsi pesan panjang yang wajar: tidak ada data pemakaian nyata.
-- Apakah satu anotator cukup: v1 hanya mengukur konsistensi dalam-anotator, dan hasil pengukuran
-  itu tidak ditemukan tercatat di berkas yang dibaca untuk dokumen ini.
+   #5).
+5. **Pemeriksaan data pribadi wajib** pada setiap teks (nomor, surel, akun, tautan), termasuk yang
+   tertulis tanpa skema; pesan berantai lebih sering memuat nomor dan tautan daripada klaim
+   pendek. Teks yang memuat kontak penipu tidak di-commit apa adanya.
+6. **Confound sumber dicatat, tidak dapat dihindari:** positif seluruhnya dari Liputan6 dan negatif
+   seluruhnya dari arsip TurnBackHoax, jadi tipe butir dan sumber tidak terpisah. Perbandingan
+   kecocokan palsu vs penolakan palsu pada set ini wajib disertai catatan itu.
+7. **Tidak boleh bocor** dari set uji v1 maupun set pengembangan.
+8. Kepatuhan situs diperiksa ulang saat pengambilan (`robots.txt`), seperti pada v1.
 
 ### 6.3 Ukuran sampel
 
-Dihitung dengan interval Wilson 95% (z = 1,96) dan, untuk perbandingan berpasangan, McNemar eksak.
+Sumber angka: `src/evaluation/sample_size.py` -> `testset/v2_ukuran_sampel.json` (rumus saja:
+Wilson 95%, McNemar eksak dua sisi, binomial; uji `tests/test_sample_size.py`).
 
-**(a) Akurasi keseluruhan tidak dapat dipakai untuk menunjukkan perbaikan.** Baseline 48/50
-(96%). Agar interval Wilson dua kondisi tidak tumpang tindih:
+**(a) Mengapa set uji besar ditinggalkan.** Agar interval Wilson dua kondisi tidak tumpang tindih:
+96% vs 99% butuh >= 413 butir per kondisi; 90% vs 96% butuh 276; 80% vs 95% butuh 68. Pada
+perbandingan berpasangan, peluang 80% mengamati 6 perbaikan butuh 197 butir bila laju perbaikan
+sejati 4% (kesalahan modus Versi 1: 2/50) dan 78 butir bila 10%. Jadi perbaikan akurasi pada klaim
+pendek tidak dapat ditunjukkan dengan set yang sanggup dilabeli satu orang -- dan setelah cakupan
+dipersempit, Versi 2 memang tidak mengklaimnya.
 
-| Perbandingan | Butir per kondisi |
-| --- | --- |
-| 96% vs 99% | >= 413 |
-| 90% vs 96% | >= 276 |
-| 86% vs 95% | >= 147 |
-| 80% vs 95% | >= 68 |
-| 10% vs 80% (pesan panjang, bila efeknya sebesar pada data sintetis) | >= 10 |
+**(b) Berapa butir pesan panjang yang cukup.** V2-H1 terdukung bila ada >= 6 perbaikan bersih.
+Laju perbaikan sejati = (bagian butir yang benar-benar terkena pemotongan) x (bagian yang
+dipulihkan Versi 2). Butir positif yang dibutuhkan agar peluang mengamati >= 6 perbaikan mencapai
+80%, tanpa kemunduran:
 
-Empat ratus butir berlabel manusia di luar jangkauan satu anotator (v1: 54 butir). Jadi **klaim
-"Versi 2 lebih akurat daripada Versi 1 pada klaim pendek" tidak akan dapat dibuktikan** dengan set
-uji yang realistis; yang dapat ditunjukkan hanyalah tidak adanya kemunduran besar.
+| Bagian butir yang terkena | dipulihkan 50% | dipulihkan 70% | dipulihkan 90% |
+| --- | --- | --- | --- |
+| 20% | 78 | 55 | 43 |
+| 40% | 39 | 27 | 21 |
+| 60% | 25 | 18 | 13 |
+| 80% | 19 | 13 | 10 |
+| 100% | 15 | 10 | 7 |
 
-**(b) Perbandingan berpasangan lebih peka, tetapi tetap terbatas.** Kedua versi dijalankan pada
-butir yang sama. McNemar eksak dua sisi memberi p < 0,05 hanya bila ada >= 6 butir yang berubah
-searah tanpa satu pun kemunduran (6 vs 0: p = 0,031; 5 vs 0: p = 0,063; 8 vs 1: p = 0,039). Jumlah
-butir agar peluang mengamati >= 6 perbaikan mencapai 80%:
+**Kedua faktor belum diketahui.** "Bagian yang terkena" adalah persis yang diukur di bagian 10;
+"bagian yang dipulihkan" baru diketahui setelah komponen dibangun. Karena itu jumlah butir **tidak
+dapat ditetapkan sekarang**. Yang dapat dikatakan: bila butir positif dipilih HANYA dari pesan
+yang terbukti terkena (baris 100%), 15 butir cukup pada pemulihan 50% dan 10 pada 70%; bila
+pengukuran menunjukkan pesan yang terkena sulit ditemukan, jumlah pesan yang harus disaring naik
+sebanding.
 
-| Laju perbaikan sejati | Butir yang dibutuhkan |
-| --- | --- |
-| 4% | 197 |
-| 6% | 131 |
-| 8% | 98 |
-| 10% | 78 |
+**(c) Ketelitian yang didapat.** Batas bawah Wilson 95% bila semua butir benar: 0,722 (n = 10),
+0,796 (15), 0,839 (20), 0,886 (30). Batas atas bila tidak ada kecocokan palsu pada butir negatif:
+27,8% (10), 20,4% (15), 16,1% (20), 11,4% (30).
 
-Kesalahan modus Versi 1 hanya 2/50 = 4%. Bahkan bila Versi 2 memperbaiki **semuanya** tanpa
-kemunduran, dibutuhkan sekitar 197 butir non-batas. Untuk kestabilan (5 dari 50 butir non-batas
-tidak bulat = 10%), memperbaiki semuanya membutuhkan sekitar 78 butir; memperbaiki separuhnya
-sekitar 160.
+**(d) Usulan (ditetapkan setelah bagian 10):** 20 butir positif pesan panjang yang terkena + 20
+butir negatif pesan panjang. Dengan 20 positif, V2-H1 berpeluang >= 80% terdukung bila Versi 2
+memulihkan sedikitnya ~40% butir; dengan 20 negatif tanpa kecocokan palsu, batas atasnya 16%. Itu
+40 butir baru (set uji v1: 54). Angka ini disesuaikan bila pengukuran bagian 10 mengubah
+gambarannya.
 
-**(c) Menunjukkan "tidak ada kejadian".** Batas atas Wilson 95% bila 0 kejadian: 16,1% (n = 20),
-11,4% (30), 7,1% (50), 3,7% (100), 2,5% (150). Untuk menyatakan kecocokan palsu Versi 2 di bawah
-~4% dibutuhkan >= 100 butir negatif tanpa satu pun kecocokan palsu.
+### 6.4 Pedoman anotasi versi 1.1 (usulan tambahan; belum dikunci)
 
-**(d) Usulan ukuran** (keputusan pemilik proyek; pertanyaan 7):
+**Koreksi atas premis:** pedoman v1.0 **sudah** memuat satu baris untuk kasus ini
+(`testset/ANNOTATION_GUIDE.md`, bagian 4): *"Pesan berantai berisi beberapa klaim -- SAMA bila KIA
+adalah salah satu klaim utamanya dan tidak dibantah pesan itu sendiri -- catat di `catatan`"*. Yang
+belum diatur adalah cara menentukan "klaim utama" dan apa yang dilakukan bila pesan cocok dengan
+lebih dari satu artikel. Versi 1.1 mengoperasionalkan baris itu; aturan lain tidak diubah.
 
-| Strata | Butir | Yang bisa ditunjukkan |
-| --- | --- | --- |
-| Positif, pesan panjang asli | 30 | V2-H1 bila efeknya besar (>= 6 butir bersih); batas bawah Wilson bila semua benar 0,886 |
-| Positif, klaim pendek | 30 | V2-H2 (tidak ada kemunduran besar) |
-| Negatif sulit | 60 | batas atas kecocokan palsu ~6% bila 0 kejadian |
-| Negatif mudah | 20 | -- |
-| Batas | dilaporkan terpisah | -- |
-| **Total non-batas** | **140** | perbaikan berpasangan hanya terdeteksi bila laju sejatinya >= ~6% |
+Usulan teks tambahan:
 
-Dengan 140 butir, V2-H4 (kesalahan turun) **hampir pasti tidak dapat didukung** kecuali kesalahan
-Versi 1 pada set baru ternyata jauh lebih banyak daripada pada v1. Itu sebabnya rancangan ini
-tidak menjadikan grader komponen wajib. Sebagai pembanding beban: 140 butir = 2,6 kali set uji v1.
+1. **Klaim utama sebuah pesan** adalah klaim yang (i) dinyatakan pesan itu sebagai fakta -- bukan
+   dikutip untuk dibantah atau dipertanyakan -- **dan** (ii) menjadi pokok yang diminta dipercaya,
+   diwaspadai, atau disebarkan, atau ditonjolkan pesan itu sendiri (judul, pengulangan, huruf
+   besar).
+2. **SAMA** bila ketiga unsur inti KIA muncul lengkap pada satu klaim utama, dan klaim itu lolos
+   uji dua arah serta uji Kesimpulan. Klaim lain di dalam pesan diperlakukan seperti unsur
+   perifer: jumlahnya dan letak klaim utama di dalam pesan (awal, tengah, akhir) tidak mengubah
+   keputusan.
+3. **TIDAK SAMA** bila KIA hanya disinggung sebagai latar atau contoh (setara `sebagian_perifer`),
+   atau bila pesan itu sendiri membantahnya.
+4. **Cocok dengan lebih dari satu artikel basis data** (pesan memuat beberapa klaim utama yang
+   masing-masing punya artikel): butir TIDAK dikeluarkan; semua artikel yang sah dicatat di
+   `expected_alt`, dan jawaban dinilai benar bila memilih salah satunya. (v1.0 untuk kasus `ambigu`
+   pada klaim pendek tetap berlaku.)
+5. **Unsur perifer tambahan untuk pesan berantai:** sapaan, ajakan menyebarkan, doa atau sumpah,
+   daftar penerima, tanda baca dan emoji berlebihan.
+6. **Kolom baru per butir:** `jumlah_klaim_utama`, dan posisi klaim yang cocok (token awal dan
+   akhir menurut tokenizer bge-m3; lihat bagian 10).
+
+Yang perlu diputuskan pemilik proyek sebelum dikunci: definisi (ii) pada butir 1 bersifat
+penilaian, dan dengan satu anotator konsistensinya tidak terukur.
 
 ---
 
@@ -481,54 +463,42 @@ tidak menjadikan grader komponen wajib. Sebagai pembanding beban: 140 butir = 2,
 
 ### 7.1 Kuota LLM
 
-Angka tercatat (`src/llm/limits.py`, diambil dari AI Studio 2026-09-21): `gemini-3.5-flash-lite`
-RPM 15, TPM 250.000, **RPD 500**. Angka tier gratis **dapat berubah tanpa pemberitahuan** dan
-"not guaranteed"; `gemini-3.8-flash` pernah dihentikan karena ketidakstabilan layanan (CLAUDE.md).
-Setiap permintaan yang dikirim dihitung, termasuk yang ditolak. Demo berbagi kuota yang sama.
+Angka tercatat (`src/llm/limits.py`, dari AI Studio 2026-09-21): `gemini-3.5-flash-lite` RPM 15,
+TPM 250.000, **RPD 500**. Tier gratis **dapat berubah tanpa pemberitahuan**; `gemini-3.8-flash`
+pernah dihentikan karena ketidakstabilan layanan. Setiap permintaan yang dikirim dihitung, termasuk
+yang ditolak; demo berbagi kuota yang sama. Versi 1 memakai 1 panggilan per kueri (evaluasi v1: 162
+panggilan untuk 162 baris; rata-rata 2.516 token masuk; latensi rata-rata 10-18 detik).
 
-Versi 1 memakai 1 panggilan per kueri (evaluasi v1: 162 panggilan untuk 162 baris, 0 percobaan
-ulang; rata-rata 2.516 token masuk, latensi rata-rata 10-18 detik per run;
-`v1_analysis_report.txt` B.4). Panggilan per kueri untuk tiap kondisi (bagian 5.3):
+Panggilan untuk evaluasi 3 run dengan cakupan sekarang:
 
-| Kondisi | Panggilan per kueri | Catatan |
-| --- | --- | --- |
-| K0 Versi 1 | 1 | |
-| K1 pencarian per potongan | 1 | tanpa LLM tambahan |
-| K2 ekstraksi LLM | 1 + 1 hanya untuk pesan panjang | |
-| K3 perubahan prompt | 1 | 3 bila pemungutan suara; 2-4 bila node grader terpisah (1 atau 3 kandidat per panggilan) |
-| K4 lengkap | 1-2 | sampai ~4 dengan grader per kandidat (rata-rata ~4,2 bila 30 dari 150 butir pesan panjang) |
+| Bagian | Butir | Kondisi | Panggilan |
+| --- | --- | --- | --- |
+| Uji kemunduran (b), set uji v1 | 54 | Versi 2 saja (hasil Versi 1 sudah tercatat) | 162 |
+| Uji kemampuan baru | 40 (usulan) | K0 + kondisi terpilih | 240 bila tanpa LLM; 240 + 3 x (jumlah butir terkena) bila ekstraksi LLM |
+| Pemilihan K1 vs K2 (retrieval saja) | butir positif | K2 saja yang memanggil LLM | 1 x jumlah butir positif |
 
-Evaluasi 3 run pada 140 butir non-batas + butir batas (dibulatkan 150 butir, 30 di antaranya pesan
-panjang; 450 panggilan per kondisi satu-panggilan):
+Totalnya sekitar **400-480 panggilan**, yaitu satu hari kuota bila demo tidak dipakai, dua hari
+bila ingin aman. Token masuk untuk pesan panjang lebih besar daripada 2.516 (pesan utuh ikut
+dikirim ke generator); besarnya belum diukur, tetapi TPM 250.000 pada RPM 15 memberi ruang ~16.000
+token per panggilan.
 
-| Skenario | Panggilan | Hari pada RPD 500 (tanpa demo, tanpa percobaan ulang) |
-| --- | --- | --- |
-| Hanya K0 dan K4, tanpa grader (1 dan ~1,2 panggilan) | ~990 | 2 |
-| K0 + K1 + K2 + K3 + K4, tanpa grader | ~2.400 | 5 |
-| Sama, dengan node grader 1 panggilan (K3 = 2, K4 = ~2,2) | ~3.300 | 7 |
-| Sama, dengan grader per kandidat (K3 = 4, K4 = ~4,2) | ~5.100 | 11 |
-
-Menurut RPM 15, 500 panggilan butuh >= 34 menit; menurut latensi terukur (10-18 detik, berurutan)
-sekitar 1,4-2,5 jam per hari. TPM bukan pembatas (2.516 token x 15 = ~38.000 per menit). Menekan
-biaya: K1 vs K2 diputuskan pada tahap retrieval saja; kondisi yang gugur tidak dijalankan
-generatornya; evaluasi dapat dilanjutkan antar-hari (`results_store` sudah mendukung).
-
-**Bagi pengguna demo:** tiap komponen LLM tambahan mengurangi jumlah pemeriksaan per hari (500
-dibagi panggilan per kueri) dan menambah latensi per pemeriksaan.
+Bagi pengguna demo: pencarian per potongan tidak menambah panggilan; ekstraksi LLM menambah satu
+panggilan hanya untuk pesan yang terkena.
 
 ### 7.2 Memori
 
 Laptop pengembangan: 15,7 GB RAM, memori bebas teramati 2,3-3,4 GB; memuat model embedding menekan
 memori tersedia sampai ~0,9-1,0 GB (`data/pending_2026-10-03.log`). Proses pernah dihentikan
 sistem karena memori rendah: ingest 2026-09-27 dan ablasi 2026-10-03 tercatat di CLAUDE.md (pemilik
-proyek menyebut tiga kejadian). Konsekuensi untuk Versi 2: tidak ada model lokal tambahan (mis.
-reranker atau model embedding kedua) tanpa pengukuran memori lebih dulu; satu proses pemuat model
-pada satu waktu; evaluasi panjang memakai pemantau memori dan dapat dilanjutkan.
+proyek menyebut tiga kejadian). Konsekuensi: tidak ada model lokal tambahan; satu proses pemuat
+model pada satu waktu; pencarian per potongan meng-embed beberapa jendela per pesan dengan model
+yang sama (tanpa tambahan memori, hanya waktu); evaluasi dapat dilanjutkan antar-hari.
 
 ### 7.3 Lain-lain
 
 Satu anotator; satu sumber data; `generator.py` terkunci; pembaruan berkala terus mengubah indeks
-produksi (karena itu perlu snapshot); permintaan API key Yudistira belum dijawab.
+produksi (karena itu perlu snapshot); ingest hanya dimulai pemilik proyek; permintaan API key
+Yudistira belum dijawab.
 
 ---
 
@@ -536,50 +506,75 @@ produksi (karena itu perlu snapshot); permintaan API key Yudistira belum dijawab
 
 | Hal | Alasan |
 | --- | --- |
+| Grader / node penilai relevansi | Keputusan 2: generator sudah menilai kesamaan klaim; tidak ada bukti untuk perbedaan yang dibawa grader; kuota terbatas |
 | Penulis ulang kueri saat retrieval gagal (putaran "cari lagi") | Tidak ada bukti masalah: empat kegagalan Recall@3 semuanya butir negatif; positif 20/20 di semua indeks |
+| "Mungkin terkait" dan verdict ketiga "artikel terkait" | Keputusan 3: perubahan produk, bukan perbaikan yang dijawab data; ambang skor terbukti gagal dan tidak ada bukti untuk penggantinya |
+| Mutu / gaya bahasa klarifikasi | Keputusan 9: mengubah prompt mencampur efeknya dengan perbaikan pesan panjang |
+| Menghapus Penjelasan dari indeks | Keputusan 10: mengubah indeks dan snapshot; tidak berkaitan dengan masalah yang dijawab |
 | Penilaian kredibilitas dokumen hasil retrieval | Satu sumber data; tidak ada yang dinilai |
 | Penilai kredibilitas rujukan per-URL oleh LLM | Tidak ada bukti solusi; LLM tidak dapat membuka tautan; daftar eksplisit lebih mudah diaudit |
 | Mengganti top-k atau agregasi | Tidak dapat dibedakan dari kebetulan pada tiga indeks |
-| Model embedding lain, batas token indeks lain, skema chunking lain | Butuh pembangunan ulang indeks dan memori; tidak ada temuan yang menuntutnya. Pengecualian yang masih terbuka: menghapus Penjelasan dari indeks (pertanyaan 8) |
-| Juri LLM (RAGAS + Gemma) | Lihat 5.5 |
-| Verdict ketiga "artikel terkait" | Belum diputuskan; bergantung pada M3 (pertanyaan 3) |
+| Model embedding lain, batas token indeks lain, skema chunking lain | Butuh pembangunan ulang indeks dan memori; tidak ada temuan yang menuntutnya |
+| Juri LLM (RAGAS + Gemma) | Keputusan 6 |
+| LangGraph | Keputusan 4 |
+| Set uji umum v2 berukuran besar (140 butir) | Keputusan 7 |
 | Mengubah `archive/v1`, `v1.jsonl`, `generator.py` | Baseline |
 | Integrasi API Yudistira, penjadwalan ingest | Tahap lain |
 
 ---
 
-## 9. Pertanyaan terbuka untuk pemilik proyek
+## 9. Yang masih terbuka
 
-Harus diputuskan sebelum ada kode ditulis.
+1. **Hasil pengukuran bagian 10** -- menentukan apakah Versi 2 dilanjutkan dengan cakupan ini.
+2. **Metode penentuan posisi klaim** (bagian 10.3) -- menunggu persetujuan pemilik proyek sebelum
+   sampel diambil.
+3. **Jumlah butir pesan panjang** (bagian 6.3 d) -- ditetapkan setelah pengukuran.
+4. **Teks pedoman 1.1** (bagian 6.4) -- disetujui lalu dikunci sebelum pelabelan.
+5. **Ambang hipotesis** (bagian 4) -- dikunci di `testset/v2.meta.json` sebelum pelabelan.
+6. **Pengaruh pesan utuh pada generator** (bagian 3, butir 5): generator Versi 1 membaca seluruh
+   pesan panjang; belum pernah diukur apakah penilaian "klaim sama"-nya tetap andal pada masukan
+   sepanjang itu (set uji v1 tidak memuat pesan panjang).
 
-1. **Cakupan Versi 2.** Menurut bukti, satu-satunya masalah dengan bukti kuat yang belum ditangani
-   adalah pesan panjang (M1), dan itu pun baru terbukti pada data sintetis. Apakah Versi 2
-   dipersempit menjadi "penanganan pesan panjang + pengukuran kebersihan rujukan", atau komponen
-   lain tetap dimasukkan sebagai eksperimen yang hasilnya mungkin "tidak ada perbaikan"?
-2. **Grader.** Dimasukkan atau tidak? Bila ya, dalam bentuk apa: perubahan prompt (satu
-   panggilan), pemungutan suara, atau node terpisah? Rancangan ini tidak merekomendasikannya
-   sebagai komponen wajib.
-3. **"Mungkin terkait" dan verdict ketiga.** Tetap mati, atau dicoba lewat keluaran tambahan
-   generator Versi 2 ("topik sama, klaim berbeda")? Bila dicoba, butir set uji v2 perlu label untuk
-   kategori itu, dan pedoman anotasi harus direvisi.
-4. **Kerangka.** Pipeline Python biasa (usulan), atau LangGraph demi nilai portofolio walau
-   alurnya tidak membutuhkannya?
-5. **Snapshot dan Aturan Wajib #6.** Setujukah membekukan snapshot baru (`archive/v2_snapshot/`,
-   `ef_search` 2000) sebagai tempat Versi 1 dan Versi 2 dibandingkan, dan menyesuaikan bunyi
-   Aturan Wajib #6? Kapan snapshot diambil, dan apakah antrean 16 artikel masuk?
-6. **Juri.** Setujukah tanpa juri LLM, dengan penilaian manusia pada sampel kecil hanya bila M5
-   masuk cakupan?
-7. **Ukuran set uji v2.** 140 butir non-batas (usulan) sanggup dikerjakan satu anotator? Bila
-   tidak, strata mana yang dikurangi -- dengan konsekuensi di bagian 6.3?
-8. **Pesan panjang asli.** Dari mana sumbernya, dan bagaimana kepatuhan serta data pribadinya
-   diperiksa? Tanpa ini V2-H1 tidak dapat diuji dan M1 tetap hanya terbukti pada data sintetis.
-9. **Mutu klarifikasi (M5).** Masuk cakupan? Mengubah prompt berarti satu kondisi ablasi lagi.
-10. **Menghapus Penjelasan dari indeks.** Agenda lama (`v1_temuan_untuk_v2.md` bagian 5.2):
-    Penjelasan tidak menyumbang recall, tetapi pengaruhnya pada jawaban belum diuji dan menuntut
-    indeks kedua. Dimasukkan sebagai kondisi ablasi atau ditunda?
-11. **`retriever.py` dikunci dengan hash** sebelum evaluasi Versi 2?
-12. **Pedoman anotasi.** Dipakai apa adanya (v1.0) atau direvisi dulu (mis. untuk kategori
-    "topik sama, klaim berbeda" dan pesan panjang)?
+---
+
+## 10. Langkah pertama: apakah masalah pesan panjang terjadi pada pesan berantai asli?
+
+Ditetapkan pemilik proyek. Bukti M1 berasal dari pengganggu sintetis yang sengaja menaruh klaim di
+belakang separuh pengganggu. Belum diketahui apakah pesan berantai asli sering seperti itu. Bila
+klaimnya hampir selalu di awal, Versi 1 sudah menanganinya (klaim di awal pesan: 19/20 pada ~5.000
+karakter) dan Versi 2 memecahkan masalah yang jarang terjadi.
+
+### 10.1 Yang diukur
+
+1. Panjang tiap pesan dalam token bge-m3 (tokenizer yang sama dengan retrieval).
+2. Posisi klaim inti relatif terhadap batas 512 token.
+3. Persentase sampel yang benar-benar terkena masalah, menurut definisi mekanistik di 10.4.
+
+### 10.2 Sampel
+
+Diambil **acak**, bukan dipilih yang kebetulan panjang; ukuran sampel dan cara memilihnya
+dilaporkan. Sumber sesuai keputusan 8: Liputan6 Cek Fakta (positif) dan arsip TurnBackHoax sebelum
+September 2025 (negatif). Rincian kerangka sampel (populasi, benih acak, ukuran) diusulkan bersama
+metode di 10.3 dan **menunggu persetujuan sebelum ada yang diambil**.
+
+### 10.3 Metode penentuan posisi klaim
+
+Diusulkan terpisah kepada pemilik proyek (lihat laporan 2026-10-03); **LLM tidak dipakai untuk
+menentukannya tanpa persetujuan**. Metode yang disetujui dicatat di sini sebelum sampel diambil.
+
+### 10.4 Definisi "pesan panjang" (mekanistik, bukan jumlah karakter)
+
+Sebuah pesan **terkena** bila kedua syarat ini terpenuhi: (i) panjangnya melebihi 512 token
+bge-m3, sehingga sebagian pesan tidak ikut di-embed; dan (ii) klaim intinya tidak terbaca utuh di
+dalam 512 token pertama. Pesan yang panjang tetapi klaimnya utuh di dalam 512 token pertama
+**tidak** terkena, berapa pun jumlah karakternya. Cara menetapkan syarat (ii) bergantung pada
+metode di 10.3.
+
+### 10.5 Aturan keputusan sesudahnya
+
+Tidak ditetapkan angka ambang "jarang" di sini; pemilik proyek melihat hasilnya lebih dulu. Yang
+dilaporkan: proporsi terkena beserta interval Wilson 95%, sebaran posisi klaim, dan berapa pesan
+yang harus disaring untuk mendapat satu butir yang terkena (masukan langsung untuk bagian 6.3).
 
 ---
 
@@ -590,14 +585,13 @@ Harus diputuskan sebelum ada kode ditulis.
 | `testset/v1_temuan_untuk_v2.md` | temuan per bagian (1, 2, 3, 4, 5, 6, 6.1, 8, 9, 10, 11) |
 | `testset/v1_analysis_report.txt` | akurasi, jenis kesalahan, kesepakatan antar-run, caveat, latensi dan token |
 | `testset/v1.meta.json` | ambang H1/H3, rancangan evaluasi, sidik jari generator, batas tafsir H1, butir negatif yang berubah status, keputusan `v1-046` |
-| `testset/v1.jsonl` | tipe dan label empat butir gagal Recall@3; komposisi sumber |
+| `testset/v1.jsonl` | tipe dan label empat butir gagal Recall@3; panjang klaim |
+| `testset/ANNOTATION_GUIDE.md` | aturan v1.0 untuk pesan berantai berisi beberapa klaim |
 | `data/testset_v1_eval_gemini-3.5-flash-lite.jsonl` | akurasi per run (46, 47, 48 dari 50); 1 panggilan per butir |
 | `testset/retrieval_ablation_report.txt`, `_prod922_report.txt`, `_prod1532_report.txt` | Recall@k per indeks; pesan panjang (2/20, 0/20, 0/20; 19/20) |
 | `testset/v1_perbandingan_indeks_1532.json`, `testset/devset_retrieval_1532.json` | recall positif pada indeks 1.532; skor set pengembangan |
 | `config/related_threshold.json` | dasar keputusan mematikan "Mungkin terkait" |
+| `src/evaluation/sample_size.py`, `testset/v2_ukuran_sampel.json`, `testset/v2_ukuran_sampel.txt` | seluruh angka ukuran sampel (bagian 4 dan 6.3) |
 | `src/llm/limits.py` | kuota (RPM 15, TPM 250.000, RPD 500; 2026-09-21) |
 | `src/generator.py`, `tests/test_testset_locks.py` | apa yang sudah dilakukan generator; apa yang terkunci |
 | `CLAUDE.md` | keterbatasan, temuan Aturan Wajib #1, latensi Gemma, catatan memori |
-
-Perhitungan ukuran sampel (bagian 6.3) memakai rumus interval Wilson dan McNemar eksak dua sisi;
-angka-angkanya dihitung saat dokumen ini disusun dan tidak tersimpan sebagai berkas hasil.

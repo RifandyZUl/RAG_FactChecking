@@ -708,8 +708,18 @@ Proyek dibangun bertahap dalam dua versi:
     top-3 -- kegagalan itu murni penilaian LLM, bukan retrieval.
   - Temuan lengkap untuk rancangan Versi 2 (kegagalan retrieval vs generator,
     dipetakan ke komponen target): `testset/v1_temuan_untuk_v2.md`.
-- **Versi 2 — RANCANGAN DISUSUN 2026-10-03, BELUM ADA KODE: `docs/rancangan_v2.md`** (menunggu
-  keputusan pemilik proyek atas 12 pertanyaan terbuka di bagian 9 dokumen itu). **Rancangan itu
+- **Versi 2 — RANCANGAN DISUSUN 2026-10-03, BELUM ADA KODE: `docs/rancangan_v2.md`.** Dua belas
+  pertanyaan sudah dijawab pemilik proyek (bagian 0 dokumen itu): **cakupan dipersempit menjadi
+  penanganan pesan panjang + pengukuran kebersihan rujukan**; grader, "Mungkin terkait"/verdict
+  ketiga, gaya klarifikasi, penghapusan Penjelasan, juri LLM, dan LangGraph TIDAK masuk; pipeline
+  Python biasa; uji kemunduran = set uji v1 pada `archive/v1` (hanya sah untuk "tidak lebih buruk"),
+  uji kemampuan baru = butir pesan panjang baru pada snapshot baru; `retriever.py` dikunci dengan
+  hash sebelum evaluasi; pedoman anotasi 1.1 (tambahan) dan hipotesis dikunci sebelum pelabelan.
+  **RANCANGAN BELUM BOLEH DILANJUTKAN: langkah pertama adalah mengukur pada pesan berantai ASLI
+  apakah klaim memang sering berada di luar 512 token (dokumen bagian 10); metode penentuan posisi
+  klaim dan kerangka sampelnya MENUNGGU persetujuan pemilik proyek -- jangan mengambil sampel
+  sebelum itu, dan jangan memakai LLM untuk menentukan posisi klaim tanpa persetujuan.**
+  Perhitungan ukuran sampel: `python -m evaluation.sample_size` -> `testset/v2_ukuran_sampel.json`. **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
@@ -847,6 +857,16 @@ $env:RAG_INDEX_DIR = "archive/v1"          # arahkan SEMUA pembacaan indeks ke a
 .\.venv\Scripts\python.exe -m evaluation.retrieval_ablation --out-json X.json --out-report X.txt
 Remove-Item Env:RAG_INDEX_DIR               # kembali ke indeks utama
 ```
+
+**Tambahan 2026-10-03 (keputusan pemilik proyek; berlaku bila Versi 2 dilanjutkan):** aturan di atas
+menjaga **angka asli Versi 1** (48/50, Recall@3 36/40, ablasi) dan uji kemunduran Versi 2 pada set
+uji v1 -- semuanya tetap hanya lewat `archive/v1` (`ef_search` 100). **Perbandingan Versi 1 dan
+Versi 2 pada KEMAMPUAN BARU (butir pesan panjang) wajib memakai snapshot beku yang baru**
+(`archive/v2_snapshot/`, `ef_search` 2000), dengan kedua versi dijalankan pada snapshot, set uji,
+dan parameter retrieval yang sama. Snapshot itu BELUM dibuat: urutannya antrean digabung dan
+di-ingest (ingest dimulai pemilik proyek) -> snapshot dibekukan (daftar id + sidik jari isi) -> set
+uji v2 dibangun dan diverifikasi terhadapnya. Hasil pada snapshot tidak boleh dibandingkan dengan
+angka pada `archive/v1`, dan sebaliknya. Rincian: `docs/rancangan_v2.md` bagian 5.1.
 
 `RAG_INDEX_DIR` hanya mengubah jalur BACA (`paths.INDEX_DIR`); scraping tetap menulis ke `data/`,
 dan `ingest` menolak menulis ke `archive/` kecuali `--allow-archive`. Nilai yang tidak berisi

@@ -1,0 +1,56 @@
+UKURAN SAMPEL -- rancangan set uji Versi 2 (rumus saja; tidak ada data yang dibaca)
+
+Wilson95 48/50 = [0.865, 0.989]
+n : batas bawah bila semua benar | batas atas bila 0 kejadian
+    10 : 0.722 | 0.278
+    15 : 0.796 | 0.204
+    20 : 0.839 | 0.161
+    25 : 0.867 | 0.133
+    30 : 0.886 | 0.114
+    40 : 0.912 | 0.088
+    50 : 0.929 | 0.071
+    60 : 0.940 | 0.060
+   100 : 0.963 | 0.037
+   150 : 0.975 | 0.025
+   200 : 0.981 | 0.019
+
+Butir per kondisi agar interval Wilson 95% dua proporsi tidak tumpang tindih:
+  0.96 vs 0.99: 413
+  0.90 vs 0.96: 276
+  0.86 vs 0.95: 147
+  0.80 vs 0.95: 68
+  0.50 vs 0.80: 37
+  0.30 vs 0.80: 15
+  0.10 vs 0.80: 9
+  0.10 vs 0.50: 19
+  0.00 vs 0.50: 11
+
+McNemar eksak dua sisi:
+  4 membaik, 0 memburuk: p = 0.125
+  5 membaik, 0 memburuk: p = 0.0625
+  6 membaik, 0 memburuk: p = 0.0312
+  7 membaik, 0 memburuk: p = 0.0156
+  8 membaik, 0 memburuk: p = 0.0078
+  6 membaik, 1 memburuk: p = 0.125
+  8 membaik, 1 memburuk: p = 0.0391
+  9 membaik, 1 memburuk: p = 0.0215
+  8 membaik, 2 memburuk: p = 0.1094
+  11 membaik, 2 memburuk: p = 0.0225
+
+Perbandingan berpasangan: butir agar peluang 80% mengamati >= 6 perbaikan (tanpa kemunduran):
+  laju perbaikan sejati 0.04: 197
+  laju perbaikan sejati 0.06: 131
+  laju perbaikan sejati 0.08: 98
+  laju perbaikan sejati 0.10: 78
+  laju perbaikan sejati 0.20: 39
+  laju perbaikan sejati 0.30: 25
+  laju perbaikan sejati 0.50: 15
+  laju perbaikan sejati 0.70: 10
+  laju perbaikan sejati 0.90: 7
+
+Butir positif pesan panjang yang dibutuhkan (terkena x dipulihkan):
+  terkena 20%: dipulihkan 50% -> 78 | dipulihkan 70% -> 55 | dipulihkan 90% -> 43
+  terkena 40%: dipulihkan 50% -> 39 | dipulihkan 70% -> 27 | dipulihkan 90% -> 21
+  terkena 60%: dipulihkan 50% -> 25 | dipulihkan 70% -> 18 | dipulihkan 90% -> 13
+  terkena 80%: dipulihkan 50% -> 19 | dipulihkan 70% -> 13 | dipulihkan 90% -> 10
+  terkena 100%: dipulihkan 50% -> 15 | dipulihkan 70% -> 10 | dipulihkan 90% -> 7
