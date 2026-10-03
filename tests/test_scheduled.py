@@ -77,7 +77,7 @@ def test_clean_run_queues_articles_writes_status_and_no_marker(env: Env) -> None
     assert scheduled.run_once() == 0
     s = env.status()
     assert (s["kode_keluar"], s["arti"], s["antrean_belum_digabung"]) == (0, "bersih", 2)
-    assert s["kualitas"]["artikel"] == 2 and not s["kualitas"]["tahan_penggabungan"]
+    assert s["kualitas"]["artikel"] == 2 and not s["kualitas"]["tahan_penggabungan"] and s["artikel_baru"] == 2
     assert not env.marker.exists() and env.toasts == [] and s["notifikasi"] == "tidak perlu"
     assert not (env.exp / scheduled.LOCK_NAME).exists(), "kunci dilepas"
     assert Path(s["log"]).exists() and "mode maju" in Path(s["log"]).read_text(encoding="utf-8")
@@ -166,6 +166,7 @@ def test_missed_schedule_can_run_twice_a_day_without_refetching(env: Env) -> Non
     env.forward_result = [_art("201")]
     assert scheduled.run_once() == 0 and scheduled.run_once() == 0
     assert env.forward_calls == 1 and env.status()["mode_maju"].startswith("dilewati")
+    assert env.status()["antrean_belum_digabung"] == 1
 
 
 def test_lock_prevents_overlapping_runs_and_stale_lock_is_taken_over(env: Env) -> None:
@@ -207,3 +208,35 @@ def test_notify_failure_is_recorded_not_raised(env: Env, monkeypatch: pytest.Mon
     env.forward_result = expand.EXIT_NETWORK_DOWN
     assert scheduled.run_once() == expand.EXIT_NETWORK_DOWN
     assert env.status()["notifikasi"] == "GAGAL dikirim" and env.marker.exists()
+
+
+def test_unreviewed_label_in_queue_keeps_marker_on_later_runs_until_merged(env: Env) -> None:
+    """
+    Cacat yang ditemukan pada percobaan manual 2026-10-03: jalan kedua (tidak mengambil apa pun) dianggap
+    bersih dan menghapus penanda, padahal artikel berlabel baru masih di antrean.
+    """
+    env.forward_result = [_art("201"), _art("202", "BELUM TERBUKTI")]
+    assert scheduled.run_once() == expand.EXIT_NEEDS_REVIEW and env.marker.exists()
+    assert scheduled.run_once() == expand.EXIT_NEEDS_REVIEW, "jalan susulan di hari yang sama: masih perlu ditinjau"
+    assert env.marker.exists() and env.status()["kualitas"]["id_label_belum_ditinjau"] == ["202"]
+    assert env.forward_calls == 1
+
+    # setelah pemilik proyek menggabungkan antrean ke articles.json, jalan berikutnya bersih
+    merged = json.loads(expand.ARTICLES_PATH.read_text(encoding="utf-8")) + [_art("201"), _art("202", "BELUM TERBUKTI")]
+    expand.ARTICLES_PATH.write_text(json.dumps(merged), encoding="utf-8")
+    assert scheduled.run_once() == 0 and not env.marker.exists()
+    assert env.status()["antrean_belum_digabung"] == 0
+
+
+def test_pending_articles_lists_unmerged_articles_from_all_result_files(env: Env) -> None:
+    (env.exp / "batch_07.json").write_text(json.dumps([_art("100"), _art("90")]), encoding="utf-8")
+    (env.exp / "forward_2026-10-01.json").write_text(json.dumps([_art("201")]), encoding="utf-8")
+    (env.exp / "retry_2026-10-02.json").write_text(json.dumps([_art("150"), _art("201")]), encoding="utf-8")
+    (env.exp / "forward_2026-10-01_report.json").write_text(json.dumps({"gagal": []}), encoding="utf-8")
+    assert sorted(a["article_id"] for a in scheduled.pending_articles()) == ["150", "201", "90"], "100 sudah digabung"
+
+
+def test_reviewed_labels_match_what_the_demo_knows_how_to_display() -> None:
+    from presentation import STATUS_ALIASES, STATUS_STYLES
+
+    assert scheduled.REVIEWED_LABELS == set(STATUS_STYLES) | set(STATUS_ALIASES)

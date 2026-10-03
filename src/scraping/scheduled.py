@@ -58,7 +58,9 @@ EXIT_MEANING = {
     EXIT_UNEXPECTED: "galat tak terduga di pembungkus atau scraping",
     EXIT_LOCKED: "jalan lain sedang berlangsung; jalan ini dilewati",
 }
-# Label yang sudah diputuskan cara menampilkannya (presentation.STATUS_ALIASES); label lain menahan penggabungan.
+# Label yang sudah diputuskan cara menampilkannya: tiga label dasar + alias di presentation.STATUS_ALIASES
+# (uji menjaga keduanya tetap sama). Label lain menahan penggabungan sampai pemilik proyek memutuskannya;
+# menambahkannya ke STATUS_ALIASES (dan ke sini) adalah cara "meninjau" sebuah label baru.
 REVIEWED_LABELS = frozenset(KNOWN_LABELS) | {"SATIRE", "SATIR", "KOMEDI"}
 INVALID_URL_REASON = "URL tidak sah"
 
@@ -109,11 +111,24 @@ def quality_report(articles: list[dict], owned_before: set[str]) -> dict[str, An
     }
 
 
-def pending_merge(articles_path: Path | None = None) -> int:
-    """Jumlah artikel yang sudah diambil tetapi belum digabung ke articles.json (antrean ingest manual)."""
+def pending_articles(articles_path: Path | None = None) -> list[dict]:
+    """
+    ANTREAN: artikel yang sudah diambil (batch_*/forward_*/retry_*.json) tetapi belum digabung ke
+    articles.json. Pemeriksaan kualitas berlaku pada seluruh antrean ini di SETIAP jalan, bukan hanya
+    pada hasil jalan itu -- kalau tidak, jalan berikutnya yang tidak mengambil apa pun akan tampak
+    "bersih" dan menghapus penanda padahal masih ada artikel yang menahan penggabungan.
+    """
     path = articles_path or ARTICLES_PATH
     merged = {a["article_id"] for a in json.loads(path.read_text(encoding="utf-8"))} if path.exists() else set()
-    return len(expand.owned_ids() - merged)
+    pending: dict[str, dict] = {}
+    for pattern in ("batch_*.json", "forward_*.json", "retry_*.json"):
+        for f in sorted(expand.EXPANSION_DIR.glob(pattern)):
+            if f.name.endswith("_report.json"):
+                continue
+            for a in json.loads(f.read_text(encoding="utf-8")):
+                if a["article_id"] not in merged:
+                    pending.setdefault(a["article_id"], a)
+    return list(pending.values())
 
 
 def consecutive_systematic(history_path: Path) -> int:
@@ -227,9 +242,8 @@ def _scrape_steps(today: str) -> tuple[int, dict[str, Any]]:
         detail["mode_maju"] = "dijalankan"
         if forward_path.exists():
             articles = json.loads(forward_path.read_text(encoding="utf-8"))
-            detail["kualitas"] = quality_report(articles, owned_before)
-            if detail["kualitas"]["tahan_penggabungan"] and forward_code == 0:
-                forward_code = expand.EXIT_NEEDS_REVIEW
+            detail["artikel_baru"] = len(articles)
+            detail["tumpang_tindih_jalan_ini"] = sorted({a["article_id"] for a in articles} & owned_before)
     detail["kode_mode_maju"] = forward_code
     return (forward_code or retry_code), detail
 
@@ -270,11 +284,18 @@ def run_once(notify: bool = True) -> int:
                 "kode_keluar": code, "arti": EXIT_MEANING.get(code, "tidak dikenal"),
                 "gagal_terbuka": after["terbuka"], "bisa_dicoba_ulang": after["id_bisa_dicoba_ulang"],
                 "perlu_tinjauan": after["id_perlu_tinjauan"], "gagal_per_jenis": after["terbuka_per_jenis"],
-                "antrean_belum_digabung": pending_merge(),
                 "durasi_detik": round((now_utc() - started).total_seconds(), 1),
             })
-            if code == 0 and after["id_perlu_tinjauan"]:
-                # jalan ini bersih, tetapi masih ada artikel gagal permanen yang belum ditinjau
+            # kualitas SELURUH antrean yang belum digabung (lihat pending_articles)
+            queue = pending_articles()
+            status["antrean_belum_digabung"] = len(queue)
+            status["kualitas"] = quality_report(queue, set())
+            if status.get("tumpang_tindih_jalan_ini"):
+                status["kualitas"]["tumpang_tindih_dengan_yang_dimiliki"] = status["tumpang_tindih_jalan_ini"]
+                status["kualitas"]["tahan_penggabungan"] = True
+            if code == 0 and (after["id_perlu_tinjauan"] or status["kualitas"]["tahan_penggabungan"]):
+                # jalan ini sendiri bersih, tetapi masih ada artikel gagal permanen yang belum ditinjau
+                # atau artikel di antrean yang menahan penggabungan (label baru, duplikat, tumpang tindih)
                 status["kode_keluar"] = code = expand.EXIT_NEEDS_REVIEW
                 status["arti"] = EXIT_MEANING[code]
             print(f"=== selesai: kode {code} ({status['arti']}); antrean belum digabung {status['antrean_belum_digabung']} ===")

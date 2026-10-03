@@ -118,3 +118,53 @@ proyek.
 **Yang belum dikerjakan:** penjadwalan (Task Scheduler, jalankan sekali saat menyala bila terlewat),
 pembungkus dan pemberitahuan, rotasi cadangan, catatan cakupan demo dengan jumlah artikel otomatis,
 dan lapisan pengambilan data yang bisa diganti. Menunggu laporan ini ditinjau.
+
+---
+
+## Kemajuan 2026-10-03 (malam): pembungkus dibangun dan diuji manual; BELUM didaftarkan ke Task Scheduler
+
+**Keputusan pemilik proyek atas laporan sebelumnya:** aturan menahan dan angka tiga percobaan disetujui,
+dengan satu perubahan -- **kegagalan jaringan tidak dihitung** ke batas tiga kali antar-jalan (internet
+mati beberapa hari tidak boleh membuat artikel sehat ditandai permanen); pemberitahuan dua lapis
+disetujui; cadangan lama tidak dihapus tanpa keputusan pemilik proyek.
+
+**Status keenam tambahan:**
+
+| # | Tambahan | Status |
+| --- | --- | --- |
+| 1 | Dua celah prasyarat | Selesai (`expand.py`); hitungan percobaan hanya non-jaringan |
+| 2 | Pemberitahuan dua lapis | Selesai (`scraping.scheduled`): `PERHATIAN_PEMBARUAN.txt` di root proyek + notifikasi Windows |
+| 3 | Jadwal terlewat dijalankan sekali saat menyala | Didukung pembungkus (jalan kedua di hari yang sama tidak mengambil ulang); setelan Task Scheduler-nya (`StartWhenAvailable`) menunggu pendaftaran |
+| 4 | Cadangan: simpan tiga terakhir | BELUM dibangun (cadangan hanya dibuat saat ingest, yang manual); cadangan yang ada tidak dihapus |
+| 5 | Catatan cakupan demo | Selesai: tanggal dan ukuran indeks saat diukur tertulis; jumlah artikel dibaca dari indeks |
+| 6 | Lapisan pengambilan data bisa diganti | Selesai (`scraping.source`, `ARTICLE_SOURCE`); integrasi API Yudistira tidak dibangun |
+
+**Pembungkus `python -m scraping.scheduled`** (peluncur: `scripts/pembaruan_berkala.cmd`): kunci
+satu-instans -> coba ulang kegagalan terbuka -> mode maju -> pemeriksaan kualitas SELURUH antrean yang
+belum digabung -> `data/expansion/pembaruan_status.json` + `pembaruan_riwayat.jsonl` + log per jalan
+-> penanda dan notifikasi bila tidak bersih. Label baru (di luar yang sudah diputuskan cara
+menampilkannya), duplikat, dan tumpang tindih MENAHAN penggabungan dan terus memicu penanda sampai
+ditinjau. Setelah tiga jalan beruntun ditahan sistematis pembungkus berhenti mencoba sampai
+`--reset`; kegagalan jaringan tidak pernah memicu "berhenti mencoba". Kode keluar: 0 bersih | 3 | 4 |
+5 | 6 (lihat `expand.py`) | 7 batas mode maju tak ditemukan | 8 galat tak terduga | 9 jalan lain
+sedang berlangsung.
+
+**Percobaan manual (tanpa Task Scheduler):**
+
+- *Jalan nyata:* 16 artikel baru (27 Sep-2 Okt 2026; SALAH 8, PENIPUAN 6, **BELUM TERBUKTI 2** -- label
+  baru: 36976, 36941), 0 gagal, 64 detik; kode 6, penanda ditulis, notifikasi terkirim. Antrean belum
+  digabung: 16 artikel.
+- *Simulasi jaringan mati sejak awal* (proxy rusak, direktori sementara): permintaan pertama (halaman
+  daftar) gagal setelah 4 percobaan -> kode 4, penanda, notifikasi; tidak ada berkas artikel maupun
+  `state.json` yang ditulis.
+- *Simulasi putus di tengah jalan* (sumber tiruan): 3 artikel berhasil, lalu pemutus sirkuit aktif
+  setelah 5 kegagalan jaringan beruntun -> kode 4, penanda, notifikasi; 5 kegagalan tercatat sebagai
+  bisa dicoba ulang; tidak ada berkas artikel yang ditulis.
+- *Cacat yang ditemukan dan diperbaiki lewat percobaan ini:* jalan kedua pada hari yang sama dianggap
+  bersih dan menghapus penanda padahal artikel berlabel baru masih di antrean; pemeriksaan kualitas
+  kini berlaku pada seluruh antrean.
+- Notifikasi dilaporkan "terkirim" berdasarkan kode keluar PowerShell; apakah muncul di layar belum
+  dikonfirmasi pemilik proyek.
+
+**Menunggu pemilik proyek:** jam penjadwalan dan persetujuan pendaftaran ke Task Scheduler; keputusan
+untuk label `BELUM TERBUKTI`; cadangan mana yang dihapus.
