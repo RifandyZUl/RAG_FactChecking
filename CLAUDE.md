@@ -23,9 +23,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > pengembangan SUDAH dijalankan (butir (l) di bawah; jalan pertama ablasi sempat dihentikan karena
 > memori rendah). **v1-046 diputuskan pemilik proyek: TETAP NEGATIF**
 > (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya = pembaruan
-> berkala: rancangan DISETUJUI (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual). Dua
-> celah prasyarat SUDAH ditutup (butir (n)); PENJADWALAN BELUM DIBANGUN -- menunggu pemilik proyek
-> meninjau laporan 2026-10-03.** `ef_search` produksi kini 2000 (butir (m)). Cadangan:
+> berkala (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual): pembungkus SCRAPING sudah
+> dibangun dan diuji manual (butir (o)), tetapi BELUM DIDAFTARKAN ke Task Scheduler -- menunggu
+> pemilik proyek menentukan jam dan menyetujui pendaftaran. ANTREAN BELUM DIGABUNG: 16 artikel
+> (`data/expansion/forward_2026-10-03.json`, 27 Sep-2 Okt 2026), DUA di antaranya berlabel BARU
+> `BELUM TERBUKTI` (36976, 36941) -> penggabungan DITAHAN sampai pemilik proyek memutuskan cara
+> menampilkannya; `PERHATIAN_PEMBARUAN.txt` di root proyek ada selama itu.** `ef_search` produksi kini 2000 (butir (m)). Cadangan:
 > `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
 > (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
@@ -294,6 +297,33 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     berkas `retry_*.json` harus ikut digabung seperti kelompok lain.**
     Kode keluar `expand`: 0 bersih | 3 ditahan sistematis | 4 jaringan putus | 5 ditahan, akan dicoba
     lagi | 6 ditulis, ada yang perlu ditinjau. Data nyata saat ini: 210 entri, 0 terbuka.
+    (o) **Pembaruan berkala, tahap scraping (2026-10-03 malam; BELUM dijadwalkan):**
+    *Hitungan percobaan:* kegagalan JARINGAN tidak dihitung ke `MAX_ATTEMPTS` (keputusan pemilik
+    proyek: internet mati beberapa hari tidak boleh menandai artikel sehat permanen;
+    `attempts_by_id`). Konsekuensi: artikel yang terus gagal karena jaringan menahan jalan (kode 5)
+    sampai berhasil atau `--accept-failures`.
+    *Lapisan sumber data* (`src/scraping/source.py`): `expand` memakai `SOURCE` (dipilih
+    `ARTICLE_SOURCE`, bawaan `html`); artikel dari sumber mana pun diperiksa skemanya
+    (`ARTICLE_KEYS`); `yudistira` dikenali tetapi BELUM dibangun (NotImplementedError).
+    *Catatan cakupan demo:* `presentation.evaluation_scope_note(n)`; angka pencarian terikat
+    `RETRIEVAL_MEASUREMENT` (3 Oktober 2026, 1.532 artikel) dan jumlah artikel saat ini dibaca dari
+    indeks lewat sqlite baca-saja (`count_indexed_articles`); bila berbeda, catatan menyebut angka
+    itu belum tentu berlaku. **Bila pengukuran diulang, perbarui `RETRIEVAL_MEASUREMENT`.**
+    *Pembungkus* `python -m scraping.scheduled` (peluncur `scripts/pembaruan_berkala.cmd`; uji
+    `tests/test_scheduled.py`): kunci satu-instans, coba ulang kegagalan terbuka, mode maju,
+    kualitas SELURUH antrean belum digabung (label di luar `REVIEWED_LABELS`, duplikat, tumpang tindih
+    menahan penggabungan), status `data/expansion/pembaruan_status.json` + `pembaruan_riwayat.jsonl` +
+    `logs/`, penanda `PERHATIAN_PEMBARUAN.txt` (di-gitignore; dihapus pada jalan bersih) dan notifikasi
+    Windows. Kode keluar tambahan: 7 batas mode maju tak ditemukan, 8 galat tak terduga, 9 terkunci.
+    Tiga kali beruntun ditahan sistematis -> berhenti mencoba sampai `--reset`.
+    *Percobaan manual:* jalan nyata = 16 artikel baru, 0 gagal, kode 6 karena label baru `BELUM
+    TERBUKTI`; simulasi jaringan mati sejak awal (halaman daftar gagal) dan putus di tengah (pemutus
+    sirkuit) = kode 4, penanda dan notifikasi bekerja, tidak ada berkas artikel/`state.json` yang
+    ditulis. Cacat yang ditemukan dan diperbaiki: jalan susulan menghapus penanda padahal antrean
+    masih menahan. **Meninjau label baru = memutuskan tampilannya di `presentation.STATUS_ALIASES`
+    (atau `STATUS_STYLES`) DAN menambahkannya ke `scheduled.REVIEWED_LABELS` (uji menjaga keduanya
+    sama).** Rotasi cadangan "tiga terakhir" BELUM dibangun; lima cadangan di `data/backups/` tidak
+    dihapus.
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
@@ -898,7 +928,9 @@ RAG_FactChecking/
 │   │   ├── pipeline.py   #   orkestrasi + CLI (python -m scraping)
 │   │   ├── reparse.py    #   parse ulang dari cache TANPA jaringan (python -m scraping.reparse)
 │   │   ├── restore.py    #   pulihkan articles.json arsip dari daftar artikel (cache/jaringan)
-│   │   └── expand.py     #   perluasan basis data per kelompok -> data/expansion/ (python -m scraping.expand)
+│   │   ├── expand.py     #   perluasan basis data per kelompok -> data/expansion/ (python -m scraping.expand)
+│   │   ├── source.py     #   sumber artikel yang bisa diganti (bawaan HTML; ARTICLE_SOURCE)
+│   │   └── scheduled.py  #   pembungkus pembaruan berkala: scraping saja, penanda + notifikasi
 │   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
 │   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
 │   ├── retriever.py      # Retrieval, diagregasi per article_id
