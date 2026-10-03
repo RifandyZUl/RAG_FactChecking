@@ -31,6 +31,15 @@ def _art(aid: str, date: str = "05/08/2026", **sections: str) -> dict:
     return base
 
 
+def _full_article(aid: str, **over: object) -> dict:
+    """Artikel dengan seluruh kunci kontrak sumber (scraping.source.ARTICLE_KEYS)."""
+    art = {"article_id": aid, "url": u(int(aid)), "title": "Judul", "title_raw": "[SALAH] Judul", "label": "SALAH",
+           "category": "Politik", "date": "05/08/2026", "narasi": "n", "penjelasan": "p", "kesimpulan": "k",
+           "references_raw": [], "references": [], "references_filtered": [], "claim_sources": []}
+    art.update(over)
+    return art
+
+
 def test_article_id_of() -> None:
     assert article_id_of(u(35990)) == "35990"
     assert article_id_of("https://turnbackhoax.id/about") is None
@@ -129,10 +138,10 @@ def test_scrape_with_reason_extracts_reason_and_retries_from_client_log(monkeypa
 
     def ok_after_retry(url: str, session: object) -> tuple[dict, bool]:
         print("  [retry 1/3] ConnectionError; menunggu 2 dtk")
-        return {"article_id": "1"}, True
+        return _full_article("1"), True
 
     monkeypatch.setattr(expand, "scrape_article", ok_after_retry)
-    assert scrape_with_reason(u(1), None) == ({"article_id": "1"}, True, "", 1), "retry pada artikel berhasil ikut terhitung"
+    assert scrape_with_reason(u(1), None) == (_full_article("1"), True, "", 1), "retry pada artikel berhasil ikut terhitung"
 
 
 def test_record_failure_appends_across_runs_never_overwrites(tmp_path: Path) -> None:
@@ -166,11 +175,11 @@ def test_scrape_all_records_each_failure_and_counts_retries(monkeypatch: pytest.
 def test_fetch_list_page_counts_list_retries(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(expand, "RETRIES", {"artikel": 0, "halaman_daftar": 0})
 
-    def flaky_soup(url: str, session: object) -> None:
+    def flaky_list(page: int, session: object) -> None:
         print("  [retry 1/3] halaman galat (HTML tidak lolos validasi); menunggu 2 dtk")
-        print(f"  [gagal] {url} -> ReadTimeout setelah 4 percobaan")
+        print(f"  [gagal] halaman {page} -> ReadTimeout setelah 4 percobaan")
 
-    monkeypatch.setattr(expand, "get_soup", flaky_soup)
+    monkeypatch.setattr(expand, "list_page_urls", flaky_list)
     assert expand.fetch_list_page(5, None) is None
     assert expand.RETRIES == {"artikel": 0, "halaman_daftar": 1}
 
@@ -730,3 +739,110 @@ def test_non_network_failures_still_become_permanent_even_with_network_failures_
     assert expand.hold_decision([_fail(1, CODE_ERR)], 20, expand.attempts_by_id(entries + [_entry(1, "e", CODE_ERR)])) == (
         "tulis", [], ["1"])
     assert expand.hold_decision([_fail(1, CODE_ERR)], 20, expand.attempts_by_id(entries))[0] == "tahan_coba_lagi"
+
+
+# -- lapisan pengambilan data yang bisa diganti (scraping.source) --------------
+
+class FakeApiSource:
+    """Sumber tiruan berbentuk API: tanpa HTML, tanpa cache. Membuktikan expand tidak terikat pada scraping HTML."""
+
+    name = "tiruan"
+
+    def __init__(self, pages: dict[int, list[str]], broken: set[str] = frozenset()) -> None:
+        self.pages, self.broken, self.calls = pages, set(broken), []
+
+    def make_session(self) -> str:
+        return "sesi-tiruan"
+
+    def list_page_urls(self, page: int, session: object) -> list[str] | None:
+        self.calls.append(("daftar", page, session))
+        return self.pages.get(page, [])
+
+    def fetch_article(self, url: str, session: object) -> tuple[dict | None, bool]:
+        self.calls.append(("artikel", url, session))
+        aid = article_id_of(url) or ""
+        if aid in self.broken:
+            return {"article_id": aid, "isi": "bentuk respons API yang belum dipetakan"}, True
+        return _full_article(aid), True
+
+
+def test_expand_runs_end_to_end_on_a_swapped_source(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    exp = tmp_path / "expansion"
+    exp.mkdir()
+    state = {"batch": 0, "anchor_url": u(30), "start_page": 1, "known_ids": ["30"]}
+    (exp / "state.json").write_text(json.dumps(state), encoding="utf-8")
+    monkeypatch.setattr(expand, "EXPANSION_DIR", exp)
+    monkeypatch.setattr(expand, "STATE_PATH", exp / "state.json")
+    monkeypatch.setattr(expand, "FAILED_PATH", exp / "failed_ids.json")
+    monkeypatch.setattr(expand, "ARTICLES_PATH", tmp_path / "articles.json")
+    monkeypatch.setattr(expand, "RAW_HTML_DIR", tmp_path / "raw")
+    monkeypatch.setattr(expand, "RETRIES", {"artikel": 0, "halaman_daftar": 0})
+    monkeypatch.setattr(expand.time, "sleep", lambda s: None)
+    source = FakeApiSource({1: [u(31), u(30), u(29), u(28)], 2: [u(27), u(26)]})
+    monkeypatch.setattr(expand, "SOURCE", source)
+    monkeypatch.setattr(expand.sys, "argv", ["expand", "--batch-size", "4"])
+
+    assert expand.main() == 0
+    written = json.loads((exp / "batch_01.json").read_text(encoding="utf-8"))
+    assert [a["article_id"] for a in written] == ["29", "28", "27", "26"], "artikel lebih tua dari jangkar, urutan daftar"
+    assert all(set(a) == set(_full_article("1")) for a in written)
+    assert ("daftar", 1, "sesi-tiruan") in source.calls and ("artikel", u(29), "sesi-tiruan") in source.calls
+    assert json.loads((exp / "state.json").read_text(encoding="utf-8"))["anchor_url"] == u(26)
+
+
+def test_source_returning_wrong_schema_is_a_code_failure_not_a_silent_article(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Sumber baru yang responsnya belum dipetakan ke skema artikel tidak boleh lolos sebagai artikel."""
+    monkeypatch.setattr(expand, "RAW_HTML_DIR", tmp_path)
+    monkeypatch.setattr(expand, "SOURCE", FakeApiSource({}, broken={"5"}))
+    art, _, reason, _ = scrape_with_reason(u(5), None)
+    assert art is None and expand.failure_kind(reason) == "galat_kode"
+    assert "tidak sesuai skema" in reason and "narasi" in reason and "isi" in reason
+    assert scrape_with_reason(u(6), None)[0] == _full_article("6")
+
+
+def test_get_source_default_unknown_and_planned(monkeypatch: pytest.MonkeyPatch) -> None:
+    from scraping import source
+
+    monkeypatch.delenv(source.SOURCE_ENV, raising=False)
+    assert source.get_source().name == "html" and isinstance(expand.SOURCE, source.HtmlSource)
+    monkeypatch.setenv(source.SOURCE_ENV, " HTML ")
+    assert source.get_source().name == "html"
+    with pytest.raises(NotImplementedError, match="belum dibangun"):
+        source.get_source("yudistira")
+    with pytest.raises(ValueError, match="tidak dikenal"):
+        source.get_source("lain")
+
+
+def test_html_source_delegates_to_existing_scraping_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    from bs4 import BeautifulSoup
+
+    from scraping import source
+
+    html = '<a href="/articles/7-judul">a</a><a href="/tentang">b</a><a href="https://turnbackhoax.id/articles/6-judul">c</a>'
+    seen: list[str] = []
+
+    def fake_soup(url: str, session: object) -> BeautifulSoup:
+        seen.append(url)
+        return BeautifulSoup(html, "html.parser")
+
+    monkeypatch.setattr(source, "get_soup", fake_soup)
+    monkeypatch.setattr(source, "scrape_article", lambda url, s: ({"dari": url}, False))
+    src = source.HtmlSource()
+    assert src.list_page_urls(3, None) == ["https://turnbackhoax.id/articles/7-judul", "https://turnbackhoax.id/articles/6-judul"]
+    assert seen == ["https://turnbackhoax.id/articles?page=3"]
+    monkeypatch.setattr(source, "get_soup", lambda url, s: None)
+    assert src.list_page_urls(3, None) is None
+    assert src.fetch_article(u(7), None) == ({"dari": u(7)}, False)
+
+
+def test_article_keys_match_the_html_parser_output() -> None:
+    """Kontrak sumber = keluaran parser HTML yang sebenarnya (bukan daftar yang ditulis tangan lalu basi)."""
+    from _fakes import FIXTURE_DIR
+    from scraping.parser import parse_article
+    from scraping.source import ARTICLE_KEYS, check_article_schema
+
+    art = parse_article((FIXTURE_DIR / "36730.html").read_text(encoding="utf-8"),
+                        "https://turnbackhoax.id/articles/36730-salah-ojol-dilarang-beli-pertalite")
+    assert art is not None and set(art) == ARTICLE_KEYS
+    check_article_schema(art)
