@@ -18,7 +18,13 @@ from bs4 import BeautifulSoup
 from _fakes import FIXTURE_DIR, read_fixture
 from scraping.discovery import is_valid_list_html
 from scraping.links import blocked_reason
-from scraping.parser import extract_sections, is_valid_article_html, parse_article, parse_title
+from scraping.parser import (
+    extract_factcheck_sources,
+    extract_sections,
+    is_valid_article_html,
+    parse_article,
+    parse_title,
+)
 
 
 # id artikel -> URL asli (id dipakai sebagai nama berkas fixture)
@@ -288,3 +294,47 @@ def test_unparseable_reference_url_does_not_crash_and_is_filtered(bad: str) -> N
     assert {"url": bad, "reasons": ["URL tidak sah"]} in art["references_filtered"]
     changed = {k for k in base if art[k] != base[k]}
     assert changed == {"references_raw", "references_filtered"}, "bidang lain tidak terpengaruh"
+
+
+def _factcheck(inner: str) -> BeautifulSoup:
+    return BeautifulSoup(f'<div><section class="article-factcheck"><strong>Hasil Periksa fakta</strong>'
+                         f'<p>Salah</p><p>Sumber: {inner}</p></section></div>', "html.parser")
+
+
+def test_extract_factcheck_sources_splits_multi_url_hrefs_and_skips_own_site() -> None:
+    """Satu <a href> di sumber bisa memuat beberapa URL (spasi/tab); semuanya diambil satu per satu."""
+    soup = _factcheck(
+        '<a href="https://web.facebook.com/reel/1\thttps://archive.ph/AbC">https://web.facebook.com/reel/1 '
+        'https://archive.ph/AbC</a>, <a href="https://tinyurl.com/contoh1">https://tinyurl.com/contoh1</a> '
+        '<a href="https://turnbackhoax.id/wp-content/uploads/2025/10/x.png">gambar</a> https://contoh.top/tanpa-tautan,')
+    assert extract_factcheck_sources(soup) == [
+        "https://web.facebook.com/reel/1", "https://archive.ph/AbC", "https://tinyurl.com/contoh1",
+        "https://contoh.top/tanpa-tautan"]
+    assert extract_factcheck_sources(BeautifulSoup("<div><section class='article-origin'>x</section></div>",
+                                                   "html.parser")) == []
+
+
+def test_sumber_line_feeds_claim_sources_except_trusted_domains() -> None:
+    """
+    Aturan Wajib #1 (2026-10-03): URL di baris "Sumber:" = sumber klaim -> tersaring dari references,
+    KECUALI situs pemerintah/media tepercaya, yang tetap tampil. Bidang lain tidak berubah.
+    """
+    html = (FIXTURE_DIR / "36730.html").read_text(encoding="utf-8")
+    base = load("36730")
+    scam, gov, media = "https://klaim-hadiah.contoh.top/?x=1", "https://www.contoh.go.id/layanan", "https://mediaindonesia.com/a/1"
+    links = "".join(f'<p><a href="{u}">{u}</a></p>' for u in (scam, gov, media))
+    ref_at = html.index("</section>", html.index("article-references"))
+    html = html[:ref_at] + links + html[ref_at:]  # ketiganya ada di Referensi
+    with_refs = parse_article(html, ARTICLE_URLS["36730"])
+    assert with_refs is not None and {scam, gov, media} <= set(with_refs["references"]), "tanpa Sumber: semuanya tampil"
+
+    fact_at = html.index("</section>", html.index("article-factcheck"))
+    art = parse_article(html[:fact_at] + f"<p>Sumber: {links}</p>" + html[fact_at:], ARTICLE_URLS["36730"])
+    assert art is not None
+    assert scam in art["claim_sources"] and scam not in art["references"]
+    assert {"url": scam, "reasons": ["cocok dengan claim_sources"]} in art["references_filtered"]
+    assert gov in art["references"] and media in art["references"], "pemerintah/media tetap tampil"
+    assert gov not in art["claim_sources"] and media not in art["claim_sources"]
+    assert set(base["claim_sources"]) <= set(art["claim_sources"]), "sumber dari Narasi tetap ada"
+    changed = {k for k in with_refs if art[k] != with_refs[k]}
+    assert changed == {"claim_sources", "references", "references_filtered"}

@@ -9,7 +9,7 @@ import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
-from scraping.links import filter_references, unique_urls
+from scraping.links import filter_references, is_trusted_source, unique_urls
 
 
 def is_valid_article_html(html: str) -> bool:
@@ -194,6 +194,30 @@ def extract_claim_sources(container) -> list[str]:
     return sources
 
 
+_URL_TOKEN = re.compile(r"https?://\S+")
+
+
+def extract_factcheck_sources(container) -> list[str]:
+    """
+    Ambil URL dari baris "Sumber:" di seksi Hasil Periksa Fakta (`section.article-factcheck`).
+
+    Baris itu memuat sumber klaim yang diperiksa. Pada artikel lama (sebelum ~akhir Okt 2025) Narasi
+    tidak bertautan sama sekali, sehingga inilah satu-satunya tempat sumber hoaks tercatat. Satu
+    <a href> di sumber bisa memuat BEBERAPA URL yang dipisah spasi/tab (136 dari 1.532 artikel),
+    jadi href dan teks dipecah per URL. Tautan ke turnbackhoax.id dilewati, sama seperti ekstraksi lain.
+    """
+    urls: list[str] = []
+    for section in container.select("section.article-factcheck"):
+        chunks = [a["href"] for a in section.find_all("a", href=True)]
+        chunks.append(section.get_text(" ", strip=True))
+        for chunk in chunks:
+            for token in _URL_TOKEN.findall(chunk):
+                url = token.rstrip(",;")
+                if "turnbackhoax.id" not in url and url not in urls:
+                    urls.append(url)
+    return urls
+
+
 def normalize_newlines(text: str) -> str:
     """
     CRLF dan CR tunggal -> LF. HTML dari jaringan memuat CRLF, sedangkan HTML yang dibaca dari cache
@@ -240,7 +264,11 @@ def parse_article(html: str, url: str) -> dict | None:
 
     sections = extract_sections(container)
     references_raw = unique_urls(extract_references(container))
-    claim_sources = unique_urls(extract_claim_sources(container))
+    # Sumber klaim: tautan di Narasi + baris "Sumber:" (Hasil Periksa Fakta). URL "Sumber:" yang
+    # berdomain pemerintah/media/cek fakta tepercaya bukan sumber hoaks dan tidak dimasukkan,
+    # sehingga tetap boleh tampil sebagai rujukan (Aturan Wajib #1; lihat links.is_trusted_source).
+    factcheck_sources = [u for u in unique_urls(extract_factcheck_sources(container)) if not is_trusted_source(u)]
+    claim_sources = unique_urls(extract_claim_sources(container) + factcheck_sources)
     references, references_filtered = filter_references(references_raw, claim_sources)
 
     # Kategori dan tanggal dicari di blok judul, bukan di seluruh artikel,
