@@ -42,6 +42,11 @@ ALWAYS_BLOCKED_DOMAINS: tuple[str, ...] = (
     "archive.md",
     "webarchive.io",
     "ghostarchive.org",
+    "archive.fo",  # alias archive.today
+    "arsip.cekfakta.com",  # arsip unggahan hoaks milik jaringan cek fakta (mis. lowongan palsu, 35161)
+    "megalodon.jp",
+    "perma.cc",
+    "archive.cob.web.id",
     # hosting gambar
     "ibb.co.com",
     "ibb.co",  # domain asli imgbb; ibb.co.com adalah cerminannya
@@ -88,6 +93,43 @@ def unique_urls(urls: list[str]) -> list[str]:
             seen.add(n)
             result.append(n)
     return result
+
+
+# Baris "Sumber:" di seksi Hasil Periksa Fakta memuat sumber klaim yang diperiksa (unggahan hoaks,
+# arsipnya, tautan penipuan) dan kadang juga situs pembanding yang sah. Aturan (pemilik proyek,
+# 2026-10-03): BAWAAN = SARING. Setiap URL di baris itu diperlakukan sebagai sumber klaim, KECUALI
+# domainnya situs pemerintah (*.go.id) atau media/cek fakta pada daftar eksplisit di bawah. Daftar
+# ini sengaja pendek dan hanya memuat media arus utama serta pemeriksa fakta yang memang muncul
+# sebagai rujukan di data; domain di luar daftar tersaring sampai ditambahkan dengan sengaja.
+TRUSTED_SOURCE_SUFFIXES: tuple[str, ...] = ("go.id",)
+TRUSTED_SOURCE_DOMAINS: tuple[str, ...] = (
+    # media arus utama
+    "kompas.com", "kompas.tv", "kompas.id", "tempo.co", "detik.com", "antaranews.com",
+    "cnbcindonesia.com", "cnnindonesia.com", "liputan6.com", "tirto.id", "metrotvnews.com",
+    "kumparan.com", "bisnis.com", "idntimes.com", "suara.com", "tribunnews.com", "republika.co.id",
+    "merdeka.com", "inews.id", "tvonenews.com", "beritasatu.com", "mediaindonesia.com", "medcom.id",
+    "viva.co.id", "sindonews.com", "rri.co.id", "katadata.co.id", "jawapos.com", "batampos.co.id",
+    "bbc.com", "reuters.com", "aljazeera.com",
+    # cek fakta
+    "afp.com", "snopes.com", "cekfakta.com",
+)
+
+
+def _matches_domain(host: str, domain: str) -> bool:
+    return host == domain or host.endswith("." + domain)
+
+
+def is_trusted_source(url: str) -> bool:
+    """
+    Apakah URL dari baris "Sumber:" boleh TETAP menjadi rujukan (pemerintah, media, cek fakta).
+
+    URL yang tidak dapat diurai atau berdomain daftar-blokir tidak pernah tepercaya (mis.
+    arsip.cekfakta.com tersaring walau cekfakta.com ada di daftar).
+    """
+    if blocked_reason(url) is not None:
+        return False
+    host = (urlparse(url).hostname or "").lower()
+    return any(_matches_domain(host, d) for d in TRUSTED_SOURCE_SUFFIXES + TRUSTED_SOURCE_DOMAINS)
 
 
 def blocked_reason(url: str) -> str | None:

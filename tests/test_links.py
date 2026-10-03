@@ -5,6 +5,7 @@ from scraping.links import (
     INVALID_URL_REASON,
     blocked_reason,
     filter_references,
+    is_trusted_source,
     normalize_url,
     unique_urls,
 )
@@ -99,3 +100,33 @@ def test_url_shorteners_are_always_filtered() -> None:
         "https://tirto.id/a", "https://www.ojk.go.id/a",
     ]:
         assert blocked_reason(url) is None, f"tidak boleh disaring: {url}"
+
+
+def test_all_archive_domains_are_filtered() -> None:
+    """Kebijakan sejak awal: seluruh domain arsip disaring (lima domain ditambahkan 2026-10-03)."""
+    for url in [
+        "https://arsip.cekfakta.com/archive/123.456/index.html", "https://archive.fo/AbCdE",
+        "https://megalodon.jp/2026-0101-0000-00/contoh.example/a", "https://perma.cc/ABCD-1234",
+        "https://archive.cob.web.id/contoh",
+    ]:
+        assert blocked_reason(url), f"seharusnya disaring: {url}"
+    assert blocked_reason("https://cekfakta.com/a") is None, "hanya subdomain arsipnya yang disaring"
+    assert blocked_reason("https://cekfakta.tempo.co/a") is None
+
+
+def test_trusted_source_is_government_or_listed_media_only() -> None:
+    """Baris "Sumber:": bawaan saring; hanya *.go.id dan media/cek fakta pada daftar yang dikecualikan."""
+    for url in [
+        "https://www.contoh.go.id/", "http://cek.layanan.contoh.go.id", "https://mediaindonesia.com/a/1",
+        "https://news.batampos.co.id/a", "https://nasional.kompas.com/read/1", "https://cekfakta.tempo.co/a",
+        "https://periksafakta.afp.com/a",
+    ]:
+        assert is_trusted_source(url), f"seharusnya tepercaya: {url}"
+    for url in [
+        "https://klaim-hadiah.contoh.top/?x=1", "https://docs.google.com/document/d/x", "https://drive.google.com/file/d/x",
+        "https://contoh-go.id/a", "https://go.id.contoh.top/a", "https://kompas.com.contoh.top/a",
+        "https://lowongan.vercel.app/a", "https://tinyurl.com/contoh1", "https://web.facebook.com/reel/1",
+        "https://arsip.cekfakta.com/archive/1/index.html",  # arsip: tersaring walau cekfakta.com tepercaya
+        "http://contoh.go.id]",  # tidak dapat diurai: tidak pernah tepercaya
+    ]:
+        assert not is_trusted_source(url), f"tidak boleh tepercaya: {url}"
