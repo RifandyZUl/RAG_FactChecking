@@ -734,10 +734,18 @@ Proyek dibangun bertahap dalam dua versi:
   juga diperiksa TurnBackHoax. Kandidat dicari dari JUDUL Liputan6 (embedding top-5 + kata kunci pada
   judul), bukan dari pesannya; **kecocokan dikonfirmasi pemilik proyek sendiri, dengan pilihan "tidak
   ada yang cocok"**. Pengelompokan otomatis terbukti tidak dapat dipercaya ke dua arah, jadi keseratus
-  butir perlu dikonfirmasi (sekitar 660 baris kandidat bila dibatasi 5 + 3 per butir). Label Liputan6
-  pada sampel: tidak terstruktur; kata vonis di judul "Tidak Benar" 57, "Hoaks" 40, "Klarifikasi" 1,
-  tanpa kata vonis 2 -- TIDAK dipetakan ke label TurnBackHoax tanpa pasangan terkonfirmasi. Berkas
-  konfirmasi BELUM disiapkan (menunggu pemilik proyek). **Rancangan itu
+  butir perlu dikonfirmasi. **Keputusan pemilik proyek 2026-10-04: 50 butir acak berbenih
+  (20261004); AMBANG ditetapkan sebelum data dilihat dan dicatat di `docs/rancangan_v2.md` bagian
+  11.2 (commit `f9ecd0f`): "kalau lebih dari separuh klaim Liputan6 yang sah tidak ada di basis data
+  TurnBackHoax, tahap berikutnya layak dikerjakan".** Berkas konfirmasi SUDAH disiapkan:
+  `data/candidates/celah_liputan6/konfirmasi_50.csv` (50 butir, 326 baris kandidat; lokal, tidak
+  di-commit; alat `python -m candidates.gap_review`, yang menolak menimpa berkas yang sudah ada).
+  **KEPUTUSAN di berkas itu diisi pemilik proyek SENDIRI dengan pedoman v1.0, tanpa bantuan AI --
+  jangan mengisi, mengusulkan, atau "memeriksa" keputusannya, dan jangan membuka
+  `kunci_kandidat.json` untuknya.** Satu artikel dikeluarkan (Klarifikasi Polri). Label Liputan6:
+  banner "Salah" 58, "Hoax" 39, "Klarifikasi" 2, tanpa 1 (dari 100) -- TIDAK dipetakan ke label
+  TurnBackHoax tanpa pasangan terkonfirmasi. Sesudah berkas diisi: hitung proporsi "TIDAK ADA" dari
+  butir sah dengan Wilson 95%, bandingkan butir ujung rentang, dan laporkan tabel silang label. **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
