@@ -746,7 +746,17 @@
       "teks_butir_vs_artikel": "Narasi artikel 30089 mengutip teks butir secara persis (kalimat pembuka 'Program pemutihan tunggakan BPJS Kesehatan akan dimulai pada akhir 2025 ...' sampai tagar). Judul artikelnya (KIA) adalah 'Video Cak Imin Membicarakan tentang Pemutihan Utang BPJS'. Apakah butir ini kini 'klaim sama' menurut pedoman anotasi TIDAK ditetapkan di sini (label final selalu manusia, Aturan Wajib #5); yang dicatat hanya bahwa label negatifnya tidak dapat dipakai pada indeks produksi karena artikel asalnya ada di basis data."
     },
     "konsekuensi": "Pada indeks produksi 1.532 artikel, enam butir negatif set uji v1 tidak dapat dipakai sebagai negatif: v1-021, v1-022, v1-029, v1-043, v1-049 (artikel asalnya ada di basis data) dan v1-050 (klaim yang sama lewat artikel lain). Persyaratan set uji Versi 2 tetap seperti dicatat 2026-09-28: butir negatif diverifikasi terhadap snapshot basis data dan diberi versi bersama snapshot itu.",
-    "belum_diputuskan": "v1-046 (negatif_mudah; asal 23544, tidak ada di basis data): pada indeks 1.532 top-1 naik ke 0,6308 (30652 'Timur Kapadze Resmi Menjadi Pelatih Timnas Indonesia'; klaim butir: Shin Tae-yong mundur sebagai pelatih timnas). TIDAK dicatat sebagai berubah status; menunggu keputusan pemilik proyek apakah klaimnya sama atau berbeda."
+    "keputusan_v1-046_2026-10-03": {
+      "keputusan": "Label v1-046 TETAP NEGATIF pada indeks produksi 1.532 artikel; butir ini TIDAK berubah status. Diputuskan pemilik proyek (manusia) 2026-10-03 setelah membaca judul, Narasi, dan Kesimpulan artikel 30652 yang ditampilkan Claude Code; Claude Code tidak mengusulkan label (Aturan Wajib #5).",
+      "pengamatan": "v1-046 (negatif_mudah; asal 23544, tidak ada di basis data): pada indeks 1.532 skor top-1 naik dari 0,5362 ke 0,6308, ke artikel 30652 '[SALAH] Timur Kapadze Resmi Menjadi Pelatih Timnas Indonesia'. Klaim butir: Shin Tae-yong mundur sebagai pelatih Timnas Indonesia setelah kalah dari China.",
+      "alasan_menurut_pedoman": [
+        "Klaim inti artikel 30652 (KIA = judul): Timur Kapadze diangkat menjadi pelatih Timnas Indonesia. Klaim butir: Shin Tae-yong mundur. Subjek dan tindakannya berbeda.",
+        "Uji dua arah gagal: mundurnya Shin Tae-yong tidak berarti Kapadze diangkat, dan sebaliknya.",
+        "Uji Kesimpulan gagal: Kesimpulan 30652 (Kapadze melatih Navbahor FK) tidak menjawab klaim butir sama sekali.",
+        "Jadi keduanya hanya bertetangga topik (pelatih Timnas Indonesia), bukan klaim yang sama."
+      ],
+      "catatan_untuk_versi_2": "Pasangan ini contoh negatif sulit yang baik untuk set uji Versi 2 (topik sama, subjek dan tindakan berbeda, skor kemiripan 0,6308 -- di atas sebagian kandidat yang layak tampil). Pada set uji v1 ia terdaftar sebagai negatif_mudah karena pada basis data 150 artikel belum ada tetangga topiknya."
+    }
   },
   "butir_negatif_berubah_status_indeks_922_2026-09-28": {
     "pernyataan": "Label negatif (expected_verdict=belum_ditemukan) butir v1-021, v1-022, v1-043, dan v1-049 TIDAK BERLAKU pada indeks produksi 922 artikel. Keempatnya dibuat dari artikel arsip TurnBackHoax (url_asal: 35310, 35850, 32490, 35833) yang kini ada di basis data produksi, dan artikel asalnya muncul di peringkat 1 (skor 0,8713; 0,7732; 0,8488; 0,8266). Pada archive/v1 (150 artikel) labelnya tetap sah.",

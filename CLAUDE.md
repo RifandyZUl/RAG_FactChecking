@@ -21,8 +21,9 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > pemilik proyek setelah penutupan 2026-10-03; berikutnya Versi 2 (belum dimulai).** Ablasi lengkap
 > pada indeks 1.532, konfirmasi v1-029 lewat retriever produksi, dan pengukuran ulang set
 > pengembangan SUDAH dijalankan (butir (l) di bawah; jalan pertama ablasi sempat dihentikan karena
-> memori rendah). **Menunggu keputusan pemilik proyek:** status v1-046 (klaim sama atau berbeda dengan
-> artikel 30652). Cadangan:
+> memori rendah). **v1-046 diputuskan pemilik proyek: TETAP NEGATIF**
+> (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya (pembaruan
+> berkala) BELUM dikerjakan -- baru usulan rancangan (2026-10-03), menunggu keputusan.** Cadangan:
 > `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
 > (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
@@ -242,6 +243,17 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     *Daftar tepercaya* disetujui pemilik proyek (2026-10-03); pencocokan pada batas domain, diuji
     dengan tiruan nama media. *Catatan cakupan demo* memisahkan hasil pencarian (18 dan 20 dari 20
     butir uji) dari akurasi jawaban, yang belum terukur pada indeks ini.
+    (m) **Retriever produksi = pencarian PERKIRAAN (HNSW), diselidiki 2026-10-03 pada SALINAN indeks
+    (produksi tidak diubah; hash byte sama):** parameter bawaan ChromaDB 1.5.9 `ef_search` 100,
+    `ef_construction` 100, `max_neighbors` 16. v1-048: artikel 31975 (eksak peringkat 2, 0,5546)
+    hilang dari hasil produksi karena chunk Narasi-nya tidak dikembalikan; 34690 naik ke peringkat 2,
+    36776 masuk peringkat 3. 64 kueri, 30 chunk teratas: chunk terlewat 20/1.920 pada 922 artikel
+    (0 top-3 berbeda) -> 35/1.920 pada 1.532 (1 top-3 berbeda); pada salinan dengan `ef_search` 200:
+    10; 500: 1; 2.000: 0. Jadi selisihnya aproksimasi HNSW dan membesar bersama indeks. Konsekuensi
+    demo: artikel yang benar kadang bisa tidak terambil (penolakan palsu dari indeks); pada 20 butir
+    positif tidak terjadi. **Parameter produksi TIDAK diubah**; usulan Versi 2 di
+    `v1_temuan_untuk_v2.md` bagian 10. Catatan: `ef_search` baru berlaku pada proses yang membuka
+    indeks SETELAH diubah (segmen di-cache per proses).
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
@@ -1588,9 +1600,17 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   penyusunan/gaya bahasa klarifikasi perlu sumber selain Kesimpulan untuk artikel seperti ini (ikut
   ditimbang bersama agenda menghapus Penjelasan dari indeks). Kelompok 6 (30 Sep-23 Okt 2025) sama: median
   136 karakter, hanya 4/110 Kesimpulan diawali "Faktanya". Periode sebelum 30 Sep 2025 belum diketahui.
-- **Dua artikel berseksi kosong di sumber** (kelompok 5; digabung apa adanya, keputusan 2026-10-02):
+- **Dua artikel berseksi kosong di sumber** (kelompok 5; digabung apa adanya, keputusan 2026-10-03):
   29687 tanpa Penjelasan; 29670 (PARODI) tanpa Narasi dan Penjelasan, sehingga hanya terjangkau
-  lewat chunk Kesimpulan.
+  lewat chunk Kesimpulan. **Itu jalur pencarian terlemah:** pada ablasi, retrieval dengan Kesimpulan
+  saja turun bermakna (Recall@3 non-batas 21/40 vs 29/40 pada indeks 1.532, p 0,008; positif 15/20
+  vs 20/20), jadi klaim yang cocok dengan 29670 lebih mungkin tidak terambil
+  (`v1_temuan_untuk_v2.md` bagian 11).
+- **Retriever produksi memakai pencarian perkiraan (HNSW, `ef_search` 100)** dan sejak indeks
+  1.532 artikel tidak lagi selalu sama dengan pencarian eksak (1 dari 64 kueri berbeda di top-3;
+  ~1,8% chunk dari 30 teratas terlewat). Artikel yang seharusnya masuk tiga besar kadang tidak
+  terambil; risikonya naik saat basis data bertambah. Tidak diubah di Versi 1
+  (`v1_temuan_untuk_v2.md` bagian 10).
 - **Tidak ada mekanisme untuk menyegarkan artikel lama yang isinya berubah di sumber** (dicatat
   2026-09-27). Artikel yang sudah ada di cache `data/raw_html/` tidak pernah diambil ulang (mode maju
   berhenti pada artikel pertama yang sudah dimiliki; cache dipakai tanpa memeriksa perubahan), jadi
