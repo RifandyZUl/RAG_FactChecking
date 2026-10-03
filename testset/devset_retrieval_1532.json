@@ -1,0 +1,408 @@
+{
+  "jumlah_chunk": 4593,
+  "v1": {
+    "v1-029": [
+      {
+        "article_id": "30089",
+        "skor": 0.8992,
+        "seksi": "narasi",
+        "label": "SALAH",
+        "judul": "Video Cak Imin Membicarakan tentang Pemutihan Utang BPJS"
+      },
+      {
+        "article_id": "32614",
+        "skor": 0.7815,
+        "seksi": "narasi",
+        "label": "PENIPUAN",
+        "judul": "Tautan Pendaftaran Pemutihan Denda Iuran BPJS"
+      },
+      {
+        "article_id": "29732",
+        "skor": 0.707,
+        "seksi": "penjelasan",
+        "label": "PENIPUAN",
+        "judul": "Pendaftaran Program Penghapusan Tunggakan BPJS Kesehatan dari Purbaya yang Siapkan 20 Triliun"
+      },
+      {
+        "article_id": "32378",
+        "skor": 0.6545,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Mensos Anggap Rakyat “Orang Mampu” kalau Setahun Tidak Pakai BPJS"
+      },
+      {
+        "article_id": "36161",
+        "skor": 0.6434,
+        "seksi": "narasi",
+        "label": "PENIPUAN",
+        "judul": "Tautan Pendaftaran BPJS Kesehatan Gratis 2026"
+      }
+    ],
+    "v1-046": [
+      {
+        "article_id": "30652",
+        "skor": 0.6308,
+        "seksi": "kesimpulan",
+        "label": "SALAH",
+        "judul": "Timur Kapadze Resmi Menjadi Pelatih Timnas Indonesia"
+      },
+      {
+        "article_id": "31230",
+        "skor": 0.616,
+        "seksi": "kesimpulan",
+        "label": "SALAH",
+        "judul": "Indra Sjafri Siap Bawa Timnas Malaysia Lolos Piala Dunia 2030"
+      },
+      {
+        "article_id": "29860",
+        "skor": 0.6142,
+        "seksi": "narasi",
+        "label": "SALAH",
+        "judul": "Shin Tae Young Jadi Pelatih Baru Timnas Thailand"
+      },
+      {
+        "article_id": "29663",
+        "skor": 0.6091,
+        "seksi": "narasi",
+        "label": "SALAH",
+        "judul": "FIFA Pecat Wasit Ma Ning Usai Laga Indonesia vs Irak"
+      },
+      {
+        "article_id": "29669",
+        "skor": 0.608,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Shin Tae Yong Resmi Kembali ke Indonesia untuk Melatih Timnas"
+      }
+    ],
+    "v1-050": [
+      {
+        "article_id": "36775",
+        "skor": 0.633,
+        "seksi": "narasi",
+        "label": "SALAH",
+        "judul": "Menkeu Suahasil Terlibat Korupsi Ratusan Triliun Rupiah"
+      },
+      {
+        "article_id": "33076",
+        "skor": 0.5232,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Kejagung Sita Rp920 Miliar dari Rumah Pejabat Pajak"
+      },
+      {
+        "article_id": "31967",
+        "skor": 0.5166,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Bahlil Terseret Kasus Korupsi Pertamina"
+      },
+      {
+        "article_id": "29590",
+        "skor": 0.5137,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Luhut Jadi Tersangka Korupsi Batu Bara"
+      },
+      {
+        "article_id": "31885",
+        "skor": 0.5016,
+        "seksi": "penjelasan",
+        "label": "SALAH",
+        "judul": "Menkeu Purbaya Bakal Audit Kekayaan Luhut"
+      }
+    ]
+  },
+  "devset": [
+    {
+      "klaim": "katanya ojol nggak boleh isi pertalite lagi ya?",
+      "tipe": "positif",
+      "sasaran": "36730",
+      "peringkat_sasaran_top3": 1,
+      "top3": [
+        {
+          "article_id": "36730",
+          "skor": 0.6953,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Ojol Dilarang Beli Pertalite"
+        },
+        {
+          "article_id": "29367",
+          "skor": 0.5983,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Video “Demo Ojol Imbas Larangan Penggunaan BBM Subsidi”"
+        },
+        {
+          "article_id": "29325",
+          "skor": 0.5915,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Ojol Demo Kenaikan Pertalite"
+        }
+      ]
+    },
+    {
+      "klaim": "ada link pendaftaran bantuan buat orang tua, itu beneran?",
+      "tipe": "positif",
+      "sasaran": "36737",
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "32625",
+          "skor": 0.6514,
+          "seksi": "kesimpulan",
+          "label": "PENIPUAN",
+          "judul": "Tautan Pendaftaran Bansos PKH, KPM, dan BPNT"
+        },
+        {
+          "article_id": "35849",
+          "skor": 0.6408,
+          "seksi": "narasi",
+          "label": "PENIPUAN",
+          "judul": "Tautan Pendaftaran PKH Khusus Balita"
+        },
+        {
+          "article_id": "32117",
+          "skor": 0.6355,
+          "seksi": "penjelasan",
+          "label": "PENIPUAN",
+          "judul": "Informasi Bantuan Sosial Pemerintah Rp7 Juta hingga Rp50 Juta Berbasis NIK KTP"
+        }
+      ]
+    },
+    {
+      "klaim": "malaysia marah ke indonesia soal asap",
+      "tipe": "negatif_sulit",
+      "sasaran": "36729",
+      "peringkat_sasaran_top3": 1,
+      "top3": [
+        {
+          "article_id": "36729",
+          "skor": 0.5739,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Malaysia Laporkan Indonesia ke PBB soal Karhutla"
+        },
+        {
+          "article_id": "35133",
+          "skor": 0.516,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Lepas dari Malaysia, Sabah-Sarawak Resmi Jadi Bagian Indonesia"
+        },
+        {
+          "article_id": "29464",
+          "skor": 0.5096,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Prabowo Tantang Malaysia Perang karena Rebut Pulau Ligitan dan Sipadan"
+        }
+      ]
+    },
+    {
+      "klaim": "polisi mau razia motor sampai ke rumah-rumah warga?",
+      "tipe": "positif",
+      "sasaran": "36738",
+      "peringkat_sasaran_top3": 1,
+      "top3": [
+        {
+          "article_id": "36738",
+          "skor": 0.6381,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Ada Kebijakan Razia Kendaraan dari Rumah ke Rumah"
+        },
+        {
+          "article_id": "36143",
+          "skor": 0.5455,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Video “Penggusuran Lahan untuk Pembangunan Kopdes Merah Putih”"
+        },
+        {
+          "article_id": "31781",
+          "skor": 0.535,
+          "seksi": "narasi",
+          "label": "PENIPUAN",
+          "judul": "Tautan Layanan “Gratis Pemutihan Pajak Motor dan Mobil Seluruh Indonesia”"
+        }
+      ]
+    },
+    {
+      "klaim": "daftar cek kesehatan gratis lewat link yang beredar, asli gak sih?",
+      "tipe": "positif",
+      "sasaran": "36731",
+      "peringkat_sasaran_top3": 1,
+      "top3": [
+        {
+          "article_id": "36731",
+          "skor": 0.6922,
+          "seksi": "kesimpulan",
+          "label": "PENIPUAN",
+          "judul": "Tautan Pendaftaran Cek Kesehatan Gratis"
+        },
+        {
+          "article_id": "36479",
+          "skor": 0.6877,
+          "seksi": "kesimpulan",
+          "label": "SALAH",
+          "judul": "Cek Kesehatan Gratis Itu Agenda Plandemi Jilid 2"
+        },
+        {
+          "article_id": "36161",
+          "skor": 0.6483,
+          "seksi": "kesimpulan",
+          "label": "PENIPUAN",
+          "judul": "Tautan Pendaftaran BPJS Kesehatan Gratis 2026"
+        }
+      ]
+    },
+    {
+      "klaim": "katanya gas melon 3 kg mau dihapus bulan depan, harus beli yang nonsubsidi?",
+      "tipe": "negatif_sulit",
+      "sasaran": null,
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "29528",
+          "skor": 0.6225,
+          "seksi": "narasi",
+          "label": "PENIPUAN",
+          "judul": "Tautan “Pendaftaran Bantuan Tunai untuk Pemilik Gas LPG 3 Kg”"
+        },
+        {
+          "article_id": "29549",
+          "skor": 0.5406,
+          "seksi": "penjelasan",
+          "label": "PARODI",
+          "judul": "Purbaya Menyebut Harga Pertalite Harusnya di Rp5.400 per Liter dan LPG 3 Kg di Rp14.700 per Tabung"
+        },
+        {
+          "article_id": "35262",
+          "skor": 0.5377,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Pembelian Pertalite Dibatasi Rp50.000 per Transaksi"
+        }
+      ]
+    },
+    {
+      "klaim": "vaksin flu bikin laki-laki jadi mandul, benar nggak sih?",
+      "tipe": "negatif_sulit",
+      "sasaran": null,
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "36214",
+          "skor": 0.6671,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Vaksin HPV Bikin Anak Laki-Laki Impoten"
+        },
+        {
+          "article_id": "32624",
+          "skor": 0.5201,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Vaksinasi HPV Bisa Membahayakan Nyawa Anak"
+        },
+        {
+          "article_id": "36577",
+          "skor": 0.5181,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Vaksin Cacar Air Sebabkan Pandemi Shingles"
+        }
+      ]
+    },
+    {
+      "klaim": "katanya BMKG bilang bakal ada gempa megathrust besar di Jawa minggu ini",
+      "tipe": "negatif_sedang",
+      "sasaran": null,
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "32702",
+          "skor": 0.5963,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "BMKG Prediksi Potensi Tsunami dan Megathrust 8,7 SR di Seluruh Indonesia"
+        },
+        {
+          "article_id": "30637",
+          "skor": 0.5812,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "BMKG Sebut Siklon 97s Berpotensi Besar Mengepung Pulau Jawa"
+        },
+        {
+          "article_id": "33795",
+          "skor": 0.5187,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Dokumentasi \"Tsunami Jepang 2026\""
+        }
+      ]
+    },
+    {
+      "klaim": "minum rebusan daun sirsak tiap pagi katanya bisa sembuhin diabetes",
+      "tipe": "negatif_mudah",
+      "sasaran": null,
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "29949",
+          "skor": 0.5715,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Air Rebusan Ciplukan Bisa Mengatasi Stroke"
+        },
+        {
+          "article_id": "35194",
+          "skor": 0.5573,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Penderita Diabetes Tipe 1 dan Tipe 2 Bisa Sembuh Tanpa Obat"
+        },
+        {
+          "article_id": "35859",
+          "skor": 0.5326,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Daun Patikan China Bisa Sembuhkan Ambeien Tanpa Harus Operasi"
+        }
+      ]
+    },
+    {
+      "klaim": "NASA ngaku kalau bumi ternyata datar ya?",
+      "tipe": "negatif_mudah",
+      "sasaran": null,
+      "peringkat_sasaran_top3": null,
+      "top3": [
+        {
+          "article_id": "32186",
+          "skor": 0.6385,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Agustus 2026 Gravitasi Bumi Berhenti 7 Detik"
+        },
+        {
+          "article_id": "31867",
+          "skor": 0.5203,
+          "seksi": "narasi",
+          "label": "SALAH",
+          "judul": "Uji Coba Nuklir AS Sebabkan Gempa dan Tsunami Aceh 2004"
+        },
+        {
+          "article_id": "36727",
+          "skor": 0.5079,
+          "seksi": "penjelasan",
+          "label": "SALAH",
+          "judul": "Video \"Laut Merak Kering Imbas Erupsi Gunung Anak Krakatau\""
+        }
+      ]
+    }
+  ]
+}
