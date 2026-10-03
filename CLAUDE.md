@@ -26,11 +26,14 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > berkala (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual): pembungkus SCRAPING sudah
 > dibangun dan diuji manual (butir (o)), tetapi BELUM DIDAFTARKAN ke Task Scheduler -- menunggu
 > pemilik proyek menentukan jam dan menyetujui pendaftaran. ANTREAN BELUM DIGABUNG: 16 artikel
-> (`data/expansion/forward_2026-10-03.json`, 27 Sep-2 Okt 2026), DUA di antaranya berlabel BARU
-> `BELUM TERBUKTI` (36976, 36941) -> penggabungan DITAHAN sampai pemilik proyek memutuskan cara
-> menampilkannya; `PERHATIAN_PEMBARUAN.txt` di root proyek ada selama itu.** `ef_search` produksi kini 2000 (butir (m)). Cadangan:
-> `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
-> (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
+> (`data/expansion/forward_2026-10-03.json`, 27 Sep-2 Okt 2026; SALAH 8, PENIPUAN 6, BELUM TERBUKTI
+> 2) -- penggabungan dan ingest-nya dijalankan MANUAL oleh pemilik proyek, jangan dikerjakan
+> sendiri. Label baru `BELUM TERBUKTI` sudah diputuskan (gaya ungu sendiri, butir (p)), jadi antrean
+> tidak lagi menahan dan `PERHATIAN_PEMBARUAN.txt` sudah terhapus.** `ef_search` produksi kini 2000
+> (butir (m)). Cadangan yang ada (dua yang lebih lama DIHAPUS 2026-10-03 atas perintah pemilik
+> proyek): `data/backups/pre_batch04-06_2026-10-03/` (indeks 922 dengan rujukan bersih +
+> `articles.json` 1.532, sebelum ingest) dan `data/backups/pre_ef_search_2026-10-03/` (indeks 1.532,
+> `ef_search` 100). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
 > Wajib #1" di bawah): SELESAI untuk data dan indeks produksi -- pemendek URL dan
 > seluruh domain arsip disaring, baris "Sumber:" dibaca sebagai sumber klaim (kecuali pemerintah/
@@ -66,7 +69,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     dengan 10 artikel sebelumnya), digabung di akhir `articles.json` -> **922 artikel**; 672 lama
     identik; reparse penuh 922 dari cache identik. Cadangan sebelum ingest:
     `data/backups/pre_batch03_2026-09-27/` (29 MB: `chroma/` + `articles.json`; di-gitignore, terpisah
-    dari arsip). Ingest INKREMENTAL (bukan `--rebuild`): 750 chunk baru, 2016 dilewati, 10 mnt 13 dtk
+    dari arsip; **DIHAPUS 2026-10-03** atas perintah pemilik proyek -- memuat metadata rujukan lama). Ingest INKREMENTAL (bukan `--rebuild`): 750 chunk baru, 2016 dilewati, 10 mnt 13 dtk
     (0,8 dtk/chunk), tidak terhenti. `index_check` produksi: SEGAR, 2766 chunk. Arsip v1 diperiksa pada
     SALINAN byte (agar arsip tidak dibuka; lihat temuan ChromaDB): `--expect-v1-archive` SIDIK JARI
     COCOK, SEGAR; hash byte 11 berkas `archive/v1/` sebelum = sesudah. Chunk terpotong kini 10/2766
@@ -174,7 +177,9 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     (f) **Metadata 922 artikel terindeks diperbarui TERARAH (2026-10-03):** alat baru
     `python src/ingest.py --update-metadata` (`ingest.update_metadata`: menulis ulang metadata chunk
     yang teksnya sama; tanpa embedding, tanpa memuat model; chunk berteks beda/belum ada hanya
-    dilaporkan; uji dengan ChromaDB sementara). Urutan yang dijalankan: cadangan (salinan byte 10
+    dilaporkan; uji dengan ChromaDB sementara). Urutan yang dijalankan: cadangan
+    (`data/backups/pre_metadata_update_2026-10-03/`, DIHAPUS 2026-10-03 atas perintah pemilik proyek
+    karena memuat metadata rujukan yang bermasalah; salinan byte 10
     berkas indeks cocok) -> `index_check` SEGAR -> `scraping.reparse` (922: 729 identik, 193 berubah,
     hanya tiga bidang itu) -> `index_check` **BASI, 60 masalah, semuanya "metadata 'references'
     beda"** (20 artikel x 3 chunk: bukti nyata bahwa ia memeriksa metadata, bukan hanya teks) ->
@@ -322,8 +327,21 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     ditulis. Cacat yang ditemukan dan diperbaiki: jalan susulan menghapus penanda padahal antrean
     masih menahan. **Meninjau label baru = memutuskan tampilannya di `presentation.STATUS_ALIASES`
     (atau `STATUS_STYLES`) DAN menambahkannya ke `scheduled.REVIEWED_LABELS` (uji menjaga keduanya
-    sama).** Rotasi cadangan "tiga terakhir" BELUM dibangun; empat cadangan di `data/backups/` tidak
-    dihapus.
+    sama).** Rotasi cadangan "tiga terakhir" BELUM dibangun; dari empat cadangan, dua yang
+    lebih lama dihapus 2026-10-03 atas perintah pemilik proyek (tersisa `pre_batch04-06_2026-10-03`
+    dan `pre_ef_search_2026-10-03`, 89 MB).
+    (p) **Label `BELUM TERBUKTI` (2026-10-03; keputusan pemilik proyek):** gaya SENDIRI, bukan alias:
+    `STATUS_STYLES["BELUM TERBUKTI"]` = judul "Belum terbukti", warna `violet` (slot `violetColor`/
+    `violetTextColor`/`violetBackgroundColor` di `.streamlit/config.toml`, `#6A3A9A`; kontras teks pada
+    latar halaman 7,5:1), ikon `help`, kalimat persis: "Klaim ini sudah diperiksa TurnBackHoax.id dan
+    belum ada bukti yang mendukungnya, sehingga belum dapat dianggap benar." -- TANPA saran medis atau
+    kalimat lain. Alasan ungu: merah/jingga/kuning = skala bahaya, abu-abu = "belum ditemukan", hijau
+    terkesan "benar", biru = aksen. `tests/test_theme.py` (baru) memastikan setiap warna status punya
+    slot tema dan lolos kontras AA (4,5:1) pada latar halaman, latar sekunder, dan latar sendiri; uji
+    presentasi memastikan tampilannya berbeda dari "belum ditemukan". Label ini masuk
+    `scheduled.REVIEWED_LABELS`; pemeriksaan antrean dijalankan ulang tanpa scraping -> kode 0, penanda
+    terhapus. Tampilan ungu di halaman demo belum dilihat langsung (hanya diuji lewat data tampilan
+    dan konfigurasi).
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
