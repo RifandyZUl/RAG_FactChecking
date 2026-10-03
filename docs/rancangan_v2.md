@@ -699,8 +699,19 @@ membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dili
 - **Keputusan** dibaca dari proporsi teramati: di atas 50% -> layak dikerjakan; 50% atau kurang ->
   tidak.
 - **Dilaporkan bersama interval Wilson 95%.** Pemilik proyek menyatakan sampel diperluas bila
-  hasilnya ambigu; "ambigu" di sini diartikan interval itu mencakup 50% (pada 50 butir kira-kira
-  proporsi teramati antara 37% dan 63%). Arti ini belum dikonfirmasi pemilik proyek.
+  hasilnya ambigu.
+
+**Dikonfirmasi pemilik proyek 2026-10-04, sebelum berkas konfirmasi dibuka:**
+
+- Ambangnya memang **"lebih dari separuh"** (kurung siku pada rumusan awal adalah sisa templat,
+  bukan angka yang masih terbuka).
+- **Hasil dianggap jelas** bila interval Wilson 95%-nya **seluruhnya di atas atau seluruhnya di
+  bawah 50%**; **ambigu** bila interval itu melintasi 50% (pada 50 butir sah kira-kira proporsi
+  teramati antara 37% dan 63%; batas persisnya dihitung dari jumlah butir sah yang sebenarnya).
+- **Bila ambigu, sampel diperluas ke 100 butir** (seluruh sampel Liputan6 yang sah), lalu aturan
+  yang sama diterapkan pada hasil 100 butir itu.
+- Akibatnya aturan "proporsi teramati di atas 50%" di atas hanya memutuskan bila hasilnya jelas;
+  hasil ambigu tidak diputuskan dari 50 butir.
 
 ### 11.3 Sampel dan aturan (ditetapkan 2026-10-04)
 
