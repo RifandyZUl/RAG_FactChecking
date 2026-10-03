@@ -24,8 +24,18 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > memori rendah). **v1-046 diputuskan pemilik proyek: TETAP NEGATIF**
 > (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya = pembaruan
 > berkala (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual): pembungkus SCRAPING sudah
-> dibangun dan diuji manual (butir (o)), tetapi BELUM DIDAFTARKAN ke Task Scheduler -- menunggu
-> pemilik proyek menentukan jam dan menyetujui pendaftaran. ANTREAN BELUM DIGABUNG: 16 artikel
+> dibangun dan diuji manual (butir (o)) dan **TERDAFTAR di Task Scheduler sejak 2026-10-03 (atas
+> persetujuan pemilik proyek): tugas "RAG_FactChecking - pembaruan berkala", setiap hari 13.00**,
+> `pythonw.exe` + `scripts/pembaruan_berkala.pyw` (tanpa jendela), boleh mulai dan terus berjalan
+> saat memakai baterai, `StartWhenAvailable` (jadwal terlewat dijalankan sekali saat menyala), hanya
+> bila jaringan tersedia, satu instans, batas 1 jam, hanya saat pengguna login (Interactive). Dipicu
+> sekali lewat Task Scheduler pukul 20.35: kode keluar 0, `pembaruan_status.json` dan log tertulis --
+> TETAPI jalan itu melewati mode maju (sudah berjalan hari itu), jadi **pengambilan dari jaringan di
+> bawah Task Scheduler baru pertama kali teruji pada jalan terjadwal 2026-10-04 13.00; periksa
+> `data/expansion/pembaruan_status.json` sesudahnya.** Setelan tugas JANGAN diubah tanpa persetujuan
+> pemilik proyek (mengubah pengaturan sistem). Menghapus: `Unregister-ScheduledTask -TaskName
+> "RAG_FactChecking - pembaruan berkala"`. Berkas penanda `PERHATIAN_PEMBARUAN.txt` adalah
+> pemberitahuan UTAMA (notifikasi Windows masuk diam-diam ke panel karena Do not disturb). ANTREAN BELUM DIGABUNG: 16 artikel
 > (`data/expansion/forward_2026-10-03.json`, 27 Sep-2 Okt 2026; SALAH 8, PENIPUAN 6, BELUM TERBUKTI
 > 2) -- penggabungan dan ingest-nya dijalankan MANUAL oleh pemilik proyek, jangan dikerjakan
 > sendiri. Label baru `BELUM TERBUKTI` sudah diputuskan (gaya ungu sendiri, butir (p)), jadi antrean

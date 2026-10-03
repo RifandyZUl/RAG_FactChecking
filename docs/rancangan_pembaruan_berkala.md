@@ -190,3 +190,32 @@ untuk label `BELUM TERBUKTI`; cadangan mana yang dihapus.
   persetujuan atas perintah finalnya; setelah terdaftar, tugas dipicu sekali lewat Task Scheduler
   dan berkas status serta kode keluarnya diperiksa (lingkungan Task Scheduler bisa berbeda dari
   terminal: direktori kerja, variabel lingkungan).
+
+---
+
+## Pendaftaran Task Scheduler (2026-10-03, disetujui pemilik proyek)
+
+Tugas **"RAG_FactChecking - pembaruan berkala"** terdaftar dengan perintah berikut (PowerShell):
+
+```powershell
+$aksi    = New-ScheduledTaskAction -Execute "C:\FolderD\RAG_FactChecking\.venv\Scripts\pythonw.exe" -Argument '"C:\FolderD\RAG_FactChecking\scripts\pembaruan_berkala.pyw"' -WorkingDirectory "C:\FolderD\RAG_FactChecking"
+$pemicu  = New-ScheduledTaskTrigger -Daily -At "13:00"
+$setelan = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+$pelaku  = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+Register-ScheduledTask -TaskName "RAG_FactChecking - pembaruan berkala" -Action $aksi -Trigger $pemicu -Settings $setelan -Principal $pelaku -Description "Scraping artikel baru TurnBackHoax (mode maju). Ingest tetap manual."
+```
+
+Setelan tersimpan (dibaca kembali dari Task Scheduler): harian 13.00; `StartWhenAvailable` True;
+`DisallowStartIfOnBatteries` False; `StopIfGoingOnBatteries` False; `RunOnlyIfNetworkAvailable` True;
+`MultipleInstances` IgnoreNew; batas waktu 1 jam; LogonType Interactive, RunLevel Limited.
+
+**Bukti berjalan (dipicu sekali lewat `Start-ScheduledTask`, 20.35 WIB):** `LastTaskResult` 0;
+`pembaruan_status.json` ditulis ulang oleh jalan itu (kode 0 "bersih", antrean 16, kualitas tanpa
+temuan); log jalan tertulis; tidak ada penanda, tidak ada `peluncur_galat.log`, kunci dilepas. Jadi
+direktori kerja, jalur modul, dan penulisan berkas benar di bawah Task Scheduler.
+
+**Yang BELUM terbukti:** jalan itu melewati mode maju karena hasil hari itu sudah ada, sehingga tidak
+ada permintaan jaringan yang dilakukan dari dalam Task Scheduler. Pengambilan artikel di bawah Task
+Scheduler baru teruji pada jalan terjadwal pertama, 2026-10-04 pukul 13.00.
+
+Menghapus tugas: `Unregister-ScheduledTask -TaskName "RAG_FactChecking - pembaruan berkala"`.
