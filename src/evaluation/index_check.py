@@ -52,6 +52,14 @@ def compare_index(chunks: list[dict], stored_ids: list[str], stored_docs: list[s
     return problems
 
 
+def search_config_problems(actual: int | None, expected: int) -> list[str]:
+    """Masalah bila `ef_search` tersimpan tidak sesuai (mis. indeks dibangun ulang lalu lupa disetel)."""
+    if actual == expected:
+        return []
+    return [(f"parameter pencarian: ef_search {actual}, seharusnya {expected} "
+             "(indeks produksi: python src/ingest.py --apply-search-config; arsip tidak boleh diubah)")]
+
+
 V1_ARCHIVE_META_KEY = "arsip_indeks_v1_2026-09-25"
 FINGERPRINT_KEYS = ("jumlah_artikel", "jumlah_chunk", "sha256_daftar_artikel", "sha256_articles_json_isi",
                     "sha256_teks_metadata", "sha256_embedding_float32")
@@ -116,7 +124,14 @@ def main() -> int:
     args = ap.parse_args()
 
     from chunker import build_chunks, load_articles, make_token_counter
-    from ingest import CHROMA_DIR, get_collection, load_model
+    from ingest import (
+        ARCHIVE_EF_SEARCH,
+        CHROMA_DIR,
+        collection_ef_search,
+        expected_ef_search,
+        get_collection,
+        load_model,
+    )
     from paths import INDEX_ARTICLES_PATH, PROJECT_ROOT
 
     print(f"indeks: {CHROMA_DIR} | articles.json: {INDEX_ARTICLES_PATH}")
@@ -126,6 +141,11 @@ def main() -> int:
     got = coll.get(include=["documents", "metadatas", "embeddings"])
     problems = compare_index(chunks, got["ids"], got["documents"], got["metadatas"])
     print(f"articles.json: {len(articles)} artikel -> {len(chunks)} chunk | indeks: {coll.count()} chunk")
+
+    # Parameter pencarian: arsip (atau salinannya, --expect-v1-archive) 100; indeks lain nilai produksi.
+    want_ef = ARCHIVE_EF_SEARCH if args.expect_v1_archive else expected_ef_search(CHROMA_DIR)
+    problems += search_config_problems(collection_ef_search(coll), want_ef)
+    print(f"parameter pencarian: ef_search {collection_ef_search(coll)} (seharusnya {want_ef})")
 
     if args.fingerprint or args.expect_v1_archive:
         fp = content_fingerprint(got["ids"], got["documents"], got["metadatas"], got["embeddings"])

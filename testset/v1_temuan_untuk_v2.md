@@ -466,14 +466,40 @@ pengembangan), `n_results = CHUNK_FETCH = 30`.
   tiga teratas, baik eksak maupun produksi); kejadian yang teramati 1 dari 64 kueri, pada butir
   negatif. Risikonya membesar setiap kali basis data bertambah, dan `index_check` tidak
   mendeteksinya (ia memeriksa isi, bukan mutu pencarian).
-- **Yang TIDAK dilakukan:** parameter produksi tidak diubah (keputusan pemilik proyek; mengubahnya
-  juga mengubah perilaku retrieval yang dibandingkan dengan baseline). Baseline Versi 1 pada
-  `archive/v1` (450 chunk) tidak terpengaruh: di ukuran itu HNSW identik dengan pencarian eksak.
-- **Usulan untuk Versi 2:** (1) naikkan `ef_search` (cukup lewat konfigurasi koleksi, tanpa
-  embedding ulang) atau pakai pencarian eksak -- pada ribuan chunk brute-force masih murah; (2)
-  jadikan "top-k retriever = top-k eksak pada set kueri tetap" pemeriksaan rutin setiap kali indeks
-  bertambah; (3) evaluasi Versi 2 melaporkan Recall dari retriever yang benar-benar dipakai, bukan
-  hanya dari pencarian eksak.
+- **Diperbaiki di indeks produksi pada hari yang sama (keputusan pemilik proyek 2026-10-03):**
+  ini perbaikan ketepatan, bukan fitur -- demo bisa menjawab "belum ditemukan" padahal artikelnya
+  ada -- dan tidak memerlukan embedding ulang. `ef_search` indeks produksi dinaikkan **100 -> 2000**
+  (`python src/ingest.py --apply-search-config`; cadangan `data/backups/pre_ef_search_2026-10-03/`).
+  Dipilih 2000 = nilai terkecil yang terukur tanpa meleset (500 masih menyisakan 1 chunk), bukan
+  "setara eksak" (`ef_search` >= jumlah chunk): jumlah chunk terus bertambah sehingga nilai seperti
+  itu tidak stabil; jaminannya berasal dari pemeriksaan rutin, bukan dari angkanya. Hasil pada indeks
+  produksi (64 kueri, proses baru; `testset/retriever_exactness_1532.json`):
+
+  | | `ef_search` | Kueri dengan chunk terlewat | Chunk terlewat | Top-3 artikel berbeda | Latensi kueri median / p95 |
+  | --- | --- | --- | --- | --- | --- |
+  | Sebelum | 100 | 24/64 | 33/1.920 | 1 (v1-048) | 4,1 ms / 5,6 ms |
+  | Sesudah | 2000 | 0/64 | 0/1.920 | 0 | 9,8 ms / 11,9 ms |
+
+  Latensi hanya `collection.query` (tanpa embedding kueri dan LLM); tambahan ~6 ms tidak berarti
+  dibanding embedding kueri dan panggilan LLM. Isi indeks tidak berubah (sidik jari teks+metadata dan
+  embedding sama sebelum/sesudah; `index_check` lengkap SEGAR).
+- **Indeks produksi dan arsip kini SENGAJA memakai parameter pencarian berbeda:** produksi
+  `ef_search` 2000, `archive/v1` tetap 100 (tidak disentuh; hash byte sama). Alasannya: arsip adalah
+  baseline yang dibangun dan dievaluasi dengan nilai bawaan dan tidak boleh berubah, dan pada 450
+  chunk HNSW identik dengan pencarian eksak (200 kueri acak, 0 selisih) sehingga beda parameter ini
+  tidak mengubah hasil pembandingan. Evaluasi pembanding tetap wajib lewat `archive/v1` (Aturan
+  Wajib #6). `index_check` kini memeriksa parameter ini (produksi 2000, arsip 100) dan gagal bila
+  tidak sesuai, mis. setelah indeks dibangun ulang.
+- **Alat pemeriksaan rutin (ada sejak 2026-10-03):** `python -m evaluation.retriever_exactness`
+  (64 kueri tetap; kode keluar 1 bila ada top-3 artikel yang berbeda dari pencarian eksak; melaporkan
+  artikel yang masuk/keluar beserta peringkatnya, chunk terlewat, parameter, dan latensi). Wajib
+  dijalankan setiap kali indeks bertambah: `ef_search` 2000 terukur cukup pada 4.593 chunk, belum
+  tentu cukup pada indeks yang lebih besar.
+- **Yang tersisa untuk Versi 2:** (1) bila pemeriksaan rutin mulai gagal lagi, naikkan `ef_search`
+  atau ganti ke pencarian eksak -- pada ribuan chunk brute-force masih murah; (2) evaluasi Versi 2
+  melaporkan Recall dari retriever yang benar-benar dipakai, bukan hanya dari pencarian eksak; (3)
+  angka retrieval yang tercatat untuk indeks 922 dan 1.532 (ablasi, perbandingan indeks) berasal
+  dari pencarian EKSAK, jadi tidak berubah oleh perbaikan ini.
 
 ## 11. Artikel yang hanya punya chunk Kesimpulan berada di jalur pencarian terlemah (dicatat 2026-10-03)
 
