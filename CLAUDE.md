@@ -719,7 +719,15 @@ Proyek dibangun bertahap dalam dua versi:
   apakah klaim memang sering berada di luar 512 token (dokumen bagian 10); metode penentuan posisi
   klaim dan kerangka sampelnya MENUNGGU persetujuan pemilik proyek -- jangan mengambil sampel
   sebelum itu, dan jangan memakai LLM untuk menentukan posisi klaim tanpa persetujuan.**
-  Perhitungan ukuran sampel: `python -m evaluation.sample_size` -> `testset/v2_ukuran_sampel.json`. **Rancangan itu
+  Perhitungan ukuran sampel: `python -m evaluation.sample_size` -> `testset/v2_ukuran_sampel.json`.
+  **HASIL PENGUKURAN PANJANG (2026-10-03; `testset/v2_pesan_berantai_ringkasan.json`, dokumen bagian
+  10.7): 0 dari 100 pesan Liputan6 dan 0 dari 100 pesan arsip TurnBackHoax melebihi 512 token**
+  (maks 312 dan 297 token; Wilson95 [0; 3,7%] per sumber; tahan terhadap cara pengukuran). Yang
+  diukur adalah pesan sebagaimana DIKUTIP artikel cek fakta, bukan pesan yang ditempel pengguna.
+  Metode yang disetujui: "terkena" didefinisikan dari sisi kegagalan Versi 1 saja; kandidat artikel
+  sasaran dicari dari judul, bukan dari pesan panjang; penandaan posisi klaim dan konfirmasi artikel
+  sasaran dikerjakan pemilik proyek TANPA bantuan AI. **Berkas penandaan TIDAK disiapkan; cakupan
+  Versi 2 MENUNGGU keputusan pemilik proyek atas hasil ini.** **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk

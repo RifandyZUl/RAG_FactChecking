@@ -642,6 +642,36 @@ memutuskan apakah cakupan Versi 2 dipikir ulang.
   **batas masukan demo harus ikut dipikirkan ulang** (dan peringatan 220 token), dengan batas baru
   yang diukur, bukan ditebak -- batas 5.000 karakter dulu ditetapkan tanpa pengukuran.
 
+### 10.7 Hasil pengukuran panjang (2026-10-03) -- langkah sebelum penandaan
+
+Sumber: `testset/v2_pesan_berantai_ringkasan.json` (hitungan saja; teks pesan tetap lokal). 200
+artikel diambil, 0 gagal, 0 dibuang karena tanggal.
+
+| Sumber | Sampel | Punya kutipan pesan | Di atas 512 token | Wilson 95% (dari sampel) | Token median / p90 / maks |
+| --- | --- | --- | --- | --- | --- |
+| Liputan6 Cek Fakta (terbit 2 Okt 2025-23 Sep 2026) | 100 | 99 | **0** | [0; 3,7%] | 66 / 162 / 312 |
+| Arsip TurnBackHoax (terbit 2 Jan 2022-24 Nov 2024) | 100 | 100 | **0** | [0; 3,7%] | 34 / 69 / 297 |
+
+- **Tidak ada satu pun pesan panjang menurut definisi 10.4.** Akibatnya angka 2 dan 3 pada 10.5
+  tidak dapat dihitung: penyebutnya (pesan panjang) nol.
+- **Hasilnya tahan terhadap cara pengukuran.** Untuk Liputan6: kutipan terpanjang di SEMUA halaman
+  artikel maks 331 token (0 di atas 512); seluruh kutipan halaman pertama digabung maks 397 token
+  (0 di atas 512). Baru bila seluruh kutipan di semua halaman digabung -- termasuk kutipan
+  narasumber di bagian penelusuran, yang bukan pesan hoaks -- ada 3 dari 100 di atas 512. Untuk
+  arsip TurnBackHoax: seksi Narasi PENUH (termasuk kalimat pengantar redaksi) maks 300 token.
+- **Yang TIDAK dapat disimpulkan dari sini.** Yang diukur adalah pesan *sebagaimana dikutip artikel
+  cek fakta*: artikel bisa saja hanya mengutip sebagian pesan berantai, dan sebagian besar yang
+  dikutip adalah unggahan media sosial, bukan pesan yang diteruskan lewat aplikasi percakapan.
+  Seberapa panjang pesan yang benar-benar akan ditempel pengguna ke demo tetap **tidak diketahui**
+  (tidak ada data pemakaian). Arsip TurnBackHoax yang tersampel berasal dari 2022-2024, bukan dari
+  rentang basis data.
+- **Konsekuensi untuk rancangan.** Dengan sumber yang ditetapkan (keputusan 8), butir pesan panjang
+  yang "terkena" tidak dapat dibangun: di 200 pesan acak tidak ada satu pun kandidatnya. Batas atas
+  Wilson 3,7% per sumber berarti perlu menyaring puluhan sampai ratusan artikel untuk menemukan satu
+  pesan di atas 512 token, bila ada. Rancangan Versi 2 dengan cakupan "penanganan pesan panjang"
+  karenanya **menunggu keputusan pemilik proyek** (aturan yang ditetapkan sebelumnya: bila masalahnya
+  jarang, cakupan dipikir ulang). Berkas penandaan TIDAK disiapkan.
+
 ---
 
 ## Sumber
