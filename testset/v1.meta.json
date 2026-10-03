@@ -726,6 +726,28 @@
       "rincian": "testset/v1_perbandingan_indeks_922.json (evaluation.index_comparison), testset/retrieval_ablation_prod922.json"
     }
   },
+  "butir_negatif_berubah_status_indeks_1532_2026-10-03": {
+    "pernyataan": "Label negatif (expected_verdict=belum_ditemukan) butir v1-029 TIDAK BERLAKU pada indeks produksi 1.532 artikel (terverifikasi 2026-10-03; butir KEENAM setelah v1-021, v1-022, v1-043, v1-049, v1-050). Butir ini dibuat dari artikel arsip TurnBackHoax 30089 (url_asal), yang masuk basis data produksi pada perluasan kelompok 5, dan artikel asalnya kini berada di peringkat 1. Pada archive/v1 (150 artikel) labelnya tetap sah.",
+    "yang_tidak_diubah": "testset/v1.jsonl TIDAK diubah (label, butir, dan hash tetap; uji kunci tests/test_testset_locks.py lolos). Set uji v1 tetap beku dan hanya sah pada archive/v1 (Aturan Wajib #6; keterikatan_basis_data_150_2026-09-27).",
+    "rincian_butir": [
+      {
+        "id": "v1-029",
+        "tipe": "negatif_sulit",
+        "subtipe": "entitas_sama_klaim_beda",
+        "artikel_asal": "30089",
+        "skor_peringkat_1": 0.8992
+      }
+    ],
+    "verifikasi": {
+      "asal_30089_di_indeks_produksi": "Kelompok mundur 5 (jalan ulang 2026-10-02): tercantum di data/expansion/batch_05.json (date 16/11/2025, label SALAH) dan manifests/expansion_article_ids.json (kelompok 'batch_05'); di-ingest 2026-10-03 (indeks data/, 4593 chunk). Jalan pertama kelompok 5 (2026-09-28) gagal mengambilnya karena jaringan putus.",
+      "top3_retrieval_1532": "30089 berada di PERINGKAT 1 top-3 retriever produksi (retriever.retrieve; indeks data/, 4593 chunk): 30089 0,8992; 32614 0,7815; 29732 0,7070 (peringkat 4-5: 32378 0,6545; 36161 0,6434). Identik dengan top-3 pencarian eksak di testset/v1_perbandingan_indeks_1532.json. Pada indeks 922 artikel 30089 belum ada (top-3: 32614 0,7815; 32378 0,6545; 36161 0,6434). Pada archive/v1 top-3: 36161 0,6434; 36479 0,6056; 36089 0,5902.",
+      "sasaran_tetangga": "Artikel tetangga yang menjadi sasaran butir (expected_retrieval_article 36161) turun dari peringkat 1 (archive/v1) ke 3 (922 artikel) ke 5 (1.532 artikel), jadi pada indeks produksi ia tidak lagi masuk top-3.",
+      "tipe_butir": "Terdaftar sebagai negatif_sulit, subtipe entitas_sama_klaim_beda, kekhususan 'spesifik', sumber teks_nyata, di v1.jsonl baris 29.",
+      "teks_butir_vs_artikel": "Narasi artikel 30089 mengutip teks butir secara persis (kalimat pembuka 'Program pemutihan tunggakan BPJS Kesehatan akan dimulai pada akhir 2025 ...' sampai tagar). Judul artikelnya (KIA) adalah 'Video Cak Imin Membicarakan tentang Pemutihan Utang BPJS'. Apakah butir ini kini 'klaim sama' menurut pedoman anotasi TIDAK ditetapkan di sini (label final selalu manusia, Aturan Wajib #5); yang dicatat hanya bahwa label negatifnya tidak dapat dipakai pada indeks produksi karena artikel asalnya ada di basis data."
+    },
+    "konsekuensi": "Pada indeks produksi 1.532 artikel, enam butir negatif set uji v1 tidak dapat dipakai sebagai negatif: v1-021, v1-022, v1-029, v1-043, v1-049 (artikel asalnya ada di basis data) dan v1-050 (klaim yang sama lewat artikel lain). Persyaratan set uji Versi 2 tetap seperti dicatat 2026-09-28: butir negatif diverifikasi terhadap snapshot basis data dan diberi versi bersama snapshot itu.",
+    "belum_diputuskan": "v1-046 (negatif_mudah; asal 23544, tidak ada di basis data): pada indeks 1.532 top-1 naik ke 0,6308 (30652 'Timur Kapadze Resmi Menjadi Pelatih Timnas Indonesia'; klaim butir: Shin Tae-yong mundur sebagai pelatih timnas). TIDAK dicatat sebagai berubah status; menunggu keputusan pemilik proyek apakah klaimnya sama atau berbeda."
+  },
   "butir_negatif_berubah_status_indeks_922_2026-09-28": {
     "pernyataan": "Label negatif (expected_verdict=belum_ditemukan) butir v1-021, v1-022, v1-043, dan v1-049 TIDAK BERLAKU pada indeks produksi 922 artikel. Keempatnya dibuat dari artikel arsip TurnBackHoax (url_asal: 35310, 35850, 32490, 35833) yang kini ada di basis data produksi, dan artikel asalnya muncul di peringkat 1 (skor 0,8713; 0,7732; 0,8488; 0,8266). Pada archive/v1 (150 artikel) labelnya tetap sah.",
     "yang_tidak_diubah": "testset/v1.jsonl TIDAK diubah (label, butir, dan hash tetap; uji kunci tests/test_testset_locks.py lolos). Set uji v1 tetap beku dan hanya sah pada archive/v1 (Aturan Wajib #6; keterikatan_basis_data_150_2026-09-27).",
