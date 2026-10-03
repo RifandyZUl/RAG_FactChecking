@@ -1,0 +1,3779 @@
+{
+ "ambang": 0.5739,
+ "negatif_dengan_kandidat_di_atas_ambang": {
+  "dasar": [
+   "v1-022",
+   "v1-024",
+   "v1-025",
+   "v1-026",
+   "v1-027",
+   "v1-028",
+   "v1-029",
+   "v1-030",
+   "v1-032",
+   "v1-034",
+   "v1-035",
+   "v1-036",
+   "v1-037",
+   "v1-038",
+   "v1-039",
+   "v1-040"
+  ],
+  "pembanding": [
+   "v1-021",
+   "v1-022",
+   "v1-023",
+   "v1-024",
+   "v1-025",
+   "v1-026",
+   "v1-027",
+   "v1-028",
+   "v1-029",
+   "v1-030",
+   "v1-031",
+   "v1-032",
+   "v1-034",
+   "v1-035",
+   "v1-036",
+   "v1-037",
+   "v1-038",
+   "v1-039",
+   "v1-040",
+   "v1-043",
+   "v1-044",
+   "v1-046",
+   "v1-049",
+   "v1-050"
+  ]
+ },
+ "negatif_artikel_asal_kini_ada_di_pembanding": [
+  "v1-021",
+  "v1-022",
+  "v1-029",
+  "v1-043",
+  "v1-049"
+ ],
+ "sebaran_per_tipe": {
+  "batas": {
+   "skor_top1_dasar": {
+    "n": 4,
+    "min": 0.5746,
+    "median": 0.6865,
+    "rerata": 0.6748,
+    "maks": 0.7516
+   },
+   "skor_top1_pembanding": {
+    "n": 4,
+    "min": 0.6357,
+    "median": 0.7296,
+    "rerata": 0.7368,
+    "maks": 0.8524
+   },
+   "selisih": {
+    "n": 4,
+    "min": 0.0,
+    "median": 0.0306,
+    "rerata": 0.062,
+    "maks": 0.1868
+   },
+   "naik": 2,
+   "turun": 0,
+   "artikel_top1_berganti": [
+    "v1-051",
+    "v1-052"
+   ]
+  },
+  "negatif_mudah": {
+   "skor_top1_dasar": {
+    "n": 10,
+    "min": 0.4217,
+    "median": 0.517,
+    "rerata": 0.5034,
+    "maks": 0.568
+   },
+   "skor_top1_pembanding": {
+    "n": 10,
+    "min": 0.4726,
+    "median": 0.5742,
+    "rerata": 0.6193,
+    "maks": 0.8488
+   },
+   "selisih": {
+    "n": 10,
+    "min": 0.0142,
+    "median": 0.0477,
+    "rerata": 0.1159,
+    "maks": 0.3308
+   },
+   "naik": 10,
+   "turun": 0,
+   "artikel_top1_berganti": [
+    "v1-041",
+    "v1-042",
+    "v1-043",
+    "v1-044",
+    "v1-045",
+    "v1-046",
+    "v1-047",
+    "v1-048",
+    "v1-049",
+    "v1-050"
+   ]
+  },
+  "negatif_sulit": {
+   "skor_top1_dasar": {
+    "n": 20,
+    "min": 0.46,
+    "median": 0.6319,
+    "rerata": 0.6367,
+    "maks": 0.8256
+   },
+   "skor_top1_pembanding": {
+    "n": 20,
+    "min": 0.46,
+    "median": 0.6979,
+    "rerata": 0.7031,
+    "maks": 0.8992
+   },
+   "selisih": {
+    "n": 20,
+    "min": 0.0,
+    "median": 0.0081,
+    "rerata": 0.0663,
+    "maks": 0.311
+   },
+   "naik": 10,
+   "turun": 0,
+   "artikel_top1_berganti": [
+    "v1-021",
+    "v1-022",
+    "v1-023",
+    "v1-024",
+    "v1-025",
+    "v1-026",
+    "v1-027",
+    "v1-028",
+    "v1-029",
+    "v1-031"
+   ]
+  },
+  "positif": {
+   "skor_top1_dasar": {
+    "n": 20,
+    "min": 0.5416,
+    "median": 0.7723,
+    "rerata": 0.7404,
+    "maks": 0.8932
+   },
+   "skor_top1_pembanding": {
+    "n": 20,
+    "min": 0.5686,
+    "median": 0.775,
+    "rerata": 0.7423,
+    "maks": 0.8932
+   },
+   "selisih": {
+    "n": 20,
+    "min": 0.0,
+    "median": 0.0,
+    "rerata": 0.0019,
+    "maks": 0.027
+   },
+   "naik": 2,
+   "turun": 0,
+   "artikel_top1_berganti": [
+    "v1-002",
+    "v1-019"
+   ]
+  }
+ },
+ "butir": [
+  {
+   "id": "v1-001",
+   "tipe": "positif",
+   "sasaran": "36213",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36213",
+      0.8275
+     ],
+     [
+      "36101",
+      0.8165
+     ],
+     [
+      "36621",
+      0.5575
+     ]
+    ],
+    "skor_top1": 0.8275,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36213",
+      0.8275,
+      true
+     ],
+     [
+      "36101",
+      0.8165,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36213",
+      0.8275
+     ],
+     [
+      "36101",
+      0.8165
+     ],
+     [
+      "32479",
+      0.7143
+     ]
+    ],
+    "skor_top1": 0.8275,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36213",
+      0.8275,
+      true
+     ],
+     [
+      "36101",
+      0.8165,
+      true
+     ],
+     [
+      "32479",
+      0.7143,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-002",
+   "tipe": "positif",
+   "sasaran": "36019",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36051",
+      0.5416
+     ],
+     [
+      "36019",
+      0.5401
+     ],
+     [
+      "36682",
+      0.5333
+     ]
+    ],
+    "skor_top1": 0.5416,
+    "peringkat_sasaran": 2,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "35726",
+      0.5686
+     ],
+     [
+      "36051",
+      0.5416
+     ],
+     [
+      "36019",
+      0.5401
+     ]
+    ],
+    "skor_top1": 0.5686,
+    "peringkat_sasaran": 3,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-003",
+   "tipe": "positif",
+   "sasaran": "36357",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36357",
+      0.7817
+     ],
+     [
+      "36604",
+      0.566
+     ],
+     [
+      "36700",
+      0.5632
+     ]
+    ],
+    "skor_top1": 0.7817,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36357",
+      0.7817,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36357",
+      0.7817
+     ],
+     [
+      "30674",
+      0.6119
+     ],
+     [
+      "35216",
+      0.6072
+     ]
+    ],
+    "skor_top1": 0.7817,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36357",
+      0.7817,
+      true
+     ],
+     [
+      "30674",
+      0.6119,
+      false
+     ],
+     [
+      "35216",
+      0.6072,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-004",
+   "tipe": "positif",
+   "sasaran": "36477",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36477",
+      0.8086
+     ],
+     [
+      "36120",
+      0.5931
+     ],
+     [
+      "36052",
+      0.5777
+     ]
+    ],
+    "skor_top1": 0.8086,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36477",
+      0.8086,
+      true
+     ],
+     [
+      "36120",
+      0.5931,
+      true
+     ],
+     [
+      "36052",
+      0.5777,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36477",
+      0.8086
+     ],
+     [
+      "32992",
+      0.6542
+     ],
+     [
+      "32371",
+      0.6409
+     ]
+    ],
+    "skor_top1": 0.8086,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36477",
+      0.8086,
+      true
+     ],
+     [
+      "32992",
+      0.6542,
+      false
+     ],
+     [
+      "32371",
+      0.6409,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-005",
+   "tipe": "positif",
+   "sasaran": "36700",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36700",
+      0.6921
+     ],
+     [
+      "36604",
+      0.5303
+     ],
+     [
+      "36681",
+      0.5041
+     ]
+    ],
+    "skor_top1": 0.6921,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36700",
+      0.6921,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36700",
+      0.6921
+     ],
+     [
+      "32669",
+      0.5722
+     ],
+     [
+      "34281",
+      0.5431
+     ]
+    ],
+    "skor_top1": 0.6921,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36700",
+      0.6921,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-006",
+   "tipe": "positif",
+   "sasaran": "36387",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36387",
+      0.6907
+     ],
+     [
+      "36380",
+      0.6232
+     ],
+     [
+      "36596",
+      0.5888
+     ]
+    ],
+    "skor_top1": 0.6907,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36387",
+      0.6907,
+      true
+     ],
+     [
+      "36380",
+      0.6232,
+      true
+     ],
+     [
+      "36596",
+      0.5888,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36387",
+      0.6907
+     ],
+     [
+      "36380",
+      0.6232
+     ],
+     [
+      "29686",
+      0.5926
+     ]
+    ],
+    "skor_top1": 0.6907,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36387",
+      0.6907,
+      true
+     ],
+     [
+      "36380",
+      0.6232,
+      true
+     ],
+     [
+      "29686",
+      0.5926,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-007",
+   "tipe": "positif",
+   "sasaran": "36120",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36120",
+      0.7067
+     ],
+     [
+      "36477",
+      0.4783
+     ],
+     [
+      "36164",
+      0.4652
+     ]
+    ],
+    "skor_top1": 0.7067,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36120",
+      0.7067,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36120",
+      0.7067
+     ],
+     [
+      "35979",
+      0.5945
+     ],
+     [
+      "35745",
+      0.5863
+     ]
+    ],
+    "skor_top1": 0.7067,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36120",
+      0.7067,
+      true
+     ],
+     [
+      "35979",
+      0.5945,
+      false
+     ],
+     [
+      "35745",
+      0.5863,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-008",
+   "tipe": "positif",
+   "sasaran": "36111",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36111",
+      0.6234
+     ],
+     [
+      "36052",
+      0.5281
+     ],
+     [
+      "36477",
+      0.5224
+     ]
+    ],
+    "skor_top1": 0.6234,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36111",
+      0.6234,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36111",
+      0.6234
+     ],
+     [
+      "34437",
+      0.5436
+     ],
+     [
+      "32992",
+      0.536
+     ]
+    ],
+    "skor_top1": 0.6234,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36111",
+      0.6234,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-009",
+   "tipe": "positif",
+   "sasaran": "36157",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36157",
+      0.748
+     ],
+     [
+      "36042",
+      0.6834
+     ],
+     [
+      "36737",
+      0.6585
+     ]
+    ],
+    "skor_top1": 0.748,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36157",
+      0.748,
+      true
+     ],
+     [
+      "36042",
+      0.6834,
+      true
+     ],
+     [
+      "36737",
+      0.6585,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36157",
+      0.748
+     ],
+     [
+      "35254",
+      0.6998
+     ],
+     [
+      "36042",
+      0.6834
+     ]
+    ],
+    "skor_top1": 0.748,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36157",
+      0.748,
+      true
+     ],
+     [
+      "35254",
+      0.6998,
+      false
+     ],
+     [
+      "36042",
+      0.6834,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-010",
+   "tipe": "positif",
+   "sasaran": "36191",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36191",
+      0.6804
+     ],
+     [
+      "36546",
+      0.5314
+     ],
+     [
+      "36597",
+      0.5135
+     ]
+    ],
+    "skor_top1": 0.6804,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36191",
+      0.6804,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36191",
+      0.6804
+     ],
+     [
+      "31092",
+      0.6559
+     ],
+     [
+      "29513",
+      0.6422
+     ]
+    ],
+    "skor_top1": 0.6804,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36191",
+      0.6804,
+      true
+     ],
+     [
+      "31092",
+      0.6559,
+      false
+     ],
+     [
+      "29513",
+      0.6422,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-011",
+   "tipe": "positif",
+   "sasaran": "36166",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36166",
+      0.6379
+     ],
+     [
+      "36358",
+      0.5233
+     ],
+     [
+      "36122",
+      0.4982
+     ]
+    ],
+    "skor_top1": 0.6379,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36166",
+      0.6379,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36166",
+      0.6379
+     ],
+     [
+      "35650",
+      0.5473
+     ],
+     [
+      "36358",
+      0.5233
+     ]
+    ],
+    "skor_top1": 0.6379,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36166",
+      0.6379,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-012",
+   "tipe": "positif",
+   "sasaran": "36331",
+   "artikel_asal_tbh": "36331",
+   "dasar": {
+    "top3": [
+     [
+      "36331",
+      0.7736
+     ],
+     [
+      "36054",
+      0.6758
+     ],
+     [
+      "36563",
+      0.6229
+     ]
+    ],
+    "skor_top1": 0.7736,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "36331",
+      0.7736,
+      true
+     ],
+     [
+      "36054",
+      0.6758,
+      true
+     ],
+     [
+      "36563",
+      0.6229,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36331",
+      0.7736
+     ],
+     [
+      "35288",
+      0.6842
+     ],
+     [
+      "36054",
+      0.6758
+     ]
+    ],
+    "skor_top1": 0.7736,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "36331",
+      0.7736,
+      true
+     ],
+     [
+      "35288",
+      0.6842,
+      false
+     ],
+     [
+      "36054",
+      0.6758,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-013",
+   "tipe": "positif",
+   "sasaran": "36545",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36545",
+      0.8932
+     ],
+     [
+      "36109",
+      0.7342
+     ],
+     [
+      "36621",
+      0.6417
+     ]
+    ],
+    "skor_top1": 0.8932,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36545",
+      0.8932,
+      true
+     ],
+     [
+      "36109",
+      0.7342,
+      true
+     ],
+     [
+      "36621",
+      0.6417,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36545",
+      0.8932
+     ],
+     [
+      "36109",
+      0.7342
+     ],
+     [
+      "32283",
+      0.7179
+     ]
+    ],
+    "skor_top1": 0.8932,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36545",
+      0.8932,
+      true
+     ],
+     [
+      "36109",
+      0.7342,
+      true
+     ],
+     [
+      "32283",
+      0.7179,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-014",
+   "tipe": "positif",
+   "sasaran": "36048",
+   "artikel_asal_tbh": "36048",
+   "dasar": {
+    "top3": [
+     [
+      "36048",
+      0.8171
+     ],
+     [
+      "36054",
+      0.6981
+     ],
+     [
+      "36379",
+      0.6711
+     ]
+    ],
+    "skor_top1": 0.8171,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "36048",
+      0.8171,
+      true
+     ],
+     [
+      "36054",
+      0.6981,
+      true
+     ],
+     [
+      "36379",
+      0.6711,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36048",
+      0.8171
+     ],
+     [
+      "34547",
+      0.7158
+     ],
+     [
+      "36054",
+      0.6981
+     ]
+    ],
+    "skor_top1": 0.8171,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "36048",
+      0.8171,
+      true
+     ],
+     [
+      "34547",
+      0.7158,
+      false
+     ],
+     [
+      "36054",
+      0.6981,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-015",
+   "tipe": "positif",
+   "sasaran": "36606",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36606",
+      0.7764
+     ],
+     [
+      "36111",
+      0.5225
+     ],
+     [
+      "36119",
+      0.5213
+     ]
+    ],
+    "skor_top1": 0.7764,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36606",
+      0.7764,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36606",
+      0.7764
+     ],
+     [
+      "31883",
+      0.5782
+     ],
+     [
+      "31093",
+      0.5619
+     ]
+    ],
+    "skor_top1": 0.7764,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36606",
+      0.7764,
+      true
+     ],
+     [
+      "31883",
+      0.5782,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-016",
+   "tipe": "positif",
+   "sasaran": "36573",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36573",
+      0.7853
+     ],
+     [
+      "36520",
+      0.6122
+     ],
+     [
+      "36700",
+      0.5968
+     ]
+    ],
+    "skor_top1": 0.7853,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36573",
+      0.7853,
+      true
+     ],
+     [
+      "36520",
+      0.6122,
+      true
+     ],
+     [
+      "36700",
+      0.5968,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36573",
+      0.7853
+     ],
+     [
+      "32669",
+      0.6849
+     ],
+     [
+      "31871",
+      0.6541
+     ]
+    ],
+    "skor_top1": 0.7853,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36573",
+      0.7853,
+      true
+     ],
+     [
+      "32669",
+      0.6849,
+      false
+     ],
+     [
+      "31871",
+      0.6541,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-017",
+   "tipe": "positif",
+   "sasaran": "36610",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36610",
+      0.7858
+     ],
+     [
+      "36727",
+      0.6248
+     ],
+     [
+      "36590",
+      0.5591
+     ]
+    ],
+    "skor_top1": 0.7858,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36610",
+      0.7858,
+      true
+     ],
+     [
+      "36727",
+      0.6248,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36610",
+      0.7858
+     ],
+     [
+      "35820",
+      0.6571
+     ],
+     [
+      "35682",
+      0.6409
+     ]
+    ],
+    "skor_top1": 0.7858,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36610",
+      0.7858,
+      true
+     ],
+     [
+      "35820",
+      0.6571,
+      false
+     ],
+     [
+      "35682",
+      0.6409,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-018",
+   "tipe": "positif",
+   "sasaran": "36388",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36388",
+      0.7782
+     ],
+     [
+      "36622",
+      0.6562
+     ],
+     [
+      "36610",
+      0.5139
+     ]
+    ],
+    "skor_top1": 0.7782,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36388",
+      0.7782,
+      true
+     ],
+     [
+      "36622",
+      0.6562,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36388",
+      0.7782
+     ],
+     [
+      "36622",
+      0.6562
+     ],
+     [
+      "33795",
+      0.5813
+     ]
+    ],
+    "skor_top1": 0.7782,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36388",
+      0.7782,
+      true
+     ],
+     [
+      "36622",
+      0.6562,
+      true
+     ],
+     [
+      "33795",
+      0.5813,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-019",
+   "tipe": "positif",
+   "sasaran": "36282",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36282",
+      0.771
+     ],
+     [
+      "36564",
+      0.6808
+     ],
+     [
+      "36560",
+      0.6742
+     ]
+    ],
+    "skor_top1": 0.771,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36282",
+      0.771,
+      true
+     ],
+     [
+      "36564",
+      0.6808,
+      true
+     ],
+     [
+      "36560",
+      0.6742,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "32121",
+      0.7823
+     ],
+     [
+      "36282",
+      0.771
+     ],
+     [
+      "32209",
+      0.7362
+     ]
+    ],
+    "skor_top1": 0.7823,
+    "peringkat_sasaran": 2,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "32121",
+      0.7823,
+      false
+     ],
+     [
+      "36282",
+      0.771,
+      true
+     ],
+     [
+      "32209",
+      0.7362,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-020",
+   "tipe": "positif",
+   "sasaran": "36062",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36062",
+      0.6894
+     ],
+     [
+      "36589",
+      0.486
+     ],
+     [
+      "36110",
+      0.4769
+     ]
+    ],
+    "skor_top1": 0.6894,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36062",
+      0.6894,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36062",
+      0.6894
+     ],
+     [
+      "30657",
+      0.5179
+     ],
+     [
+      "35195",
+      0.5146
+     ]
+    ],
+    "skor_top1": 0.6894,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36062",
+      0.6894,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-021",
+   "tipe": "negatif_sulit",
+   "sasaran": "36457",
+   "artikel_asal_tbh": "35310",
+   "dasar": {
+    "top3": [
+     [
+      "36140",
+      0.5603
+     ],
+     [
+      "36457",
+      0.5419
+     ],
+     [
+      "36164",
+      0.5316
+     ]
+    ],
+    "skor_top1": 0.5603,
+    "peringkat_sasaran": 2,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "35310",
+      0.8713
+     ],
+     [
+      "35655",
+      0.7159
+     ],
+     [
+      "29549",
+      0.6732
+     ]
+    ],
+    "skor_top1": 0.8713,
+    "peringkat_sasaran": 34,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "35310",
+      0.8713,
+      false
+     ],
+     [
+      "35655",
+      0.7159,
+      false
+     ],
+     [
+      "29549",
+      0.6732,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-022",
+   "tipe": "negatif_sulit",
+   "sasaran": "36648",
+   "artikel_asal_tbh": "35850",
+   "dasar": {
+    "top3": [
+     [
+      "36672",
+      0.6318
+     ],
+     [
+      "36612",
+      0.6099
+     ],
+     [
+      "36054",
+      0.5897
+     ]
+    ],
+    "skor_top1": 0.6318,
+    "peringkat_sasaran": 19,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": [
+     [
+      "36672",
+      0.6318,
+      true
+     ],
+     [
+      "36612",
+      0.6099,
+      true
+     ],
+     [
+      "36054",
+      0.5897,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "35850",
+      0.7732
+     ],
+     [
+      "34449",
+      0.6436
+     ],
+     [
+      "34447",
+      0.6385
+     ]
+    ],
+    "skor_top1": 0.7732,
+    "peringkat_sasaran": 158,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "35850",
+      0.7732,
+      false
+     ],
+     [
+      "34449",
+      0.6436,
+      false
+     ],
+     [
+      "34447",
+      0.6385,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-023",
+   "tipe": "negatif_sulit",
+   "sasaran": "36546",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36546",
+      0.5688
+     ],
+     [
+      "36597",
+      0.5322
+     ],
+     [
+      "36737",
+      0.5279
+     ]
+    ],
+    "skor_top1": 0.5688,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "30412",
+      0.585
+     ],
+     [
+      "33864",
+      0.5843
+     ],
+     [
+      "29989",
+      0.5797
+     ]
+    ],
+    "skor_top1": 0.585,
+    "peringkat_sasaran": 6,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "30412",
+      0.585,
+      false
+     ],
+     [
+      "33864",
+      0.5843,
+      false
+     ],
+     [
+      "29989",
+      0.5797,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-024",
+   "tipe": "negatif_sulit",
+   "sasaran": "36576",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36043",
+      0.5842
+     ],
+     [
+      "36042",
+      0.575
+     ],
+     [
+      "36737",
+      0.5642
+     ]
+    ],
+    "skor_top1": 0.5842,
+    "peringkat_sasaran": 4,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36043",
+      0.5842,
+      true
+     ],
+     [
+      "36042",
+      0.575,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36811",
+      0.8063
+     ],
+     [
+      "35732",
+      0.6772
+     ],
+     [
+      "29695",
+      0.638
+     ]
+    ],
+    "skor_top1": 0.8063,
+    "peringkat_sasaran": 30,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36811",
+      0.8063,
+      false
+     ],
+     [
+      "35732",
+      0.6772,
+      false
+     ],
+     [
+      "29695",
+      0.638,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-025",
+   "tipe": "negatif_sulit",
+   "sasaran": "36191",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36191",
+      0.6636
+     ],
+     [
+      "36572",
+      0.5602
+     ],
+     [
+      "36049",
+      0.5561
+     ]
+    ],
+    "skor_top1": 0.6636,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36191",
+      0.6636,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "32483",
+      0.707
+     ],
+     [
+      "31782",
+      0.6979
+     ],
+     [
+      "29437",
+      0.6825
+     ]
+    ],
+    "skor_top1": 0.707,
+    "peringkat_sasaran": 6,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "32483",
+      0.707,
+      false
+     ],
+     [
+      "31782",
+      0.6979,
+      false
+     ],
+     [
+      "29437",
+      0.6825,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-026",
+   "tipe": "negatif_sulit",
+   "sasaran": "36561",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36561",
+      0.6096
+     ],
+     [
+      "36089",
+      0.5792
+     ],
+     [
+      "36043",
+      0.5667
+     ]
+    ],
+    "skor_top1": 0.6096,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36561",
+      0.6096,
+      true
+     ],
+     [
+      "36089",
+      0.5792,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "29387",
+      0.7498
+     ],
+     [
+      "31607",
+      0.7269
+     ],
+     [
+      "32984",
+      0.6837
+     ]
+    ],
+    "skor_top1": 0.7498,
+    "peringkat_sasaran": 9,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "29387",
+      0.7498,
+      false
+     ],
+     [
+      "31607",
+      0.7269,
+      false
+     ],
+     [
+      "32984",
+      0.6837,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-027",
+   "tipe": "negatif_sulit",
+   "sasaran": "36191",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36613",
+      0.6138
+     ],
+     [
+      "36576",
+      0.5979
+     ],
+     [
+      "36571",
+      0.5886
+     ]
+    ],
+    "skor_top1": 0.6138,
+    "peringkat_sasaran": 4,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36613",
+      0.6138,
+      true
+     ],
+     [
+      "36576",
+      0.5979,
+      true
+     ],
+     [
+      "36571",
+      0.5886,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36776",
+      0.7154
+     ],
+     [
+      "35550",
+      0.668
+     ],
+     [
+      "34690",
+      0.6268
+     ]
+    ],
+    "skor_top1": 0.7154,
+    "peringkat_sasaran": 30,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36776",
+      0.7154,
+      false
+     ],
+     [
+      "35550",
+      0.668,
+      false
+     ],
+     [
+      "34690",
+      0.6268,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-028",
+   "tipe": "negatif_sulit",
+   "sasaran": "36213",
+   "artikel_asal_tbh": "26646",
+   "dasar": {
+    "top3": [
+     [
+      "36213",
+      0.6517
+     ],
+     [
+      "36101",
+      0.6056
+     ],
+     [
+      "36296",
+      0.5334
+     ]
+    ],
+    "skor_top1": 0.6517,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": [
+     [
+      "36213",
+      0.6517,
+      true
+     ],
+     [
+      "36101",
+      0.6056,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "31846",
+      0.6864
+     ],
+     [
+      "30190",
+      0.6779
+     ],
+     [
+      "32561",
+      0.6689
+     ]
+    ],
+    "skor_top1": 0.6864,
+    "peringkat_sasaran": 5,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": [
+     [
+      "31846",
+      0.6864,
+      false
+     ],
+     [
+      "30190",
+      0.6779,
+      false
+     ],
+     [
+      "32561",
+      0.6689,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-029",
+   "tipe": "negatif_sulit",
+   "sasaran": "36161",
+   "artikel_asal_tbh": "30089",
+   "dasar": {
+    "top3": [
+     [
+      "36161",
+      0.6434
+     ],
+     [
+      "36479",
+      0.6056
+     ],
+     [
+      "36089",
+      0.5902
+     ]
+    ],
+    "skor_top1": 0.6434,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": [
+     [
+      "36161",
+      0.6434,
+      true
+     ],
+     [
+      "36479",
+      0.6056,
+      true
+     ],
+     [
+      "36089",
+      0.5902,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "30089",
+      0.8992
+     ],
+     [
+      "32614",
+      0.7815
+     ],
+     [
+      "29732",
+      0.707
+     ]
+    ],
+    "skor_top1": 0.8992,
+    "peringkat_sasaran": 5,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "30089",
+      0.8992,
+      false
+     ],
+     [
+      "32614",
+      0.7815,
+      false
+     ],
+     [
+      "29732",
+      0.707,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-030",
+   "tipe": "negatif_sulit",
+   "sasaran": "36216",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36216",
+      0.6218
+     ],
+     [
+      "36086",
+      0.6032
+     ],
+     [
+      "36020",
+      0.5893
+     ]
+    ],
+    "skor_top1": 0.6218,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36216",
+      0.6218,
+      true
+     ],
+     [
+      "36086",
+      0.6032,
+      true
+     ],
+     [
+      "36020",
+      0.5893,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36216",
+      0.6218
+     ],
+     [
+      "29859",
+      0.6184
+     ],
+     [
+      "29750",
+      0.6076
+     ]
+    ],
+    "skor_top1": 0.6218,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36216",
+      0.6218,
+      true
+     ],
+     [
+      "29859",
+      0.6184,
+      false
+     ],
+     [
+      "29750",
+      0.6076,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-031",
+   "tipe": "negatif_sulit",
+   "sasaran": "36216",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36086",
+      0.5499
+     ],
+     [
+      "36020",
+      0.5469
+     ],
+     [
+      "36216",
+      0.5445
+     ]
+    ],
+    "skor_top1": 0.5499,
+    "peringkat_sasaran": 3,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "32050",
+      0.6102
+     ],
+     [
+      "30791",
+      0.6071
+     ],
+     [
+      "29859",
+      0.5862
+     ]
+    ],
+    "skor_top1": 0.6102,
+    "peringkat_sasaran": 20,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "32050",
+      0.6102,
+      false
+     ],
+     [
+      "30791",
+      0.6071,
+      false
+     ],
+     [
+      "29859",
+      0.5862,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-032",
+   "tipe": "negatif_sulit",
+   "sasaran": "36286",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36286",
+      0.6888
+     ],
+     [
+      "36042",
+      0.6817
+     ],
+     [
+      "36157",
+      0.6011
+     ]
+    ],
+    "skor_top1": 0.6888,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36286",
+      0.6888,
+      true
+     ],
+     [
+      "36042",
+      0.6817,
+      true
+     ],
+     [
+      "36157",
+      0.6011,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36286",
+      0.6888
+     ],
+     [
+      "36042",
+      0.6817
+     ],
+     [
+      "32360",
+      0.6798
+     ]
+    ],
+    "skor_top1": 0.6888,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36286",
+      0.6888,
+      true
+     ],
+     [
+      "36042",
+      0.6817,
+      true
+     ],
+     [
+      "32360",
+      0.6798,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-033",
+   "tipe": "negatif_sulit",
+   "sasaran": "36191",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36596",
+      0.46
+     ],
+     [
+      "36380",
+      0.4473
+     ],
+     [
+      "36476",
+      0.4242
+     ]
+    ],
+    "skor_top1": 0.46,
+    "peringkat_sasaran": 6,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36596",
+      0.46
+     ],
+     [
+      "36380",
+      0.4473
+     ],
+     [
+      "31115",
+      0.4337
+     ]
+    ],
+    "skor_top1": 0.46,
+    "peringkat_sasaran": 18,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-034",
+   "tipe": "negatif_sulit",
+   "sasaran": "36700",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36700",
+      0.6319
+     ],
+     [
+      "36357",
+      0.553
+     ],
+     [
+      "36604",
+      0.5349
+     ]
+    ],
+    "skor_top1": 0.6319,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36700",
+      0.6319,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36700",
+      0.6319
+     ],
+     [
+      "29425",
+      0.586
+     ],
+     [
+      "36357",
+      0.553
+     ]
+    ],
+    "skor_top1": 0.6319,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36700",
+      0.6319,
+      true
+     ],
+     [
+      "29425",
+      0.586,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-035",
+   "tipe": "negatif_sulit",
+   "sasaran": "36477",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36477",
+      0.754
+     ],
+     [
+      "36052",
+      0.4971
+     ],
+     [
+      "36111",
+      0.4911
+     ]
+    ],
+    "skor_top1": 0.754,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36477",
+      0.754,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36477",
+      0.754
+     ],
+     [
+      "34437",
+      0.5839
+     ],
+     [
+      "32992",
+      0.5698
+     ]
+    ],
+    "skor_top1": 0.754,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36477",
+      0.754,
+      true
+     ],
+     [
+      "34437",
+      0.5839,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-036",
+   "tipe": "negatif_sulit",
+   "sasaran": "36388",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36388",
+      0.6628
+     ],
+     [
+      "36622",
+      0.5871
+     ],
+     [
+      "36143",
+      0.487
+     ]
+    ],
+    "skor_top1": 0.6628,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36388",
+      0.6628,
+      true
+     ],
+     [
+      "36622",
+      0.5871,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36388",
+      0.6628
+     ],
+     [
+      "36622",
+      0.5871
+     ],
+     [
+      "33795",
+      0.5724
+     ]
+    ],
+    "skor_top1": 0.6628,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36388",
+      0.6628,
+      true
+     ],
+     [
+      "36622",
+      0.5871,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-037",
+   "tipe": "negatif_sulit",
+   "sasaran": "36157",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36157",
+      0.6327
+     ],
+     [
+      "36043",
+      0.5493
+     ],
+     [
+      "36654",
+      0.5435
+     ]
+    ],
+    "skor_top1": 0.6327,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36157",
+      0.6327,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36157",
+      0.6327
+     ],
+     [
+      "30261",
+      0.5899
+     ],
+     [
+      "33314",
+      0.5865
+     ]
+    ],
+    "skor_top1": 0.6327,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36157",
+      0.6327,
+      true
+     ],
+     [
+      "30261",
+      0.5899,
+      false
+     ],
+     [
+      "33314",
+      0.5865,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-038",
+   "tipe": "negatif_sulit",
+   "sasaran": "36545",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36545",
+      0.8256
+     ],
+     [
+      "36109",
+      0.6847
+     ],
+     [
+      "36621",
+      0.6613
+     ]
+    ],
+    "skor_top1": 0.8256,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36545",
+      0.8256,
+      true
+     ],
+     [
+      "36109",
+      0.6847,
+      true
+     ],
+     [
+      "36621",
+      0.6613,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36545",
+      0.8256
+     ],
+     [
+      "32206",
+      0.6949
+     ],
+     [
+      "36109",
+      0.6847
+     ]
+    ],
+    "skor_top1": 0.8256,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36545",
+      0.8256,
+      true
+     ],
+     [
+      "32206",
+      0.6949,
+      false
+     ],
+     [
+      "36109",
+      0.6847,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-039",
+   "tipe": "negatif_sulit",
+   "sasaran": "36282",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36282",
+      0.6289
+     ],
+     [
+      "36564",
+      0.5402
+     ],
+     [
+      "36519",
+      0.532
+     ]
+    ],
+    "skor_top1": 0.6289,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36282",
+      0.6289,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36282",
+      0.6289
+     ],
+     [
+      "32121",
+      0.5616
+     ],
+     [
+      "32209",
+      0.5496
+     ]
+    ],
+    "skor_top1": 0.6289,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36282",
+      0.6289,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-040",
+   "tipe": "negatif_sulit",
+   "sasaran": "36120",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36120",
+      0.7509
+     ],
+     [
+      "36111",
+      0.5406
+     ],
+     [
+      "36477",
+      0.5134
+     ]
+    ],
+    "skor_top1": 0.7509,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36120",
+      0.7509,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36120",
+      0.7509
+     ],
+     [
+      "34437",
+      0.5814
+     ],
+     [
+      "36111",
+      0.5406
+     ]
+    ],
+    "skor_top1": 0.7509,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36120",
+      0.7509,
+      true
+     ],
+     [
+      "34437",
+      0.5814,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-041",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "23531",
+   "dasar": {
+    "top3": [
+     [
+      "36156",
+      0.4934
+     ],
+     [
+      "36357",
+      0.4577
+     ],
+     [
+      "36457",
+      0.4559
+     ]
+    ],
+    "skor_top1": 0.4934,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "34241",
+      0.5076
+     ],
+     [
+      "36156",
+      0.4934
+     ],
+     [
+      "29456",
+      0.492
+     ]
+    ],
+    "skor_top1": 0.5076,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-042",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "28638",
+   "dasar": {
+    "top3": [
+     [
+      "36680",
+      0.5238
+     ],
+     [
+      "36387",
+      0.51
+     ],
+     [
+      "36101",
+      0.5031
+     ]
+    ],
+    "skor_top1": 0.5238,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "30407",
+      0.5584
+     ],
+     [
+      "30041",
+      0.5491
+     ],
+     [
+      "29758",
+      0.545
+     ]
+    ],
+    "skor_top1": 0.5584,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-043",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "32490",
+   "dasar": {
+    "top3": [
+     [
+      "36042",
+      0.568
+     ],
+     [
+      "36737",
+      0.5515
+     ],
+     [
+      "36191",
+      0.5397
+     ]
+    ],
+    "skor_top1": 0.568,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "32490",
+      0.8488
+     ],
+     [
+      "29505",
+      0.6469
+     ],
+     [
+      "29437",
+      0.6257
+     ]
+    ],
+    "skor_top1": 0.8488,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "32490",
+      0.8488,
+      false
+     ],
+     [
+      "29505",
+      0.6469,
+      false
+     ],
+     [
+      "29437",
+      0.6257,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-044",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36053",
+      0.5311
+     ],
+     [
+      "36582",
+      0.5088
+     ],
+     [
+      "36655",
+      0.5076
+     ]
+    ],
+    "skor_top1": 0.5311,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "33460",
+      0.5781
+     ],
+     [
+      "34710",
+      0.576
+     ],
+     [
+      "30421",
+      0.571
+     ]
+    ],
+    "skor_top1": 0.5781,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "33460",
+      0.5781,
+      false
+     ],
+     [
+      "34710",
+      0.576,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-045",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36727",
+      0.4242
+     ],
+     [
+      "36388",
+      0.4069
+     ],
+     [
+      "36622",
+      0.4053
+     ]
+    ],
+    "skor_top1": 0.4242,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "29842",
+      0.4726
+     ],
+     [
+      "30308",
+      0.4639
+     ],
+     [
+      "34443",
+      0.4594
+     ]
+    ],
+    "skor_top1": 0.4726,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-046",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "23544",
+   "dasar": {
+    "top3": [
+     [
+      "36595",
+      0.5101
+     ],
+     [
+      "36380",
+      0.4909
+     ],
+     [
+      "36387",
+      0.4899
+     ]
+    ],
+    "skor_top1": 0.5101,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "30652",
+      0.6308
+     ],
+     [
+      "31230",
+      0.616
+     ],
+     [
+      "29860",
+      0.6142
+     ]
+    ],
+    "skor_top1": 0.6308,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": [
+     [
+      "30652",
+      0.6308,
+      false
+     ],
+     [
+      "31230",
+      0.616,
+      false
+     ],
+     [
+      "29860",
+      0.6142,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-047",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "26669",
+   "dasar": {
+    "top3": [
+     [
+      "36595",
+      0.5351
+     ],
+     [
+      "36729",
+      0.5301
+     ],
+     [
+      "36215",
+      0.5241
+     ]
+    ],
+    "skor_top1": 0.5351,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "29662",
+      0.5703
+     ],
+     [
+      "31230",
+      0.5671
+     ],
+     [
+      "29663",
+      0.5586
+     ]
+    ],
+    "skor_top1": 0.5703,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-048",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "26671",
+   "dasar": {
+    "top3": [
+     [
+      "36572",
+      0.5306
+     ],
+     [
+      "36589",
+      0.5302
+     ],
+     [
+      "36191",
+      0.5157
+     ]
+    ],
+    "skor_top1": 0.5306,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "35244",
+      0.5666
+     ],
+     [
+      "31975",
+      0.5546
+     ],
+     [
+      "34690",
+      0.5478
+     ]
+    ],
+    "skor_top1": 0.5666,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   }
+  },
+  {
+   "id": "v1-049",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": "35833",
+   "dasar": {
+    "top3": [
+     [
+      "36164",
+      0.4958
+     ],
+     [
+      "36730",
+      0.4858
+     ],
+     [
+      "36190",
+      0.4839
+     ]
+    ],
+    "skor_top1": 0.4958,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": false,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "35833",
+      0.8266
+     ],
+     [
+      "32366",
+      0.6021
+     ],
+     [
+      "29477",
+      0.5856
+     ]
+    ],
+    "skor_top1": 0.8266,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": true,
+    "top3_di_atas_ambang": [
+     [
+      "35833",
+      0.8266,
+      false
+     ],
+     [
+      "32366",
+      0.6021,
+      false
+     ],
+     [
+      "29477",
+      0.5856,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-050",
+   "tipe": "negatif_mudah",
+   "sasaran": null,
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36139",
+      0.4217
+     ],
+     [
+      "36086",
+      0.4162
+     ],
+     [
+      "36140",
+      0.4122
+     ]
+    ],
+    "skor_top1": 0.4217,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": []
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36775",
+      0.633
+     ],
+     [
+      "33076",
+      0.5232
+     ],
+     [
+      "31967",
+      0.5166
+     ]
+    ],
+    "skor_top1": 0.633,
+    "peringkat_sasaran": null,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36775",
+      0.633,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-051",
+   "tipe": "batas",
+   "sasaran": "36109",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36109",
+      0.6656
+     ],
+     [
+      "36561",
+      0.6487
+     ],
+     [
+      "36545",
+      0.6373
+     ]
+    ],
+    "skor_top1": 0.6656,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36109",
+      0.6656,
+      true
+     ],
+     [
+      "36561",
+      0.6487,
+      true
+     ],
+     [
+      "36545",
+      0.6373,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "32314",
+      0.8524
+     ],
+     [
+      "30277",
+      0.8045
+     ],
+     [
+      "32496",
+      0.7593
+     ]
+    ],
+    "skor_top1": 0.8524,
+    "peringkat_sasaran": 16,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "32314",
+      0.8524,
+      false
+     ],
+     [
+      "30277",
+      0.8045,
+      false
+     ],
+     [
+      "32496",
+      0.7593,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-052",
+   "tipe": "batas",
+   "sasaran": "36518",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36546",
+      0.5746
+     ],
+     [
+      "36518",
+      0.5715
+     ],
+     [
+      "36049",
+      0.5709
+     ]
+    ],
+    "skor_top1": 0.5746,
+    "peringkat_sasaran": 2,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36546",
+      0.5746,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "29989",
+      0.6357
+     ],
+     [
+      "33461",
+      0.6237
+     ],
+     [
+      "33175",
+      0.6059
+     ]
+    ],
+    "skor_top1": 0.6357,
+    "peringkat_sasaran": 13,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "29989",
+      0.6357,
+      false
+     ],
+     [
+      "33461",
+      0.6237,
+      false
+     ],
+     [
+      "33175",
+      0.6059,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-053",
+   "tipe": "batas",
+   "sasaran": "36596",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36596",
+      0.7075
+     ],
+     [
+      "36387",
+      0.5747
+     ],
+     [
+      "36380",
+      0.5129
+     ]
+    ],
+    "skor_top1": 0.7075,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36596",
+      0.7075,
+      true
+     ],
+     [
+      "36387",
+      0.5747,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36596",
+      0.7075
+     ],
+     [
+      "36387",
+      0.5747
+     ],
+     [
+      "35660",
+      0.5557
+     ]
+    ],
+    "skor_top1": 0.7075,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36596",
+      0.7075,
+      true
+     ],
+     [
+      "36387",
+      0.5747,
+      true
+     ]
+    ]
+   }
+  },
+  {
+   "id": "v1-054",
+   "tipe": "batas",
+   "sasaran": "36387",
+   "artikel_asal_tbh": null,
+   "dasar": {
+    "top3": [
+     [
+      "36387",
+      0.7516
+     ],
+     [
+      "36596",
+      0.628
+     ],
+     [
+      "36380",
+      0.6223
+     ]
+    ],
+    "skor_top1": 0.7516,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36387",
+      0.7516,
+      true
+     ],
+     [
+      "36596",
+      0.628,
+      true
+     ],
+     [
+      "36380",
+      0.6223,
+      true
+     ]
+    ]
+   },
+   "pembanding": {
+    "top3": [
+     [
+      "36387",
+      0.7516
+     ],
+     [
+      "36596",
+      0.628
+     ],
+     [
+      "36380",
+      0.6223
+     ]
+    ],
+    "skor_top1": 0.7516,
+    "peringkat_sasaran": 1,
+    "artikel_asal_ada": null,
+    "top3_di_atas_ambang": [
+     [
+      "36387",
+      0.7516,
+      true
+     ],
+     [
+      "36596",
+      0.628,
+      true
+     ],
+     [
+      "36380",
+      0.6223,
+      true
+     ]
+    ]
+   }
+  }
+ ],
+ "meta": {
+  "model_embedding": "BAAI/bge-m3",
+  "jumlah_chunk": {
+   "dasar": 450,
+   "pembanding": 4593
+  },
+  "jumlah_artikel": {
+   "dasar": 150,
+   "pembanding": 1532
+  },
+  "catatan": "Pengamatan retrieval saja; tanpa LLM. Top-3 di atas ambang: [artikel, skor, ada_di_dasar]."
+ }
+}
