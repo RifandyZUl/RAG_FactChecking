@@ -67,9 +67,25 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from paths import ARTICLES_PATH, DATA_DIR, RAW_HTML_DIR
-from scraping.client import DELAY, make_session
-from scraping.discovery import LIST_URL, find_article_urls, get_soup
-from scraping.pipeline import scrape_article
+from scraping.client import DELAY
+from scraping.source import ArticleSource, check_article_schema, get_source
+
+# Sumber artikel (lapisan pengambilan data yang bisa diganti; bawaan scraping HTML). Dipilih lewat
+# variabel lingkungan ARTICLE_SOURCE saat modul dimuat. Logika di bawah hanya memakai tiga fungsi
+# pembungkus ini, tidak pernah kode scraping HTML secara langsung.
+SOURCE: ArticleSource = get_source()
+
+
+def make_session() -> Any:
+    return SOURCE.make_session()
+
+
+def list_page_urls(page: int, session: Any) -> list[str] | None:
+    return SOURCE.list_page_urls(page, session)
+
+
+def scrape_article(url: str, session: Any) -> tuple[dict | None, bool]:
+    return SOURCE.fetch_article(url, session)
 
 EXPANSION_DIR = DATA_DIR / "expansion"
 STATE_PATH = EXPANSION_DIR / "state.json"
@@ -255,12 +271,12 @@ def _captured(fn: Any, *args: Any) -> tuple[Any, str]:
 
 
 def fetch_list_page(page: int, session: Any) -> list[str] | None:
-    soup, log = _captured(get_soup, f"{LIST_URL}?page={page}", session)
+    urls, log = _captured(list_page_urls, page, session)
     RETRIES["halaman_daftar"] += len(_RETRY_LINE.findall(log))
-    if soup is None:
+    if urls is None:
         return None
     seen: list[str] = []
-    for u in find_article_urls(soup):
+    for u in urls:
         if u not in seen:
             seen.append(u)
     return seen
@@ -352,6 +368,8 @@ def scrape_with_reason(url: str, session: Any) -> tuple[dict | None, bool, str, 
     try:
         with contextlib.redirect_stdout(buf):
             art, from_network = scrape_article(url, session)
+            if art is not None:
+                check_article_schema(art)  # kontrak sumber: kunci sama dengan hasil parser HTML
     except Exception as e:  # noqa: BLE001 -- sengaja luas; dicatat lengkap di bawah, tidak ditelan
         error = e
     log = buf.getvalue()
