@@ -43,13 +43,13 @@ LIMITATION_NOTE = (
 )
 # Cakupan evaluasi (catatan jujur, bukan peringatan): akurasi 48/50 diukur pada archive/v1
 # (150 artikel); indeks produksi yang dipakai demo lebih besar dan baru diukur retrieval-nya
-# (testset/retrieval_ablation_prod922_report.txt, butir positif). Angka di sini wajib ikut
+# (testset/v1_perbandingan_indeks_1532.json, butir positif; 2026-10-03). Angka di sini wajib ikut
 # diperbarui bila pengukuran diulang.
 EVALUATION_SCOPE_NOTE = (
     "Akurasi 48 dari 50 diukur pada basis data versi awal (150 artikel). Demo ini memakai basis "
-    "data yang lebih besar, yang baru diukur bagian pencarian artikelnya: saat berisi 922 artikel, "
-    "artikel yang benar berada di urutan pertama untuk 18 dari 20 klaim uji dan di tiga teratas "
-    "untuk 20 dari 20. Akurasi akhir pada basis data yang lebih besar belum diukur."
+    "data yang lebih besar, 1.532 artikel dari satu tahun terakhir, yang baru diukur bagian "
+    "pencarian artikelnya: artikel yang benar berada di urutan pertama untuk 18 dari 20 klaim uji "
+    "dan di tiga teratas untuk 20 dari 20. Akurasi akhir pada basis data yang lebih besar belum diukur."
 )
 INPUT_LABEL = "Pesan atau klaim yang ingin dicek"
 INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"
@@ -122,7 +122,9 @@ _TRUE_VALUES = {"1", "true", "ya", "yes", "on"}
 # lebih baik tidak menampilkan apa pun daripada artikel yang tidak relevan. Dasar tiap
 # angka dicatat di berkas konfigurasi itu.
 #
-# Indeks `data` 922 artikel (2026-09-28): DIMATIKAN karena pada set pengembangan tidak ada
+# Indeks `data` 1.532 artikel (2026-10-03): TETAP DIMATIKAN, alasan yang sama (skor kandidat teratas
+# tidak bisa turun saat indeks diperbesar; lihat berkas konfigurasi). Riwayat 922 artikel
+# (2026-09-28): DIMATIKAN karena pada set pengembangan tidak ada
 # ambang yang memisahkan -- kueri tak terkait "NASA ngaku bumi datar" (0,6385) berskor LEBIH
 # TINGGI daripada kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang
 # menyingkirkannya hanya bermargin 0,0015. Bukan karena artikel bertopik jauh lolos pada set
