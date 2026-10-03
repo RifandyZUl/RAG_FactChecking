@@ -745,7 +745,18 @@ Proyek dibangun bertahap dalam dua versi:
   `kunci_kandidat.json` untuknya.** Satu artikel dikeluarkan (Klarifikasi Polri). Label Liputan6:
   banner "Salah" 58, "Hoax" 39, "Klarifikasi" 2, tanpa 1 (dari 100) -- TIDAK dipetakan ke label
   TurnBackHoax tanpa pasangan terkonfirmasi. Sesudah berkas diisi: hitung proporsi "TIDAK ADA" dari
-  butir sah dengan Wilson 95%, bandingkan butir ujung rentang, dan laporkan tabel silang label. **Rancangan itu
+  butir sah dengan Wilson 95%, bandingkan butir ujung rentang, dan laporkan tabel silang label.
+  **Dikonfirmasi pemilik proyek 2026-10-04 (bagian 11.2, commit `a1459a2`, sebelum berkas dibuka):**
+  ambang "lebih dari separuh"; hasil JELAS bila interval Wilson 95% seluruhnya di atas atau di bawah
+  50%, AMBIGU bila melintasi 50%; bila ambigu, perluas ke 100 butir.
+  **Yang diisi pemilik proyek adalah `konfirmasi_50.xlsx`** (dibuat `python -m candidates.gap_workbook
+  --make` dari CSV yang sama, tanpa mengambil ulang sampel; `openpyxl==3.1.5` di
+  `requirements-dev.txt`; uji `tests/test_gap_workbook.py`). Berkas ini ber-creator kode (lihat
+  Aturan Wajib #5): templat keluar dengan KEPUTUSAN kosong, buktinya `sidik_jari_templat_xlsx.json`.
+  **Setelah pemilik proyek menyatakan selesai: `python -m candidates.gap_workbook --read`** -- ia
+  menolak menghitung bila sel selain KEPUTUSAN/catatan berubah dari templat atau ada butir yang
+  kosong/tidak terbaca (dilaporkan untuk ditanyakan, TIDAK ditebak), dan baru saat itu membuka
+  `kunci_kandidat.json` untuk tabel silang label. **Belum dijalankan; keputusan belum diisi.** **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk

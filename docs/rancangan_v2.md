@@ -744,6 +744,23 @@ membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dili
 - **Kesamaan klaim ditentukan pemilik proyek sendiri dengan pedoman anotasi v1.0, tanpa bantuan AI.**
   Berkas disiapkan kode (kandidat dan tata letak); keputusan diisi manusia (Aturan Wajib #5).
 - Berkas dan teksnya lokal (`data/candidates/celah_liputan6/`, tidak di-commit).
+- **Versi `.xlsx` (2026-10-04, permintaan pemilik proyek; inilah yang diisi dan dibaca):**
+  `konfirmasi_50.xlsx`, dibuat `python -m candidates.gap_workbook --make` dari `konfirmasi_50.csv`
+  tanpa mengambil ulang sampel (326 baris, 50 butir; isi dibaca ulang identik dengan CSV). Teks
+  dibungkus, baris judul dibekukan, lebar kolom diatur, Kesimpulan tetap paling kanan, semua sel
+  bertipe teks, tanpa skor.
+- **Asal-usul berkas (Aturan Wajib #5).** Berkas buatan `openpyxl` ber-*creator* kode, persis tanda
+  yang dipakai untuk mendeteksi kejadian 2026-09-22. Karena itu: (1) *creator*-nya ditulis
+  eksplisit "tata letak dihasilkan kode, KEPUTUSAN diisi manusia"; (2) sidik jari templat kosong
+  disimpan saat dibuat (`sidik_jari_templat_xlsx.json`): KEPUTUSAN terisi 0, catatan terisi 0,
+  sidik jari isi selain kolom manusia `501df3816f509baa...`, SHA-256 berkas `387147e2edc768f4...`;
+  (3) pembacaan (`--read`) menolak menghitung bila sel selain KEPUTUSAN/catatan berbeda dari
+  templat, dan melaporkan apakah berkas terakhir disimpan aplikasi lain (`lastModifiedBy`).
+  Pemeriksaan ini membuktikan berkas disimpan lewat Excel, **bukan** siapa yang mengetik; yang
+  terakhir tetap pernyataan pemilik proyek.
+- **Pembacaan tidak menebak.** Keputusan dibaca dari baris pertama tiap butir. Sel kosong, tulisan
+  di luar tiga pilihan, id di luar daftar kandidat, dan keputusan yang diketik di baris kandidat
+  hanya dilaporkan untuk ditanyakan; hasil tidak dihitung sampai semuanya jelas.
 
 ### 11.4 Batas tafsir
 
