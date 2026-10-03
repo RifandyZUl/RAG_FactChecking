@@ -3,3 +3,5 @@
 pytest==9.1.1
 # Linter; versi dikunci karena aturan bawaan ruff berubah antarversi (konfigurasi: ruff.toml)
 ruff==0.16.9
+# Berkas konfirmasi manusia .xlsx (candidates.gap_workbook): tata letak saja, keputusan diisi manusia
+openpyxl==3.1.5
