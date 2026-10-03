@@ -17,11 +17,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > SATIR 2, SATIRE 1, KOMEDI 1). `index_check` LENGKAP (termasuk 8 sampel embedding ulang, kosinus
 > 1,000000): SEGAR. **Demo berjalan di indeks ini, yang BELUM PERNAH dievaluasi dengan generator;
 > yang terukur hanya retrieval (positif Recall@1/3 = 18/20, 20/20).** Akurasi 48/50 tetap hanya
-> berlaku pada `archive/v1` (150 artikel). **Yang TIDAK selesai 2026-10-03:** jalan ulang ablasi
-> lengkap (`retrieval_ablation`) pada indeks 1.532 DIHENTIKAN Claude Code karena memori sistem
-> rendah dan tidak dijalankan lagi (tidak ada berkas keluaran); Recall@k diambil dari
-> `index_comparison`. Konfirmasi v1-029 lewat retriever produksi (HNSW) dan pengukuran ulang set
-> pengembangan untuk ambang "Mungkin terkait" juga tidak dijalankan (perlu memuat model). Cadangan:
+> berlaku pada `archive/v1` (150 artikel). **TAHAP PERLUASAN ("tahap 3") DINYATAKAN SELESAI oleh
+> pemilik proyek setelah penutupan 2026-10-03; berikutnya Versi 2 (belum dimulai).** Ablasi lengkap
+> pada indeks 1.532, konfirmasi v1-029 lewat retriever produksi, dan pengukuran ulang set
+> pengembangan SUDAH dijalankan (butir (l) di bawah; jalan pertama ablasi sempat dihentikan karena
+> memori rendah). **Menunggu keputusan pemilik proyek:** status v1-046 (klaim sama atau berbeda dengan
+> artikel 30652). Cadangan:
 > `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
 > (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
@@ -214,6 +215,33 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     turun saat indeks diperbesar (chunk lama dan embedding-nya tetap), jadi kueri tak terkait "bumi
     datar" tetap >= 0,6385, di atas kandidat layak tampil (0,5739-0,63); selain itu v1-046 kini
     0,6308. Set pengembangan tidak diukur ulang (memori).
+    (l) **Penutupan 2026-10-03 (satu jalan, memori dipantau; log `data/pending_2026-10-03.log`):**
+    *Ablasi lengkap pada indeks 1.532* (`testset/retrieval_ablation_prod1532.json`/`_report.txt`, ~7
+    menit, kode keluar 0): Recall@1/3/5/10/20 non-batas 27,29,31,34,36 dari 40 (positif
+    18,20,20,20,20; negatif sulit 9,9,11,14,16) -- sama dengan `index_comparison`. Agregasi dan top-k:
+    tetap tidak dapat dibedakan dari kebetulan. Seksi (@3 non-batas): seluruh seksi 29/40, hanya
+    Narasi 28/40, Narasi+Kesimpulan 29/40 (identik dengan seluruh seksi, 0 butir berpindah), hanya
+    Kesimpulan 21/40 (turun bermakna, -8, p 0,008; positif 15/20) -- jadi 29670, yang hanya punya
+    chunk Kesimpulan, berada di jalur retrieval terlemah. Panjang klaim: ~1.500 dan ~3.000 karakter
+    19/20; ~5.000 karakter dengan pengganggu di kedua sisi **0/20** (klaim di luar 512 token pada
+    18/20; pada arsip 2/20); klaim di awal pesan tetap 19/20. **Validasi kesetiaan: top-3 eksak =
+    `retriever.retrieve` produksi pada 53/54 butir; berbeda pada v1-048** (pada 922: 54/54) --
+    pertama kalinya retriever produksi tidak sama dengan pencarian eksak; penyebabnya (aproksimasi
+    HNSW atau batas `CHUNK_FETCH`) BELUM diselidiki.
+    *v1-029 lewat retriever produksi:* 30089 peringkat 1 (0,8992), lalu 32614 (0,7815), 29732
+    (0,7070); identik dengan pencarian eksak. Dicatat di `v1.meta.json`
+    (`butir_negatif_berubah_status_indeks_1532_2026-10-03`) sebagai butir negatif KEENAM. **v1-046
+    TIDAK dicatat** (menunggu keputusan pemilik proyek; top-1 30652 0,6308).
+    *Set pengembangan pada indeks 1.532* (`testset/devset_retrieval_1532.json`): sasaran di peringkat
+    1 untuk 36730, 36738, 36731, 36729; **kueri batas "bantuan buat orang tua" tidak lagi memuat 36737
+    di top-3** (32625 0,6514; 35849 0,6408; 32117 0,6355). Negatif: bumi datar 0,6385 (tetap), vaksin
+    flu 36214 0,6671 (tetap), megathrust 0,5963 (tetap), daun sirsak 0,5715, gas melon 0,6225 (naik
+    dari 0,5377; kini ada artikel bantuan untuk pemilik LPG 3 kg). "Mungkin terkait" tetap mati; bahwa
+    ambang skor gagal secara STRUKTURAL saat basis data membesar dicatat di
+    `v1_temuan_untuk_v2.md` bagian 6.1 (usulan: ganti dengan penilaian grader di Versi 2).
+    *Daftar tepercaya* disetujui pemilik proyek (2026-10-03); pencocokan pada batas domain, diuji
+    dengan tiruan nama media. *Catatan cakupan demo* memisahkan hasil pencarian (18 dan 20 dari 20
+    butir uji) dari akurasi jawaban, yang belum terukur pada indeks ini.
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris
@@ -1610,8 +1638,9 @@ sebagai cacat yang perlu diperbaiki tanpa diminta.
   (dicatat 2026-10-03). (1) `links.TRUSTED_SOURCE_DOMAINS` (media dan cek fakta) disusun Claude Code
   pada 2026-10-03 dari domain yang muncul sebagai rujukan di data -- **melingkar**, karena justru
   kebersihan rujukan itulah yang sedang diperiksa; "klasifikasi domain" 2026-09-26 tidak pernah ada
-  sebagai daftar. **Daftar ini MENUNGGU tinjauan pemilik proyek**; pada data saat ini hanya dua URL
-  (33497) yang bergantung padanya. (2) Pengecualian `*.go.id` berisiko: situs pemerintah di Indonesia
+  sebagai daftar. **Isi daftar sudah dibaca dan disetujui pemilik proyek (2026-10-03)**; cara
+  penyusunannya tetap melingkar. Pada data saat ini hanya dua URL (33497) yang bergantung padanya.
+  Pencocokan pada batas domain (host persis atau subdomain sejati), diuji dengan tiruan nama media. (2) Pengecualian `*.go.id` berisiko: situs pemerintah di Indonesia
   cukup sering diretas dan disisipi halaman judi atau penipuan, sehingga URL `.go.id` di baris
   "Sumber:" bisa saja memang halaman berbahaya. Tidak diubah sekarang (keputusan pemilik proyek);
   pada data saat ini hanya dua URL (32110, 31532), keduanya beranda/layanan resmi yang disebut
