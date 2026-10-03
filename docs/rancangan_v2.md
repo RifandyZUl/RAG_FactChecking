@@ -526,14 +526,15 @@ Yudistira belum dijawab.
 ## 9. Yang masih terbuka
 
 1. **Hasil pengukuran bagian 10** -- menentukan apakah Versi 2 dilanjutkan dengan cakupan ini.
-2. **Metode penentuan posisi klaim** (bagian 10.3) -- menunggu persetujuan pemilik proyek sebelum
-   sampel diambil.
+2. **Beban penandaan** (bagian 10.3) -- setelah sampel diukur: berapa pesan di atas 512 token dan
+   berapa pesan Liputan6 yang dikonfirmasi; diperkecil dengan sampel acak bila terlalu banyak.
 3. **Jumlah butir pesan panjang** (bagian 6.3 d) -- ditetapkan setelah pengukuran.
 4. **Teks pedoman 1.1** (bagian 6.4) -- disetujui lalu dikunci sebelum pelabelan.
 5. **Ambang hipotesis** (bagian 4) -- dikunci di `testset/v2.meta.json` sebelum pelabelan.
 6. **Pengaruh pesan utuh pada generator** (bagian 3, butir 5): generator Versi 1 membaca seluruh
    pesan panjang; belum pernah diukur apakah penilaian "klaim sama"-nya tetap andal pada masukan
    sepanjang itu (set uji v1 tidak memuat pesan panjang).
+7. **Batas masukan demo** (bagian 10.6) bila Versi 2 menangani pesan panjang.
 
 ---
 
@@ -550,31 +551,96 @@ karakter) dan Versi 2 memecahkan masalah yang jarang terjadi.
 2. Posisi klaim inti relatif terhadap batas 512 token.
 3. Persentase sampel yang benar-benar terkena masalah, menurut definisi mekanistik di 10.4.
 
-### 10.2 Sampel
+### 10.2 Sampel (disetujui 2026-10-03)
 
-Diambil **acak**, bukan dipilih yang kebetulan panjang; ukuran sampel dan cara memilihnya
-dilaporkan. Sumber sesuai keputusan 8: Liputan6 Cek Fakta (positif) dan arsip TurnBackHoax sebelum
-September 2025 (negatif). Rincian kerangka sampel (populasi, benih acak, ukuran) diusulkan bersama
-metode di 10.3 dan **menunggu persetujuan sebelum ada yang diambil**.
+Diambil **acak berbenih** (benih 20261003, dicatat sebelum pengambilan), bukan dipilih yang
+kebetulan panjang. Alat: `python -m candidates.chain_sample` (keluaran lokal di
+`data/candidates/pesan_berantai/`, tidak di-commit). `robots.txt` kedua situs diperiksa
+2026-10-03: liputan6.com tidak melarang `/cek-fakta` (daftar larangan tidak memuatnya, tidak ada
+aturan khusus agen AI); turnbackhoax.id `Disallow:` kosong.
 
-### 10.3 Metode penentuan posisi klaim
+- **Liputan6 Cek Fakta, 100 artikel kasus tunggal** ("Cek Fakta: ...") terbit 30 Sep 2025-27 Sep
+  2026 (rentang basis data). Pencacahan lewat halaman indeks per tanggal
+  (`/cek-fakta/indeks/YYYY/MM/DD`): 60 tanggal dipilih acak, lalu 100 artikel dipilih acak dari
+  gabungannya; artikel yang tanggal terbitnya di luar rentang dibuang.
+- **Arsip TurnBackHoax sebelum September 2025, 100 artikel** di luar basis data: 30 halaman daftar
+  dipilih acak dari halaman 175-1.558, lalu sampai 4 artikel acak per halaman; artikel bertanggal
+  1 September 2025 atau sesudahnya dibuang.
+- **"Pesan"** = kutipan terpanjang di artikel (Liputan6: halaman pertama; TurnBackHoax: seksi
+  Narasi, atau teks setelah kata "narasi" bila tidak dikutip). **Kelemahan yang dicatat:** kutipan
+  diambil otomatis dari tanda kutip, sehingga pesan yang memuat tanda kutip di dalamnya bisa
+  terpotong (panjangnya terukur lebih pendek dari aslinya), dan artikel cek fakta bisa saja hanya
+  mengutip sebagian pesan berantai.
 
-Diusulkan terpisah kepada pemilik proyek (lihat laporan 2026-10-03); **LLM tidak dipakai untuk
-menentukannya tanpa persetujuan**. Metode yang disetujui dicatat di sini sebelum sampel diambil.
+### 10.3 Metode (disetujui 2026-10-03 dengan dua perubahan dari pemilik proyek)
 
-### 10.4 Definisi "pesan panjang" (mekanistik, bukan jumlah karakter)
+Tanpa LLM. Tiga bagian:
 
-Sebuah pesan **terkena** bila kedua syarat ini terpenuhi: (i) panjangnya melebihi 512 token
-bge-m3, sehingga sebagian pesan tidak ikut di-embed; dan (ii) klaim intinya tidak terbaca utuh di
-dalam 512 token pertama. Pesan yang panjang tetapi klaimnya utuh di dalam 512 token pertama
-**tidak** terkena, berapa pun jumlah karakternya. Cara menetapkan syarat (ii) bergantung pada
-metode di 10.3.
+- **C -- uji kegagalan, sebagai definisi.** Untuk tiap pesan positif (artikel sasarannya
+  terkonfirmasi), pesan dicari dengan cara Versi 1 (512 token pertama). Hasil pencarian per
+  jendela atas seluruh pesan **boleh dilaporkan sebagai pengamatan, tetapi BUKAN bagian dari
+  definisi**: pencarian per jendela adalah salah satu kandidat solusi Versi 2, dan mendefinisikan
+  "terkena" sebagai "yang bisa ditemukannya" akan membuat solusi itu tampak memulihkan semua butir
+  secara melingkar.
+- **A -- penandaan manual oleh pemilik proyek**, tanpa bantuan AI: kalimat pembawa klaim inti
+  ditandai pada pesan di atas 512 token; posisi tokennya dihitung dari tanda itu. Dipakai untuk
+  memisahkan penyebab kegagalan: klaimnya memang di luar 512 token pertama, atau gagal karena hal
+  lain.
+- **B -- pencocokan kata dengan judul artikel cek fakta**, dihitung untuk semua pesan sebagai
+  pembanding; yang dilaporkan adalah seberapa sering ia sepakat dengan A.
 
-### 10.5 Aturan keputusan sesudahnya
+**Artikel sasaran pesan Liputan6 dikonfirmasi pemilik proyek, tanpa bantuan AI.** Daftar kandidat
+yang disodorkan **tidak dicari memakai pesan panjangnya**: bila dicari dengan pesan itu, pada
+pesan yang memang gagal dicari -- persis kasus yang ingin dihitung -- artikel yang benar tidak
+muncul, butirnya tersisih, dan prevalensinya terukur terlalu rendah. Kandidat dicari dari **judul
+artikel Liputan6** (pendek) ditambah **pencarian kata kunci pada judul 1.532 artikel**, dan selalu
+ada pilihan **"tidak ada yang cocok"**.
 
-Tidak ditetapkan angka ambang "jarang" di sini; pemilik proyek melihat hasilnya lebih dulu. Yang
-dilaporkan: proporsi terkena beserta interval Wilson 95%, sebaran posisi klaim, dan berapa pesan
-yang harus disaring untuk mendapat satu butir yang terkena (masukan langsung untuk bagian 6.3).
+Urutan yang ditetapkan: sampel diambil dan diukur panjangnya lebih dulu; jumlah pesan di atas 512
+token dan jumlah pesan Liputan6 yang perlu dikonfirmasi dilaporkan; bila terlalu banyak untuk
+dikerjakan dengan teliti, diperkecil dengan **sampel acak**, bukan dengan bantuan AI; baru
+kemudian berkas penandaan disiapkan.
+
+### 10.4 Definisi (mekanistik, bukan jumlah karakter)
+
+- **Pesan panjang** = pesan yang melebihi 512 token bge-m3, sehingga sebagian isinya tidak ikut
+  di-embed.
+- **Pesan terkena** = pesan panjang yang artikel sasarannya **tidak masuk tiga besar saat dicari
+  dengan cara Versi 1**. Definisi ini hanya dari sisi kegagalan.
+- **Penyebab** dipisahkan dengan penandaan manual: (i) klaim inti berada di luar 512 token pertama
+  (seluruhnya atau sebagian); (ii) klaim inti utuh di dalam 512 token pertama tetapi tetap gagal
+  (sebab lain).
+
+### 10.5 Pelaporan: setiap angka dengan penyebutnya
+
+Tidak ada angka "prevalensi" tanpa penyebut. Yang dilaporkan, masing-masing dengan interval Wilson
+95%:
+
+1. pesan di atas 512 token **dari seluruh sampel** (per sumber, dan dari sampel yang punya kutipan
+   pesan);
+2. pesan yang klaim intinya berada di luar 512 token pertama **dari pesan panjang**;
+3. kegagalan Versi 1 (artikel sasaran di luar tiga besar) **dari butir positif yang artikel
+   sasarannya terkonfirmasi**, dipisah untuk pesan panjang dan pesan pendek;
+4. berapa pesan yang harus disaring untuk mendapat satu butir yang terkena (masukan untuk 6.3).
+
+Tidak ditetapkan angka ambang "jarang"; pemilik proyek melihat hasilnya lebih dulu, lalu
+memutuskan apakah cakupan Versi 2 dipikir ulang.
+
+### 10.6 Dua hal yang ikut dicatat (2026-10-03)
+
+- **Generator Versi 1 tetap membaca seluruh pesan panjang.** `AnswerGenerator` menerima pesan utuh
+  sebagai `claim` dan mengirimkannya ke LLM; hanya pencariannya yang terpotong. Pengaruh masukan
+  sepanjang itu pada penilaian "klaim sama" **belum pernah diukur** (set uji v1 tidak memuat pesan
+  panjang). Ini **wajib ikut dievaluasi**: pada butir pesan panjang, kegagalan pencarian dan
+  kegagalan penilaian dilaporkan terpisah, termasuk untuk butir yang artikelnya sudah masuk tiga
+  besar.
+- **Demo menolak pesan di atas 1.500 karakter**, sedangkan 512 token setara kira-kira 2.300-3.000
+  karakter menurut rasio yang terukur (335 token pada 1.500 karakter; 998 token pada 5.000
+  karakter; `presentation.py` dan `v1_temuan_untuk_v2.md` bagian 4.2). Artinya pesan yang terkena
+  pemotongan saat ini **tidak bisa dimasukkan ke demo sama sekali**: bagi pengguna demo masalahnya
+  berbentuk "pesan ditolak", bukan "pesan dijawab keliru". Bila Versi 2 menangani pesan panjang,
+  **batas masukan demo harus ikut dipikirkan ulang** (dan peringatan 220 token), dengan batas baru
+  yang diukur, bukan ditebak -- batas 5.000 karakter dulu ditetapkan tanpa pengukuran.
 
 ---
 
@@ -591,6 +657,7 @@ yang harus disaring untuk mendapat satu butir yang terkena (masukan langsung unt
 | `testset/retrieval_ablation_report.txt`, `_prod922_report.txt`, `_prod1532_report.txt` | Recall@k per indeks; pesan panjang (2/20, 0/20, 0/20; 19/20) |
 | `testset/v1_perbandingan_indeks_1532.json`, `testset/devset_retrieval_1532.json` | recall positif pada indeks 1.532; skor set pengembangan |
 | `config/related_threshold.json` | dasar keputusan mematikan "Mungkin terkait" |
+| `src/candidates/chain_sample.py` | pengambilan sampel acak pesan berantai (bagian 10.2) |
 | `src/evaluation/sample_size.py`, `testset/v2_ukuran_sampel.json`, `testset/v2_ukuran_sampel.txt` | seluruh angka ukuran sampel (bagian 4 dan 6.3) |
 | `src/llm/limits.py` | kuota (RPM 15, TPM 250.000, RPD 500; 2026-09-21) |
 | `src/generator.py`, `tests/test_testset_locks.py` | apa yang sudah dilakukan generator; apa yang terkunci |
