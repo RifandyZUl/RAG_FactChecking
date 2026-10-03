@@ -1,0 +1,156 @@
+{
+  "keterangan": "Ringkasan pengukuran panjang pesan berantai asli (docs/rancangan_v2.md bagian 10). HANYA hitungan; teks pesan, judul, dan URL tidak disertakan (teks hoaks apa adanya tetap lokal di data/candidates/pesan_berantai/). Alat: python -m candidates.chain_sample.",
+  "tanggal_pengambilan": "2026-10-03",
+  "benih": 20261003,
+  "batas_token": 512,
+  "tokenizer": "BAAI/bge-m3 (termasuk token khusus)",
+  "robots_txt_2026-10-03": {
+    "liputan6.com": "tidak melarang /cek-fakta; tanpa aturan khusus agen AI",
+    "turnbackhoax.id": "Disallow kosong"
+  },
+  "liputan6": {
+    "pengambilan": {
+      "tanggal_dipilih": 60,
+      "tanggal_gagal": [],
+      "artikel_kasus_tunggal_di_gabungan": 147,
+      "dicoba": 100,
+      "dilewati": {
+        "gagal_ambil": 0,
+        "di_luar_rentang_tanggal": 0,
+        "tanpa_kutipan": 1
+      },
+      "benih": 20261003
+    },
+    "sampel": 100,
+    "punya_kutipan_pesan": 99,
+    "di_atas_512_token": 0,
+    "di_atas_256_token": 2,
+    "token_median": 66,
+    "token_p90": 169,
+    "token_maks": 312,
+    "karakter_maks": 1032,
+    "memuat_penanda_data_pribadi": 12,
+    "rentang_tanggal_terbit": [
+      "2025-10-02",
+      "2026-09-23"
+    ],
+    "kuartil_token_min_q1_median_q3_p90_p95_maks": [
+      3,
+      40,
+      66,
+      104,
+      162,
+      214,
+      312
+    ],
+    "wilson95_di_atas_512_dari_sampel": [
+      0.0,
+      0.037
+    ],
+    "uji_ketahanan_di_atas_512_token_dari_100": {
+      "kutipan_terpanjang_halaman_1 (dipakai)": {
+        "jumlah": 0,
+        "maks_token": 312
+      },
+      "kutipan_terpanjang_semua_halaman": {
+        "jumlah": 0,
+        "maks_token": 331
+      },
+      "semua_kutipan_halaman_1_digabung": {
+        "jumlah": 0,
+        "maks_token": 397
+      },
+      "semua_kutipan_semua_halaman_digabung (termasuk kutipan narasumber di bagian penelusuran)": {
+        "jumlah": 3,
+        "maks_token": 706
+      },
+      "seluruh_teks_halaman_1 (termasuk tulisan wartawan)": {
+        "jumlah": 7,
+        "maks_token": 633
+      }
+    }
+  },
+  "arsip_turnbackhoax": {
+    "pengambilan": {
+      "halaman_dipilih": [
+        285,
+        326,
+        368,
+        434,
+        471,
+        478,
+        492,
+        532,
+        542,
+        563,
+        565,
+        601,
+        613,
+        682,
+        684,
+        709,
+        722,
+        737,
+        795,
+        911,
+        979,
+        980,
+        989,
+        1036,
+        1050,
+        1149,
+        1246,
+        1397,
+        1488,
+        1550
+      ],
+      "dicoba": 100,
+      "dilewati": {
+        "halaman_gagal": [],
+        "gagal_ambil_atau_parse": 0,
+        "tidak_lebih_tua_dari_batas": 0,
+        "sudah_di_basis_data": 0,
+        "tanpa_narasi": 0
+      },
+      "benih": 20261003
+    },
+    "sampel": 100,
+    "punya_kutipan_pesan": 100,
+    "di_atas_512_token": 0,
+    "di_atas_256_token": 1,
+    "token_median": 35,
+    "token_p90": 70,
+    "token_maks": 297,
+    "karakter_maks": 1559,
+    "memuat_penanda_data_pribadi": 12,
+    "rentang_tanggal_terbit": [
+      "2022-01-02",
+      "2024-11-24"
+    ],
+    "per_tahun": {
+      "2022": 24,
+      "2023": 24,
+      "2024": 52
+    },
+    "kuartil_token_min_q1_median_q3_p90_p95_maks": [
+      5,
+      21,
+      34,
+      49,
+      69,
+      77,
+      297
+    ],
+    "wilson95_di_atas_512_dari_sampel": [
+      0.0,
+      0.037
+    ],
+    "narasi_penuh_token": {
+      "median": 49,
+      "p90": 120,
+      "maks": 300,
+      "di_atas_512": 0
+    },
+    "artikel_tanpa_tanda_kutip_di_narasi (pesan = teks setelah kata 'narasi')": 47
+  }
+}
