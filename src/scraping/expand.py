@@ -141,15 +141,27 @@ def failure_kind(reason: str) -> str:
 
 
 def attempts_by_id(entries: list[dict[str, Any]]) -> dict[str, int]:
-    """Berapa kali tiap artikel tercatat gagal di buku gagal (antar-jalan)."""
+    """
+    Berapa kali tiap artikel tercatat gagal KARENA SEBAB NON-JARINGAN di buku gagal (antar-jalan).
+
+    Kegagalan jaringan sengaja TIDAK dihitung (keputusan pemilik proyek 2026-10-03): bila internet mati
+    beberapa hari, artikel yang dicoba sebelum pemutus sirkuit aktif tercatat gagal setiap hari, dan
+    tanpa pengecualian ini akan ditandai permanen padahal artikelnya tidak bermasalah. Konsekuensinya:
+    artikel yang terus-menerus gagal karena jaringan tidak pernah menjadi permanen dengan sendirinya;
+    ia menahan jalan (kode 5) sampai berhasil atau manusia memutuskan (--accept-failures).
+    """
     counts: dict[str, int] = {}
     for e in entries:
-        counts[e["article_id"]] = counts.get(e["article_id"], 0) + 1
+        if (e.get("jenis") or failure_kind(e["alasan"])) != "jaringan":
+            counts[e["article_id"]] = counts.get(e["article_id"], 0) + 1
     return counts
 
 
 def is_permanent_failure(reason: str, attempts: int) -> bool:
-    """Kegagalan yang tidak layak dicoba lagi otomatis: HTTP 404/410, atau sudah MAX_ATTEMPTS kali gagal."""
+    """
+    Kegagalan yang tidak layak dicoba lagi otomatis: HTTP 404/410, atau artikel itu sudah MAX_ATTEMPTS
+    kali gagal karena sebab non-jaringan (`attempts` dari `attempts_by_id`).
+    """
     return _PERMANENT_HTTP.match(reason) is not None or attempts >= MAX_ATTEMPTS
 
 
@@ -159,10 +171,10 @@ def hold_decision(failures: list[dict[str, Any]], attempted: int, attempts: dict
     Putuskan apakah hasil jalan boleh ditulis (batas "sudah dimiliki" maju).
 
     Mengembalikan (keputusan, id_bisa_dicoba_lagi, id_permanen); keputusan: "tulis" |
-    "tahan_sistematis" | "tahan_coba_lagi". `attempts` = jumlah kegagalan per artikel di buku gagal,
-    SUDAH termasuk jalan ini. `accept` (--accept-failures) = manusia memutuskan menulis apa adanya.
+    "tahan_sistematis" | "tahan_coba_lagi". `attempts` = jumlah kegagalan NON-JARINGAN per artikel di
+    buku gagal (`attempts_by_id`), SUDAH termasuk jalan ini. `accept` (--accept-failures) = manusia memutuskan menulis apa adanya.
     """
-    permanent = [f["article_id"] for f in failures if is_permanent_failure(f["alasan"], attempts.get(f["article_id"], 1))]
+    permanent = [f["article_id"] for f in failures if is_permanent_failure(f["alasan"], attempts.get(f["article_id"], 0))]
     retryable = [f["article_id"] for f in failures if f["article_id"] not in permanent]
     if accept or not failures:
         return "tulis", retryable, permanent
@@ -402,7 +414,8 @@ def failure_status(entries: list[dict[str, Any]], owned: set[str]) -> dict[str, 
         last[aid] = e
         count[aid] = count.get(aid, 0) + 1
     open_ids = [aid for aid in last if aid not in owned]
-    review = [aid for aid in open_ids if is_permanent_failure(last[aid]["alasan"], count[aid])]
+    non_network = attempts_by_id(entries)
+    review = [aid for aid in open_ids if is_permanent_failure(last[aid]["alasan"], non_network.get(aid, 0))]
     return {
         "entri": len(entries),
         "id_unik": len(last),
@@ -415,6 +428,7 @@ def failure_status(entries: list[dict[str, Any]], owned: set[str]) -> dict[str, 
         "id_perlu_tinjauan": review,
         "terbuka_per_jenis": _count(last[aid].get("jenis") or failure_kind(last[aid]["alasan"]) for aid in open_ids),
         "rincian_terbuka": [{"article_id": aid, "url": last[aid]["url"], "kali_gagal": count[aid],
+                             "kali_gagal_non_jaringan": non_network.get(aid, 0),
                              "alasan_terakhir": last[aid]["alasan"], "jalan_terakhir": last[aid]["jalan"],
                              "waktu_utc_terakhir": last[aid]["waktu_utc"]} for aid in open_ids],
     }
