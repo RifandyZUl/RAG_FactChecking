@@ -674,6 +674,69 @@ artikel diambil, 0 gagal, 0 dibuang karena tanggal.
 
 ---
 
+## 11. Arah yang sedang ditimbang: klaim yang dijawab "belum ditemukan" (pengukuran pendahuluan)
+
+**Status 2026-10-04: hanya pengukuran; belum ada rancangan dan belum ada yang dibangun.** Setelah
+hasil 10.7, pemilik proyek menimbang arah lain yang mungkin lebih bernilai daripada penanganan
+pesan panjang: klaim yang saat ini dijawab "belum ditemukan". Sebelum merancang apa pun, besar
+celahnya diukur dulu.
+
+### 11.1 Pertanyaan
+
+Dari klaim yang diperiksa situs cek fakta lain (Liputan6 Cek Fakta), berapa bagian yang **tidak**
+diperiksa TurnBackHoax, yaitu tidak ada di basis data 1.532 artikel?
+
+### 11.2 Ambang keputusan (ditetapkan pemilik proyek SEBELUM melihat data)
+
+> **Kalau lebih dari separuh klaim Liputan6 yang sah tidak ada di basis data TurnBackHoax, tahap
+> berikutnya layak dikerjakan.**
+
+Dicatat di sini pada 2026-10-04, sebelum berkas konfirmasi dibuat dan sebelum pemilik proyek
+membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dilihat):
+
+- **Ukuran:** butir berkeputusan "tidak ada yang cocok" dibagi **butir yang sah**. Butir yang sah =
+  butir tersampel dikurangi yang dinyatakan pemilik proyek "bukan putusan hoaks".
+- **Keputusan** dibaca dari proporsi teramati: di atas 50% -> layak dikerjakan; 50% atau kurang ->
+  tidak.
+- **Dilaporkan bersama interval Wilson 95%.** Pemilik proyek menyatakan sampel diperluas bila
+  hasilnya ambigu; "ambigu" di sini diartikan interval itu mencakup 50% (pada 50 butir kira-kira
+  proporsi teramati antara 37% dan 63%). Arti ini belum dikonfirmasi pemilik proyek.
+
+### 11.3 Sampel dan aturan (ditetapkan 2026-10-04)
+
+- **50 butir** dipilih acak berbenih (benih 20261004) dari 100 artikel Liputan6 pada sampel 10.2,
+  **setelah** artikel yang bukan putusan hoaks dikeluarkan.
+- **Dikeluarkan: 1 artikel** -- "Cek Fakta: Klarifikasi Polri soal Deretan Kabupaten Siap ke Jakarta
+  27 Agustus 2026": penanda vonis Liputan6 sendiri adalah "klarifikasi" (judul dan keterangan
+  banner), dan Kesimpulannya hanya menyatakan postingan itu "telah diklarifikasi", bukan bahwa
+  klaimnya tidak benar. Aturan yang dipakai: dikeluarkan bila penanda vonis Liputan6 bukan putusan
+  salah/hoaks. Satu artikel lain tanpa kata vonis ("Video Sri Mulyani Diperiksa Bareskrim Polri Ini
+  Terjadi pada 2015"; Kesimpulan: "video lama pada 2015") TIDAK dikeluarkan otomatis; berkas
+  konfirmasi menyediakan pilihan "BUKAN PUTUSAN HOAKS" agar pemilik proyek yang memutuskan butir
+  seperti itu.
+- **Kandidat** dicari dari JUDUL artikel Liputan6 (kata vonis di awal dibuang), bukan dari pesan:
+  5 teratas pencarian embedding pada indeks 1.532 artikel + 3 teratas pencocokan kata kunci pada
+  judul 1.532 artikel. Skor kemiripan TIDAK ditampilkan di berkas, dan kandidat diurutkan menurut
+  tanggal, bukan menurut skor.
+- **Efek ujung rentang.** TurnBackHoax bisa memeriksa hoaks yang sama beberapa hari setelah Liputan6
+  (bukti: `v1-050`). Karena itu judul artikel dari **antrean pembaruan terjadwal** (belum di-ingest;
+  termasuk yang terbit setelah 27 September 2026) ikut dijadikan kandidat lewat pencocokan kata kunci
+  pada judul, dan butir Liputan6 yang terbit pada dua minggu terakhir rentang (14-27 September 2026)
+  ditandai agar hasilnya dapat dibandingkan.
+- **Kesamaan klaim ditentukan pemilik proyek sendiri dengan pedoman anotasi v1.0, tanpa bantuan AI.**
+  Berkas disiapkan kode (kandidat dan tata letak); keputusan diisi manusia (Aturan Wajib #5).
+- Berkas dan teksnya lokal (`data/candidates/celah_liputan6/`, tidak di-commit).
+
+### 11.4 Batas tafsir
+
+- Mengukur celah terhadap SATU situs cek fakta lain pada artikel kasus tunggal ("Cek Fakta: ...");
+  artikel rangkuman tidak tersampel. Ini bukan ukuran celah terhadap klaim yang diketik pengguna.
+- Label Liputan6 tidak terstruktur dan praktis biner (judul: "Tidak Benar" 57, "Hoaks" 40,
+  "Klarifikasi" 1, tanpa kata vonis 2 dari 100); pemetaannya ke label TurnBackHoax hanya dilaporkan
+  dari pasangan yang dikonfirmasi, tidak diasumsikan.
+
+---
+
 ## Sumber
 
 | Berkas | Dipakai untuk |
