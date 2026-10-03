@@ -12,15 +12,18 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-03)*
 
-> **KEADAAN (2026-10-03 sore): `data/articles.json` = 1.532 ARTIKEL (922 + kelompok 4, 5, 6 sudah
-> di-reparse dan DIGABUNG), 2025-09-30 s.d. 2026-09-27. INDEKS MASIH 922 artikel / 2766 chunk --
-> INGEST BELUM DIJALANKAN, menunggu pemilik proyek membebaskan memori.** `index_check` saat ini
-> melaporkan BASI dengan tepat satu masalah, "1827 chunk belum ada di indeks": itu DIHARAPKAN sampai
-> ingest. Ingest berikutnya: INKREMENTAL (`python src/ingest.py`, bukan `--rebuild`): 1.827 chunk
-> baru (~25 menit pada 0,8 dtk/chunk), lalu `index_check`. Cadangan sebelum perubahan hari ini:
-> `data/backups/pre_metadata_update_2026-10-03/` (`chroma/` + `articles.json` 922 sebelum reparse +
-> `articles_922_setelah_reparse.json`). 30089 ada di `articles.json`; verifikasi top-3 v1-029
-> dilakukan SETELAH ingest. Manifest `manifests/expansion_article_ids.json` SUDAH memuat
+> **KEADAAN (2026-10-03 malam): PERLUASAN BASIS DATA SELESAI. INDEKS PRODUKSI = 1.532 ARTIKEL /
+> 4.593 CHUNK, SATU TAHUN PENUH: 2025-09-30 s.d. 2026-09-27** (SALAH 1.057, PENIPUAN 456, PARODI 15,
+> SATIR 2, SATIRE 1, KOMEDI 1). `index_check` LENGKAP (termasuk 8 sampel embedding ulang, kosinus
+> 1,000000): SEGAR. **Demo berjalan di indeks ini, yang BELUM PERNAH dievaluasi dengan generator;
+> yang terukur hanya retrieval (positif Recall@1/3 = 18/20, 20/20).** Akurasi 48/50 tetap hanya
+> berlaku pada `archive/v1` (150 artikel). **Yang TIDAK selesai 2026-10-03:** jalan ulang ablasi
+> lengkap (`retrieval_ablation`) pada indeks 1.532 DIHENTIKAN Claude Code karena memori sistem
+> rendah dan tidak dijalankan lagi (tidak ada berkas keluaran); Recall@k diambil dari
+> `index_comparison`. Konfirmasi v1-029 lewat retriever produksi (HNSW) dan pengukuran ulang set
+> pengembangan untuk ambang "Mungkin terkait" juga tidak dijalankan (perlu memuat model). Cadangan:
+> `data/backups/pre_metadata_update_2026-10-03/` dan `data/backups/pre_batch04-06_2026-10-03/`
+> (indeks 922 + `articles.json` 1.532, sebelum ingest). Manifest `manifests/expansion_article_ids.json` SUDAH memuat
 > kelompok 4-6 (1.382 artikel; pemeriksaan PII judul 2026-10-03: 0 temuan). **Aturan Wajib #1 (butir "Temuan Aturan
 > Wajib #1" di bawah): SELESAI untuk data dan indeks produksi -- pemendek URL dan
 > seluruh domain arsip disaring, baris "Sumber:" dibaca sebagai sumber klaim (kecuali pemerintah/
@@ -29,7 +32,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 **VERSI 1 SELESAI, TERUKUR, DAN PUNYA DEMO LOKAL. Tahap: (1) pengarsipan indeks Versi 1 --
 SELESAI 2026-09-25, ditutup 2026-09-26 (pemeriksaan data terpublikasi); (2) perluasan basis
-data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) Versi 2.**
+data -- SELESAI 2026-10-03 (1.532 artikel, 30 Sep 2025-27 Sep 2026; disebut "tahap 3" di prompt
+pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
 
 - **Perluasan basis data (sejak 2026-09-26): scraping HTML**, keputusan pemilik proyek -- API key
   Yudistira belum diberikan; tetap scraping sampai key ada. Alat: `src/scraping/expand.py`
@@ -184,6 +188,32 @@ data -- SEDANG BERJALAN (disebut "tahap 3" di prompt pemilik proyek); lalu (3) V
     (bukan 4.596). Chunk terpotong 512 token yang AKAN berlaku setelah ingest: **Narasi 4 /
     Penjelasan 9 / Kesimpulan 0 dari 4.593** (922: 1/9/0 dari 2.766). Berkas `batch_0N.json` di
     disk dibiarkan seperti hasil scraping (belum memuat perubahan reparse).
+    (i) **Ingest kelompok 4-6 (2026-10-03, INKREMENTAL, bukan `--rebuild`):** cadangan
+    `data/backups/pre_batch04-06_2026-10-03/` (35 MB; salinan byte cocok, 2.766 chunk, integritas
+    sqlite ok). 2.766 chunk dilewati, **1.827 chunk baru di-embed dalam 35 mnt 22 dtk (1,2 dtk/chunk)**,
+    tidak terhenti, kode keluar Python 0 (log `data/ingest_batch04-06_2026-10-03.log`). `index_check`
+    lengkap (`data/index_check_batch04-06_2026-10-03.log`): SEGAR, 4.593 chunk, 8 sampel kosinus
+    1,000000 (termasuk 31975, 30987, 29913 dari kelompok baru). **Arsip v1:** hash byte 11 berkas
+    `archive/v1/` sebelum = sesudah; pada SALINAN byte, `--expect-v1-archive`: SIDIK JARI COCOK, SEGAR.
+    **Chunk terpotong 512 token: Narasi 4 / Penjelasan 9 / Kesimpulan 0 dari 4.593** (riwayat:
+    0/3/0 dari 450; 0/8/0 dari 2.016; 1/9/0 dari 2.766). Maks token: Narasi 547, Penjelasan 591,
+    Kesimpulan 132.
+    (j) **v1-029 dan perbandingan indeks (2026-10-03; `evaluation.index_comparison`, kosinus eksak,
+    tanpa LLM; `testset/v1_perbandingan_indeks_1532.json`):** **30089 berada di PERINGKAT 1 untuk
+    v1-029 (0,8992)**; top-3: 30089, 32614 (0,7815), 29732 (0,7070); sasaran lama 36161 turun dari
+    peringkat 1 (arsip) -> 3 (922) -> 5 (1.532). Jadi v1-029 = butir negatif KEENAM yang klaimnya
+    kini ada di basis data (artikel asalnya sendiri); belum dicatat di `v1.meta.json`. Recall@1/3/5/
+    10/20 arsip -> 922 -> 1.532: **positif 19,20,20,20,20 -> 18,20,20,20,20 -> 18,20,20,20,20** (tidak
+    berubah sejak 922; v1-002 peringkat 3, v1-019 peringkat 2); negatif sulit (sasaran = artikel
+    tetangga; PENGAMATAN, bukan mutu) 14,16,18,19,20 -> 9,11,13,15,18 -> 9,9,11,14,16; negatif dengan
+    kandidat top-3 > 0,5739: 16 -> 23 -> 24 dari 30 (bertambah v1-046, 0,6308 ke 30652, topik pelatih
+    timnas, klaim berbeda). Artikel asal butir negatif yang kini ada di indeks: v1-021, v1-022,
+    v1-029, v1-043, v1-049 (+ v1-050 lewat artikel lain).
+    (k) **"Mungkin terkait" pada indeks 1.532: TETAP DIMATIKAN** (`config/related_threshold.json`,
+    entri `data` kini 1.532 artikel / 4.593 chunk, `ambang: null`). Skor kandidat teratas tidak bisa
+    turun saat indeks diperbesar (chunk lama dan embedding-nya tetap), jadi kueri tak terkait "bumi
+    datar" tetap >= 0,6385, di atas kandidat layak tampil (0,5739-0,63); selain itu v1-046 kini
+    0,6308. Set pengembangan tidak diukur ulang (memori).
     (d) **Baris "Sumber:" -- temuan awal (riwayat; keputusannya di butir (e)).** Letak: seksi Hasil Periksa Fakta
     (`section.article-factcheck`) pada 1.532/1.532 artikel (2 artikel juga memuat kata "Sumber:" di
     Narasi); 2.106 URL, 39 domain, 1.987 URL berdomain daftar-blokir. Keputusan pemilik proyek: baris

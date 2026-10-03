@@ -189,25 +189,29 @@ Pemisahan ini memetakan langsung kebutuhan Versi 2.
 
 Seluruh angka di atas, termasuk akurasi **48/50**, diukur pada basis data **150
 artikel** (indeks arsip `archive/v1/`). Demo berjalan pada **indeks produksi yang
-lebih besar** (sedang diperluas; 922 artikel saat pengukuran di bawah), dan indeks
-itu **belum pernah dievaluasi dengan menjalankan generator**.
+lebih besar: 1.532 artikel (4.593 chunk), mencakup satu tahun penuh, 30 September
+2025 sampai 27 September 2026**. Indeks itu **belum pernah dievaluasi dengan
+menjalankan generator**.
 
-Yang sudah diukur pada indeks besar hanya **retrieval**: perbandingan ablasi arsip
-(150 artikel, 450 chunk) versus indeks produksi 922 artikel (2766 chunk), tanpa
-panggilan LLM. Recall@k butir positif (artikel yang benar berada di k teratas), dari 20:
+Yang sudah diukur pada indeks besar hanya **retrieval**: perbandingan indeks arsip
+(150 artikel, 450 chunk) dengan indeks produksi, tanpa panggilan LLM. Recall@k butir
+positif (artikel yang benar berada di k teratas), dari 20:
 
 | Indeks | @1 | @3 | @5 | @10 | @20 |
 | --- | --- | --- | --- | --- | --- |
 | Arsip, 150 artikel | 19/20 | 20/20 | 20/20 | 20/20 | 20/20 |
-| Produksi, 922 artikel | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
+| Produksi, 922 artikel (2026-09-27) | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
+| Produksi, 1.532 artikel (2026-10-03) | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
 
-Dua butir positif turun peringkat: v1-002 dari 2 ke 3 dan v1-019 dari 1 ke 2.
-Angka ini **hanya mengukur retrieval**; **akurasi akhir sistem pada indeks besar
-belum terukur**. Label negatif set uji v1 juga tidak otomatis berlaku pada indeks
-besar (lima butir negatif kini menemukan klaim yang sama di basis data), sehingga
-set uji v1 tetap sah hanya pada `archive/v1/`. Rincian:
-`testset/retrieval_ablation_prod922_report.txt` dan
-`testset/v1_temuan_untuk_v2.md` bagian 8.
+Dua butir positif turun peringkat sejak indeks 922 artikel dan tidak berubah lagi
+pada 1.532: v1-002 dari 2 ke 3 dan v1-019 dari 1 ke 2. Angka ini **hanya mengukur
+retrieval**; **akurasi akhir sistem pada indeks besar belum terukur**. Label negatif
+set uji v1 juga tidak otomatis berlaku pada indeks besar (enam butir negatif kini
+menemukan klaim yang sama di basis data, termasuk v1-029 yang artikel asalnya masuk
+pada perluasan terakhir), sehingga set uji v1 tetap sah hanya pada `archive/v1/`.
+Rincian: `testset/v1_perbandingan_indeks_1532.json`,
+`testset/retrieval_ablation_prod922_report.txt` (ablasi lengkap terakhir, pada 922
+artikel), dan `testset/v1_temuan_untuk_v2.md` bagian 8.
 
 ---
 
@@ -238,15 +242,29 @@ Teks pengganggunya sintetis, sehingga angka ini indikatif. Rincian:
 Klaim yang baru viral akan dijawab "belum ditemukan" walaupun sebenarnya hoaks.
 Jawaban itu sah, bukan kegagalan sistem.
 
-**Rentang waktu sempit.** 150 artikel berasal dari Agustus–September 2026.
+**Rentang waktu.** Basis data yang dievaluasi (150 artikel) berasal dari
+Agustus–September 2026. Basis data demo memuat 1.532 artikel dari 30 September 2025
+sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
+yang sudah diambil tidak disegarkan bila diperbarui di sumbernya.
 
-**Rujukan tidak selalu tersedia.** 16 dari 150 artikel tidak memiliki rujukan
-sahih setelah tautan sumber hoaks disaring; jawaban untuk artikel tersebut
+**Rujukan tidak selalu tersedia.** Pada basis data demo, 205 dari 1.532 artikel
+tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (16 dari 150 pada
+basis data yang dievaluasi, dengan aturan saat itu); jawaban untuk artikel tersebut
 disusun tanpa bagian rujukan.
 
-**Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial dan
-arsip disaring, termasuk akun resmi instansi, karena kredibilitas sumber tidak
-dapat diverifikasi secara otomatis pada Versi 1.
+**Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
+hosting gambar, dan pemendek URL disaring, termasuk akun resmi instansi dan tautan
+pendek yang sebenarnya sah, karena kredibilitas sumber tidak dapat diverifikasi
+secara otomatis pada Versi 1 dan tujuan tautan pendek tidak dapat diperiksa sebelum
+diklik. Tautan pada baris "Sumber:" artikel (sumber klaim yang diperiksa) tidak
+ditampilkan sebagai rujukan, kecuali situs pemerintah (`.go.id`) dan media/cek
+fakta pada daftar eksplisit di `src/scraping/links.py`; pengecualian `.go.id`
+membawa risiko karena situs pemerintah dapat diretas. Rujukan disaring dua kali:
+saat artikel di-parse dan sekali lagi saat akan ditampilkan di demo.
+
+**Klarifikasi bisa tipis.** Klarifikasi disusun dari seksi Kesimpulan artikel.
+Pada artikel September–November 2025, Kesimpulan umumnya hanya satu kalimat yang
+menyatakan klaimnya palsu, tanpa uraian fakta.
 
 **Anotasi satu orang.** Seluruh label ditetapkan satu anotator manusia, sehingga
 kesepakatan antar-anotator tidak terukur. Draf awal label tahap pertama dibuat
