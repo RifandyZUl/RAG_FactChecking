@@ -17,6 +17,7 @@ artikel, rujukan tetap dari `references` (Aturan Wajib #1 dan #3), dan
 import json
 import logging
 import re
+import sqlite3
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -47,13 +48,55 @@ LIMITATION_NOTE = (
 # diperbarui bila pengukuran diulang.
 # Kalimatnya sengaja memisahkan PENCARIAN (artikel yang benar ditemukan) dari AKURASI JAWABAN, agar
 # "20 dari 20" tidak terbaca sebagai akurasi seratus persen (arahan pemilik proyek 2026-10-03).
-EVALUATION_SCOPE_NOTE = (
-    "Akurasi jawaban 48 dari 50 diukur pada basis data versi awal (150 artikel). Demo ini memakai "
-    "basis data yang lebih besar, 1.532 artikel dari satu tahun terakhir. Pada basis data ini yang "
-    "diukur baru tahap pencarian artikel, bukan jawabannya: dari 20 butir uji, artikel yang benar "
-    "muncul di urutan pertama hasil pencarian untuk 18 butir dan di tiga teratas untuk 20 butir. "
-    "Itu bukan ukuran akurasi jawaban. Akurasi jawaban akhir pada basis data ini belum diukur."
-)
+# Angka pencarian adalah hasil pengukuran pada indeks TERTENTU, jadi selalu ditulis bersama tanggal
+# dan ukuran indeks saat diukur; jumlah artikel yang SEDANG dipakai dibaca dari indeks saat demo
+# berjalan (`count_indexed_articles`), bukan ditulis tangan. Perbarui RETRIEVAL_MEASUREMENT hanya
+# bila pengukurannya diulang (evaluation.index_comparison).
+BASELINE_ARTICLES = 150  # basis data versi awal (archive/v1), tempat akurasi jawaban diukur
+RETRIEVAL_MEASUREMENT = {"tanggal": "3 Oktober 2026", "artikel": 1532, "butir": 20, "urutan_pertama": 18,
+                         "tiga_teratas": 20}
+
+
+def evaluation_scope_note(article_count: int | None) -> str:
+    """Catatan cakupan evaluasi untuk halaman demo; `article_count` = jumlah artikel di indeks aktif."""
+    m = RETRIEVAL_MEASUREMENT
+    if article_count is None:
+        current = "Jumlah artikel pada basis data yang dipakai demo tidak terbaca saat ini."
+    else:
+        current = f"Basis data yang dipakai demo saat ini berisi {_format_count(article_count)} artikel."
+    stale = ""
+    # 150 = basis data versi awal (arsip): angka pencarian indeks besar memang bukan tentang indeks itu
+    if article_count is not None and article_count not in (m["artikel"], BASELINE_ARTICLES):
+        stale = " Basis data sudah berubah sejak pengukuran itu, jadi angka pencarian tersebut belum tentu berlaku sekarang."
+    return (
+        f"Akurasi jawaban 48 dari 50 diukur pada basis data versi awal ({BASELINE_ARTICLES} artikel). "
+        f"{current} Pada basis data yang lebih besar, yang diukur baru tahap pencarian artikel, bukan "
+        f"jawabannya: pada pengukuran {m['tanggal']}, saat basis data berisi {_format_count(m['artikel'])} "
+        f"artikel, dari {m['butir']} butir uji artikel yang benar muncul di urutan pertama hasil pencarian "
+        f"untuk {m['urutan_pertama']} butir dan di tiga teratas untuk {m['tiga_teratas']} butir.{stale} "
+        "Itu bukan ukuran akurasi jawaban. Akurasi jawaban akhir pada basis data ini belum diukur."
+    )
+
+
+def count_indexed_articles(chroma_dir: Path) -> int | None:
+    """
+    Jumlah artikel berbeda di indeks, dibaca langsung dari berkas sqlite ChromaDB dalam mode
+    BACA-SAJA (koleksi tidak dibuka, jadi berkas indeks tidak ditulis ulang). None bila tidak
+    terbaca (indeks belum ada, atau skema internal ChromaDB berubah): catatan tetap tampil tanpa angka.
+    """
+    db = chroma_dir / "chroma.sqlite3"
+    if not db.is_file():
+        return None
+    try:
+        con = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+        try:
+            row = con.execute("select count(distinct string_value) from embedding_metadata where key = 'article_id'").fetchone()
+        finally:
+            con.close()
+    except sqlite3.Error as e:
+        logger.warning("jumlah artikel indeks tidak terbaca: %s", e)
+        return None
+    return int(row[0]) if row and row[0] else None
 INPUT_LABEL = "Pesan atau klaim yang ingin dicek"
 INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"
 SUBMIT_LABEL = "Periksa"
