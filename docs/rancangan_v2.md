@@ -707,13 +707,20 @@ membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dili
 - **50 butir** dipilih acak berbenih (benih 20261004) dari 100 artikel Liputan6 pada sampel 10.2,
   **setelah** artikel yang bukan putusan hoaks dikeluarkan.
 - **Dikeluarkan: 1 artikel** -- "Cek Fakta: Klarifikasi Polri soal Deretan Kabupaten Siap ke Jakarta
-  27 Agustus 2026": penanda vonis Liputan6 sendiri adalah "klarifikasi" (judul dan keterangan
+  27 Agustus 2026": penanda vonis Liputan6 sendiri adalah "klarifikasi" (judul dan label
   banner), dan Kesimpulannya hanya menyatakan postingan itu "telah diklarifikasi", bukan bahwa
-  klaimnya tidak benar. Aturan yang dipakai: dikeluarkan bila penanda vonis Liputan6 bukan putusan
-  salah/hoaks. Satu artikel lain tanpa kata vonis ("Video Sri Mulyani Diperiksa Bareskrim Polri Ini
-  Terjadi pada 2015"; Kesimpulan: "video lama pada 2015") TIDAK dikeluarkan otomatis; berkas
-  konfirmasi menyediakan pilihan "BUKAN PUTUSAN HOAKS" agar pemilik proyek yang memutuskan butir
-  seperti itu.
+  klaimnya tidak benar. Aturan (`candidates.gap_review.is_non_hoax_verdict`): dikeluarkan bila judul
+  berkata vonis "klarifikasi", atau banner berlabel "klarifikasi" sementara judul tanpa kata vonis
+  salah/hoaks dan Kesimpulan tidak menyatakan klaimnya keliru. **Dua artikel yang penandanya tidak
+  tegas TIDAK dikeluarkan otomatis:** "Tidak Benar Maladewa Putus Hubungan Diplomatik dengan Israel
+  ..." (banner "Klarifikasi", tetapi judul dan Kesimpulan menyatakan "tidak benar") dan "Video Sri
+  Mulyani Diperiksa Bareskrim Polri Ini Terjadi pada 2015" (tanpa kata vonis dan tanpa banner;
+  Kesimpulan: "video lama pada 2015"). Berkas konfirmasi menyediakan pilihan "BUKAN PUTUSAN HOAKS"
+  agar pemilik proyek yang memutuskan butir seperti itu.
+- **Berkas yang dihasilkan (2026-10-04):** `data/candidates/celah_liputan6/konfirmasi_50.csv` -- 50
+  butir, 326 baris kandidat (5-8 per butir, median 7); 2 butir di ujung rentang (terbit 18 dan 23
+  September 2026); 3 butir memuat kandidat dari antrean (16 artikel antrean, terbit 27 Sep-2 Okt
+  2026); kolom KEPUTUSAN kosong. Skor kemiripan disimpan terpisah (`kunci_kandidat.json`).
 - **Kandidat** dicari dari JUDUL artikel Liputan6 (kata vonis di awal dibuang), bukan dari pesan:
   5 teratas pencarian embedding pada indeks 1.532 artikel + 3 teratas pencocokan kata kunci pada
   judul 1.532 artikel. Skor kemiripan TIDAK ditampilkan di berkas, dan kandidat diurutkan menurut
@@ -731,9 +738,14 @@ membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dili
 
 - Mengukur celah terhadap SATU situs cek fakta lain pada artikel kasus tunggal ("Cek Fakta: ...");
   artikel rangkuman tidak tersampel. Ini bukan ukuran celah terhadap klaim yang diketik pengguna.
-- Label Liputan6 tidak terstruktur dan praktis biner (judul: "Tidak Benar" 57, "Hoaks" 40,
-  "Klarifikasi" 1, tanpa kata vonis 2 dari 100); pemetaannya ke label TurnBackHoax hanya dilaporkan
-  dari pasangan yang dikonfirmasi, tidak diasumsikan.
+- **Label Liputan6** (100 artikel sampel; koreksi 2026-10-04 atas laporan awal yang menyebut "tanpa
+  banner 62" -- pola pembacaan banner waktu itu keliru): halaman Kesimpulan memuat **banner
+  berlabel**, yaitu "Cek Fakta: Salah" 58, "Hoax" 39, "Klarifikasi" 2, tanpa banner 1. Kata vonis di
+  awal judul: "Tidak Benar" 57, "Hoaks" 40, "Klarifikasi" 1, tanpa 2. Keduanya hampir selalu
+  berpasangan (judul "Tidak Benar" dengan banner "Salah" 55; judul "Hoaks" dengan banner "Hoax" 37),
+  jadi Liputan6 membedakan setidaknya tiga label: Salah, Hoax, Klarifikasi. **Pemetaannya ke label
+  TurnBackHoax (SALAH, PENIPUAN, PARODI, ...) tidak diasumsikan**; hanya dilaporkan dari pasangan
+  yang dikonfirmasi.
 
 ---
 
