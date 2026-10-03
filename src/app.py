@@ -39,7 +39,6 @@ from presentation import (
     CLARIFICATION_HEADING,
     CLARIFICATION_LINE_HEIGHT,
     DIAGNOSTICS_LABEL,
-    EVALUATION_SCOPE_NOTE,
     INPUT_LABEL,
     INPUT_PLACEHOLDER,
     LIMITATION_NOTE,
@@ -67,6 +66,8 @@ from presentation import (
     RelatedThreshold,
     ResultView,
     build_view,
+    count_indexed_articles,
+    evaluation_scope_note,
     escape_markdown,
     failure_view,
     index_key,
@@ -132,6 +133,12 @@ def load_collection() -> Any:
     if collection.count() == 0:
         raise IndexUnavailableError(f"koleksi '{COLLECTION_NAME}' kosong")
     return collection
+
+
+@st.cache_resource(show_spinner=False)
+def load_article_count() -> int | None:
+    """Jumlah artikel di indeks aktif (sqlite baca-saja; koleksi tidak dibuka). None bila tak terbaca."""
+    return count_indexed_articles(CHROMA_DIR)
 
 
 @st.cache_resource(show_spinner=False)
@@ -253,7 +260,7 @@ def render_header() -> None:
     st.title(PAGE_TITLE, anchor=False)
     st.markdown(PAGE_SUBTITLE)
     st.caption(LIMITATION_NOTE)
-    st.caption(EVALUATION_SCOPE_NOTE)
+    st.caption(evaluation_scope_note(load_article_count()))
 
 
 def render_status(view: ResultView) -> None:

@@ -697,7 +697,7 @@ def test_internet_down_for_days_does_not_mark_healthy_articles_permanent(
     _scripted(monkeypatch, tmp_path, [(CODE_ERR, True)] + [("", True)] * 19)
     monkeypatch.setattr(expand, "FAILED_PATH", ledger)
     assert expand.main() == expand.EXIT_HELD_RETRY
-    held = sorted(exp.glob("batch_06_tertahan_*_report.json"))[-1]
+    held = max(exp.glob("batch_06_tertahan_*_report.json"))
     report = json.loads(held.read_text(encoding="utf-8"))
     assert report["gagal_bisa_dicoba_lagi"] == ["1"] and report["gagal_permanen"] == []
 

@@ -10,7 +10,6 @@ from generator import MAX_FORMAT_RETRIES, Answer
 from llm import CallRecord
 from presentation import (
     EMPTY_INPUT_MESSAGE,
-    EVALUATION_SCOPE_NOTE,
     FAILURE_MESSAGES,
     FALLBACK_STATUS_LABEL,
     LONG_CLAIM_CONFIRM,
@@ -22,6 +21,7 @@ from presentation import (
     RELATED_DISABLED_NO_CONFIG,
     RELATED_NOTE,
     RELATED_THRESHOLD_CONFIG,
+    RETRIEVAL_MEASUREMENT,
     SCAM_ADVICE,
     STATUS_STYLES,
     FailureKind,
@@ -30,9 +30,11 @@ from presentation import (
     build_view,
     classify_call_error,
     classify_failure,
+    count_indexed_articles,
     display_references,
     display_title,
     escape_markdown,
+    evaluation_scope_note,
     failure_view,
     index_key,
     is_long_claim,
@@ -465,15 +467,48 @@ def test_warning_threshold_is_below_input_limit() -> None:
 
 
 def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
-    """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya retrieval (18/20 @1, 20/20 @3)."""
-    note = EVALUATION_SCOPE_NOTE
+    """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya pencarian, dengan tanggal dan ukuran saat diukur."""
+    note = evaluation_scope_note(1532)
     assert "48 dari 50" in note and "150 artikel" in note
-    assert "1.532 artikel" in note and "dari 20 butir uji" in note
+    assert "saat ini berisi 1.532 artikel" in note
+    assert "pada pengukuran 3 Oktober 2026, saat basis data berisi 1.532 artikel" in note
+    assert "dari 20 butir uji" in note
     assert "pertama hasil pencarian untuk 18 butir" in note and "tiga teratas untuk 20 butir" in note
     # angka pencarian tidak boleh terbaca sebagai akurasi jawaban
     assert "tahap pencarian artikel, bukan jawabannya" in note and "bukan ukuran akurasi jawaban" in note
     assert "Akurasi jawaban akhir pada basis data ini belum diukur" in note
     assert "20 dari 20" not in note and "100" not in note and "%" not in note
+    assert "belum tentu berlaku" not in note, "ukuran indeks sama dengan saat diukur: tanpa peringatan"
+
+
+def test_evaluation_scope_note_follows_the_live_article_count() -> None:
+    """Jumlah artikel yang sedang dipakai otomatis; angka pencarian tetap terikat tanggal dan ukuran saat diukur."""
+    grown = evaluation_scope_note(1575)
+    assert "saat ini berisi 1.575 artikel" in grown
+    assert "pada pengukuran 3 Oktober 2026, saat basis data berisi 1.532 artikel" in grown
+    assert "untuk 18 butir" in grown and "untuk 20 butir" in grown, "angka pengukuran tidak dihapus"
+    assert "Basis data sudah berubah sejak pengukuran itu" in grown and "belum tentu berlaku sekarang" in grown
+    unknown = evaluation_scope_note(None)
+    assert "tidak terbaca" in unknown and "berisi 1.532 artikel" in unknown and "belum tentu berlaku" not in unknown
+    archive = evaluation_scope_note(150)  # demo diarahkan ke arsip: tanpa peringatan "sudah berubah"
+    assert "saat ini berisi 150 artikel" in archive and "belum tentu berlaku" not in archive
+    assert RETRIEVAL_MEASUREMENT == {"tanggal": "3 Oktober 2026", "artikel": 1532, "butir": 20,
+                                     "urutan_pertama": 18, "tiga_teratas": 20}
+
+
+def test_count_indexed_articles_reads_the_index_without_opening_the_collection(tmp_path: Path) -> None:
+    from ingest import get_collection
+
+    assert count_indexed_articles(tmp_path / "tidak_ada") is None
+    path = tmp_path / "chroma"
+    coll = get_collection(path)
+    ids = ["1_narasi", "1_kesimpulan", "2_narasi", "3_kesimpulan"]
+    coll.upsert(ids=ids, embeddings=[[1.0, 0.0], [0.0, 1.0], [0.6, 0.8], [0.8, 0.6]], documents=["a"] * 4,
+                metadatas=[{"article_id": i.split("_")[0], "section": i.split("_")[1]} for i in ids])
+    assert count_indexed_articles(path) == 3
+    (tmp_path / "rusak").mkdir()
+    (tmp_path / "rusak" / "chroma.sqlite3").write_text("bukan sqlite", encoding="utf-8")
+    assert count_indexed_articles(tmp_path / "rusak") is None
 
 
 # -- penyaringan ulang rujukan di lapisan tampilan (Aturan Wajib #1) ---------
