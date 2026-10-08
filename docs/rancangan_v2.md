@@ -775,6 +775,124 @@ membukanya. Operasionalisasi (usulan Claude Code, ikut dicatat sebelum data dili
   TurnBackHoax (SALAH, PENIPUAN, PARODI, ...) tidak diasumsikan**; hanya dilaporkan dari pasangan
   yang dikonfirmasi.
 
+### 11.5 Hasil 50 butir (2026-10-08)
+
+Alat: `python -m candidates.gap_result --hasil` lalu `--kunci` (uji `tests/test_gap_result.py`).
+Keluaran lokal, tidak di-commit: `hasil_konfirmasi.json`, `perbandingan_kunci.json`.
+
+**Asal-usul label (Aturan Wajib #5; dicatat apa adanya menurut pernyataan pemilik proyek).**
+
+- Keputusan diisi pemilik proyek. **Butir 1-5 dibahas bersama Claude** sebagai contoh cara mengisi;
+  **butir 6-50 dikerjakan pemilik proyek sendiri tanpa bantuan AI.** Ini berbeda dari rencana di 11.3
+  ("tanpa bantuan AI" untuk seluruh butir).
+- **Setelah selesai, Claude memeriksa berkas terisi** dan menunjukkan dua aturan yang diterapkan
+  tidak konsisten (lihat sensitivitas). Pemilik proyek **mempertahankan semua keputusan apa adanya**
+  dan melaporkan inkonsistensinya sebagai keterbatasan; tidak ada label yang direvisi setelah data
+  dilihat. Pembahasan dan pemeriksaan itu terjadi di luar sesi Claude Code yang menghitung hasil ini;
+  tidak ada catatannya di repositori.
+- **Berkas yang dihitung bukan `konfirmasi_50.xlsx` (templat kode pada 11.3)**, melainkan
+  `konfirmasi_50_terisi.csv`: pemilik proyek mengisi versi `.xlsx` lain
+  (`konfirmasi_50_rapi_terisi.xlsx`) lalu mengonversinya kembali ke CSV dan menyeragamkan penulisan
+  "Tidak Ada" menjadi "TIDAK ADA". Akibatnya pemeriksaan sidik jari templat `.xlsx`
+  (`gap_workbook --read`) **tidak dijalankan**; penggantinya adalah pembandingan CSV terisi dengan
+  `konfirmasi_50.csv`. `konfirmasi_50.xlsx` dan `konfirmasi_50.csv` tidak ditimpa (KEPUTUSAN tetap
+  kosong). SHA-256 berkas terisi `f8e8909e8ae67753...`.
+- `kunci_kandidat.json` dibuka kode baru setelah hasil utama, sensitivitas, dan rincian tersimpan.
+  Label Liputan6 untuk tabel silang didapat tanpa kunci (butir dipetakan ke artikel sampel lewat
+  judul; pemetaannya kemudian terbukti sama dengan urutan di kunci).
+
+**Validasi: lolos.** 50 butir, 326 baris; setiap KEPUTUSAN adalah id kandidat butirnya atau TIDAK
+ADA; tidak ada keputusan di baris bukan-pertama; kolom selain KEPUTUSAN/catatan identik dengan
+`konfirmasi_50.csv`. Kolom catatan (terisi 50/50) tidak di-parse.
+
+**Hasil utama (aturan 11.2 diterapkan apa adanya).**
+
+| | TIDAK ADA / butir sah | Proporsi | Wilson 95% | Kategori 11.2 |
+| --- | --- | --- | --- | --- |
+| Label utama | 29 / 50 | 58,0% | [44,2%; 70,6%] | **AMBIGU** (interval melintasi 50%) |
+
+Proporsi teramati di atas separuh, tetapi menurut 11.2 hasil ambigu **tidak diputuskan dari 50
+butir**: sampel diperluas ke 100 butir, lalu aturan yang sama diterapkan. Jadi 50 butir ini **belum
+mendukung dan belum menolak** arah "belum ditemukan". BUKAN PUTUSAN HOAKS: **0 butir**, sehingga
+penyebutnya tetap 50; butir 44 (Maladewa, banner "Klarifikasi") diperlakukan pemilik proyek sebagai
+butir sah dan diputuskan TIDAK ADA.
+
+**Sensitivitas -- EKSPLORATIF, tidak dipra-registrasi.** Pemilik proyek menyatakan dua aturan
+diterapkan tidak konsisten: (1) *selisih waktu/gelombang* -- kandidat butir 2 ditolak karena
+tahun/periodenya berbeda, tetapi butir 8, 14, 28, 49 diterima walau selisih waktunya lebih jauh
+(8 dan 28 sama-sama dicocokkan ke 36654); (2) *detail yang tidak disebut di judul TurnBackHoax* --
+ditolak di butir 15, 20, 21, 22, 25, 29, 32; diterima di butir 24, 39, 40, 48. Label utama tidak
+diubah; yang dihitung hanya batasnya.
+
+| Batas | Butir dibalik | TIDAK ADA / sah | Proporsi | Wilson 95% | Kategori 11.2 |
+| --- | --- | --- | --- | --- | --- |
+| Atas | 8, 14, 24, 28, 39, 40, 48, 49 -> TIDAK ADA | 37 / 50 | 74,0% | [60,5%; 84,1%] | jelas di atas 50% |
+| Bawah | 15, 20, 21, 22, 25, 29, 32 -> cocok | 22 / 50 | 44,0% | [31,2%; 57,7%] | ambigu |
+
+**Kategori keputusan TIDAK sama di kedua batas: kesimpulan bergantung pada aturan pelabelan.**
+Dengan aturan ketat hasilnya menjadi "layak dikerjakan"; dengan aturan longgar tetap ambigu dengan
+proporsi teramati di bawah separuh. Pada tidak satu pun batas hasilnya "jelas di bawah 50%". Lima
+belas dari 50 butir (30%) berada di daftar meragukan, lebih lebar daripada jarak hasil utama ke
+ambang (4 butir).
+
+**Rincian pendukung.**
+
+- *Ujung rentang (n = 2; tidak ditarik kesimpulan):* butir 3 (18 Sep 2026) cocok dengan 36776;
+  butir 21 (23 Sep 2026) TIDAK ADA.
+- *Label banner Liputan6 pada 50 butir:* salah 26, hoax 22, hoaks 1 (ejaan banner apa adanya),
+  klarifikasi 1. Pada 29 butir TIDAK ADA: salah 15, hoax 12, hoaks 1, klarifikasi 1.
+- *Tabel silang, hanya 21 pasangan yang dikonfirmasi cocok:*
+
+  | Banner Liputan6 | SALAH | PENIPUAN | PARODI | SATIR | Jumlah |
+  | --- | --- | --- | --- | --- | --- |
+  | salah | 3 | 7 | 1 | 0 | 11 |
+  | hoax | 5 | 4 | 0 | 1 | 10 |
+
+  Kedua label Liputan6 berpasangan dengan SALAH maupun PENIPUAN; pada 21 pasangan ini tidak tampak
+  pemetaan satu-ke-satu (n kecil; tidak diuji).
+- *Waktu terbit artikel TurnBackHoax terhadap artikel Liputan6 (21 pasangan):* sebelum 7, hari yang
+  sama 1, sesudah 13. Tidak ada pasangan dari antrean (semua dari indeks). Di antara "sesudah" ada
+  butir 28 (selisih ~11 bulan), butir 8 (~8 bulan), dan butir 49 (~5 bulan) -- ketiganya di daftar
+  meragukan; 36654 dipilih dua kali.
+
+**Keputusan vs pencarian otomatis (kunci dibuka setelah semua di atas tersimpan; TIDAK dipakai
+untuk mengubah label).**
+
+- Dari 21 pasangan cocok, id pilihan pemilik proyek adalah kandidat **teratas pencarian embedding
+  pada 18** (ada di 5 teratas: 20) dan **teratas pencocokan kata kunci judul pada 20** (ada di 3
+  teratas: 21). Teratas di keduanya: 18. Bukan teratas di keduanya: butir 3 (36776: di luar 5
+  teratas embedding, peringkat 2 kata kunci). Embedding peringkat 2: butir 31 dan 49.
+- **Skor tidak memisahkan cocok dari tidak cocok.** Skor embedding pilihan: 0,5733-0,7831 (median
+  0,6903). Skor kandidat teratas pada 29 butir TIDAK ADA: 0,4833-0,7294 (median 0,6270); **22 dari
+  29 berada di atas skor pilihan terendah.** Dua butir TIDAK ADA di atas median pilihan: butir 10
+  (0,7294) dan butir 20 (0,7271).
+- Butir TIDAK ADA dengan tumpang tindih kata kunci judul tertinggi: 21 (0,75), 20 (0,67), 15 (0,60),
+  22 (0,50) -- keempatnya juga ada di daftar "ditolak secara meragukan". Ini pengamatan, bukan dasar
+  untuk membalik label.
+- Tafsir yang sah: bila ada pasangan, kandidat teratas hampir selalu pasangan itu; tetapi kandidat
+  teratas selalu ada juga saat tidak ada pasangan, dan skornya tidak membedakan kedua keadaan
+  (sejalan dengan temuan Versi 1). Catatan: kandidat hanya berasal dari kedua pencarian ini, jadi
+  pasangan yang luput dari keduanya tidak mungkin dipilih -- angka di atas adalah kesepakatan
+  **dengan syarat** pasangannya ada di daftar, bukan recall.
+
+**Keterbatasan.**
+
+- **Satu anotator**; kesepakatan antar-anotator tidak terukur.
+- **Butir 1-5 dibahas bersama AI** (3 di antaranya cocok, 2 TIDAK ADA), dan berkas terisi diperiksa
+  AI sebelum dihitung (tanpa revisi label).
+- **Dua aturan diterapkan tidak konsisten** pada 15 butir, dan kategori keputusan berubah di batas
+  atas. Daftar butir meragukan disusun setelah pelabelan, jadi sensitivitasnya eksploratif.
+- **Perbandingan hanya berbasis judul dan Kesimpulan** artikel TurnBackHoax (Narasi tidak
+  ditampilkan), dan kandidat dicari dari judul Liputan6.
+- Pemeriksaan sidik jari templat `.xlsx` tidak berlaku untuk berkas yang dipakai (lihat asal-usul).
+- Batas tafsir 11.4 tetap berlaku (satu situs pembanding; bukan klaim yang diketik pengguna).
+
+**Langkah berikutnya (menurut 11.2 dan keputusan pemilik proyek 2026-10-08).** Sampel diperluas ke
+100 butir. **Berkas 50 butir berikutnya BELUM dibuat:** dua aturan pelabelan tertulis (selisih
+waktu/gelombang tautan penipuan; detail tidak disebut vs detail bertentangan) dikunci pemilik proyek
+lebih dulu, sebelum data baru dilihat. Aturan itu hanya berlaku untuk butir baru; 50 butir di atas
+tidak dilabel ulang.
+
 ---
 
 ## Sumber

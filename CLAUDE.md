@@ -756,7 +756,21 @@ Proyek dibangun bertahap dalam dua versi:
   **Setelah pemilik proyek menyatakan selesai: `python -m candidates.gap_workbook --read`** -- ia
   menolak menghitung bila sel selain KEPUTUSAN/catatan berubah dari templat atau ada butir yang
   kosong/tidak terbaca (dilaporkan untuk ditanyakan, TIDAK ditebak), dan baru saat itu membuka
-  `kunci_kandidat.json` untuk tabel silang label. **Belum dijalankan; keputusan belum diisi.** **Rancangan itu
+  `kunci_kandidat.json` untuk tabel silang label. `--read` TIDAK jadi dipakai (lihat hasil di bawah).
+  **HASIL 50 BUTIR (2026-10-08; `docs/rancangan_v2.md` bagian 11.5; alat `python -m
+  candidates.gap_result --hasil` lalu `--kunci`, uji `tests/test_gap_result.py`): TIDAK ADA 29/50 =
+  58,0%, Wilson95 [44,2%; 70,6%] -> AMBIGU menurut 11.2 -> sampel diperluas ke 100 butir; 50 butir
+  ini belum mendukung dan belum menolak arah itu.** BUKAN PUTUSAN HOAKS 0. Sensitivitas
+  (EKSPLORATIF): batas atas 37/50 (jelas di atas 50%), batas bawah 22/50 (ambigu) -> **kategori
+  berubah, kesimpulan bergantung pada aturan pelabelan** (15 butir meragukan, daftar dari pemilik
+  proyek). Berkas yang dihitung = `konfirmasi_50_terisi.csv` (diisi di `.xlsx` lain lalu dikonversi;
+  sidik jari templat `.xlsx` tidak berlaku, diganti pembandingan dengan `konfirmasi_50.csv`).
+  **Asal-usul label: butir 1-5 dibahas bersama Claude, butir 6-50 tanpa AI; berkas terisi diperiksa
+  Claude sesudahnya, tanpa revisi label.** Kunci: pilihan = teratas embedding 18/21, teratas kata
+  kunci 20/21; skor tidak memisahkan (22/29 TIDAK ADA di atas skor pilihan terendah).
+  **BERIKUTNYA: JANGAN membuat berkas 50 butir kedua sebelum pemilik proyek mengunci dua aturan
+  pelabelan tertulis (selisih waktu/gelombang; detail tidak disebut vs bertentangan); aturan hanya
+  untuk butir baru, 50 butir lama tidak dilabel ulang.** **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
