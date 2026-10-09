@@ -893,6 +893,69 @@ waktu/gelombang tautan penipuan; detail tidak disebut vs detail bertentangan) di
 lebih dulu, sebelum data baru dilihat. Aturan itu hanya berlaku untuk butir baru; 50 butir di atas
 tidak dilabel ulang.
 
+### 11.6 Aturan untuk perluasan ke 99 butir (DIKUNCI pemilik proyek 2026-10-09, sebelum berkas butir baru dibuat)
+
+Dikunci setelah hasil 50 butir pertama dilihat (11.5) dan **sebelum** berkas konfirmasi butir baru
+dibuat, kandidatnya dicari, atau kuncinya ada. Berlaku **hanya untuk butir baru**; 50 butir lama
+tidak dilabel ulang.
+
+**Jumlah butir (dipastikan dari berkas sampel, bukan diasumsikan).** `sampel_liputan6.jsonl`: 100
+artikel, 100 id unik; 1 dikeluarkan aturan `is_non_hoax_verdict` (11.3); 99 sah. Pengambilan
+berbenih 20261004 direproduksi dan sama persis dengan 50 butir yang sudah dikonfirmasi; **sisanya 49
+butir**. Total setelah perluasan: **99**, bukan 100 seperti tertulis di 11.2.
+
+**Aturan A -- selisih waktu atau gelombang.** Unsur inti (subjek, tindakan, objek pembeda)
+menentukan; **tanggal terbit tidak**. Untuk tautan penipuan berulang, lembaga dan jenis tawaran yang
+sama berarti cocok walaupun gelombangnya berbeda. Tahun atau periode hanya menjadi pembeda bila
+**disebut eksplisit di kedua sisi dan berbeda**.
+*Keterbatasan yang diterima:* pada penipuan tahunan, tahun di judul sering hanya penanda gelombang,
+sehingga aturan ini bisa memisahkan dua artikel yang sebenarnya gelombang dari penipuan yang sama.
+Aturan ini dipilih karena **objektif**, bukan karena pasti benar.
+
+**Aturan B -- detail tidak disebut versus detail bertentangan.** Detail yang tidak disebut **bukan**
+alasan menolak; hanya detail yang **bertentangan pada unsur inti** yang menjadi alasan menolak.
+Pembandingnya adalah **kutipan pesan Liputan6 dengan Narasi TurnBackHoax**, bukan hanya judul dan
+Kesimpulan. Butir baru boleh ditandai ragu **hanya setelah Narasinya dibaca**. Tanda ragu disimpan
+di kolom tersendiri `ragu` (`YA` atau kosong), bukan di catatan.
+
+**Sensitivitas butir baru (ditetapkan di muka).** Dua arah: semua butir bertanda ragu dihitung
+cocok (batas bawah proporsi TIDAK ADA), dan semua butir bertanda ragu dihitung TIDAK ADA (batas
+atas). Label utama tidak diubah.
+
+**Aturan berhenti.** Bila pada 99 butir interval Wilson 95% **masih mencakup 50%**, sampling
+dihentikan dan **ambang dinyatakan tidak terpenuhi**: sumber kedua tidak diprioritaskan sekarang.
+**Tidak ada perluasan ketiga.** Bila interval seluruhnya di atas 50%: layak dikerjakan; seluruhnya di
+bawah 50%: tidak.
+
+**Pelaporan.**
+
+- **Hasil utama = 99 butir gabungan** (50 lama + 49 baru), sesuai pra-registrasi 11.2; butir BUKAN
+  PUTUSAN HOAKS keluar dari penyebut.
+- **Hasil sekunder = 49 butir baru saja**, yang dilabel dengan aturan terkunci di atas.
+- Sensitivitas 50 butir lama tetap memakai batas 11.5 (37/50 dan 22/50); tidak dihitung ulang.
+  Operasionalisasi untuk gabungan (usulan Claude Code, dicatat sebelum data baru ada; eksploratif):
+  batas atas gabungan = batas atas lama + batas atas baru, begitu juga batas bawah.
+
+**Berkas konfirmasi butir baru (rancangan; dibuat setelah bagian ini di-push).**
+
+- Tata letak **blok per butir**: judul dan kutipan pesan Liputan6 di atas; sel masukan KEPUTUSAN,
+  ragu, catatan; lalu tabel kandidat berkolom id, tanggal, label, asal, judul, **Narasi TurnBackHoax
+  utuh**, Kesimpulan. Kandidat tanpa Narasi ditandai dan jumlahnya dilaporkan.
+- Masukan **hanya** di sel blok. Lembar Rekap berisi rumus saja dan diproteksi (tanpa kata sandi):
+  pada 50 butir pertama pemilik proyek sempat mengetik di lembar rekap karena tidak ada yang
+  mencegahnya.
+- Pembaca mengambil keputusan dari sel blok, menolak berkas yang kolom buktinya berubah dari
+  templat, dan menyeragamkan huruf besar-kecil (`Tidak Ada` -> `TIDAK ADA`); selain itu tidak
+  menafsirkan apa pun.
+- Kandidat dicari dengan cara yang sama (11.3: dari judul Liputan6; 5 teratas embedding + 3 teratas
+  kata kunci judul), diurutkan menurut tanggal, tanpa skor; kunci skor disimpan terpisah dan tidak
+  dibuka sampai pemilik proyek selesai.
+
+**Perbedaan antara 50 butir lama dan 49 butir baru yang ikut membatasi hasil gabungan** (dicatat di
+muka): (1) aturan pelabelan berbeda (lama: pedoman v1.0 dengan dua inkonsistensi; baru: Aturan A dan
+B); (2) bukti yang dilihat berbeda (lama: judul dan Kesimpulan; baru: juga Narasi utuh); (3) antrean
+yang ikut dijadikan kandidat berbeda (lama: 16 artikel; baru: antrean pada saat berkas dibuat).
+
 ---
 
 ## Sumber
