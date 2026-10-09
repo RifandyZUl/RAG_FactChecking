@@ -787,7 +787,7 @@ Proyek dibangun bertahap dalam dua versi:
   tanpa itu 7 `System` chromadb tetap hidup sampai sesi berakhir (terukur), dengan itu 0. Dipasang
   setelah `test_apply_search_config_changes_only_the_parameter` gagal SEKALI (`InternalError` dari
   `collection.modify`) pada jalan penuh 2026-10-08; **kegagalan itu tidak berhasil direproduksi (0
-  dari 28 jalan penuh, 14 di antaranya paralel, dan 60 ulangan skenario di bawah beban CPU), pesan
+  dari 26 jalan penuh tanpa fixture, 14 di antaranya paralel, dan 60 ulangan skenario di bawah beban CPU), pesan
   galat aslinya tidak tersimpan, jadi penyebabnya BELUM terbukti dan perbaikannya belum terbukti
   menutupnya.** Bila gagal lagi, simpan jejak lengkapnya. **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
