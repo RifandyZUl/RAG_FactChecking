@@ -956,6 +956,36 @@ muka): (1) aturan pelabelan berbeda (lama: pedoman v1.0 dengan dua inkonsistensi
 B); (2) bukti yang dilihat berbeda (lama: judul dan Kesimpulan; baru: juga Narasi utuh); (3) antrean
 yang ikut dijadikan kandidat berbeda (lama: 16 artikel; baru: antrean pada saat berkas dibuat).
 
+**Berkas dibuat 2026-10-09, setelah aturan di atas di-push (commit `c347e20`).**
+`python -m candidates.gap_blocks --make` -> `konfirmasi_49.xlsx` (lokal, tidak di-commit): **49
+butir**, 319 baris kandidat (5-8 per butir, median 7), 1 butir ujung rentang, antrean 32 artikel (6
+butir memuat kandidat dari antrean), **kandidat tanpa Narasi: 0**, sel masukan terisi saat dibuat: 0.
+Sidik jari bukti `932e756ae3a87d21...`; peta blok dan sidik jari di `sidik_jari_templat_49.json`;
+skor di `kunci_kandidat_49.json` (ditulis, tidak dibaca alat ini). Lembar konfirmasi dan Rekap
+diproteksi tanpa kata sandi; yang tidak terkunci hanya sel KEPUTUSAN, ragu, dan catatan di tiap blok
+(proteksi lembar konfirmasi adalah tambahan Claude Code agar masukan memang hanya bisa di sel blok;
+lebar kolom dan tinggi baris tetap bisa diubah). Pembacaan: `python -m candidates.gap_blocks --read`
+(uji `tests/test_gap_blocks.py`); pada templat kosong ia menolak menghitung (49 butir kosong).
+Isi berkas tidak dibuka atau diringkas Claude Code.
+
+### 11.7 Selisih hari terbit pada 21 pasangan cocok (EKSPLORATIF; dari 50 butir pertama)
+
+Selisih = tanggal terbit TurnBackHoax dikurangi tanggal terbit Liputan6 (positif = TurnBackHoax
+belakangan). Hanya untuk menimbang apakah cakupan *saat hoaks beredar* perlu diukur terpisah nanti;
+bukan dasar keputusan sekarang.
+
+- Bertanda: minimum -197, kuartil bawah -5, **median +3**, kuartil atas +6, maksimum +323 hari.
+- Nilai mutlak: kuartil bawah 3, median 6, kuartil atas 36 hari. **Dalam 14 hari: 15 dari 21;
+  di atas 30 hari: 6 dari 21.**
+- 13 pasangan "sesudah": **10 terpaut 1-14 hari** (1, 2, 3, 3, 4, 4, 5, 6, 8, 14) dan 3 terpaut jauh
+  (159, 248, 323 hari: butir 49, 8, 28). 7 pasangan "sebelum": 4 terpaut 3-9 hari, 3 terpaut jauh
+  (36, 42, 197 hari: butir 42, 48, 14). Satu pasangan terbit di hari yang sama.
+- Jadi sebagian besar pasangan "sesudah" adalah TurnBackHoax terlambat beberapa hari, bukan
+  gelombang lain. Lima dari enam pasangan yang terpaut lebih dari 30 hari ada di daftar "diterima
+  secara meragukan" (8, 14, 28, 48, 49); yang keenam butir 42.
+- Batas: n = 21, satu anotator, dan tanggal yang dibandingkan adalah tanggal terbit artikel cek
+  fakta, bukan tanggal hoaks beredar.
+
 ---
 
 ## Sumber

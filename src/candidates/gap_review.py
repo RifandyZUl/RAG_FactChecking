@@ -154,16 +154,22 @@ def conclusion_text(article_id: str) -> str:
     return ""
 
 
-def main() -> int:
+def load_valid_sample() -> tuple[list[dict], list[dict], dict[str, dict]]:
+    """(sampel 100 artikel, yang dikeluarkan sebagai bukan putusan hoaks, yang sah per id)."""
+    sample = [json.loads(ln) for ln in SAMPLE_PATH.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    excluded = [r for r in sample if is_non_hoax_verdict(r["judul"], conclusion_text(r["id"]))]
+    return sample, excluded, {r["id"]: r for r in sample if r not in excluded}
+
+
+def build_items(chosen: list[str], valid: dict[str, dict]) -> tuple[list[dict[str, Any]], dict[str, Any], int]:
+    """
+    Kandidat untuk tiap artikel Liputan6 di `chosen` (urutan dipertahankan): 5 teratas embedding + 3 teratas
+    kata kunci judul, antrean ikut bersaing. Mengembalikan (butir, kunci skor, jumlah artikel antrean).
+    """
     import numpy as np
 
     from ingest import get_collection, load_model
     from retriever import retrieve
-
-    sample = [json.loads(ln) for ln in SAMPLE_PATH.read_text(encoding="utf-8").splitlines() if ln.strip()]
-    excluded = [r for r in sample if is_non_hoax_verdict(r["judul"], conclusion_text(r["id"]))]
-    valid = {r["id"]: r for r in sample if r not in excluded}
-    chosen = draw_sample(list(valid))
 
     db = json.loads(Path(ARTICLES_PATH).read_text(encoding="utf-8"))
     queue = load_queue({a["article_id"] for a in db})
@@ -192,8 +198,16 @@ def main() -> int:
         items.append({"id": aid, "judul": r["judul"], "tanggal": r["tanggal"], "pesan": r["pesan"],
                       "ujung_rentang": in_range_tail(r["tanggal"]),
                       "kandidat": [{"id": c, "tanggal": by_id[c]["date"], "label": by_id[c]["label"], "asal": by_id[c]["asal"],
-                                    "judul": by_id[c]["title"], "kesimpulan": by_id[c]["kesimpulan"]} for c in cand_ids]})
+                                    "judul": by_id[c]["title"], "narasi": by_id[c].get("narasi") or "",
+                                    "kesimpulan": by_id[c]["kesimpulan"]} for c in cand_ids]})
         key[aid] = {"kueri": query, "vonis_judul": verdict, "embedding_top": [(i, round(s, 4)) for i, s in hits], "kata_kunci_top": lex}
+    return items, key, len(queue)
+
+
+def main() -> int:
+    sample, excluded, valid = load_valid_sample()
+    chosen = draw_sample(list(valid))
+    items, key, n_queue = build_items(chosen, valid)
 
     rows = build_rows(items)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -218,7 +232,7 @@ def main() -> int:
     print(json.dumps({
         "sampel_awal": len(sample), "dikeluarkan": [r["judul"] for r in excluded], "butir": len(items), "baris_kandidat": len(rows),
         "kandidat_per_butir_min_median_maks": [min(n_cand), sorted(n_cand)[len(n_cand) // 2], max(n_cand)],
-        "butir_ujung_rentang": sum(i["ujung_rentang"] for i in items), "artikel_antrean": len(queue),
+        "butir_ujung_rentang": sum(i["ujung_rentang"] for i in items), "artikel_antrean": n_queue,
         "butir_dengan_kandidat_dari_antrean": sum(any(c["asal"].startswith("antrean") for c in i["kandidat"]) for i in items),
         "butir_tanpa_kutipan_pesan": sum(not i["pesan"] for i in items), "berkas": str(out)}, ensure_ascii=False, indent=2))
     return 0
