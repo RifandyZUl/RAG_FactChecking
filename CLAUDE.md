@@ -768,9 +768,28 @@ Proyek dibangun bertahap dalam dua versi:
   **Asal-usul label: butir 1-5 dibahas bersama Claude, butir 6-50 tanpa AI; berkas terisi diperiksa
   Claude sesudahnya, tanpa revisi label.** Kunci: pilihan = teratas embedding 18/21, teratas kata
   kunci 20/21; skor tidak memisahkan (22/29 TIDAK ADA di atas skor pilihan terendah).
-  **BERIKUTNYA: JANGAN membuat berkas 50 butir kedua sebelum pemilik proyek mengunci dua aturan
-  pelabelan tertulis (selisih waktu/gelombang; detail tidak disebut vs bertentangan); aturan hanya
-  untuk butir baru, 50 butir lama tidak dilabel ulang.** **Rancangan itu
+  **ATURAN PERLUASAN DIKUNCI 2026-10-09 (bagian 11.6, commit `c347e20`, sebelum berkas dibuat):**
+  Aturan A (unsur inti menentukan, tanggal terbit tidak; tahun/periode pembeda hanya bila eksplisit
+  di kedua sisi dan berbeda), Aturan B (hanya detail BERTENTANGAN pada unsur inti yang menolak;
+  pembanding = kutipan pesan Liputan6 vs Narasi TurnBackHoax; kolom `ragu` YA/kosong), **aturan
+  berhenti: total 99 butir (sisa terverifikasi 49, bukan 50); bila Wilson95 pada 99 butir masih
+  mencakup 50% -> berhenti, ambang TIDAK terpenuhi, tidak ada perluasan ketiga.** Hasil utama = 99
+  gabungan; sekunder = 49 baru; 50 lama tidak dilabel ulang. **BERKAS SUDAH DIBUAT, MENUNGGU DIISI
+  PEMILIK PROYEK: `data/candidates/celah_liputan6/konfirmasi_49.xlsx`** (`python -m
+  candidates.gap_blocks --make`; blok per butir dengan Narasi utuh; lembar konfirmasi dan Rekap
+  diproteksi tanpa kata sandi, hanya sel KEPUTUSAN/ragu/catatan yang terbuka; 49 butir, 319 kandidat,
+  0 tanpa Narasi). **Jangan mengisi, mengusulkan, atau memeriksa keputusannya, dan jangan membuka
+  `kunci_kandidat_49.json` sebelum pemilik proyek menyatakan selesai.** Sesudah itu: `python -m
+  candidates.gap_blocks --read` (menolak bila bukti berubah atau ada butir tidak terbaca; menghitung
+  gabungan dan menerapkan aturan berhenti); perbandingan dengan kunci 49 butir BELUM dibangun
+  (`gap_result.compare_with_key` bisa dipakai ulang). Selisih hari 21 pasangan: bagian 11.7.
+  **Uji (2026-10-09): `tests/conftest.py` menghentikan backend ChromaDB yang dibuka tiap uji** --
+  tanpa itu 7 `System` chromadb tetap hidup sampai sesi berakhir (terukur), dengan itu 0. Dipasang
+  setelah `test_apply_search_config_changes_only_the_parameter` gagal SEKALI (`InternalError` dari
+  `collection.modify`) pada jalan penuh 2026-10-08; **kegagalan itu tidak berhasil direproduksi (0
+  dari 28 jalan penuh, 14 di antaranya paralel, dan 60 ulangan skenario di bawah beban CPU), pesan
+  galat aslinya tidak tersimpan, jadi penyebabnya BELUM terbukti dan perbaikannya belum terbukti
+  menutupnya.** Bila gagal lagi, simpan jejak lengkapnya. **Rancangan itu
   MENGOREKSI butir di bawah ini:** (i) empat kegagalan Recall@3 (v1-022, v1-024, v1-027, v1-033)
   semuanya butir NEGATIF sulit, jadi bukan dasar untuk "menulis ulang kueri saat retrieval gagal"
   (tugas rewriter kedua dicoret; positif 20/20 di semua indeks); (ii) bukti pesan panjang kuat untuk
