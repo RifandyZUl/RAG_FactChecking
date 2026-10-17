@@ -1,11 +1,11 @@
 # Rancangan evaluasi eksternal: 99 butir Liputan6 pada indeks produksi 1.532 artikel
 
-**Status (2026-10-17): RANCANGAN DAN USULAN PRA-REGISTRASI; BELUM DISETUJUI DAN BELUM DIJALANKAN.**
-Belum ada panggilan LLM, belum ada ingest, dan sistem tidak diubah. Satu-satunya yang sudah
-dijalankan adalah **audit jejak identik** (bagian 7.1), yang tidak memakai LLM maupun embedding dan
-parameternya di-commit sebelum dijalankan (`e7504fc`). Angka ambang di bawah adalah **usulan**:
-baru mengikat setelah pemilik proyek menyetujuinya dan persetujuan itu di-commit, sebelum evaluasi
-pertama dijalankan.
+**Status (2026-10-17): DISETUJUI PEMILIK PROYEK (bagian 10) DAN DIKUNCI SEBELUM PANGGILAN LLM PERTAMA.**
+Rancangan disusun dan diusulkan Claude Code; keputusan dan dua penegasan ambang berasal dari pemilik
+proyek. Audit jejak identik (bagian 7.1) dijalankan lebih dulu tanpa LLM maupun embedding, dengan
+parameter yang di-commit sebelum dijalankan (`e7504fc`). Pemilihan butir sesi buta dan pembekuan
+daftar butir di-commit sebelum evaluasi dimulai (bagian 8). **Hasil per butir tersegel sampai sesi
+buta selesai.**
 
 Asal butir dan labelnya: `docs/rancangan_v2.md` bagian 11 (11.3-11.8). Teks Liputan6 dan TurnBackHoax
 tetap lokal (`data/candidates/`, tidak di-commit).
@@ -41,7 +41,7 @@ Kueri adalah kutipan pesan yang diambil dari artikel Liputan6 (`sampel_liputan6.
 sebagai kueri: judul adalah parafrase pemeriksa fakta, memuat kata vonis, dan justru menjadi kueri
 yang menghasilkan daftar kandidat (bias ke atas yang paling besar, lihat bagian 4).
 
-### 2.2 Aturan kutipan yang tidak memuat klaim (usulan; ditetapkan sebelum hasil apa pun dilihat)
+### 2.2 Aturan kutipan yang tidak memuat klaim (ditetapkan sebelum hasil apa pun dilihat; DISETUJUI 2026-10-17)
 
 Dihitung dengan `candidates.trace_audit.words` (NFKC, huruf kecil, tautan berskema/`www.` dibuang,
 tanda baca menjadi pemisah):
@@ -52,12 +52,15 @@ tanda baca menjadi pemisah):
   butir berikutnya baru muncul pada 9 kata.
 - **K2 -- kutipan berupa kalimat pengantar redaksi** (diakhiri titik dua, mis. "... berikut
   isinya:"): 1 butir (P2-34). Hanya satu butir di 99 yang diakhiri titik dua.
-- **Perlakuan yang diusulkan: DIKELUARKAN dari analisis utama, tanpa diganti judul.** Alasannya:
+- **Perlakuan (DISETUJUI 2026-10-17): DIKELUARKAN dari analisis utama, tanpa diganti judul.** Alasannya:
   tautan saja atau salam tidak memuat klaim yang dapat dibandingkan, dan mengganti dengan judul
   menambah bias (2.1). Butir ini juga tidak dijalankan (hemat 24 panggilan). Jumlahnya dilaporkan per
   label: **positif 4** (P1-5, P2-18, P2-34, P2-46) dan **negatif 4** (P1-4, P1-19, P2-10, P2-11).
-  *Catatan:* pengguna sungguhan memang bisa menempel tautan saja; sistem tidak dirancang untuk itu
-  (tidak mengambil isi tautan), dan itu dicatat sebagai keterbatasan, bukan diukur di sini.
+  **Keterbatasan:** pesan yang hanya berisi tautan adalah masukan pengguna yang nyata (5 dari 99
+  kutipan di sampel ini); sistem tidak dirancang untuk itu (tidak mengambil isi tautan dan meng-embed
+  teks URL apa adanya), dan evaluasi ini tidak mengukurnya. **Fitur masa depan (dicatat, BELUM
+  dibangun):** pencocokan URL/domain deterministik dari pesan ke `claim_sources` artikel, tanpa LLM,
+  dengan penyaringan domain yang sama seperti audit 7.1.
 - **Butir analisis: 91** = **42 positif** (P1 20, P2 22) dan **49 negatif** (P1 27, P2 22).
 
 ### 2.3 Panjang
@@ -80,20 +83,20 @@ terpotong jendela embedding atau ditolak demo; aturan tambahan tidak diperlukan.
   1. Pada analisis utama, setiap jawaban "ditemukan" pada butir negatif dihitung **kecocokan palsu**,
      baik artikelnya ada di daftar kandidat maupun tidak. Label awal tidak pernah ditimpa.
   2. Bila artikelnya **di luar daftar kandidat**, pemilik proyek menilainya dengan Aturan A/B lewat
-     adjudikasi buta (7.3). Hasilnya dicatat terpisah sebagai "cocok di luar daftar: sah / tidak
+     adjudikasi buta (7.6). Hasilnya dicatat terpisah sebagai "cocok di luar daftar: sah / tidak
      sah" dan dilaporkan sebagai sensitivitas, bukan sebagai pengganti label.
   3. Bila artikelnya **di dalam daftar**, pemilik proyek sudah pernah menolaknya; ia tetap masuk
-     adjudikasi buta (7.3) agar perlakuannya sama.
+     adjudikasi buta (7.6) agar perlakuannya sama.
 - **Empat butir ragu (P2-2, P2-14, P2-30 TIDAK ADA; P2-18 cocok).** P2-18 dikeluarkan oleh K1. Tiga
   sisanya: label utama dipakai apa adanya; sensitivitas dua arah seperti 11.6 (dihitung cocok /
   dihitung TIDAK ADA). Karena "cocok" pada butir ragu tidak menyebut artikel, pada arah "dihitung
   cocok" sasarannya adalah kandidat yang dipilih sistem bila ada di daftar kandidat butir itu.
 - **Perbedaan aturan antar-putaran.** P1 dilabel dengan pedoman v1.0 (dua inkonsistensi tercatat,
   tanpa Narasi); P2 dengan Aturan A/B dan Narasi utuh.
-  - **Hasil utama = gabungan 91 butir** dengan label utama (ukuran sampel terbesar; sesuai cara
-    11.6 menjadikan gabungan hasil utama).
-  - **Hasil sekunder = per putaran** (P1: 20 positif / 27 negatif; P2: 22 / 22), selalu disajikan
-    berdampingan dan **tanpa uji beda** (sama seperti 11.8 langkah 4).
+  - **Hasil utama = gabungan 91 butir** (DISETUJUI 2026-10-17), dengan label final menurut 7.5.
+  - **Pecahan wajib:** per putaran (P1: 20 positif / 27 negatif; P2: 22 / 22) dan, untuk positif,
+    per selisih terbit **<= 30 hari (25 butir) vs > 30 hari (17 butir)**. Disajikan berdampingan dan
+    **tanpa uji beda** (sama seperti 11.8 langkah 4).
   - **Sensitivitas P1:** 15 butir yang ditandai tidak konsisten (11.5) dibalik ke dua arah, dengan
     cara 11.5.
   - Bila kesimpulan sebuah metrik berbeda antara P1 dan P2, kesimpulan itu dilaporkan **bergantung
@@ -154,7 +157,7 @@ yang tidak ada di basis data.
 
 ---
 
-## 6. Metrik dan ambang (usulan; dikunci sebelum dijalankan)
+## 6. Metrik dan ambang (DISETUJUI 2026-10-17; dikunci sebelum dijalankan)
 
 Semua proporsi dengan interval Wilson 95%. Keputusan per butir = **modus 3 run** (seperti Versi 1);
 ketidakbulatan antar-run dilaporkan terpisah. Butir "tak terjawab" (galat API setelah semua
@@ -165,9 +168,14 @@ percobaan) dilaporkan sendiri dan tidak dihitung benar maupun salah.
 - **Recall@3 bersyarat** (retrieval saja; bagian 4).
 - **Ketepatan jawaban cocok** = modus "ditemukan" dengan id sasaran.
 - Dipecah: penolakan palsu (modus "belum ditemukan") dan artikel salah (ditemukan, id lain).
-- **Ambang (usulan):** memadai bila batas bawah Wilson >= 60% (pada 42 butir: >= 32/42); buruk bila
-  batas atas < 60% (<= 18/42); di antaranya tidak konklusif. Ambang positif ini **tidak** menjadi
-  gerbang langkah korektif; ia menilai apakah demo layak diklaim menemukan klaim yang ada.
+- **Ambang (DISETUJUI 2026-10-17). Patokan: 60% pada batas Wilson 95%.** Memadai bila batas
+  **bawah** Wilson >= 60% (pada 42 butir: >= 32/42); buruk bila batas **atas** < 60% (<= 18/42); di
+  antaranya (19-31/42) tidak konklusif. Ambang berlaku pada **ke-42 butir sesuai label emas**,
+  termasuk pasangan lintas gelombang. Ambang positif ini **tidak** menjadi gerbang langkah korektif;
+  ia menilai apakah demo layak diklaim menemukan klaim yang ada.
+- **Laporan wajib memisahkan kegagalan yang berupa penolakan pasangan lintas gelombang** (strata
+  > 30 hari, bagian 3), karena prompt generator yang terkunci tidak mengenal Aturan A: penolakan itu
+  dilaporkan sebagai jumlah tersendiri di samping kegagalan lain, tanpa mengubah hitungan ambang.
 
 ### 6.2 Metrik negatif (49 butir) -- dilaporkan paling menonjol
 
@@ -175,11 +183,13 @@ percobaan) dilaporkan sendiri dan tidak dihitung benar maupun salah.
   daftar kandidat vs di luar (3).
 - **Tingkat penolakan benar** = modus "belum ditemukan" / 49 (= 1 - kecocokan palsu bila tidak ada
   yang tak terjawab).
-- **Ambang kecocokan palsu (usulan; gerbang pemicu CRAG):**
+- **Ambang kecocokan palsu (DISETUJUI 2026-10-17; gerbang pemicu CRAG).** **"Lulus" berarti tidak
+  terbukti buruk, BUKAN terbukti aman:** pada batas lulus, batas atas Wilson masih sekitar 19%, jadi
+  data tetap sejalan dengan hampir satu dari lima klaim negatif tercocokkan palsu.
 
   | Kategori | Syarat | Pada 49 butir |
   | --- | --- | --- |
-  | **Lulus** | proporsi <= 10% DAN batas atas Wilson <= 20% | <= 4/49 (8,2% [3,2%; 19,2%]) |
+  | **Lulus** (= tidak terbukti buruk) | proporsi <= 10% DAN batas atas Wilson <= 20% | <= 4/49 (8,2% [3,2%; 19,2%]) |
   | **Gugur** | batas bawah Wilson > 10% | >= 10/49 (20,4% [11,5%; 33,6%]) |
   | Tidak konklusif | di antaranya | 5-9/49 |
 
@@ -204,7 +214,7 @@ percobaan) dilaporkan sendiri dan tidak dihitung benar maupun salah.
   berlaku. Tersisa 44 non-batas dan 4 batas.
 - **Pembanding:** keputusan modus Versi 1 pada butir yang sama di `archive/v1`
   (`data/testset_v1_eval_gemini-3.5-flash-lite.jsonl`).
-- **Ambang (usulan):** "mundur" bila kemunduran bersih pada 44 butir non-batas >= 3, yaitu (benar di
+- **Ambang (DISETUJUI 2026-10-17):** "mundur" bila kemunduran bersih pada 44 butir non-batas >= 3, yaitu (benar di
   arsip -> salah di 1.532) dikurangi (salah -> benar). Setiap perpindahan dilaporkan per butir dengan
   penyebab yang terlihat (retrieval vs penilaian). Selisih di sini mencampur efek data dan bukan uji
   arsitektur (Aturan Wajib #6 tetap berlaku untuk angka asli Versi 1).
@@ -243,53 +253,66 @@ anotator pengganti.** Hasil ketiga langkah di bawah **tidak pernah mengganti lab
     selesai. Rincian per sinyal dilaporkan sesudahnya.
   - Butir tanpa jejak sama sekali tidak berarti tidak cocok: 33 dari 46 positif tanpa jejak, karena
     pesan penipuan berganti tautan dan kalimat antar-gelombang (bagian 3).
-- **Tinjauan buta tujuh butir itu** digabung ke berkas uji ulang 7.2, diacak bersama butir lain,
-  tanpa keterangan mana yang berasal dari audit. Hasilnya dilaporkan sebagai "berubah / tetap" per
-  butir, sebagai sensitivitas, dan tidak dihitung dalam kappa kecuali butirnya juga terambil acak.
+- **Ketujuh butir ini ditinjau ulang dalam sesi buta gabungan (7.2)**, tanpa penanda dan tanpa
+  diberi tahu sinyalnya. Hasilnya dilaporkan terpisah sebagai hasil audit (berubah / tetap per butir,
+  lalu rincian sinyal dan presisi per sinyal setelah sesi buta selesai) dan **tidak** ikut kappa,
+  karena butirnya dipilih tidak acak.
 
-### 7.2 Uji ulang buta oleh pemilik proyek sendiri
+### 7.2 Sesi buta gabungan (DISETUJUI 2026-10-17)
 
-- **Waktu:** paling cepat **27 Oktober 2026** (dua minggu setelah pelabelan terakhir 13 Oktober).
-- **Butir:** 30, diambil acak berbenih **20261027**:
-  - **20 dari P2** (49 butir; termasuk butir ragu): ukuran **konsistensi** (aturan sama).
-  - **10 dari P1**, dari 30 butir yang memenuhi syarat: butir 1-5 (dibahas bersama AI) dan 15 butir
-    yang pernah ditandai tidak konsisten **dikeluarkan**. Butir P1 dilabel ulang dengan **Aturan
-    A/B**, jadi hasilnya diukur sebagai **efek pergantian aturan**, bukan konsistensi.
-  - Ditambah butir dari 7.1 yang belum terambil (tidak masuk kappa).
-- **Berkas:** tata letak blok `gap_blocks` (Narasi utuh, kini dengan tinggi baris yang benar);
-  urutan butir dan urutan kandidat diacak; label lama, catatan, dan tanda ragu disembunyikan;
-  butir dinomori ulang. Peta nomor baru -> butir asli disimpan terpisah dan tidak dibuka sampai
-  pemilik proyek selesai.
-- **Ukuran:** Cohen's kappa pada keputusan biner (cocok vs TIDAK ADA), interval 95% bootstrap
-  persentil (10.000 ulangan, benih 20261027), dilaporkan untuk P2 (konsistensi; dipakai ambang
-  7.4), P1 (efek aturan), dan gabungan 30 (deskriptif). Juga dilaporkan: kesepakatan persis
-  termasuk id artikel, dan perpindahan per arah (cocok -> TIDAK ADA dan sebaliknya).
-- **Keterbatasan yang diterima:** dengan 20 butir, interval kappa lebar (kira-kira +-0,25); butir P1
-  pernah dilihat sebelumnya, jadi ingatan bisa menaikkan kesepakatan.
+- **Isi: 37 butir dalam satu berkas** = 30 butir uji ulang acak + 7 butir audit (P1-10, P1-20, P1-29,
+  P1-30, P1-38, P1-45, P2-2), dicampur acak **tanpa penanda** mana butir audit dan mana butir uji
+  ulang.
+- **Pemilihan uji ulang** (dikunci dan di-commit sebelum panggilan LLM pertama, tidak bergantung pada
+  hasil evaluasi): `python -m candidates.blind_session --select` -> `testset/eksternal_sesi_buta_pilihan.json`.
+  Benih **20261027**; **20 butir P2** (konsistensi, aturan sama) lalu **10 butir P1** (dilabel ulang
+  dengan Aturan A/B; efek pergantian aturan). Dikecualikan dari kolam acak: butir 1-5 P1, 15 butir
+  P1 yang pernah ditandai tidak konsisten, dan ketujuh butir audit. Kolam: P1 26, P2 48.
+- **Berkas:** dibuat **paling cepat 27 Oktober 2026** (dua minggu setelah pelabelan terakhir 13
+  Oktober). Format sama dengan `konfirmasi_49` (blok per butir, Narasi utuh, tinggi baris disetel,
+  hanya sel masukan terbuka). Label lama, catatan, dan tanda ragu disembunyikan; urutan butir dan
+  urutan kandidat diacak; butir dinomori ulang; peta nomor -> butir asli disimpan terpisah dan tidak
+  dibuka sampai pemilik proyek selesai.
+- **Keterbatasan yang diterima:** butir P1 pernah dilihat sebelumnya (ingatan bisa menaikkan
+  kesepakatan), dan dengan 30 butir interval kappa lebar.
 
-### 7.3 Adjudikasi buta setelah evaluasi
+### 7.3 Kappa uji ulang
 
-- **Hanya butir yang keputusan modus sistemnya berbeda dari label** (penolakan palsu, artikel salah,
-  kecocokan palsu).
-- Disajikan sebagai **dua opsi dalam urutan acak**, tanpa keterangan mana dari sistem: opsi label
-  (id artikel atau TIDAK ADA) dan opsi sistem. Untuk opsi yang berupa artikel ditampilkan judul,
-  Narasi utuh, dan Kesimpulan, seperti di berkas konfirmasi. Aturan A/B berlaku.
-- **Dilaporkan:** berapa yang berubah, per arah dan per jenis. Hasil utama tetap memakai label awal;
-  hasil dengan label adjudikasi hanya sensitivitas. **Bias yang disadari:** adjudikasi hanya meninjau
-  ulang butir yang tidak sepakat dengan sistem, jadi ia hanya bisa menggeser hasil ke arah sistem.
+- Dihitung **hanya dari 30 butir acak**. Ketujuh butir audit tidak ikut.
+- **Dua tingkat**, masing-masing dengan interval 95% bootstrap persentil (10.000 ulangan, benih
+  20261027): (1) **biner** (cocok vs TIDAK ADA); (2) **kesamaan id persis** (kategori = id artikel
+  atau TIDAK ADA).
+- Dilaporkan juga (deskriptif): kappa P2 saja (konsistensi) dan P1 saja (efek aturan), dan
+  perpindahan per arah.
 
-### 7.4 Ambang kappa (ditetapkan sebelum uji ulang)
+### 7.4 Ambang kappa (DISETUJUI 2026-10-17; dibaca dari estimasi titik kappa biner 30 butir, interval dilaporkan)
 
-Diterapkan pada kappa titik P2 (n = 20):
-
-| Kappa P2 | Tindakan |
+| Kappa | Tindakan |
 | --- | --- |
 | >= 0,80 | Label dipakai apa adanya. |
-| 0,60-0,79 | Hasil tetap memakai label utama, tetapi setiap metrik dilaporkan juga dengan butir yang berubah pada uji ulang dibalik ke dua arah. Kategori "lulus" hanya dinyatakan bila lulus pada kedua arah. |
+| 0,60-0,79 | Hasil tetap memakai label final (7.5), tetapi setiap metrik dilaporkan juga dengan butir yang berubah pada uji ulang dibalik ke dua arah. Kategori "lulus" hanya dinyatakan bila lulus pada kedua arah. |
 | < 0,60 | Set ini **tidak dipakai sebagai gerbang** apa pun (termasuk pemicu CRAG); hasil evaluasi hanya deskriptif, dan pedoman perlu diperjelas sebelum set baru dibuat. |
 
-Bila kappa P1 (efek aturan) < 0,60, hasil per putaran P1 diberi catatan bahwa labelnya tidak sebanding
-dengan P2, tetapi gabungan tetap dihitung seperti 3.
+Kappa id persis dilaporkan berdampingan; bila ia jauh di bawah kappa biner, laporan menyebut bahwa
+ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasangan.
+
+### 7.5 Label final untuk metrik utama
+
+- **Label final = label awal, KECUALI butir audit yang labelnya berubah di sesi buta**: untuk butir
+  itu dipakai label sesi buta, karena perubahannya dipicu mekanisme yang tidak melihat jawaban
+  sistem.
+- **Metrik dengan label awal** dilaporkan sebagai sensitivitas.
+- Hasil uji ulang 30 butir **tidak** mengganti label; ia hanya mengukur konsistensi (7.3-7.4).
+
+### 7.6 Adjudikasi buta setelah buka segel
+
+- **Hanya butir yang keputusan modus sistemnya berbeda dari label final** (penolakan palsu, artikel
+  salah, kecocokan palsu).
+- Disajikan sebagai **dua opsi dalam urutan acak**, tanpa keterangan mana dari sistem: opsi label dan
+  opsi sistem, masing-masing dengan judul, Narasi utuh, dan Kesimpulan. Aturan A/B berlaku.
+- **Perubahan dari adjudikasi dicatat terpisah dan TIDAK masuk metrik utama.** Bias yang disadari:
+  adjudikasi hanya meninjau ulang butir yang tidak sepakat dengan sistem, jadi ia hanya bisa menggeser
+  hasil ke arah sistem.
 
 ---
 
@@ -301,10 +324,20 @@ dengan P2, tetapi gabungan tetap dihitung seperti 3.
   evaluasi: `68321aed...` (normalisasi CRLF->LF, UTF-8). Juga `src/chunker.py` `6d9de5ce...`. Uji
   kunci (`tests/test_testset_locks.py`) wajib lolos sebelum setiap hari evaluasi.
 - **3 run, keputusan modus**, urutan butir diacak per run dengan benih **2026101701-03**.
-- **Skrip baru** `evaluation.external_eval` (belum ditulis), meniru `testset_eval`: hasil mentah
-  per (run, butir) ke `data/external_eval_<model>.jsonl` (lokal), lanjut dari yang terakhir per
-  (run, butir), berhenti bila kuota harian habis atau 2 butir beruntun tak terjawab. Analisis di
-  skrip terpisah tanpa panggilan API.
+- **Skrip** `evaluation.external_eval` (uji `tests/test_external_eval.py`): `--freeze` membekukan
+  daftar 99 butir (label awal, alasan dikeluarkan, hash kutipan; tanpa teks), sidik jari indeks, dan
+  hash berkas ke `testset/eksternal_butir.json`; `--set liputan6|v1 --run N` menjalankan satu run;
+  hasil mentah per (run, butir) ke `data/external_eval_<set>_<model>.jsonl` (lokal), lanjut dari yang
+  terakhir, berhenti bila kuota habis atau 2 butir beruntun tak terjawab. Sebelum panggilan pertama
+  setiap run ia memeriksa daftar butir, sidik jari indeks, `ef_search`, hash berkas, dan
+  model/thinking; satu saja berbeda -> tidak dimulai. testset-v1 memakai benih run Versi 1 dan berkas
+  keluaran sendiri (tidak menyentuh hasil arsip). Analisis di skrip terpisah, ditulis sebelum segel
+  dibuka, tanpa panggilan API.
+- **Segel.** Layar dan `--status` hanya menampilkan status teknis (jumlah panggilan, galat, 429, butir
+  yang diulang). Selama segel, yang dilaporkan kepada pemilik proyek hanya status teknis, sidik jari
+  indeks, dan hasil `retriever_exactness`; **tidak ada angka metrik dan tidak ada hasil per butir**
+  sampai sesi buta selesai. Claude Code juga tidak membaca keputusan per butir dari berkas hasil
+  selama segel.
 - **Kuota (RPD 500, berbagi dengan demo):**
 
   | | Butir | Panggilan minimum (3 run) | Terburuk dengan ulang format |
@@ -313,11 +346,12 @@ dengan P2, tetapi gabungan tetap dihitung seperti 3.
   | testset-v1 | 54 | 162 | 324 |
   | **Jumlah** | | **435** | 870 |
 
-  **Usulan: 3 hari, satu run kedua set per hari** (145 panggilan minimum, 290 terburuk dengan ulang
-  format), menyisakan >= 210 per hari untuk ulang butir dan demo. Catatan: pemeriksaan anggaran
-  `testset_eval` memakai kasus terburuk 6 panggilan per butir; untuk 91 butir itu 546 > 500, jadi
-  skrip baru memeriksa anggaran dengan 2 panggilan per butir (ulang format), dan buku besar kuota
-  tetap menjadi penghenti keras saat sisa habis.
+  **DISETUJUI: 3 hari, satu run kedua set per hari** (145 panggilan minimum, 290 terburuk dengan ulang
+  format), menyisakan >= 210 per hari untuk ulang butir dan demo. Pemeriksaan anggaran membandingkan
+  kebutuhan minimum (1 panggilan per butir) dengan sisa kuota; kasus terburuk hanya dilaporkan, dan
+  buku besar kuota tetap menjadi penghenti keras saat sisa habis (proses berhenti dan dilanjutkan
+  setelah reset). *Koreksi atas versi pertama rancangan ini:* versi itu keliru menyebut bahwa
+  pemeriksaan anggaran `testset_eval` menolak berdasarkan kasus terburuk.
 - **Yang boleh dipublikasikan (di-commit):** metrik agregat dan intervalnya; tabel per butir berisi
   nomor butir, id artikel Liputan6 (angka), label emas (id TurnBackHoax / TIDAK ADA), keputusan modus
   sistem, dan id artikel jawaban. **Tidak** dipublikasikan: kutipan pesan, judul Liputan6, Narasi,
@@ -326,16 +360,13 @@ dengan P2, tetapi gabungan tetap dihitung seperti 3.
   retriever, parameter retrieval, chunking, atau indeks membuat ke-99 butir ini **data
   pengembangan**: tidak boleh lagi dipakai sebagai bukti mutu. Uji ulang dan adjudikasi harus selesai
   sebelum ada perubahan sistem.
-- **Urutan yang diusulkan:**
-  1. Pemilik proyek menyetujui atau mengubah rancangan ini; ambang di-commit.
-  2. Tinjauan buta 7.1 dan uji ulang 7.2 (>= 27 Oktober), **sebelum** pemilik proyek melihat keluaran
-     sistem per butir, agar uji ulang tidak terpengaruh jawaban sistem.
-  3. Evaluasi 3 hari (bagian 5 dan 8).
-  4. Adjudikasi 7.3.
-  5. Laporan, lalu ingest antrean oleh pemilik proyek.
-
-  *Alternatif:* evaluasi dijalankan sebelum 27 Oktober tetapi hasil per butir disegel (hanya agregat
-  dilaporkan) sampai uji ulang selesai.
+- **Urutan (DISETUJUI 2026-10-17):**
+  1. Rancangan diperbarui, pemilihan sesi buta (`--select`) dan pembekuan butir (`--freeze`)
+     di-commit **sebelum panggilan LLM pertama**.
+  2. Evaluasi 3 hari dengan hasil tersegel (hari pertama: 2026-10-17).
+  3. Sesi buta gabungan (7.2), berkas dibuat paling cepat 27 Oktober 2026.
+  4. Kappa (7.3-7.4) dan label final (7.5), lalu **buka segel** dan hitung metrik.
+  5. Adjudikasi buta (7.6), laporan, lalu ingest antrean oleh pemilik proyek.
 
 ---
 
@@ -345,11 +376,11 @@ dengan P2, tetapi gabungan tetap dihitung seperti 3.
 lain, lalu menjawab hanya bila menemukan putusan eksplisit atas klaim yang sama.
 
 - **Pencarian hanya lewat API pencarian web resmi** (judul, cuplikan, tautan), dibatasi ke daftar
-  domain situs cek fakta. **Tidak mengambil isi halaman** dari situs yang menolak agen AI di
-  robots.txt (Kompas, Tempo, Antara, Komdigi). *Ketegangan yang perlu diputuskan:* keputusan
-  2026-09-21 untuk set uji v1 menyatakan judul dan URL hasil pencarian dari Kompas, Tempo, dan
-  Komdigi pun tidak dipakai. Apakah cuplikan API pencarian dari situs-situs itu boleh dipakai di
-  produk perlu keputusan tersendiri.
+  domain situs cek fakta. **Kompas, Tempo, Antara, dan Komdigi tidak dipakai sama sekali**: judul,
+  URL, dan cuplikannya tidak dipakai walaupun berasal dari API pencarian, dan isi halamannya tidak
+  diambil (keputusan 2026-09-21 tetap berlaku; ditegaskan pemilik proyek 2026-10-17). Domain itu
+  dikeluarkan dari daftar pencarian **dan** hasil yang berdomain itu dibuang sebelum sampai ke LLM.
+  Keputusan ini **dapat ditinjau ulang saat langkah korektif benar-benar dibangun**.
 - **Hanya artikel dengan putusan eksplisit** (label vonis di judul atau cuplikan, mis. "[HOAKS]",
   "Cek Fakta: Tidak Benar ..."; dikenali dengan aturan, bukan LLM). Bila yang ditemukan hanya berita
   tanpa putusan, jawabannya tetap "belum ditemukan".
@@ -374,12 +405,21 @@ lain, lalu menjawab hanya bila menemukan putusan eksplisit atas klaim yang sama.
 
 ---
 
-## 10. Yang menunggu keputusan pemilik proyek
+## 10. Keputusan pemilik proyek (2026-10-17)
 
-1. Aturan kutipan K1/K2 dan perlakuan "dikeluarkan" (2.2).
-2. Hasil utama gabungan 91 butir; per putaran sekunder (3).
-3. Ambang positif (6.1), ambang kecocokan palsu (6.2), dan ambang kemunduran testset-v1 (6.3).
-4. Rancangan uji ulang 20 P2 + 10 P1, tanggal paling cepat 27 Oktober, dan ambang kappa (7.2, 7.4).
-5. Urutan langkah (8): uji ulang sebelum evaluasi, atau evaluasi dengan hasil disegel.
-6. Pembagian 3 hari kuota (8).
-7. Pemakaian cuplikan pencarian dari situs yang menolak agen AI (9).
+1. **Kutipan pendek:** K1 dan K2 disetujui; delapan butir dikeluarkan tanpa diganti judul; tersisa 91
+   butir (42 positif, 49 negatif). Keterbatasan pesan berisi tautan saja dan fitur masa depan
+   pencocokan URL/domain deterministik dicatat (2.2).
+2. **Hasil utama:** gabungan 91 butir, dengan pecahan per putaran dan per selisih terbit <= 30 / > 30
+   hari (3).
+3. **Ambang disetujui** dengan dua penegasan: "lulus" kecocokan palsu = tidak terbukti buruk, bukan
+   terbukti aman (6.2); ambang positif berlaku pada 42 butir sesuai label emas, dengan kegagalan
+   berupa penolakan pasangan lintas gelombang dipisahkan di laporan (6.1). Patokan ambang positif =
+   60% pada batas Wilson.
+4. **Urutan:** evaluasi sekarang dengan hasil tersegel, lalu satu sesi buta gabungan, lalu buka segel
+   (7.2-7.6, 8). Kappa dari 30 butir acak saja, dua tingkat, ambang dari estimasi titik. Label final
+   = label sesi buta hanya untuk butir audit yang berubah; label awal sebagai sensitivitas; adjudikasi
+   dicatat terpisah.
+5. **Kuota 3 hari disetujui.**
+6. **Langkah korektif:** Kompas, Tempo, Antara, dan Komdigi tidak dipakai sama sekali, termasuk
+   lewat API pencarian; dapat ditinjau ulang saat dibangun (9).

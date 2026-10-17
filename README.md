@@ -252,6 +252,14 @@ membantah pola yang sama, bukan pemeriksaan atas pesan yang sama persis; tanggal
 tautan, dan rincian pesan yang ditempel pengguna bisa berbeda dari artikel yang
 ditampilkan.
 
+**Pesan yang hanya berisi tautan tidak ditangani.** Pengguna nyata bisa menempel
+tautan saja (5 dari 99 kutipan pesan pada sampel Liputan6). Sistem tidak membuka
+tautan dan hanya meng-embed teks URL-nya, jadi pesan seperti itu hampir pasti
+dijawab "belum ditemukan"; evaluasi eksternal mengeluarkannya
+(`docs/rancangan_evaluasi_eksternal.md` bagian 2.2). Pencocokan URL/domain
+deterministik ke sumber hoaks yang tercatat di artikel, tanpa LLM, dicatat sebagai
+fitur masa depan dan belum dibangun.
+
 **Rentang waktu.** Basis data yang dievaluasi (150 artikel) berasal dari
 Agustus–September 2026. Basis data demo memuat 1.532 artikel dari 30 September 2025
 sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
