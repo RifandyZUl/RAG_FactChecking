@@ -783,8 +783,13 @@ Proyek dibangun bertahap dalam dua versi:
   sendiri, tanpa AI; Claude hanya membantu teknis dan memperbesar tinggi baris (kini juga dilakukan
   `gap_blocks` saat `--make`). Berkas dibaca: `konfirmasi_49_terisi.xlsx`; templat `konfirmasi_49.xlsx`
   ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
-  **EVALUASI EKSTERNAL (2026-10-17): RANCANGAN SAJA, MENUNGGU PERSETUJUAN -- jangan jalankan evaluasi,
-  panggilan LLM, atau ingest.** `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
+  **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, SEDANG BERJALAN, HASIL TERSEGEL.** Hari 1 (2026-10-17) selesai:
+  run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
+  `--status` untuk status teknis). Berikutnya run 2 dan run 3, satu per hari setelah reset kuota 14.00 WIB,
+  masing-masing didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
+  butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
+  sampai sesi buta (berkas paling cepat 27 Oktober 2026; pilihan di `testset/eksternal_sesi_buta_pilihan.json`)
+  selesai. Jangan ingest antrean sebelum evaluasi dan adjudikasi selesai.** Riwayat rancangan: `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
   kutipan K1/K2), indeks 1.532 dibekukan (sidik jari di bagian 5; antrean di-ingest pemilik proyek SETELAH
   evaluasi), ambang kecocokan palsu usulan lulus <= 4/49 / gugur >= 10/49, testset-v1 sebagai uji
   kemunduran (48 butir), kuota 435 panggilan dalam 3 hari. Audit jejak identik SUDAH dijalankan
