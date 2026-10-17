@@ -1099,21 +1099,24 @@ dilihat -- kini dengan Narasi utuh --, dan isi antrean kandidat).
 
 **Langkah 6 -- catatan interpretasi (keterbatasan; kualitatif, tanpa melabel ulang).** 50 butir lama
 dilabel dengan aturan yang berbeda dan, dalam satu hal, lebih ketat daripada aturan yang kini
-dikunci. Arah pergeserannya, dinilai hanya dari uraian 11.5 (butirnya tidak dilihat ulang):
+dikunci. Arah pergeserannya, dinilai hanya dari uraian 11.5 (butirnya tidak dilihat ulang). **Semua
+penilaian di butir-butir berikut adalah pembacaan agent (Claude Code) atas uraian itu, bukan label,
+dan tidak mengubah hasil** (rumusan dirapikan 2026-10-17 atas permintaan pemilik proyek):
 
 - *Diterima secara meragukan (8 butir: 8, 14, 24, 28, 39, 40, 48, 49).* Alasan keraguan 11.5 adalah
   selisih waktu yang jauh (8, 14, 28, 49; juga 48 menurut 11.7) atau detail yang tidak disebut
   judul TurnBackHoax (24, 39, 40, 48). Di bawah Aturan A dan B keduanya **bukan** alasan menolak,
-  jadi penerimaan itu justru sesuai aturan terkunci. Akibatnya **batas atas lama (37/50), yang
-  membalik kedelapan butir ini menjadi TIDAK ADA, tidak didukung aturan terkunci**, padahal hanya
-  batas itulah yang membuat gabungan "jelas di atas 50%". Sebagai ilustrasi aritmetika saja: tanpa
+  jadi penerimaan itu, **menurut pembacaan agent, konsisten dengan Aturan A/B; ini bukan label dan
+  tidak mengubah hasil**. Bila pembacaan itu benar, batas atas lama (37/50), yang membalik kedelapan
+  butir ini menjadi TIDAK ADA, kurang didukung aturan terkunci, padahal hanya batas itulah yang
+  membuat gabungan "jelas di atas 50%". Sebagai ilustrasi aritmetika saja: tanpa
   empat butir selisih-waktu itu, batas atas gabungan menjadi 58/99 = 58,6% [48,7%; 67,8%] -- ambigu.
 - *Ditolak secara meragukan (7 butir: 15, 20, 21, 22, 25, 29, 32)* karena detail "tidak disebut".
   Di bawah Aturan B itu bukan alasan menolak; sebagian bisa menjadi cocok, sebagian tetap ditolak
   bila Narasi (yang dulu tidak ditampilkan) memuat detail yang bertentangan. Jumlahnya tidak
   diketahui tanpa melabel ulang. Butir 2 (ditolak karena tahun/periode) hanya tetap ditolak bila
   tahunnya eksplisit dan berbeda di kedua sisi.
-- *Arah bersih:* bila aturan terkunci diterapkan seragam, TIDAK ADA pada 50 butir lama kemungkinan
+- *Arah bersih (pembacaan agent, bukan label):* bila aturan terkunci diterapkan seragam, TIDAK ADA pada 50 butir lama kemungkinan
   **berkurang atau tetap**, tidak bertambah. Jadi 53/99 kemungkinan **melebih-lebihkan** proporsi
   TIDAK ADA relatif terhadap aturan terkunci; dengan label utama butir baru, nilai seragamnya berada
   antara 46/99 (46,5% [37,0%; 56,2%], bila ketujuh butir menjadi cocok) dan 53/99.
@@ -1162,7 +1165,7 @@ cek fakta **tidak diprioritaskan sekarang**, dan pengukuran ini tidak diperluas 
 bukti bahwa celahnya kecil: sekitar separuh klaim Liputan6 memang tidak diperiksa TurnBackHoax
 (batas-batas eksploratif 43-63%), jadi "belum ditemukan" tetap akan sering menjadi jawaban yang sah
 dan perlu dikomunikasikan di demo apa adanya. Yang tidak ditunjukkan data adalah bahwa celah itu
-**jelas** melebihi separuh, dan catatan 11.8 langkah 6 menunjukkan aturan terkunci kemungkinan
+**jelas** melebihi separuh, dan menurut pembacaan agent pada 11.8 langkah 6 (bukan label) aturan terkunci kemungkinan
 justru menurunkan angkanya. Dua temuan sampingan ikut membatasi rancangan apa pun di arah ini bila
 kelak dibuka lagi: (1) skor kemiripan tidak memisahkan ada dari tidak ada pada kedua putaran (23/24
 dan 22/29 butir TIDAK ADA berskor di atas pasangan sah terendah), jadi pemicu langkah korektif tidak

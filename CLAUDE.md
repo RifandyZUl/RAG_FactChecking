@@ -783,6 +783,15 @@ Proyek dibangun bertahap dalam dua versi:
   sendiri, tanpa AI; Claude hanya membantu teknis dan memperbesar tinggi baris (kini juga dilakukan
   `gap_blocks` saat `--make`). Berkas dibaca: `konfirmasi_49_terisi.xlsx`; templat `konfirmasi_49.xlsx`
   ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
+  **EVALUASI EKSTERNAL (2026-10-17): RANCANGAN SAJA, MENUNGGU PERSETUJUAN -- jangan jalankan evaluasi,
+  panggilan LLM, atau ingest.** `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
+  kutipan K1/K2), indeks 1.532 dibekukan (sidik jari di bagian 5; antrean di-ingest pemilik proyek SETELAH
+  evaluasi), ambang kecocokan palsu usulan lulus <= 4/49 / gugur >= 10/49, testset-v1 sebagai uji
+  kemunduran (48 butir), kuota 435 panggilan dalam 3 hari. Audit jejak identik SUDAH dijalankan
+  (`python -m candidates.trace_audit`, parameter di-commit `e7504fc`): 20/99 terdeteksi; 7 butir TIDAK ADA
+  untuk ditinjau buta (P1-10, P1-20, P1-29, P1-30, P1-38, P1-45, P2-2). **Jangan menyebut sinyal per butir
+  kepada pemilik proyek dan jangan menyuruhnya membuka `audit_jejak_identik.json` sebelum tinjauan buta.**
+  Uji ulang buta paling cepat 27 Oktober 2026.
   **Uji (2026-10-09): `tests/conftest.py` menghentikan backend ChromaDB yang dibuka tiap uji** --
   tanpa itu 7 `System` chromadb tetap hidup sampai sesi berakhir (terukur), dengan itu 0. Dipasang
   setelah `test_apply_search_config_changes_only_the_parameter` gagal SEKALI (`InternalError` dari

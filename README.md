@@ -242,6 +242,16 @@ Teks pengganggunya sintetis, sehingga angka ini indikatif. Rincian:
 Klaim yang baru viral akan dijawab "belum ditemukan" walaupun sebenarnya hoaks.
 Jawaban itu sah, bukan kegagalan sistem.
 
+**"Sudah diperiksa" sering berarti "pola ini pernah dinyatakan palsu".** Pada
+pengukuran celah terhadap Liputan6 Cek Fakta (`docs/rancangan_v2.md` bagian 11.8),
+21 dari 25 pasangan cocok di putaran kedua adalah PENIPUAN, dan 14 dari 25 terpaut
+lebih dari 30 hari dari artikel Liputan6-nya (semuanya PENIPUAN): tautan penipuan
+berulang dengan lembaga dan jenis tawaran yang sama, tetapi dari gelombang lain.
+Jadi cakupan TurnBackHoax untuk hoaks semacam itu banyak berupa artikel yang
+membantah pola yang sama, bukan pemeriksaan atas pesan yang sama persis; tanggal,
+tautan, dan rincian pesan yang ditempel pengguna bisa berbeda dari artikel yang
+ditampilkan.
+
 **Rentang waktu.** Basis data yang dievaluasi (150 artikel) berasal dari
 Agustus–September 2026. Basis data demo memuat 1.532 artikel dari 30 September 2025
 sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
