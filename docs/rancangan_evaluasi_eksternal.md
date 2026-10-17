@@ -352,6 +352,26 @@ ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasa
   buku besar kuota tetap menjadi penghenti keras saat sisa habis (proses berhenti dan dilanjutkan
   setelah reset). *Koreksi atas versi pertama rancangan ini:* versi itu keliru menyebut bahwa
   pemeriksaan anggaran `testset_eval` menolak berdasarkan kasus terburuk.
+- **Rekonsiliasi buku besar hari 1 (2026-10-17): 152 = 98 + 54, selisih 6 dari percobaan ulang
+  koneksi di dalam penyedia.** Buku besar (`data/quota_ledger.json`) hanya menyimpan hitungan per
+  hari, tanpa asal, tetapi ia bertambah satu pada **setiap percobaan** permintaan
+  (`GeminiProvider._before_call`, dipanggil di tiap putaran `MAX_ATTEMPTS` = 4), sedangkan "panggilan"
+  di berkas hasil adalah satu `CallRecord` per panggilan generator, dengan bidang `attempts`. Dari
+  bidang teknis berkas hasil (tanpa membaca keputusan): Liputan6 92 panggilan dengan jumlah
+  `attempts` **98** (tiga panggilan berulang: 2, 4, dan 3 percobaan; yang 4 percobaan gagal
+  `APIConnectionError` lalu butirnya diulang dan selesai); testset-v1 54 panggilan, `attempts` 54.
+  98 + 54 = 152, sama persis dengan buku besar. Enam peringatan `[retry i/3] APIConnectionError` di
+  `data/llm_calls.log` (15.09.47, 15.15.25, 15.15.41, 15.15.46, 15.16.43, 15.18.13 WIB) cocok dengan
+  1 + 3 + 2 percobaan ulang itu, semuanya selama run Liputan6 (proses testset-v1 baru mulai 15.24).
+  **Uji kunci dan pemeriksaan sebelum run tidak memanggil API** (`tests/test_testset_locks.py` hanya
+  mengimpor konstanta `DEFAULT_GEMINI_MODEL`; `index_check`, `retriever_exactness`, dan pemeriksaan
+  awal `external_eval` tanpa LLM), jadi biayanya 0 panggilan per hari. Karena asal selisih dapat
+  dipastikan dari data yang ada, penanda asal **tidak** ditambahkan ke buku besar di tengah evaluasi.
+- **Perkiraan kuota run 2 dan run 3:** minimum 145 permintaan per hari (91 + 54). Hari 1 butuh 152
+  (beban percobaan ulang ~4%). Batas atas praktis bila setiap butir gagal format sekali: 290, ditambah
+  percobaan ulang koneksi yang tidak dapat diperkirakan (maksimal 4 percobaan per panggilan). Sisa
+  kuota per hari tanpa pemakaian demo: ~348 pada beban seperti hari 1, >= 210 pada batas atas
+  ulang format; demo berbagi kuota yang sama.
 - **Yang boleh dipublikasikan (di-commit):** metrik agregat dan intervalnya; tabel per butir berisi
   nomor butir, id artikel Liputan6 (angka), label emas (id TurnBackHoax / TIDAK ADA), keputusan modus
   sistem, dan id artikel jawaban. **Tidak** dipublikasikan: kutipan pesan, judul Liputan6, Narasi,
