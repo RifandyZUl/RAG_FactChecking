@@ -11,17 +11,20 @@ ada sel `ragu`, masukan hanya di sel blok, dan lembar Rekap berisi rumus saja se
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m candidates.gap_blocks --make    # menolak menimpa; menulis kunci skor terpisah
   PYTHONPATH=src python -m candidates.gap_blocks --read    # setelah pemilik proyek selesai; TIDAK membuka kunci
+  PYTHONPATH=src python -m candidates.gap_blocks --kunci   # baru setelah --read tersimpan; tidak mengubah label
 """
 
 import argparse
 import hashlib
 import json
+import math
+import statistics
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
-from candidates.gap_result import RESULT_PATH, timing
+from candidates.gap_result import RESULT_PATH, compare_with_key, timing
 from candidates.gap_review import (
     OUT_DIR,
     banner_label,
@@ -42,8 +45,10 @@ from candidates.gap_workbook import (
 
 XLSX_PATH = OUT_DIR / "konfirmasi_49.xlsx"
 TEMPLATE_PATH = OUT_DIR / "sidik_jari_templat_49.json"
-KEY_PATH = OUT_DIR / "kunci_kandidat_49.json"  # skor; TIDAK dibaca modul ini
+FILLED_PATH = OUT_DIR / "konfirmasi_49_terisi.xlsx"  # salinan yang diisi pemilik proyek; inilah yang dibaca --read
+KEY_PATH = OUT_DIR / "kunci_kandidat_49.json"  # skor; hanya dibuka --kunci, setelah hasil --read tersimpan
 BLOCK_RESULT_PATH = OUT_DIR / "hasil_konfirmasi_49.json"
+KEY_RESULT_PATH = OUT_DIR / "perbandingan_kunci_49.json"
 SHEET, SUMMARY = "konfirmasi", "Rekap"
 GENERATED_BY = "candidates.gap_blocks (openpyxl; tata letak dihasilkan kode, KEPUTUSAN/ragu/catatan diisi manusia)"
 CAND_HEADER = ["kandidat", "TBH_id", "TBH_tanggal", "TBH_label", "TBH_asal", "TBH_judul", "TBH_narasi", "TBH_kesimpulan"]
@@ -51,6 +56,19 @@ WIDTHS = [14, 20, 16, 13, 16, 40, 80, 60]
 INPUT_COLS = {"KEPUTUSAN": 2, "ragu": 4, "catatan": 6}  # kolom sel masukan pada baris masukan tiap blok
 NO_NARASI = "(TIDAK ADA NARASI DI SUMBER)"
 DOUBT = "YA"
+LINE_POINTS, MAX_ROW_POINTS = 15, 409  # tinggi satu baris teks; batas tinggi baris Excel
+FAR_DAYS = 30
+
+
+def wrapped_height(line: list[str]) -> int:
+    """
+    Tinggi baris (poin) agar sel terpanjang terbaca utuh saat teks dibungkus: perkiraan dari lebar kolom (satu
+    karakter per satuan lebar). Dibatasi tinggi baris maksimum Excel, jadi Narasi yang sangat panjang tetap
+    terpotong di layar (isi sel utuh).
+    """
+    lines = max((sum(max(1, math.ceil(len(par) / width)) for par in cell.split("\n")) for cell, width in zip(line, WIDTHS) if cell),
+                default=1)
+    return min(MAX_ROW_POINTS, LINE_POINTS * lines)
 
 
 def layout(items: list[dict[str, Any]]) -> tuple[list[list[str]], list[dict[str, Any]]]:
@@ -139,6 +157,8 @@ def write_workbook(grid: list[list[str]], blocks: list[dict[str, Any]], path: Pa
             ws.row_dimensions[r].height = 30 if line[0] == "L6_judul" else min(409, 15 * max(2, len(line[1]) // 180 + line[1].count("\n") + 1))
         elif kind == "masukan":
             ws.merge_cells(f"F{r}:{last}{r}")
+        elif not kind and line[0].isdigit():  # baris kandidat: tanpa ini Excel menampilkan satu baris dan Narasi terpotong
+            ws.row_dimensions[r].height = wrapped_height(line)
     doubt = DataValidation(type="list", formula1=f'"{DOUBT}"', allow_blank=True, showErrorMessage=True,
                            errorTitle="ragu", error="Isi YA atau kosongkan.")
     ws.add_data_validation(doubt)
@@ -253,6 +273,29 @@ def combine(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
                                          "kategori_sama_di_kedua_batas": main["status"] == upper["status"] == lower["status"]}}
 
 
+def day_gap(l6_iso: str, tbh_ddmmyyyy: str) -> int:
+    """Tanggal terbit TurnBackHoax dikurangi tanggal terbit Liputan6, dalam hari (positif = TurnBackHoax belakangan)."""
+    return (date(*tbh_date_key(tbh_ddmmyyyy)) - date.fromisoformat(l6_iso)).days
+
+
+def gap_summary(gaps: list[int]) -> dict[str, Any]:
+    """Sebaran selisih hari: bertanda dan mutlak (kuartil metode inklusif), dan berapa yang terpaut jauh."""
+    def spread(xs: list[int]) -> dict[str, float] | None:
+        if len(xs) < 2:
+            return None
+        q1, q2, q3 = statistics.quantiles(xs, n=4, method="inclusive")
+        return {"min": min(xs), "kuartil_bawah": q1, "median": q2, "kuartil_atas": q3, "maks": max(xs)}
+
+    absolute = [abs(g) for g in gaps]
+    return {"pasangan": len(gaps), "bertanda": spread(gaps), "mutlak": spread(absolute),
+            "dalam_14_hari": sum(a <= 14 for a in absolute), f"di_atas_{FAR_DAYS}_hari": sum(a > FAR_DAYS for a in absolute),
+            "urut": sorted(gaps)}
+
+
+def crosstab(pairs: list[dict[str, Any]]) -> dict[str, int]:
+    return dict(sorted(Counter(f"{p['label_l6']} x {p['label_tbh']}" for p in pairs).items()))
+
+
 def make() -> int:
     if XLSX_PATH.exists() or KEY_PATH.exists():
         raise SystemExit(f"{XLSX_PATH.name} atau {KEY_PATH.name} sudah ada: tidak ditimpa")
@@ -285,14 +328,17 @@ def make() -> int:
     return 0
 
 
-def read() -> int:
+def read(path: Path = FILLED_PATH) -> int:
     fp = json.loads(TEMPLATE_PATH.read_text(encoding="utf-8"))
-    blocks, grid, prov = fp["blok"], read_grid(XLSX_PATH), provenance(XLSX_PATH)
+    blocks, grid, prov = fp["blok"], read_grid(path), provenance(path)
     checks = {"bukti_sama_dengan_templat": evidence_hash(grid, blocks) == fp["sidik_jari_bukti"],
-              "berkas_berubah_sejak_templat": hashlib.sha256(XLSX_PATH.read_bytes()).hexdigest() != fp["sha256_templat_xlsx"],
+              "berkas_berubah_sejak_templat": hashlib.sha256(path.read_bytes()).hexdigest() != fp["sha256_templat_xlsx"],
               "terakhir_disimpan_aplikasi_lain": bool(prov["lastModifiedBy"])}
+    if path != XLSX_PATH and XLSX_PATH.exists():  # templat seharusnya tetap kosong; dilaporkan apa adanya bila tidak
+        checks["templat_masih_seperti_saat_dibuat"] = hashlib.sha256(XLSX_PATH.read_bytes()).hexdigest() == fp["sha256_templat_xlsx"]
     res = read_inputs(grid, blocks)
-    report: dict[str, Any] = {"asal_usul": prov, "pemeriksaan": checks, "perlu_ditanyakan": res["perlu_ditanyakan"]}
+    report: dict[str, Any] = {"berkas": {"terisi": path.name, "sha256_terisi": hashlib.sha256(path.read_bytes()).hexdigest()},
+                              "asal_usul": prov, "pemeriksaan": checks, "perlu_ditanyakan": res["perlu_ditanyakan"]}
     if not checks["bukti_sama_dengan_templat"] or res["perlu_ditanyakan"]:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         raise SystemExit("bukti berubah dari templat atau ada butir yang belum/tidak terbaca: hasil TIDAK dihitung")
@@ -302,16 +348,36 @@ def read() -> int:
     for d in decisions:
         if d["jenis"] == "sama":
             c = next(c for c in by_n[d["butir"]]["kandidat"] if c["id"] == d["keputusan"])
+            l6_date = by_n[d["butir"]]["l6_tanggal"]
             pairs.append({"butir": int(d["butir"]), "tbh_id": c["id"], "label_l6": banner[d["butir"]], "label_tbh": c["label"],
-                          "tbh_asal": c["asal"], "ragu": d["ragu"], "tbh_terbit": timing(by_n[d["butir"]]["l6_tanggal"], c["tanggal"])})
+                          "tbh_asal": c["asal"], "ragu": d["ragu"], "l6_tanggal": l6_date, "tbh_tanggal": c["tanggal"],
+                          "tbh_terbit": timing(l6_date, c["tanggal"]), "selisih_hari": day_gap(l6_date, c["tanggal"])})
+    old = json.loads(RESULT_PATH.read_text(encoding="utf-8"))
     new = doubt_bounds(decisions)
+    combined = combine(old, new)
+    statuses = {new[k]["status"] for k in ("batas_atas", "batas_bawah")} | {
+        combined["sensitivitas_EKSPLORATIF"][k]["status"] for k in ("batas_atas", "batas_bawah")}
+    queue_pairs = [p for p in pairs if p["tbh_asal"].startswith("antrean")]
     report.update({
         "jenis_keputusan": dict(Counter(d["jenis"] for d in decisions)), "butir_ragu": [int(d["butir"]) for d in decisions if d["ragu"]],
         "hasil_sekunder_butir_baru": new,
-        "gabungan": combine(json.loads(RESULT_PATH.read_text(encoding="utf-8")), new),
+        "gabungan": combined,
+        "kategori_utama_sama_di_semua_batas": statuses == {combined["hasil_utama"]["status"]},
+        "putaran_berdampingan_DESKRIPTIF_tanpa_uji": {"lama_50": old["hasil_utama_bagian_11_2"], "baru_49": new["utama"]},
+        "bukan_putusan_hoaks": [{"butir": int(d["butir"]), "label_l6": banner[d["butir"]]} for d in decisions
+                                if d["jenis"] == "bukan_putusan_hoaks"],
         "ujung_rentang": [{"butir": int(d["butir"]), "jenis": d["jenis"], "keputusan": d["keputusan"]} for d in decisions if d["ujung_rentang"]],
-        "label_liputan6_x_turnbackhoax_pasangan_cocok": dict(Counter(f"{p['label_l6']} x {p['label_tbh']}" for p in pairs)),
-        "tbh_terbit_relatif_liputan6": dict(Counter(p["tbh_terbit"] for p in pairs)), "pasangan": pairs,
+        "label_liputan6_semua_butir": dict(Counter(banner.values())),
+        "label_liputan6_pada_tidak_ada": dict(Counter(banner[d["butir"]] for d in decisions if d["jenis"] == "tidak_ada")),
+        "label_liputan6_x_turnbackhoax_pasangan_cocok": crosstab(pairs),
+        "label_liputan6_x_turnbackhoax_gabungan": crosstab(old["pasangan"] + pairs),
+        "tbh_terbit_relatif_liputan6": dict(Counter(p["tbh_terbit"] for p in pairs)),
+        "selisih_hari_tbh_dikurangi_liputan6": gap_summary([p["selisih_hari"] for p in pairs]),
+        "pasangan_dari_antrean": {"jumlah": len(queue_pairs), "butir_tbh_id": [(p["butir"], p["tbh_id"]) for p in queue_pairs]},
+        "tbh_dipilih_lebih_dari_sekali": {i: c for i, c in Counter(p["tbh_id"] for p in pairs).items() if c > 1},
+        "tbh_juga_dipilih_pada_putaran_lama": sorted({p["tbh_id"] for p in pairs} & {p["tbh_id"] for p in old["pasangan"]}),
+        "catatan_terisi": sum(bool(grid[b["baris_masukan"] - 1][INPUT_COLS["catatan"] - 1].strip()) for b in blocks),
+        "pasangan": pairs,
         "keputusan": [{"butir": int(d["butir"]), "jenis": d["jenis"], "keputusan": d["keputusan"], "ragu": d["ragu"]} for d in decisions],
         "l6_id": {n: b["l6_id"] for n, b in by_n.items()}})
     BLOCK_RESULT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -319,13 +385,31 @@ def read() -> int:
     return 0
 
 
+def key_comparison() -> int:
+    """Keputusan butir baru vs kandidat teratas tiap pencarian. Kunci dibuka HANYA di sini, setelah hasil tersimpan."""
+    if not BLOCK_RESULT_PATH.exists():
+        raise SystemExit(f"{BLOCK_RESULT_PATH.name} belum ada: jalankan --read dulu (kunci dibuka hanya setelah hasil tersimpan)")
+    res = json.loads(BLOCK_RESULT_PATH.read_text(encoding="utf-8"))
+    key = json.loads(KEY_PATH.read_text(encoding="utf-8"))
+    if {str(n): aid for n, aid in enumerate(key["urutan_butir"], 1)} != res["l6_id"]:
+        raise SystemExit("urutan butir di kunci tidak sama dengan peta blok templat")
+    decisions = [{**d, "butir": str(d["butir"])} for d in res["keputusan"]]
+    report = {"catatan": "hanya untuk menilai pencarian otomatis; TIDAK dipakai untuk mengubah label",
+              "butir_ragu": res["butir_ragu"], **compare_with_key(decisions, res["l6_id"], key["skor"])}
+    KEY_RESULT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--make", action="store_true", help="buat berkas konfirmasi butir sisa (menolak menimpa)")
-    g.add_argument("--read", action="store_true", help="baca keputusan dari sel blok dan hitung hasil")
+    g.add_argument("--read", action="store_true", help="baca keputusan dari sel blok berkas terisi dan hitung hasil")
+    g.add_argument("--kunci", action="store_true", help="bandingkan keputusan dengan kandidat teratas (setelah --read)")
+    ap.add_argument("--berkas", type=Path, default=FILLED_PATH, help=f"berkas terisi untuk --read (bawaan {FILLED_PATH.name})")
     args = ap.parse_args()
-    return make() if args.make else read()
+    return make() if args.make else key_comparison() if args.kunci else read(args.berkas)
 
 
 if __name__ == "__main__":

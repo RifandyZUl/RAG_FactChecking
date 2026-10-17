@@ -8,11 +8,14 @@ from candidates.gap_blocks import (
     SHEET,
     SUMMARY,
     combine,
+    day_gap,
     doubt_bounds,
     evidence_hash,
+    gap_summary,
     layout,
     read_grid,
     read_inputs,
+    wrapped_height,
     write_workbook,
 )
 
@@ -114,3 +117,25 @@ def test_doubt_bounds_and_stopping_rule():
     assert amb["sensitivitas_EKSPLORATIF"]["batas_atas"]["tidak_ada"] == 64
     clear = combine(old, {"utama": part(40, 49), "batas_atas": part(40, 49), "batas_bawah": part(40, 49)})
     assert clear["hasil_utama"]["status"] == "jelas_di_atas_50" and clear["keputusan_menurut_11_6"] == "layak dikerjakan"
+
+
+def test_candidate_rows_are_tall_enough_to_show_wrapped_narasi(tmp_path):
+    items = _items(1)
+    items[0]["kandidat"][0]["narasi"] = "kata semu " * 200  # 2.000 karakter pada kolom selebar 80
+    grid, blocks = layout(items)
+    path = tmp_path / "k.xlsx"
+    write_workbook(grid, blocks, path)
+    ws = load_workbook(path)[SHEET]
+    first = blocks[0]["baris_masukan"] + 2
+    heights = [ws.row_dimensions[r].height for r in range(first, first + 2)]
+    assert wrapped_height(["1", "", "", "", "", "", "x" * 161, ""]) == 45, "tiga baris teks pada lebar 80"
+    assert all(h and h > 15 for h in heights) and max(heights) >= 300, "dulu satu baris: Narasi terpotong di layar"
+    assert wrapped_height(["1", "", "", "", "", "", "x" * 100_000, ""]) == 409, "dibatasi tinggi baris maksimum Excel"
+
+
+def test_gap_summary_and_day_gap():
+    assert day_gap("2026-09-10", "13/09/2026") == 3 and day_gap("2026-09-10", "01/09/2026") == -9
+    s = gap_summary([-40, -3, 1, 5, 31])
+    assert (s["pasangan"], s["dalam_14_hari"], s["di_atas_30_hari"]) == (5, 3, 2)
+    assert s["bertanda"]["median"] == 1 and s["mutlak"]["median"] == 5
+    assert gap_summary([4])["bertanda"] is None, "kuartil tidak dihitung dari satu pasangan"
