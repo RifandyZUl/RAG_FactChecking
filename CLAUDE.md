@@ -774,15 +774,15 @@ Proyek dibangun bertahap dalam dua versi:
   pembanding = kutipan pesan Liputan6 vs Narasi TurnBackHoax; kolom `ragu` YA/kosong), **aturan
   berhenti: total 99 butir (sisa terverifikasi 49, bukan 50); bila Wilson95 pada 99 butir masih
   mencakup 50% -> berhenti, ambang TIDAK terpenuhi, tidak ada perluasan ketiga.** Hasil utama = 99
-  gabungan; sekunder = 49 baru; 50 lama tidak dilabel ulang. **BERKAS SUDAH DIBUAT, MENUNGGU DIISI
-  PEMILIK PROYEK: `data/candidates/celah_liputan6/konfirmasi_49.xlsx`** (`python -m
-  candidates.gap_blocks --make`; blok per butir dengan Narasi utuh; lembar konfirmasi dan Rekap
-  diproteksi tanpa kata sandi, hanya sel KEPUTUSAN/ragu/catatan yang terbuka; 49 butir, 319 kandidat,
-  0 tanpa Narasi). **Jangan mengisi, mengusulkan, atau memeriksa keputusannya, dan jangan membuka
-  `kunci_kandidat_49.json` sebelum pemilik proyek menyatakan selesai.** Sesudah itu: `python -m
-  candidates.gap_blocks --read` (menolak bila bukti berubah atau ada butir tidak terbaca; menghitung
-  gabungan dan menerapkan aturan berhenti); perbandingan dengan kunci 49 butir BELUM dibangun
-  (`gap_result.compare_with_key` bisa dipakai ulang). Selisih hari 21 pasangan: bagian 11.7.
+  gabungan; sekunder = 49 baru; 50 lama tidak dilabel ulang. **HASIL 99 BUTIR (2026-10-13/17; `docs/rancangan_v2.md` 11.8-11.10; `python -m candidates.gap_blocks
+  --read` lalu `--kunci`): TIDAK ADA 53/99 = 53,5%, Wilson95 [43,8%; 63,0%] -> AMBIGU -> menurut aturan
+  berhenti 11.6 AMBANG TIDAK TERPENUHI, sampling selesai, TIDAK ada perluasan ketiga; sumber cek fakta
+  kedua / langkah korektif ke situs cek fakta tidak diprioritaskan.** Butir baru saja 24/49 (49,0%);
+  batas eksploratif gabungan 43/99 (ambigu) s.d. 62/99 (jelas di atas, hanya karena batas atas 50 butir
+  lama). 0 BUKAN PUTUSAN HOAKS; 0 dari 46 pasangan hanya ada di antrean. Label 49 butir: pemilik proyek
+  sendiri, tanpa AI; Claude hanya membantu teknis dan memperbesar tinggi baris (kini juga dilakukan
+  `gap_blocks` saat `--make`). Berkas dibaca: `konfirmasi_49_terisi.xlsx`; templat `konfirmasi_49.xlsx`
+  ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
   **Uji (2026-10-09): `tests/conftest.py` menghentikan backend ChromaDB yang dibuka tiap uji** --
   tanpa itu 7 `System` chromadb tetap hidup sampai sesi berakhir (terukur), dengan itu 0. Dipasang
   setelah `test_apply_search_config_changes_only_the_parameter` gagal SEKALI (`InternalError` dari

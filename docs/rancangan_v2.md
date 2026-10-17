@@ -1124,6 +1124,56 @@ dikunci. Arah pergeserannya, dinilai hanya dari uraian 11.5 (butirnya tidak dili
   hanya dari dua cara pencarian berbasis judul (pasangan yang luput dari keduanya tidak mungkin
   dipilih, jadi TIDAK ADA bisa sedikit melebih-lebihkan celah), dan batas tafsir 11.4.
 
+### 11.9 Keputusan 49 butir baru vs pencarian otomatis (kunci dibuka 2026-10-17, setelah 11.8 di-commit `d6add92`)
+
+`python -m candidates.gap_blocks --kunci` -> `perbandingan_kunci_49.json` (lokal). Fungsinya sama
+dengan putaran pertama (`gap_result.compare_with_key`); urutan butir di kunci diperiksa sama dengan
+peta blok templat. **Hanya untuk menilai pencarian otomatis; TIDAK dipakai untuk mengubah label.**
+
+| Ukuran (pasangan cocok) | Putaran 1 (21) | Putaran 2 (25) |
+| --- | --- | --- |
+| Pilihan = teratas embedding | 18 | 17 |
+| Pilihan di 5 teratas embedding | 20 | 25 |
+| Pilihan = teratas kata kunci judul | 20 | 18 |
+| Pilihan di 3 teratas kata kunci | 21 | 24 |
+| Teratas di keduanya | 18 | 15 |
+| Skor embedding pilihan, min / median / maks | 0,5733 / 0,6903 / 0,7831 | 0,5879 / 0,7046 / 0,7663 |
+
+- Bukan teratas di keduanya: butir 1 (embedding peringkat 5, kata kunci 3), 4 (2, di luar 3 teratas
+  kata kunci), 34, 42, 46 (embedding peringkat 2). Butir ragu yang cocok (18) teratas di keduanya.
+- **Skor tetap tidak memisahkan cocok dari tidak cocok.** Skor embedding teratas pada 24 butir TIDAK
+  ADA: 0,5850 / 0,6400 / 0,7582 (min / median / maks); **23 dari 24 di atas skor pilihan terendah**
+  (putaran 1: 22 dari 29). Di atas median pilihan (0,7046): butir 8 (0,7582), 41 (0,7509), 17
+  (0,7393), 30 (0,7083; butir ragu).
+- Tumpang tindih kata kunci judul tertinggi pada butir TIDAK ADA: butir 2 (1,00; butir ragu), 8
+  (0,90), 33 (0,71), 17 (0,56). Butir 8 dan 17 tinggi di kedua cara. Pengamatan, bukan dasar untuk
+  membalik label: pada putaran ini pembanding manusia adalah Narasi utuh, sedangkan skor hanya
+  membaca judul.
+- Tafsir sama dengan 11.5: bila ada pasangan, ia hampir selalu ada di daftar dan sering teratas;
+  kandidat berskor tinggi selalu ada juga saat tidak ada pasangan. Kesepakatan ini bersyarat pada
+  pasangan ada di daftar, bukan recall.
+
+### 11.10 Implikasi (ditulis 2026-10-17, setelah angka 11.8-11.9 keluar)
+
+**Ambang yang ditetapkan sebelum data dilihat tidak terpenuhi:** pada 99 butir, 53,5% klaim Liputan6
+tidak ada di basis data TurnBackHoax, dengan interval [43,8%; 63,0%] yang mencakup 50%. Menurut
+aturan berhenti 11.6, sumber cek fakta kedua dan langkah korektif bergaya CRAG yang dibatasi ke situs
+cek fakta **tidak diprioritaskan sekarang**, dan pengukuran ini tidak diperluas lagi. Itu bukan
+bukti bahwa celahnya kecil: sekitar separuh klaim Liputan6 memang tidak diperiksa TurnBackHoax
+(batas-batas eksploratif 43-63%), jadi "belum ditemukan" tetap akan sering menjadi jawaban yang sah
+dan perlu dikomunikasikan di demo apa adanya. Yang tidak ditunjukkan data adalah bahwa celah itu
+**jelas** melebihi separuh, dan catatan 11.8 langkah 6 menunjukkan aturan terkunci kemungkinan
+justru menurunkan angkanya. Dua temuan sampingan ikut membatasi rancangan apa pun di arah ini bila
+kelak dibuka lagi: (1) skor kemiripan tidak memisahkan ada dari tidak ada pada kedua putaran (23/24
+dan 22/29 butir TIDAK ADA berskor di atas pasangan sah terendah), jadi pemicu langkah korektif tidak
+dapat berupa ambang skor -- ia membutuhkan penilai kesamaan klaim, yang sudah dikeluarkan dari
+cakupan Versi 2; (2) 0 dari 46 pasangan hanya ada di antrean, jadi keterlambatan ingest bukan
+penyebab celah pada sampel ini, dan sebagian besar pasangan baru adalah PENIPUAN berulang yang
+cocok lintas gelombang (14 dari 25 terpaut lebih dari 30 hari), sehingga cakupan nyata untuk hoaks
+semacam itu bergantung pada apakah generator menilai gelombang berbeda sebagai klaim yang sama
+(pedoman v1.0 dan Aturan A tidak identik; belum diukur). Batas tafsir 11.4 tetap: ini celah terhadap
+satu situs cek fakta, bukan terhadap klaim yang diketik pengguna.
+
 ---
 
 ## Sumber
