@@ -986,6 +986,144 @@ bukan dasar keputusan sekarang.
 - Batas: n = 21, satu anotator, dan tanggal yang dibandingkan adalah tanggal terbit artikel cek
   fakta, bukan tanggal hoaks beredar.
 
+### 11.8 Hasil 99 butir (2026-10-13): ambang TIDAK terpenuhi, sampling dihentikan
+
+Alat: `python -m candidates.gap_blocks --read` (bawaan membaca `konfirmasi_49_terisi.xlsx`; uji
+`tests/test_gap_blocks.py`). Keluaran lokal, tidak di-commit: `hasil_konfirmasi_49.json`. Bagian ini
+(langkah 1-6) di-commit **sebelum** `kunci_kandidat_49.json` dibuka; perbandingan dengan kunci ada di
+11.9.
+
+**Asal-usul label (Aturan Wajib #5; dicatat apa adanya menurut pernyataan pemilik proyek).**
+
+- Ke-49 butir dilabel pemilik proyek sendiri, tanpa bantuan AI, dengan Aturan A dan B (11.6).
+- Claude (di luar sesi Claude Code yang menghitung hasil ini) **tidak membahas satu butir pun**.
+  Bantuannya hanya teknis: cara keluar dari Protected View, letak sel isian, penjelasan umum Aturan
+  A/B, dan pola penulisan catatan dengan contoh rekaan yang tidak diambil dari data.
+- **Satu perubahan pada berkas oleh Claude:** templat menampilkan baris kandidat setinggi satu
+  baris sehingga Narasi terpotong di layar, jadi tinggi baris diperbesar lewat openpyxl. Menurut
+  pemilik proyek, isi sel, proteksi, sel terbuka, dan sel gabungan sudah dicek identik dengan
+  templat. Diperiksa ulang di sesi ini pada berkas terisi: proteksi kedua lembar aktif; sel tak
+  terkunci = tepat 245 sel masukan (49 blok x KEPUTUSAN, ragu, dan sel catatan gabungan F-H); 147
+  sel gabungan sama dengan yang dibuat kode; tinggi baris kandidat 43,5-409,5 poin. Satu jejak kecil
+  perubahan itu: *creator* berkas terisi kehilangan satu spasi (`openpyxl;tata letak ...`, templat
+  `openpyxl; tata letak ...`).
+- **Cacat alat yang diperbaiki:** `gap_blocks.write_workbook` dulu tidak menyetel tinggi baris
+  kandidat. Kini disetel dari panjang teks dan lebar kolom (`wrapped_height`), dibatasi 409 poin
+  (batas Excel; Narasi yang sangat panjang tetap terpotong di layar, isi sel utuh). Hanya berlaku
+  untuk berkas yang dibuat kemudian; berkas 49 butir tidak dibuat ulang.
+- **Templat tidak lagi kosong.** `konfirmasi_49.xlsx` disimpan Excel pada 2026-10-13 23.28 WIB
+  dengan 45 KEPUTUSAN terisi (butir 2, 14, 18, 30 kosong) dan SHA-256-nya tidak lagi sama dengan
+  sidik jari templat (`5c4ba627...` -> `d2a73ac6...`). Pembacaan pertama sesi ini (berkas terisi
+  belum ada) berhenti dan melaporkannya; pemilik proyek lalu mengisi keempat butir dan menyimpan
+  `konfirmasi_49_terisi.xlsx` (23.42 WIB), yang dihitung di sini. Bukti tidak terdampak: sidik
+  jari sel bukti kedua berkas sama dengan templat (`932e756a...`).
+
+**Langkah 1 -- validasi: lolos.** `konfirmasi_49_terisi.xlsx` (SHA-256 `b99e5bfef83e500b...`,
+terakhir disimpan Microsoft Excel). Sidik jari seluruh sel selain KEPUTUSAN/ragu/catatan **sama**
+dengan templat, jadi pemeriksaan tidak perlu dan tidak dilonggarkan: ia membandingkan nilai sel,
+bukan format (tinggi baris tidak ikut). 49/49 KEPUTUSAN terisi dan sah (25 id kandidat butirnya, 24
+TIDAK ADA, 0 BUKAN PUTUSAN HOAKS); kolom ragu hanya YA (butir 2, 14, 18, 30) atau kosong; catatan
+terisi 46/49 (tidak di-parse).
+
+**Langkah 2 -- hasil utama (11.2 dan 11.6 diterapkan apa adanya).**
+
+| | TIDAK ADA / butir sah | Proporsi | Wilson 95% | Kategori |
+| --- | --- | --- | --- | --- |
+| **Gabungan 99 butir** | **53 / 99** | **53,5%** | **[43,8%; 63,0%]** | **AMBIGU** (interval mencakup 50%) |
+
+BUKAN PUTUSAN HOAKS: 0 pada putaran lama dan 0 pada putaran baru, jadi penyebutnya 99. Menurut
+aturan berhenti 11.6: **sampling selesai dan ambang dinyatakan TIDAK terpenuhi**; sumber kedua tidak
+diprioritaskan sekarang. Proporsi teramati di atas separuh, tetapi ambang 11.2 menuntut interval
+yang seluruhnya di atas 50%, dan itu tidak tercapai.
+
+**Langkah 3 -- hasil sekunder dan sensitivitas (EKSPLORATIF selain baris "utama").**
+
+| | TIDAK ADA / sah | Proporsi | Wilson 95% | Kategori |
+| --- | --- | --- | --- | --- |
+| 49 butir baru, label utama | 24 / 49 | 49,0% | [35,6%; 62,5%] | ambigu |
+| Baru, butir ragu dihitung TIDAK ADA (butir 18 dibalik) | 25 / 49 | 51,0% | [37,5%; 64,4%] | ambigu |
+| Baru, butir ragu dihitung cocok (butir 2, 14, 30 dibalik) | 21 / 49 | 42,9% | [30,0%; 56,7%] | ambigu |
+| Gabungan, batas atas (37/50 + 25/49) | 62 / 99 | 62,6% | [52,8%; 71,5%] | **jelas di atas 50%** |
+| Gabungan, batas bawah (22/50 + 21/49) | 43 / 99 | 43,4% | [34,1%; 53,3%] | ambigu |
+
+**Kategori TIDAK sama di semua batas:** semuanya ambigu kecuali batas atas gabungan, yang jelas di
+atas 50%. Batas atas itu sepenuhnya digerakkan oleh batas atas 50 butir lama (37/50; butir baru
+hanya menambah satu). Pada putaran baru sendiri, keempat butir ragu tidak mengubah kategori.
+
+**Langkah 4 -- dua putaran berdampingan (DESKRIPTIF, tanpa uji signifikansi).**
+
+| Putaran | TIDAK ADA / sah | Proporsi | Wilson 95% |
+| --- | --- | --- | --- |
+| 50 butir pertama (11.5) | 29 / 50 | 58,0% | [44,2%; 70,6%] |
+| 49 butir sisa | 24 / 49 | 49,0% | [35,6%; 62,5%] |
+
+Selisih 9 poin persentase tidak diuji dan tidak ditafsirkan sebagai perbedaan populasi: ia tidak
+dapat dipisahkan dari tiga perbedaan yang dicatat di muka pada 11.6 (aturan pelabelan, bukti yang
+dilihat -- kini dengan Narasi utuh --, dan isi antrean kandidat).
+
+**Langkah 5 -- rincian pendukung.**
+
+- *BUKAN PUTUSAN HOAKS:* 0 butir (tidak ada alasan untuk dilaporkan).
+- *Banner Liputan6 pada 49 butir baru:* salah 32, hoax 16, tanpa banner 1. Pada 24 butir TIDAK ADA:
+  salah 15, hoax 8, tanpa banner 1.
+- *Tabel silang banner Liputan6 x label TurnBackHoax, pasangan cocok:*
+
+  | Banner Liputan6 | Pasangan | SALAH | PENIPUAN | PARODI | SATIR | Jumlah |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | salah | baru (25) | 1 | 16 | 0 | 0 | 17 |
+  | hoax | baru (25) | 3 | 5 | 0 | 0 | 8 |
+  | salah | gabungan (46) | 4 | 23 | 1 | 0 | 28 |
+  | hoax | gabungan (46) | 8 | 9 | 0 | 1 | 18 |
+
+  Seperti pada 11.5, kedua label Liputan6 berpasangan dengan SALAH maupun PENIPUAN; tidak tampak
+  pemetaan satu-ke-satu (tidak diuji). Pasangan baru didominasi PENIPUAN (21 dari 25; putaran lama
+  11 dari 21).
+- *Selisih hari terbit pasangan baru (TurnBackHoax dikurangi Liputan6; kuartil metode inklusif, sama
+  dengan 11.7 -- diperiksa: metode ini memberi ulang angka 11.7 pada 21 pasangan lama):* bertanda
+  min -212, kuartil bawah -134, **median -16**, kuartil atas +7, maks +95; mutlak kuartil bawah 7,
+  **median 38**, kuartil atas 134 hari. Dalam 14 hari: 9 dari 25; **di atas 30 hari: 14 dari 25**
+  (putaran lama: 6 dari 21). TurnBackHoax terbit sebelum Liputan6 pada 15 pasangan, sesudah pada 10.
+  **Ke-14 pasangan yang terpaut lebih dari 30 hari semuanya PENIPUAN** -- sejalan dengan Aturan A
+  (lembaga dan jenis tawaran sama = cocok walau gelombangnya berbeda). Artinya pada pasangan itu
+  artikel TurnBackHoax membantah klaim yang sama dari gelombang sebelumnya/sesudahnya, bukan
+  unggahan yang sama.
+- *Pasangan yang artikel TurnBackHoax-nya hanya ada di antrean (belum di-ingest): 0 dari 25.*
+  Seluruh 25 artikel pilihan ada di `data/articles.json` (1.532 artikel) dan indeks produksi. Enam
+  butir memuat kandidat dari antrean (butir 3, 7, 17, 27, 28, 49); tidak satu pun kandidat antrean
+  dipilih (butir 7 dan 28 cocok dengan artikel indeks; empat lainnya TIDAK ADA). Putaran lama juga
+  0. Jadi pada 99 butir **tidak ada** pasangan yang ada di TurnBackHoax tetapi belum terjangkau
+  sistem karena belum di-ingest.
+- *Ujung rentang (n = 1, tanpa kesimpulan):* butir 49 TIDAK ADA.
+- Tidak ada artikel TurnBackHoax yang dipilih dua kali pada putaran baru, dan tidak ada yang juga
+  dipilih pada putaran lama.
+
+**Langkah 6 -- catatan interpretasi (keterbatasan; kualitatif, tanpa melabel ulang).** 50 butir lama
+dilabel dengan aturan yang berbeda dan, dalam satu hal, lebih ketat daripada aturan yang kini
+dikunci. Arah pergeserannya, dinilai hanya dari uraian 11.5 (butirnya tidak dilihat ulang):
+
+- *Diterima secara meragukan (8 butir: 8, 14, 24, 28, 39, 40, 48, 49).* Alasan keraguan 11.5 adalah
+  selisih waktu yang jauh (8, 14, 28, 49; juga 48 menurut 11.7) atau detail yang tidak disebut
+  judul TurnBackHoax (24, 39, 40, 48). Di bawah Aturan A dan B keduanya **bukan** alasan menolak,
+  jadi penerimaan itu justru sesuai aturan terkunci. Akibatnya **batas atas lama (37/50), yang
+  membalik kedelapan butir ini menjadi TIDAK ADA, tidak didukung aturan terkunci**, padahal hanya
+  batas itulah yang membuat gabungan "jelas di atas 50%". Sebagai ilustrasi aritmetika saja: tanpa
+  empat butir selisih-waktu itu, batas atas gabungan menjadi 58/99 = 58,6% [48,7%; 67,8%] -- ambigu.
+- *Ditolak secara meragukan (7 butir: 15, 20, 21, 22, 25, 29, 32)* karena detail "tidak disebut".
+  Di bawah Aturan B itu bukan alasan menolak; sebagian bisa menjadi cocok, sebagian tetap ditolak
+  bila Narasi (yang dulu tidak ditampilkan) memuat detail yang bertentangan. Jumlahnya tidak
+  diketahui tanpa melabel ulang. Butir 2 (ditolak karena tahun/periode) hanya tetap ditolak bila
+  tahunnya eksplisit dan berbeda di kedua sisi.
+- *Arah bersih:* bila aturan terkunci diterapkan seragam, TIDAK ADA pada 50 butir lama kemungkinan
+  **berkurang atau tetap**, tidak bertambah. Jadi 53/99 kemungkinan **melebih-lebihkan** proporsi
+  TIDAK ADA relatif terhadap aturan terkunci; dengan label utama butir baru, nilai seragamnya berada
+  antara 46/99 (46,5% [37,0%; 56,2%], bila ketujuh butir menjadi cocok) dan 53/99.
+  Pergeseran itu menjauh dari ambang, bukan mendekatinya, sehingga tidak mengubah kesimpulan
+  "ambang tidak terpenuhi". Yang tidak dapat dinilai: arah pengaruh Narasi pada butir lama (bisa
+  menambah maupun mengurangi kecocokan).
+- Keterbatasan lain tetap berlaku: satu anotator, 1-5 butir lama dibahas bersama AI (11.5), kandidat
+  hanya dari dua cara pencarian berbasis judul (pasangan yang luput dari keduanya tidak mungkin
+  dipilih, jadi TIDAK ADA bisa sedikit melebih-lebihkan celah), dan batas tafsir 11.4.
+
 ---
 
 ## Sumber
