@@ -785,8 +785,13 @@ Proyek dibangun bertahap dalam dua versi:
   ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
   **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, SEDANG BERJALAN, HASIL TERSEGEL.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
-  `--status` untuk status teknis). Berikutnya run 2 dan run 3, satu per hari setelah reset kuota 14.00 WIB,
-  masing-masing didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
+  `--status` untuk status teknis). **Run 2 lengkap kedua set (2026-10-19, jendela kuota 18 Okt; buku besar 148 =
+  91 + 57, selisih 3 = percobaan ulang 503).** **Run 3 TERHENTI setelah 2 butir Liputan6** (Claude Code
+  menghentikan proses latar karena memori rendah, bukan galat evaluasi; butir ke-3 terkirim tetapi jawabannya
+  tidak tersimpan dan tidak dilihat, dipanggil ulang saat dilanjutkan) -- diselesaikan pemilik proyek di luar
+  Claude Code. "Gagal 1" hari 1 = satu panggilan gagal 4 percobaan, butirnya diulang; 6 percobaan ulang
+  koneksi, 0 butir kehilangan jawaban. Penanda asal buku besar (`data/quota_ledger_events.jsonl`) sejak
+  `cde7ce7`, sebelum run 2. Setiap run didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
   butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
   sampai sesi buta (berkas paling cepat 27 Oktober 2026; pilihan di `testset/eksternal_sesi_buta_pilihan.json`)
   selesai. Jangan ingest antrean sebelum evaluasi dan adjudikasi selesai.** Riwayat rancangan: `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
