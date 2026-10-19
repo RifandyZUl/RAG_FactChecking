@@ -793,7 +793,7 @@ Proyek dibangun bertahap dalam dua versi:
   koneksi, 0 butir kehilangan jawaban. Penanda asal buku besar (`data/quota_ledger_events.jsonl`) sejak
   `cde7ce7`, sebelum run 2. Setiap run didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
   butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
-  sampai sesi buta (berkas paling cepat 27 Oktober 2026; pilihan di `testset/eksternal_sesi_buta_pilihan.json`)
+  sampai sesi buta (berkas dibuat 20 Oktober 2026 -- PENYIMPANGAN dari 27 Okt, diputuskan 2026-10-19 saat hasil tersegel, rancangan 7.2; pilihan di `testset/eksternal_sesi_buta_pilihan.json`)
   selesai. Jangan ingest antrean sebelum evaluasi dan adjudikasi selesai.** Riwayat rancangan: `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
   kutipan K1/K2), indeks 1.532 dibekukan (sidik jari di bagian 5; antrean di-ingest pemilik proyek SETELAH
   evaluasi), ambang kecocokan palsu usulan lulus <= 4/49 / gugur >= 10/49, testset-v1 sebagai uji
@@ -801,7 +801,7 @@ Proyek dibangun bertahap dalam dua versi:
   (`python -m candidates.trace_audit`, parameter di-commit `e7504fc`): 20/99 terdeteksi; 7 butir TIDAK ADA
   untuk ditinjau buta (P1-10, P1-20, P1-29, P1-30, P1-38, P1-45, P2-2). **Jangan menyebut sinyal per butir
   kepada pemilik proyek dan jangan menyuruhnya membuka `audit_jejak_identik.json` sebelum tinjauan buta.**
-  Uji ulang buta paling cepat 27 Oktober 2026.
+  Uji ulang buta: berkas 20 Oktober 2026 (penyimpangan dari 27 Oktober; rancangan 7.2).
   **Uji (2026-10-09): `tests/conftest.py` menghentikan backend ChromaDB yang dibuka tiap uji** --
   tanpa itu 7 `System` chromadb tetap hidup sampai sesi berakhir (terukur), dengan itu 0. Dipasang
   setelah `test_apply_search_config_changes_only_the_parameter` gagal SEKALI (`InternalError` dari
