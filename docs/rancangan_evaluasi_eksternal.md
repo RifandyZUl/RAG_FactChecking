@@ -401,6 +401,22 @@ ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasa
     hasil), tetapi jawabannya tidak tersimpan dan tidak pernah dilihat; berkas hasil berakhir utuh pada
     butir ke-2. Butir itu dipanggil ulang saat run dilanjutkan (lanjut-dari-terakhir). Run 3 diselesaikan
     di luar Claude Code.
+  - **Run 3 DISELESAIKAN 2026-10-19 malam di luar Claude Code** (PowerShell terpisah, dijalankan pemilik
+    proyek; log `data/external_eval_run3_lanjut_20261019_1920.log`; keenam langkah kode keluar 0): uji kunci
+    6/6, `retriever_exactness` 0/64 kueri berbeda, anggaran kedua set, lalu run 3 Liputan6 (19.22-19.58 WIB,
+    89 butir sisa) dan run 3 testset-v1 (19.58-20.07 WIB). Pemeriksaan awal di dalam run (daftar butir,
+    sidik jari indeks, `ef_search`, hash berkas terkunci, model/thinking) **lolos untuk kedua set**.
+    - Run 3 Liputan6: 91/91 butir (2 dari proses siang + 89 dari proses malam), 91 panggilan, 92 percobaan
+      (satu percobaan ulang `APIConnectionError` pukul 19.54.58 WIB, berhasil pada percobaan kedua), 0
+      galat butir, 0 429, 0 butir diulang. Run 3 testset-v1: 54/54, 54 panggilan, 54 percobaan, 0 galat,
+      0 429, 0 butir diulang.
+    - **Buku besar jendela 19 Okt: 147 = 93 (Liputan6) + 54 (testset-v1).** Menurut penanda asal per
+      proses: proses siang (pid 9824) 3 percobaan pertama, 14.05.33-14.05.58 WIB = 2 butir tersimpan + 1
+      permintaan butir ke-3 yang jawabannya tidak tersimpan; proses malam (pid 14844) 90 = 89 percobaan
+      pertama + 1 percobaan ulang; testset-v1 (pid 12424) 54. Jadi 93 - 92 percobaan di berkas hasil = 1 =
+      permintaan butir ke-3 yang terputus, yang dipanggil ulang oleh proses malam. Tidak ada selisih lain.
+  - **Ketiga run lengkap untuk kedua set** (Liputan6 91 butir unik per run, testset-v1 54 per run, semua
+    berstatus selesai); tidak ada butir yang hasilnya hilang di run mana pun.
   - **Rincian "gagal 1" di laporan hari pertama:** satu panggilan generator gagal setelah 4 percobaan
     (`APIConnectionError`); butirnya diulang dan selesai. Seluruhnya ada **6 percobaan ulang karena galat
     koneksi** pada run Liputan6 (1 + 3 + 2), semuanya tercatat di buku besar; **tidak ada butir yang

@@ -783,13 +783,15 @@ Proyek dibangun bertahap dalam dua versi:
   sendiri, tanpa AI; Claude hanya membantu teknis dan memperbesar tinggi baris (kini juga dilakukan
   `gap_blocks` saat `--make`). Berkas dibaca: `konfirmasi_49_terisi.xlsx`; templat `konfirmasi_49.xlsx`
   ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
-  **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, SEDANG BERJALAN, HASIL TERSEGEL.** Hari 1 (2026-10-17) selesai:
+  **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19, HASIL TERSEGEL.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
   `--status` untuk status teknis). **Run 2 lengkap kedua set (2026-10-19, jendela kuota 18 Okt; buku besar 148 =
-  91 + 57, selisih 3 = percobaan ulang 503).** **Run 3 TERHENTI setelah 2 butir Liputan6** (Claude Code
+  91 + 57, selisih 3 = percobaan ulang 503).** Run 3 sempat terhenti setelah 2 butir Liputan6 (Claude Code
   menghentikan proses latar karena memori rendah, bukan galat evaluasi; butir ke-3 terkirim tetapi jawabannya
-  tidak tersimpan dan tidak dilihat, dipanggil ulang saat dilanjutkan) -- diselesaikan pemilik proyek di luar
-  Claude Code. "Gagal 1" hari 1 = satu panggilan gagal 4 percobaan, butirnya diulang; 6 percobaan ulang
+  tidak tersimpan dan tidak dilihat) lalu **DISELESAIKAN 2026-10-19 malam oleh pemilik proyek di luar Claude
+  Code: KETIGA RUN LENGKAP untuk kedua set, 0 butir hilang**; buku besar 19 Okt 147 = 93 + 54, selisih 1 =
+  permintaan butir ke-3 yang terputus (+1 percobaan ulang koneksi tercatat di hasil). Rincian: rancangan
+  bagian 8. **Berikutnya: berkas sesi buta 20 Oktober.** "Gagal 1" hari 1 = satu panggilan gagal 4 percobaan, butirnya diulang; 6 percobaan ulang
   koneksi, 0 butir kehilangan jawaban. Penanda asal buku besar (`data/quota_ledger_events.jsonl`) sejak
   `cde7ce7`, sebelum run 2. Setiap run didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
   butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
