@@ -9,6 +9,7 @@ setiap permintaan yang dikirim, termasuk yang ditolak (perkiraan konservatif).
 
 import json
 import os
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -80,8 +81,20 @@ class DailyLedger:
     def used_today(self) -> int:
         return int(self._load().get(self.model, {}).get(self.day_key(), 0))
 
-    def add(self, n: int = 1) -> int:
-        """Catat n permintaan terkirim (langsung ke disk); kembalikan total hari ini."""
+    @property
+    def events_path(self) -> Path:
+        """Catatan asal tiap penambahan (JSONL, hanya ditambah) di sebelah berkas buku besar."""
+        return self.path.with_name(self.path.stem + "_events.jsonl")
+
+    def add(self, n: int = 1, attempt: int | None = None) -> int:
+        """
+        Catat n permintaan terkirim (langsung ke disk); kembalikan total hari ini.
+
+        Setiap penambahan juga ditulis ke `events_path` beserta waktu UTC, proses asal
+        (argumen baris perintah, atau `RAG_LEDGER_ORIGIN` bila di-set), pid, dan nomor
+        percobaan di dalam penyedia, agar selisih buku besar dengan berkas hasil dapat
+        ditelusuri. Hitungan di berkas buku besar tidak berubah bentuknya.
+        """
         data = self._load()
         days = data.setdefault(self.model, {})
         key = self.day_key()
@@ -89,7 +102,17 @@ class DailyLedger:
         for old in sorted(days)[:-3]:  # simpan 3 hari terakhir saja
             del days[old]
         self._save(data)
+        self._log_event(key, n, days[key], attempt)
         return days[key]
+
+    def _log_event(self, day: str, n: int, total: int, attempt: int | None) -> None:
+        origin = os.environ.get("RAG_LEDGER_ORIGIN") or " ".join(
+            [Path(sys.argv[0]).name if sys.argv and sys.argv[0] else "?", *sys.argv[1:]])
+        event = {"waktu_utc": self._now().astimezone(timezone.utc).isoformat(timespec="seconds"),
+                 "model": self.model, "hari_pasifik": day, "n": n, "total_hari_ini": total,
+                 "percobaan": attempt, "asal": origin, "pid": os.getpid()}
+        with self.events_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
     def seed(self, used: int) -> None:
         """

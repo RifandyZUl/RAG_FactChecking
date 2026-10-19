@@ -45,3 +45,22 @@ def test_daily_ledger_and_budget() -> None:
         assert not plan.ok and plan.remaining == 5
         after.seed(0)
         assert not plan_budget(after, lim, 21, 2).ok
+
+
+def test_ledger_events_record_origin_and_attempt(tmp_path: Path, monkeypatch) -> None:
+    import json
+    from datetime import datetime, timezone
+
+    from llm.ledger import DailyLedger
+
+    monkeypatch.setenv("RAG_LEDGER_ORIGIN", "uji asal")
+    led = DailyLedger("m", tmp_path / "ledger.json", lambda: datetime(2026, 10, 19, 6, 0, tzinfo=timezone.utc))
+    led.add(1, attempt=1)
+    led.add(1, attempt=2)
+    led.add()
+    events = [json.loads(x) for x in led.events_path.read_text(encoding="utf-8").splitlines()]
+    assert [e["percobaan"] for e in events] == [1, 2, None]
+    assert [e["total_hari_ini"] for e in events] == [1, 2, 3] == [led.used_today() - 2, 2, led.used_today()]
+    assert {e["asal"] for e in events} == {"uji asal"}
+    assert events[0]["hari_pasifik"] == "2026-10-18" and events[0]["waktu_utc"] == "2026-10-19T06:00:00+00:00"
+    assert json.loads((tmp_path / "ledger.json").read_text(encoding="utf-8")) == {"m": {"2026-10-18": 3}}
