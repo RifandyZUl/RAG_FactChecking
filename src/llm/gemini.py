@@ -175,7 +175,7 @@ class GeminiProvider(LLMProvider):
         if waited >= 1.0:
             logger.info("throttling proaktif: menunggu %.1f dtk (RPM %d, TPM %d)",
                         waited, self.limits.rpm, self.limits.tpm)
-        self.ledger.add(1)  # dihitung sebelum dikirim: hasil akhir permintaan tak dijamin terlihat
+        self.ledger.add(1, attempt=attempt)  # dihitung sebelum dikirim: hasil akhir permintaan tak dijamin terlihat
 
     def _create(self, system_prompt: str, user_prompt: str, json_schema: dict[str, Any] | None) -> Any:
         kwargs: dict[str, Any] = {
