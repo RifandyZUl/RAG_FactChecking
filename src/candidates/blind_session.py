@@ -3,7 +3,8 @@ Sesi buta gabungan evaluasi eksternal (docs/rancangan_evaluasi_eksternal.md bagi
 
 Pemilihan dikunci dan di-commit SEBELUM panggilan LLM pertama evaluasi, dan hanya bergantung pada benih dan
 daftar pengecualian -- tidak pada hasil evaluasi, label, atau isi butir. Berkas sesi buta sendiri (30 butir uji
-ulang dicampur 7 butir audit, tanpa penanda) dibuat terpisah, paling cepat 27 Oktober 2026.
+ulang dicampur 7 butir audit, tanpa penanda) dibuat terpisah, 20 Oktober 2026 (semula paling cepat 27 Oktober;
+penyimpangan 2026-10-19, docs/rancangan_evaluasi_eksternal.md 7.2).
 
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m candidates.blind_session --select    # menolak menimpa pilihan yang sudah ada

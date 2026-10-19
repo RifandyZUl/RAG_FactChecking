@@ -269,12 +269,28 @@ anotator pengganti.** Hasil ketiga langkah di bawah **tidak pernah mengganti lab
   dengan Aturan A/B; efek pergantian aturan). Dikecualikan dari kolam acak: butir 1-5 P1, 15 butir
   P1 yang pernah ditandai tidak konsisten, dan ketujuh butir audit. Kolam: P1 26, P2 48.
 - **Berkas:** dibuat **paling cepat 27 Oktober 2026** (dua minggu setelah pelabelan terakhir 13
-  Oktober). Format sama dengan `konfirmasi_49` (blok per butir, Narasi utuh, tinggi baris disetel,
+  Oktober; **diubah menjadi 20 Oktober, lihat penyimpangan di bawah**). Format sama dengan `konfirmasi_49` (blok per butir, Narasi utuh, tinggi baris disetel,
   hanya sel masukan terbuka). Label lama, catatan, dan tanda ragu disembunyikan; urutan butir dan
   urutan kandidat diacak; butir dinomori ulang; peta nomor -> butir asli disimpan terpisah dan tidak
   dibuka sampai pemilik proyek selesai.
 - **Keterbatasan yang diterima:** butir P1 pernah dilihat sebelumnya (ingatan bisa menaikkan
-  kesepakatan), dan dengan 30 butir interval kappa lebar.
+  kesepakatan), dan dengan 30 butir interval kappa lebar. **Tambahan karena penyimpangan di bawah:**
+  jeda 7 hari untuk butir P2 menambah risiko pemilik proyek masih ingat label lama, sehingga kappa
+  (terutama kappa P2, ukuran konsistensi) bisa terlalu tinggi; jeda untuk butir P1 di atas 11 hari
+  (pelabelan P1 selesai paling lambat 8 Oktober).
+- **PENYIMPANGAN RANCANGAN (diputuskan pemilik proyek 2026-10-19, dicatat SEBELUM berkas sesi buta
+  dibuat; hasil evaluasi MASIH TERSEGEL saat keputusan diambil -- belum ada metrik atau hasil per butir
+  yang dilihat siapa pun):**
+  - *Parameter lama:* jeda uji ulang minimal **dua minggu** setelah pelabelan terakhir (13 Oktober) ->
+    berkas sesi buta dibuat paling cepat **27 Oktober 2026**.
+  - *Parameter baru:* jeda minimal **7 hari** setelah pelabelan terakhir -> berkas sesi buta dibuat
+    **20 Oktober 2026**.
+  - *Alasan:* murni jadwal; pemilik proyek ingin proyek ini selesai sebagai portofolio sebelum akhir
+    Oktober. Tidak ada alasan yang berasal dari hasil evaluasi.
+  - *Yang tidak berubah:* pemilihan butir tetap yang sudah di-commit di `fa7464c`
+    (`testset/eksternal_sesi_buta_pilihan.json`, benih 20261027; catatan "paling cepat 2026-10-27" di
+    berkas itu adalah riwayat dan digantikan penyimpangan ini), isi 37 butir, format, dan ambang kappa
+    7.4.
 
 ### 7.3 Kappa uji ulang
 
@@ -406,7 +422,8 @@ ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasa
   1. Rancangan diperbarui, pemilihan sesi buta (`--select`) dan pembekuan butir (`--freeze`)
      di-commit **sebelum panggilan LLM pertama**.
   2. Evaluasi 3 hari dengan hasil tersegel (hari pertama: 2026-10-17).
-  3. Sesi buta gabungan (7.2), berkas dibuat paling cepat 27 Oktober 2026.
+  3. Sesi buta gabungan (7.2), berkas dibuat paling cepat 27 Oktober 2026 (**penyimpangan 2026-10-19:
+     20 Oktober**, lihat 7.2).
   4. Kappa (7.3-7.4) dan label final (7.5), lalu **buka segel** dan hitung metrik.
   5. Adjudikasi buta (7.6), laporan, lalu ingest antrean oleh pemilik proyek.
 
