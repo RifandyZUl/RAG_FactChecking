@@ -372,6 +372,28 @@ ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasa
   percobaan ulang koneksi yang tidak dapat diperkirakan (maksimal 4 percobaan per panggilan). Sisa
   kuota per hari tanpa pemakaian demo: ~348 pada beban seperti hari 1, >= 210 pada batas atas
   ulang format; demo berbagi kuota yang sama.
+- **Status pelaksanaan (dicatat 2026-10-19; status teknis saja, hasil tetap tersegel):**
+  - **Run 1 dan run 2 lengkap untuk kedua set** (Liputan6 91/91, testset-v1 54/54 per run). Run 2 tidak
+    dijalankan 18 Oktober; ia dijalankan 2026-10-19 pukul 12.58-13.24 WIB, seluruhnya di jendela kuota
+    yang dimulai 18 Oktober 14.00 WIB (tidak ada butir yang menyeberang jendela). Buku besar run 2:
+    148 = 91 (Liputan6) + 57 (testset-v1); selisih 3 terhadap 145 panggilan = tiga percobaan ulang karena
+    503 "high demand" dari server (13.12, 13.16, 13.17 WIB), masing-masing berhasil pada percobaan kedua;
+    0 galat butir, 0 429, 0 butir diulang.
+  - **Run 3 terhenti setelah 2 butir Liputan6** (mulai 14.02 WIB, setelah pemeriksaan sebelum run lolos)
+    karena Claude Code menghentikan proses latarnya saat memori sistem rendah -- **bukan galat
+    evaluasi**. Butir ke-3 sempat dikirim ke model (14.05.58 WIB, tercatat di buku besar: 3 percobaan vs 2
+    hasil), tetapi jawabannya tidak tersimpan dan tidak pernah dilihat; berkas hasil berakhir utuh pada
+    butir ke-2. Butir itu dipanggil ulang saat run dilanjutkan (lanjut-dari-terakhir). Run 3 diselesaikan
+    di luar Claude Code.
+  - **Rincian "gagal 1" di laporan hari pertama:** satu panggilan generator gagal setelah 4 percobaan
+    (`APIConnectionError`); butirnya diulang dan selesai. Seluruhnya ada **6 percobaan ulang karena galat
+    koneksi** pada run Liputan6 (1 + 3 + 2), semuanya tercatat di buku besar; **tidak ada butir yang
+    kehilangan jawaban**.
+  - **Penanda asal buku besar ditambahkan sebelum run 2** (commit `cde7ce7`): setiap penambahan juga
+    ditulis ke `data/quota_ledger_events.jsonl` (waktu UTC, proses asal, pid, nomor percobaan). Hanya
+    `src/llm/ledger.py` dan satu baris di `src/llm/gemini.py`; berkas terkunci (generator, retriever,
+    chunker) dan prompt tidak tersentuh, hash terkunci tetap lolos pemeriksaan awal run 2 dan run 3.
+    (Ini menggantikan keputusan hari 1 untuk tidak menambah penanda di tengah evaluasi.)
 - **Yang boleh dipublikasikan (di-commit):** metrik agregat dan intervalnya; tabel per butir berisi
   nomor butir, id artikel Liputan6 (angka), label emas (id TurnBackHoax / TIDAK ADA), keputusan modus
   sistem, dan id artikel jawaban. **Tidak** dipublikasikan: kutipan pesan, judul Liputan6, Narasi,
