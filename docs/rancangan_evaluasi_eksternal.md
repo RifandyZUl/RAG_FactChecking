@@ -380,6 +380,78 @@ ketidakkonsistenan terletak pada pemilihan artikel, bukan pada ada/tidaknya pasa
   adjudikasi hanya meninjau ulang butir yang tidak sepakat dengan sistem, jadi ia hanya bisa menggeser
   hasil ke arah sistem.
 
+### 7.7 Hasil keandalan label dan label final (2026-10-20, dihitung dan di-commit SEBELUM segel dibuka)
+
+Alat: `python -m evaluation.external_analysis --keandalan` lalu `--label-final` (uji
+`tests/test_external_analysis.py`; fungsi keduanya tidak membaca berkas hasil sistem, dijaga uji AST).
+Masukan: `hasil_sesi_buta.json` (dari `--read` atas `sesi_buta_37_terisi.xlsx` `29b602f9...`, 2026-10-20
+15:41 UTC; 37/37 terbaca sah) dan label awal `testset/eksternal_butir.json`. Sesi diisi pemilik
+proyek sendiri, tanpa AI.
+
+**Uji ulang 30 butir acak** (kappa Cohen; interval 95% bootstrap persentil, 10.000 ulangan, benih
+20261027):
+
+| Kelompok | n | Sepakat | Kappa biner [CI95] | Kappa id persis [CI95] | Berubah (arah) |
+| --- | --- | --- | --- | --- | --- |
+| Gabungan | 30 | 25 | **0,6341** [0,3077; 0,9112] | 0,7070 [0,4161; 0,9213] | 5: cocok -> TIDAK ADA 3, TIDAK ADA -> cocok 2, id lain 0 |
+| Putaran 2 | 20 | 17 | 0,6809 [0,2857; 1,0] | 0,7479 [0,4059; 1,0] | 3: cocok -> TIDAK ADA 2 (P2-4, P2-46), TIDAK ADA -> cocok 1 (P2-3) |
+| Putaran 1 | 10 | 8 | 0,5238 [-0,1538; 1,0] | 0,5918 [-0,0714; 1,0] | 2: cocok -> TIDAK ADA 1 (P1-31), TIDAK ADA -> cocok 1 (P1-16) |
+
+- Putaran 1: 56 dari 10.000 ulangan bootstrap tidak terdefinisi (satu kategori saja) dan dibuang.
+- **Tidak ada butir yang berpindah ke id lain**: kelima perubahan semuanya ada/tidaknya pasangan. Kappa
+  id persis lebih tinggi dari kappa biner hanya karena kategori id lebih banyak (kesepakatan peluang
+  lebih rendah), bukan karena pemilihan artikel lebih konsisten daripada keputusan ada/tidaknya.
+- Butir yang ditandai ragu di sesi (uji ulang): P1-23, P2-3, P2-10, P2-46. Dua dari lima yang berubah
+  (P2-3, P2-46) ditandai ragu.
+- **Kappa putaran 1 bukan ukuran konsistensi murni**: ia mengukur gabungan pergantian aturan (v1.0 ->
+  A/B) dan bukti yang lebih lengkap (Narasi utuh), lihat 7.2; dengan 10 butir intervalnya mencakup 0.
+- **Ambang 7.4 diterapkan apa adanya:** dasar terkunci = estimasi titik kappa biner 30 butir = 0,6341 ->
+  **kategori 0,60-0,79**: label final tetap dipakai, setiap metrik dilaporkan juga dengan kelima butir
+  yang berubah dibalik ke dua arah, dan "lulus" hanya dinyatakan bila lulus pada kedua arah. Pemilik
+  proyek dalam perintahnya menyebut kappa putaran 2; nilai itu (0,6809) jatuh di kategori yang sama, jadi
+  perbedaan dasar tidak mengubah tindakan. Batas bawah interval kedua kappa di bawah 0,60, jadi
+  kategori ini sendiri tidak pasti.
+- Hasil uji ulang **tidak mengubah label** (7.5).
+
+**Tujuh butir audit** (tidak ikut kappa; sinyal dibuka setelah keputusan sesi tercatat):
+
+| Butir | Label awal | Sesi buta | Kandidat berjejak (7.1) | Sinyal | Sesi = kandidat berjejak |
+| --- | --- | --- | --- | --- | --- |
+| P1-10 | TIDAK ADA | 36546 | 36546 | 6 rangkaian 8 kata sama, domain 0 | ya |
+| P1-20 | TIDAK ADA | 32039 | 32039 | 33 rangkaian, domain 0 | ya |
+| P1-29 | TIDAK ADA | 35963 | 35963 | 45 rangkaian, domain 0 | ya |
+| P1-30 | TIDAK ADA | TIDAK ADA | 31092 | 4 rangkaian, domain 0 | - |
+| P1-38 | TIDAK ADA | 35849 | 35849 | 32 rangkaian, domain 0 | ya |
+| P1-45 | TIDAK ADA | TIDAK ADA | 33308 | 3 rangkaian, domain 0 | - |
+| P2-2 | TIDAK ADA (ragu) | TIDAK ADA (ragu) | 32765 | 4 rangkaian, domain 0 | - |
+
+- **4 dari 7 berubah dari TIDAK ADA menjadi cocok, dan keempatnya memilih tepat artikel yang ditunjuk
+  jejak identik.** Ketiga yang tetap TIDAK ADA adalah yang sinyalnya paling lemah (3-4 rangkaian).
+  Ketujuhnya berjejak lewat rangkaian kata saja; sinyal domain 0 pada semuanya.
+- Keempat yang berubah semuanya butir **putaran 1** (dulu dilabel tanpa Narasi; kini Narasi utuh
+  ditampilkan). Jadi perubahan ini konsisten dengan "bukti yang lebih lengkap" -- pada P1 penyebabnya
+  tidak dapat dipisahkan dari pergantian aturan. P1-20 dan P1-29 juga termasuk 15 butir P1 yang dulu
+  ditandai tidak konsisten (kelompok "ditolak, diragukan").
+- Bias yang disadari: butir audit dipilih justru karena berjejak, dan pemilik proyek tidak diberi tahu
+  sinyalnya, tetapi tahu bahwa ada butir audit di sesi.
+
+**Label final (7.5)** = label awal, kecuali **P1-10 -> 36546, P1-20 -> 32039, P1-29 -> 35963,
+P1-38 -> 35849** (dari TIDAK ADA; selisih terbit 36, 2, 4, -2 hari: satu > 30 hari). Akibatnya butir
+analisis menjadi **46 positif (P1 24, P2 22) dan 45 negatif (P1 23, P2 22)**, bukan 42/49. Label awal
+disimpan berdampingan di berkas yang sama untuk sensitivitas.
+
+- Berkas: `data/candidates/sesi_buta_eksternal/label_final.json` (lokal, di-gitignore), **SHA-256
+  `c24008d1cea343c037889b76001e3eeffb6617a5cbc12d5dd9f98a15f7dd28da`**; ia mencatat hash
+  `eksternal_butir.json` (`87e2ad83...`) dan `hasil_sesi_buta.json` (`fdfb2113...`). Hash ini juga
+  ditulis di `external_analysis.FINAL_LABELS_SHA256`; `--metrik` menolak membuka segel bila berkas
+  berbeda.
+- **Ambang pada n yang baru (dihitung dari aturan Wilson 6.1/6.2 yang sama, sebelum segel dibuka):**
+  positif 46 butir: memadai >= 35/46, buruk <= 21/46, tidak konklusif 22-34. Kecocokan palsu 45 butir:
+  **lulus <= 3/45** (4/45 = 8,9% tetapi batas atas Wilson > 20%), **gugur >= 9/45**, tidak konklusif 4-8.
+  Aturannya tidak berubah; hitungan "pada 49 butir" di 6.2 hanya contoh untuk n = 49.
+- **Kode analisis metrik (bagian 6, sensitivitas, kemunduran, kepatuhan) ditulis dan di-commit
+  bersama catatan ini, sebelum segel dibuka** (`external_analysis.py`).
+
 ---
 
 ## 8. Pelaksanaan
