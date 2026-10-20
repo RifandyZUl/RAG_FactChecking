@@ -15,6 +15,8 @@ ragu, dan catatan tidak pernah diisi, diusulkan, atau dikoreksi kode (Aturan Waj
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m candidates.blind_workbook --make    # menolak menimpa; menulis kunci terpisah
   PYTHONPATH=src python -m candidates.blind_workbook --read    # setelah pemilik proyek selesai; baru di sini kunci dibuka
+  PYTHONPATH=src python -m candidates.blind_workbook --read --berkas <..._terisi_v2.xlsx>   # koreksi = berkas baru
+Setiap --read menyalin berkas terisi + hash-nya ke arsip_baca/ sebelum validasi apa pun.
 """
 
 import argparse
@@ -48,6 +50,9 @@ TEMPLATE_PATH = SESSION_DIR / "sidik_jari_templat_sesi_buta.json"  # tanpa peta 
 KEY_PATH = SESSION_DIR / "kunci_sesi_buta.json"  # peta nomor sesi -> butir asli; hanya dibuka --read
 RESULT_PATH = SESSION_DIR / "hasil_sesi_buta.json"
 README_PATH = SESSION_DIR / "BACA_SAYA.txt"
+# setiap berkas yang dibaca --read disalin ke sini lebih dulu (7.2: versi pertama pernah tertimpa koreksi bernama sama)
+ARCHIVE_DIR = SESSION_DIR / "arsip_baca"
+ARCHIVE_LOG = ARCHIVE_DIR / "arsip_baca.jsonl"
 GENERATED_BY = "candidates.blind_workbook (openpyxl; tata letak dihasilkan kode, KEPUTUSAN/ragu/catatan diisi manusia)"
 SESSION_SIZE = 37
 # dicatat di docs/rancangan_evaluasi_eksternal.md 7.2 (commit yang sama) SEBELUM sesi diisi; --read berhenti bila beda
@@ -213,12 +218,44 @@ def write_session(refs: list[dict[str, Any]], source: dict[int, dict[int, dict[s
     return fp
 
 
+def archive_copy(path: Path) -> dict[str, Any]:
+    """
+    Salin berkas terisi apa adanya ke ARCHIVE_DIR dan catat hash-nya, SEBELUM validasi apa pun. Berkas yang sudah
+    diserahkan tidak boleh ditimpa (koreksi disimpan sebagai _v2, _v3, ...): bila nama yang sama pernah dibaca dengan
+    hash lain, salinan tetap dibuat lalu pembacaan berhenti.
+    """
+    if not path.exists():
+        raise SystemExit(f"berkas terisi tidak ada: {path}")
+    data = path.read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(UTC)
+    dest = ARCHIVE_DIR / f"{stamp.strftime('%Y%m%dT%H%M%S%fZ')}_{sha[:12]}_{path.name}"
+    with dest.open("xb") as f:  # "x": salinan arsip juga tidak pernah ditimpa
+        f.write(data)
+    if hashlib.sha256(dest.read_bytes()).hexdigest() != sha:
+        raise SystemExit(f"salinan arsip tidak sama dengan berkas asli: {dest}")
+    earlier = [json.loads(line) for line in ARCHIVE_LOG.read_text(encoding="utf-8").splitlines() if line.strip()] \
+        if ARCHIVE_LOG.exists() else []
+    entry = {"waktu_utc": stamp.isoformat(timespec="seconds"), "berkas": path.name, "sha256": sha, "ukuran": len(data),
+             "salinan": dest.name}
+    with ARCHIVE_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    overwritten = sorted({e["sha256"] for e in earlier if e["berkas"] == path.name and e["sha256"] != sha})
+    if overwritten:
+        raise SystemExit(f"{path.name} pernah dibaca dengan hash lain ({', '.join(h[:12] for h in overwritten)}): berkas yang "
+                         "sudah diserahkan tidak boleh ditimpa; simpan koreksi sebagai berkas baru berakhiran _v2, _v3, ...")
+    return entry
+
+
 def read(path: Path = FILLED_PATH) -> int:
     """
-    Periksa berkas terisi (bukti sama dengan templat, asal-usul), laporkan butir yang kosong/tidak terbaca tanpa
-    menebak, dan BARU SETELAH semuanya terbaca buka kunci untuk memetakan keputusan ke butir asli. Tidak menghitung
-    kappa atau metrik evaluasi; tidak membaca label lama.
+    Arsipkan berkas terisi (archive_copy), lalu periksa (bukti sama dengan templat, asal-usul), laporkan butir yang
+    kosong/tidak terbaca tanpa menebak, dan BARU SETELAH semuanya terbaca buka kunci untuk memetakan keputusan ke butir
+    asli. Tidak menghitung kappa atau metrik evaluasi; tidak membaca label lama.
     """
+    archived = archive_copy(path)
+    print(f"diarsipkan sebelum validasi: {archived['salinan']} (sha256 {archived['sha256']})")
     recorded = {p.name: (hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else "(tidak ada)",
                          RECORDED_SHA256.get(p.name)) for p in (XLSX_PATH, KEY_PATH, TEMPLATE_PATH)}
     if any(now != want for now, want in recorded.values()):
@@ -234,7 +271,7 @@ def read(path: Path = FILLED_PATH) -> int:
         checks["templat_masih_seperti_saat_dibuat"] = hashlib.sha256(XLSX_PATH.read_bytes()).hexdigest() == fp["sha256_templat_xlsx"]
     res = read_inputs(grid, blocks)
     report: dict[str, Any] = {"berkas": {"terisi": path.name, "sha256_terisi": hashlib.sha256(path.read_bytes()).hexdigest()},
-                              "asal_usul": prov, "pemeriksaan": checks, "perlu_ditanyakan": res["perlu_ditanyakan"]}
+                              "arsip": archived, "asal_usul": prov, "pemeriksaan": checks, "perlu_ditanyakan": res["perlu_ditanyakan"]}
     if not checks["bukti_sama_dengan_templat"] or not checks["kunci_tidak_berubah"] or res["perlu_ditanyakan"]:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         raise SystemExit("bukti/kunci berubah dari templat atau ada butir yang belum/tidak terbaca: hasil TIDAK dipetakan")

@@ -307,6 +307,41 @@ anotator pengganti.** Hasil ketiga langkah di bawah **tidak pernah mengganti lab
   | `kunci_sesi_buta.json` (peta nomor sesi -> butir asli) | `75263881065e111f5d9430046620060c30a88fe5e6e5816e4d94dc6937bd9d17` |
   | `sidik_jari_templat_sesi_buta.json` | `3efbfa953f888bc8412d56e967abbd4ff03e11aa12a00ee1dd52ae3e791b45c4` |
 
+- **Kejadian 2026-10-20: berkas terisi pertama ditolak, dikoreksi, dan versi pertamanya tertimpa
+  (dicatat SEBELUM segel dibuka; tidak ada hasil sistem yang dilihat siapa pun).**
+  - *Penyerahan pertama:* `sesi_buta_37_terisi.xlsx`, SHA-256
+    `63ed18c7dc1862480bede3c99b3af877c70beeb790678142f696a76cca8bf5f6` (disimpan Microsoft Excel
+    13:35:36 UTC; commit `9868b17` sudah di origin sejak 05:53:52 UTC). `--read` menolaknya (kode keluar
+    1, tidak ada yang dipetakan): **id `32218` tidak ada di daftar kandidat butir sesi 30**
+    (kandidatnya `32118`, `29971`, `32111`, `29477`, `32092`, `32007`). Pemeriksaan lain pada jalan itu:
+    sel di luar sel masukan sama dengan templat, kunci tidak berubah, templat masih seperti saat
+    dibuat; butir 30 satu-satunya masalah.
+  - *Koreksi:* nilai lama `32218`, nilai baru `32118`. Menurut pernyataan pemilik proyek ini **koreksi
+    salah ketik yang ia lakukan sendiri, bukan penilaian ulang**, dan butir lain tidak diubah atau
+    dinilai ulang. Pernyataan itu **tidak dapat dibuktikan dari berkas**.
+  - *Versi pertama tertimpa:* koreksi disimpan ke nama yang sama, mengikuti instruksi yang diterima
+    pemilik proyek; instruksi itu keliru karena bertentangan dengan permintaan perbandingan sel demi
+    sel. `--read` saat itu tidak menyalin berkas, Claude Code tidak membuat salinan, dan Previous
+    Versions Windows tidak menyediakan versi lama. **Versi pertama tidak dapat dipulihkan.**
+  - *Versi koreksi:* `sesi_buta_37_terisi.xlsx`, SHA-256
+    `29b602f946ad401f353611c4f75b21da5942bb33d9f4b8da32f9f2d1d2d85961` (98.023 byte, disimpan 14:51:53
+    UTC); salinan byte di `arsip_baca/20261020T153235684685Z_29b602f946ad_sesi_buta_37_terisi.xlsx`
+    (hash sama).
+  - *Catatan butir 30* di berkas berbunyi "Lembaga dan tokoh yang disebut sama" dan **tidak menyebut
+    koreksi**. Pemilik proyek sempat menyatakan koreksinya dicatat di kolom catatan; pemeriksaan
+    berkas (kolom catatan dan seluruh sel) menunjukkan tidak, dan pemilik proyek membenarkannya. Jejak
+    koreksi hanya ada di bagian ini.
+  - **Terbukti:** dari `--read` pertama, sel di luar sel masukan sama dengan templat dan satu-satunya
+    masalah adalah butir 30 = `32218`; dari versi koreksi, butir 30 = `32118`. **Tidak terbukti:**
+    bahwa KEPUTUSAN, ragu, dan catatan 36 butir lain tidak berubah antara kedua versi; itu hanya
+    bersandar pada pernyataan pemilik proyek.
+  - Koreksi dilakukan saat segel masih tertutup, jadi perubahan apa pun tidak mungkin dipengaruhi hasil
+    sistem.
+  - **Aturan sejak kejadian ini:** berkas yang sudah diserahkan tidak pernah ditimpa; koreksi disimpan
+    sebagai berkas baru berakhiran `_v2`, `_v3`, dan seterusnya (`--read --berkas ...`). `--read` kini
+    menyalin berkas terisi beserta hash-nya ke `arsip_baca/` (log `arsip_baca.jsonl`) **sebelum
+    validasi apa pun**, dan berhenti bila nama yang sama pernah dibaca dengan hash lain.
+
 ### 7.3 Kappa uji ulang
 
 - Dihitung **hanya dari 30 butir acak**. Ketujuh butir audit tidak ikut.

@@ -28,7 +28,7 @@ def _source() -> dict[int, dict[int, dict]]:
 def session(tmp_path, monkeypatch):
     for name, fname in [("SESSION_DIR", ""), ("XLSX_PATH", "s.xlsx"), ("FILLED_PATH", "s_terisi.xlsx"),
                         ("TEMPLATE_PATH", "fp.json"), ("KEY_PATH", "kunci.json"), ("RESULT_PATH", "hasil.json"),
-                        ("README_PATH", "BACA.txt")]:
+                        ("README_PATH", "BACA.txt"), ("ARCHIVE_DIR", "arsip"), ("ARCHIVE_LOG", "arsip/log.jsonl")]:
         monkeypatch.setattr(bw, name, tmp_path / fname if fname else tmp_path)
     refs = bw.session_refs(json.loads(SELECTION_PATH.read_text(encoding="utf-8")))
     fp = bw.write_session(refs, _source(), random.Random(1), "x")
@@ -128,6 +128,46 @@ def test_read_stops_when_a_recorded_hash_differs(session, name):
     with pytest.raises(SystemExit, match="hash tercatat"):
         bw.read(path)
     assert not (tmp_path / "hasil.json").exists()
+
+
+def test_read_archives_the_file_before_any_validation(session):
+    tmp_path, _, fp = session
+    path = _fill(tmp_path, fp, lambda b: "TIDAK ADA" if b["butir"] != 5 else None)  # kosong -> validasi gagal
+    want = hashlib.sha256(path.read_bytes()).hexdigest()
+    with pytest.raises(SystemExit):
+        bw.read(path)
+    (copy,) = [p for p in (tmp_path / "arsip").iterdir() if p.suffix == ".xlsx"]
+    assert hashlib.sha256(copy.read_bytes()).hexdigest() == want and want[:12] in copy.name
+    log = [json.loads(x) for x in (tmp_path / "arsip" / "log.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert log == [{"waktu_utc": log[0]["waktu_utc"], "berkas": "s_terisi.xlsx", "sha256": want,
+                    "ukuran": path.stat().st_size, "salinan": copy.name}]
+
+
+def test_read_archives_even_when_template_hash_check_fails(session):
+    tmp_path, _, fp = session
+    path = _fill(tmp_path, fp, lambda b: "TIDAK ADA")
+    (tmp_path / "kunci.json").write_bytes((tmp_path / "kunci.json").read_bytes() + b" ")
+    with pytest.raises(SystemExit, match="hash tercatat"):
+        bw.read(path)
+    assert len([p for p in (tmp_path / "arsip").iterdir() if p.suffix == ".xlsx"]) == 1
+
+
+def test_read_refuses_a_submitted_file_overwritten_under_the_same_name(session):
+    tmp_path, _, fp = session
+    path = _fill(tmp_path, fp, lambda b: "TIDAK ADA")
+    assert bw.read(path) == 0
+    assert bw.read(path) == 0, "membaca ulang berkas yang sama (hash sama) tetap boleh"
+    (tmp_path / "hasil.json").unlink()
+    wb = load_workbook(path)
+    wb[SHEET].cell(row=fp["blok"][0]["baris_masukan"], column=INPUT_COLS["KEPUTUSAN"], value=fp["blok"][0]["kandidat"][0]["id"])
+    wb.save(path)
+    with pytest.raises(SystemExit, match="_v2"):
+        bw.read(path)
+    assert not (tmp_path / "hasil.json").exists()
+    assert len([p for p in (tmp_path / "arsip").iterdir() if p.suffix == ".xlsx"]) == 3, "versi yang ditolak pun diarsipkan"
+    v2 = tmp_path / "s_terisi_v2.xlsx"
+    v2.write_bytes(path.read_bytes())
+    assert bw.read(v2) == 0, "koreksi dengan nama baru dibaca"
 
 
 def test_recorded_hashes_match_design_document():
