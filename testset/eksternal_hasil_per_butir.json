@@ -1,0 +1,824 @@
+{
+ "label_final_sha256": "c24008d1cea343c037889b76001e3eeffb6617a5cbc12d5dd9f98a15f7dd28da",
+ "butir": [
+  {
+   "kode": "P1-1",
+   "l6_id": "6250452",
+   "label_final": "31239",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31239",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-2",
+   "l6_id": "6188783",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-3",
+   "l6_id": "8294487",
+   "label_final": "36776",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36776",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-6",
+   "l6_id": "6273313",
+   "label_final": "32045",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32045",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-7",
+   "l6_id": "7481094",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-8",
+   "l6_id": "6253843",
+   "label_final": "36654",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P1-9",
+   "l6_id": "8277674",
+   "label_final": "36544",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36544",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-10",
+   "l6_id": "8257099",
+   "label_final": "36546",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36546",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-11",
+   "l6_id": "6228488",
+   "label_final": "30601",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "30601",
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-12",
+   "l6_id": "6314054",
+   "label_final": "33422",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "33422",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-13",
+   "l6_id": "6234572",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-14",
+   "l6_id": "8284031",
+   "label_final": "32360",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32360",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-15",
+   "l6_id": "7984313",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32612",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P1-16",
+   "l6_id": "6290632",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32770",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P1-17",
+   "l6_id": "6254135",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "33548",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P1-18",
+   "l6_id": "6259628",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-20",
+   "l6_id": "6264916",
+   "label_final": "32039",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32039",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-21",
+   "l6_id": "8297918",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32360",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P1-22",
+   "l6_id": "6265420",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-23",
+   "l6_id": "8273921",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36156",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P1-24",
+   "l6_id": "6265034",
+   "label_final": "31974",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31974",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-25",
+   "l6_id": "8277979",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-26",
+   "l6_id": "6234648",
+   "label_final": "30924",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P1-27",
+   "l6_id": "8245851",
+   "label_final": "35858",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35858",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-28",
+   "l6_id": "6195251",
+   "label_final": "36654",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P1-29",
+   "l6_id": "8257152",
+   "label_final": "35963",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35963",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-30",
+   "l6_id": "6296768",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-31",
+   "l6_id": "6297941",
+   "label_final": "32774",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P1-32",
+   "l6_id": "6259727",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-33",
+   "l6_id": "6292235",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-34",
+   "l6_id": "6188866",
+   "label_final": "29627",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "29627",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-35",
+   "l6_id": "6263373",
+   "label_final": "32050",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32050",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-36",
+   "l6_id": "8283901",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-37",
+   "l6_id": "7876638",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-38",
+   "l6_id": "8256569",
+   "label_final": "35849",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35849",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-39",
+   "l6_id": "7894820",
+   "label_final": "35329",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35329",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-40",
+   "l6_id": "6290072",
+   "label_final": "32564",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32564",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-41",
+   "l6_id": "6253823",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-42",
+   "l6_id": "6317423",
+   "label_final": "32805",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32805",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-43",
+   "l6_id": "8268105",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-44",
+   "l6_id": "6296606",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-45",
+   "l6_id": "6228540",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-46",
+   "l6_id": "8288925",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-47",
+   "l6_id": "6234704",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-48",
+   "l6_id": "6289640",
+   "label_final": "31834",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31834",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P1-49",
+   "l6_id": "6174338",
+   "label_final": "32795",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P1-50",
+   "l6_id": "8257083",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-1",
+   "l6_id": "6174110",
+   "label_final": "31400",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "29505",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "artikel_salah"
+  },
+  {
+   "kode": "P2-2",
+   "l6_id": "6179670",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31894",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P2-3",
+   "l6_id": "6184271",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-4",
+   "l6_id": "6184510",
+   "label_final": "29617",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P2-5",
+   "l6_id": "6185813",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-6",
+   "l6_id": "6189297",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-7",
+   "l6_id": "6197641",
+   "label_final": "30059",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "30059",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-8",
+   "l6_id": "6197909",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-9",
+   "l6_id": "6209177",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-12",
+   "l6_id": "6235040",
+   "label_final": "30637",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "30637",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-13",
+   "l6_id": "6253883",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-14",
+   "l6_id": "6263772",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-15",
+   "l6_id": "6265006",
+   "label_final": "30534",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P2-16",
+   "l6_id": "6273440",
+   "label_final": "32118",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32118",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-17",
+   "l6_id": "6273568",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "30409",
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P2-19",
+   "l6_id": "6285009",
+   "label_final": "32525",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32525",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-20",
+   "l6_id": "6285116",
+   "label_final": "32614",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32614",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-21",
+   "l6_id": "6287624",
+   "label_final": "31919",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31919",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-22",
+   "l6_id": "6290079",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-23",
+   "l6_id": "6292481",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-24",
+   "l6_id": "6294141",
+   "label_final": "32831",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32831",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-25",
+   "l6_id": "6296567",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-26",
+   "l6_id": "6302600",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-27",
+   "l6_id": "6308676",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-28",
+   "l6_id": "6308835",
+   "label_final": "31336",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31336",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-29",
+   "l6_id": "6308953",
+   "label_final": "32988",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32988",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-30",
+   "l6_id": "6313764",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-31",
+   "l6_id": "6314168",
+   "label_final": "34431",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "34431",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-32",
+   "l6_id": "6322778",
+   "label_final": "29578",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "29578",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-33",
+   "l6_id": "6809177",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35610",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P2-35",
+   "l6_id": "7795875",
+   "label_final": "31970",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P2-36",
+   "l6_id": "7888943",
+   "label_final": "35254",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35254",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-37",
+   "l6_id": "7889048",
+   "label_final": "29989",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "penolakan_palsu"
+  },
+  {
+   "kode": "P2-38",
+   "l6_id": "7892352",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32988",
+   "kesepakatan_3_run": "mayoritas",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P2-39",
+   "l6_id": "7892418",
+   "label_final": "31451",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31451",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-40",
+   "l6_id": "7894727",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-41",
+   "l6_id": "7895861",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36547",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "kecocokan_palsu"
+  },
+  {
+   "kode": "P2-42",
+   "l6_id": "7984434",
+   "label_final": "31609",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "31609",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-43",
+   "l6_id": "8245733",
+   "label_final": "35745",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "35745",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-44",
+   "l6_id": "8245856",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-45",
+   "l6_id": "8245901",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-47",
+   "l6_id": "8257296",
+   "label_final": "32984",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "32984",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-48",
+   "l6_id": "8277980",
+   "label_final": "36545",
+   "keputusan_modus": "ditemukan",
+   "article_id_modus": "36545",
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  },
+  {
+   "kode": "P2-49",
+   "l6_id": "8297645",
+   "label_final": "TIDAK ADA",
+   "keputusan_modus": "tidak_ditemukan",
+   "article_id_modus": null,
+   "kesepakatan_3_run": "bulat",
+   "hasil": "benar"
+  }
+ ]
+}

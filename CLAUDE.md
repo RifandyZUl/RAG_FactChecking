@@ -783,7 +783,19 @@ Proyek dibangun bertahap dalam dua versi:
   sendiri, tanpa AI; Claude hanya membantu teknis dan memperbesar tinggi baris (kini juga dilakukan
   `gap_blocks` saat `--make`). Berkas dibaca: `konfirmasi_49_terisi.xlsx`; templat `konfirmasi_49.xlsx`
   ikut tersimpan Excel dengan 45 keputusan (tidak lagi kosong; dicatat di 11.8).
-  **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19, HASIL TERSEGEL.** Hari 1 (2026-10-17) selesai:
+  **EVALUASI EKSTERNAL: SEGEL DIBUKA 2026-10-20 (rancangan bagian 11; label final dikunci lebih dulu di `bf82657`).
+  Hasil: positif 36/46 = 78,3% [64,4; 87,7] MEMADAI; kecocokan palsu 10/45 = 22,2% [12,5; 36,3] GUGUR (pemicu CRAG
+  belum layak); Recall@3 bersyarat 41/46; testset-v1 kemunduran bersih 5/44 MUNDUR (3 negatif yang kini dicocokkan
+  belum diverifikasi labelnya); kategori sama di semua sensitivitas. Kappa uji ulang biner 0,6341 [0,31; 0,91] ->
+  kategori 0,60-0,79 (dua arah); audit 4/7 TIDAK ADA -> cocok (P1-10, P1-20, P1-29, P1-38) -> 46 positif / 45 negatif.
+  Alat: `python -m evaluation.external_analysis --keandalan|--label-final|--metrik|--retrieval-pembanding`.
+  ADJUDIKASI BUTA SIAP, BELUM DIISI: `data/candidates/adjudikasi_eksternal/adjudikasi_buta.xlsx` (20 butir; hash di
+  rancangan 7.8; `python -m candidates.adjudication_workbook --read` setelah pemilik proyek selesai). Jangan membuka
+  atau menyebut isi `kunci_adjudikasi.json`; hasil adjudikasi tidak mengubah metrik utama. Berkas terisi tidak pernah
+  ditimpa (koreksi = `_v2`, `_v3`); `--read` mengarsipkan ke `arsip_baca/` sebelum validasi. SET 99 BUTIR INI KINI
+  SEKALI PAKAI: jangan ubah sistem lalu mengevaluasi ulang di set yang sama. Ingest antrean oleh pemilik proyek
+  setelah adjudikasi.** Riwayat di bawah (teks "tersegel" adalah keadaan sebelum 2026-10-20).
+  **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
   `--status` untuk status teknis). **Run 2 lengkap kedua set (2026-10-19, jendela kuota 18 Okt; buku besar 148 =
   91 + 57, selisih 3 = percobaan ulang 503).** Run 3 sempat terhenti setelah 2 butir Liputan6 (Claude Code

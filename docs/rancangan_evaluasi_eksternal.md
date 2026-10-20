@@ -452,6 +452,33 @@ disimpan berdampingan di berkas yang sama untuk sensitivitas.
 - **Kode analisis metrik (bagian 6, sensitivitas, kemunduran, kepatuhan) ditulis dan di-commit
   bersama catatan ini, sebelum segel dibuka** (`external_analysis.py`).
 
+### 7.8 Berkas adjudikasi buta (DIBUAT 2026-10-20 16:00 UTC, SEBELUM diisi; belum dijalankan)
+
+- Alat: `python -m candidates.adjudication_workbook --make` (uji `tests/test_adjudication_workbook.py`).
+  Isi: **20 butir** = semua butir analisis yang keputusan modus sistemnya berbeda dari label final:
+  9 penolakan palsu, 10 kecocokan palsu, 1 artikel salah; 21 baris artikel.
+- Format dan proteksi sama dengan berkas sesi (`gap_blocks.write_workbook`: blok per butir, judul,
+  tanggal, dan kutipan Liputan6, Narasi utuh, tinggi baris disetel, hanya sel masukan terbuka, Rekap
+  rumus saja, petunjuk memuat aturan A dan B persis seperti sesi). Dua opsi per butir dalam urutan
+  acak tanpa keterangan asal; opsi "tidak ada yang cocok" tidak berupa baris, jadi butir dengan satu
+  artikel berarti opsi lainnya TIDAK ADA (berlaku sama untuk penolakan palsu dan kecocokan palsu, jadi
+  jumlah artikel tidak membocorkan sisi sistem). Urutan butir dan artikel `SystemRandom`.
+- Folder `data/candidates/adjudikasi_eksternal/` di-gitignore. Hash yang di-commit sebelum diisi
+  (`--read` mencocokkannya, mengarsipkan berkas terisi ke `arsip_baca/` sebelum validasi apa pun, dan
+  menolak nama yang sama dengan hash lain; koreksi = berkas baru `_v2`, ...):
+
+  | Berkas | SHA-256 |
+  | --- | --- |
+  | `adjudikasi_buta.xlsx` (templat kosong) | `e721bd943d0abd64b1c14c947f5ddb03a99584272283dd1f6d4acb9e40b8b45b` |
+  | `kunci_adjudikasi.json` (peta butir -> butir asli, opsi label/sistem) | `8f8cf5aaeccb1004ab86e6aae8fab809dbe49a1fbd17454072a93db3a2c65fd1` |
+  | `sidik_jari_templat_adjudikasi.json` | `1d0a88dc5a57de2a2581de8d41f3203afd68558dc6f2940e346128f3af8e20ef` |
+
+- Diisi pemilik proyek sendiri sebagai `adjudikasi_buta_terisi.xlsx`, lalu `--read`. Hasilnya
+  (`hasil_adjudikasi.json`: memihak label / sistem / keduanya tidak) **dicatat terpisah dan tidak
+  mengubah label final maupun metrik utama**. Bias yang disadari (7.6): hanya butir yang tidak sepakat
+  yang ditinjau, jadi adjudikasi hanya bisa menggeser hasil ke arah sistem; dan pemilik proyek kini
+  sudah tahu bahwa setiap butir di berkas ini adalah ketidaksesuaian.
+
 ---
 
 ## 8. Pelaksanaan
@@ -620,3 +647,162 @@ lain, lalu menjawab hanya bila menemukan putusan eksplisit atas klaim yang sama.
 5. **Kuota 3 hari disetujui.**
 6. **Langkah korektif:** Kompas, Tempo, Antara, dan Komdigi tidak dipakai sama sekali, termasuk
    lewat API pencarian; dapat ditinjau ulang saat dibangun (9).
+
+---
+
+## 11. Hasil (segel dibuka 2026-10-20, setelah label final terkunci di `bf82657`)
+
+Urutan yang dijalankan: commit `9868b17` (hash templat sesi) sudah di origin sejak 05:53:52 UTC, sebelum
+pengisian -> berkas terisi pertama ditolak dan dicatat (7.2, `e919a7e`) -> `--read` versi koreksi lolos
+(ketiga hash sama, bukti sama dengan templat, 37/37 terbaca sah) -> keandalan dan label final dihitung,
+di-commit dan di-push (7.7, `bf82657`) -> baru kemudian `python -m evaluation.external_analysis --metrik`
+dan `--retrieval-pembanding`. Rincian lokal: `data/candidates/sesi_buta_eksternal/hasil_evaluasi_eksternal.json`
+dan `retrieval_pembanding.json`; tabel per butir yang boleh dipublikasikan (bagian 8):
+`testset/eksternal_hasil_per_butir.json`. Butir analisis: **91 = 46 positif + 45 negatif** (label final 7.7).
+
+### 11.1 Keputusan modus
+
+- 91 butir x 3 run = 273 rekam, semuanya `selesai`; **0 tak terjawab, 0 tanpa modus**.
+- **Bulat 3/3: 82; pecah 2-1: 9** (P1-2, P1-8, P1-11, P1-22, P1-30, P1-31, P2-6, P2-17, P2-38).
+- Top-3 retrieval identik di ketiga run pada 91/91 butir, dan identik dengan pencarian ulang tanpa LLM
+  (46/46 positif diperiksa).
+
+### 11.2 Positif (46 butir)
+
+- **Ketepatan jawaban cocok: 36/46 = 78,3% [64,4%; 87,7%] -> MEMADAI** (batas bawah Wilson >= 60%;
+  ambang pada 46 butir: >= 35/46). Per selisih terbit: **<= 30 hari 25/28 = 89,3% [72,8%; 96,3%]**;
+  **> 30 hari 11/18 = 61,1% [38,6%; 79,7%]**. Per putaran (deskriptif, tanpa uji): P1 19/24 = 79,2%
+  [59,5%; 90,8%], P2 17/22 = 77,3% [56,6%; 89,9%] -- keduanya tidak konklusif sendiri-sendiri.
+- **Recall@3 bersyarat (pada pasangan yang terjangkau pencarian judul): 41/46 = 89,1% [77,0%; 95,3%].**
+  *Recall@3 ini batas atas; Recall@3 sistem atas seluruh klaim yang memang ada di TurnBackHoax tidak
+  dapat diukur dari set ini.* Per cara pasangan ditemukan: (a) teratas embedding judul 33/36; (b) 5
+  teratas embedding, bukan teratas, 7/9; (c) hanya kata kunci 1/1.
+- **Pembanding tanpa LLM:** kueri judul (tanpa kata vonis) **44/46 = 95,7% [85,5%; 98,8%]**, kueri
+  kutipan **41/46 = 89,1%**. Per strata (judul / kutipan): (a) 36 / 33 dari 36, (b) 8 / 7 dari 9, (c)
+  0 / 1 dari 1. Judul menemukan tetapi kutipan tidak: P1-8, P1-26, P1-28, P1-49, P2-37; sebaliknya:
+  P1-3, P2-1. Jadi menempel pesan alih-alih parafrase pemeriksa fakta kehilangan 5 pasangan dan
+  mendapat 2.
+- **Kegagalan (10):**
+
+  | Jenis | Butir | Sasaran di top-3? |
+  | --- | --- | --- |
+  | Penolakan pasangan lintas gelombang (> 30 hari) | **6**: P1-8, P1-28, P1-49, P2-37 / P2-15, P2-35 | tidak (4) / ya (2) |
+  | Penolakan lain (<= 30 hari) | **3**: P1-26 / P1-31, P2-4 | tidak (1) / ya (2) |
+  | Kecocokan ke artikel yang salah | **1**: P2-1 (memilih kandidat lain di daftarnya) | ya |
+
+  Jadi 5 dari 10 kegagalan positif adalah kegagalan **retrieval** (sasaran tidak di top-3, sehingga
+  generator tidak mungkin memilihnya) dan 5 kegagalan **penilaian**. Dari 4 penolakan dengan sasaran di
+  top-3, 2 lintas gelombang (konsisten dengan prompt yang tidak mengenal Aturan A, bagian 3), dan 2
+  (P1-31, P2-4) adalah butir yang **pada uji ulang 7.7 juga dilabel TIDAK ADA oleh pemilik proyek**.
+  Label tidak diubah karenanya (7.5); hanya dicatat.
+
+### 11.3 Negatif (45 butir) -- metrik utama untuk pemicu langkah korektif
+
+- **Tingkat kecocokan palsu: 10/45 = 22,2% [12,5%; 36,3%] -> GUGUR** (batas bawah Wilson > 10%; ambang
+  pada 45 butir: gugur >= 9/45). **Tingkat penolakan benar: 35/45 = 77,8% [63,7%; 87,5%].**
+  Per putaran (deskriptif): P1 5/23 = 21,7% [9,7%; 41,9%] (tidak konklusif), P2 5/22 = 22,7% [10,1%;
+  43,4%] (gugur). Menurut bagian 3 kategori yang berbeda antar-putaran dilaporkan "bergantung pada aturan
+  pelabelan"; estimasi titiknya hampir sama, dan perbedaan kategori di sini datang dari n yang kecil
+  (batas bawah 9,7% vs 10,1%).
+- **Di dalam daftar kandidat 9, di luar daftar 1** (P2-17 -> 30409, peringkat 3 di top-3, pecah 2-1;
+  didaftar untuk adjudikasi, tetap dihitung kecocokan palsu).
+- **Pola kegagalan:** 9 dari 10 kecocokan palsu memilih **artikel peringkat 1 retrieval**, artikel yang
+  dulu ditampilkan kepada pemilik proyek dan ditolaknya; 8 dari 10 bulat 3/3 (P2-17 dan P2-38 pecah 2-1).
+  Jadi kesalahannya stabil, bukan acak: generator menerima tetangga terdekat yang pola klaimnya mirip
+  tetapi menurut label berbeda unsur intinya. Empat dari sepuluh menyentuh ketidakpastian label: P1-16
+  (pada uji ulang pemilik proyek memilih artikel yang sama dengan sistem), P1-15 (termasuk 15 butir P1
+  yang ditandai tidak konsisten), P1-23 dan P2-2 (ditandai ragu di sesi). Kategori tetap GUGUR walau
+  butir-butir seperti itu dihitung cocok (11.5).
+
+### 11.4 Uji kemunduran testset-v1 (48 butir) dan kepatuhan
+
+- **Kemunduran bersih 5 pada 44 butir non-batas -> MUNDUR** (ambang >= 3). Benar di arsip 42/44, benar
+  di 1.532 37/44; benar -> salah 5, salah -> benar 0. Per butir:
+  - v1-010, v1-019 (positif): sasaran tetap di top-3, tetapi kini dijawab "belum ditemukan" (bulat) --
+    kegagalan penilaian.
+  - v1-024, v1-026, v1-027 (negatif sulit): kini dicocokkan ke artikel yang tidak ada di indeks 150
+    (36811, 31607, 36776; bulat) -- efek data. **Belum diperiksa apakah ketiga artikel itu memuat klaim
+    yang sama** (seperti enam butir yang dikeluarkan); bila ya, labelnya tidak berlaku pada 1.532 dan
+    itu bukan kecocokan palsu. Tanpa pemeriksaan itu kategori MUNDUR berlaku apa adanya.
+  - Butir batas: v1-051 benar -> salah (kini dicocokkan ke 32314).
+- **Kepatuhan:** pelanggaran format **0** pada 274 panggilan Liputan6 dan 162 panggilan testset-v1
+  (ketiga run); id di luar kandidat 0. **URL yang tidak berasal dari metadata: 2 di Liputan6 (1 butir,
+  P2-39, run 2) dan 2 di testset-v1 (1 butir, v1-026, run 1 dan 3)**, menurut
+  `testset_analysis.urls_outside_metadata` pada keluaran mentah. Semuanya ada di bidang `klarifikasi`
+  keluaran mentah, berdomain `.go.id`, dan tersalin dari teks seksi artikel kandidat (bukan karangan
+  model); semuanya dibuang `strip_urls` sebelum disimpan dan tidak pernah tampil. Aturan Wajib #3 tetap
+  terjaga di keluaran, tetapi prompt tidak mencegah model menyalin URL dari teks dokumen.
+
+### 11.5 Sensitivitas
+
+| Set label | Positif benar | Kategori | Kecocokan palsu | Kategori |
+| --- | --- | --- | --- | --- |
+| **Utama (label final)** | 36/46 = 78,3% [64,4; 87,7] | memadai | 10/45 = 22,2% [12,5; 36,3] | gugur |
+| Label awal butir audit (tanpa perubahan sesi) | 32/42 = 76,2% [61,5; 86,5] | memadai | 14/49 = 28,6% [17,9; 42,4] | gugur |
+| Butir ragu dihitung cocok | 37/49 = 75,5% [61,9; 85,4] | memadai | 9/42 = 21,4% [11,7; 35,9] | gugur |
+| Butir ragu dihitung TIDAK ADA | 36/46 = 78,3% [64,4; 87,7] | memadai | 10/45 = 22,2% [12,5; 36,3] | gugur |
+| 15 butir P1: yang diterima -> TIDAK ADA | 31/38 = 81,6% [66,6; 90,8] | memadai | 15/53 = 28,3% [18,0; 41,6] | gugur |
+| 15 butir P1: yang ditolak -> cocok | 38/51 = 74,5% [61,1; 84,5] | memadai | 8/40 = 20,0% [10,5; 34,8] | gugur |
+| Uji ulang berubah (5) -> cocok (kappa 0,60-0,79) | 37/48 = 77,1% [63,5; 86,7] | memadai | 9/43 = 20,9% [11,4; 35,2] | gugur |
+| Uji ulang berubah (5) -> TIDAK ADA | 36/44 = 81,8% [68,0; 90,5] | memadai | 10/47 = 21,3% [12,0; 34,9] | gugur |
+| Per putaran: P1 (deskriptif) | 19/24 | tidak konklusif | 5/23 | tidak konklusif |
+| Per putaran: P2 (deskriptif) | 17/22 | tidak konklusif | 5/22 | gugur |
+
+- "Butir ragu dihitung cocok" memakai kandidat yang dipilih sistem bila ada di daftar kandidat butir
+  itu (bagian 3); ketiga butir ragu (P2-2, P2-14, P2-30) negatif. "Ditolak -> cocok" pada 15 butir P1
+  memakai aturan yang sama. "Butir ragu dihitung TIDAK ADA" identik dengan utama (tidak ada positif
+  ragu).
+- **Kategori sama di semua sensitivitas: positif MEMADAI, kecocokan palsu GUGUR** (kategori terburuk
+  menurut 6.2 dan 7.4 = kategori yang sama). Per putaran berbeda karena n kecil (lihat 11.3).
+- Uji kemunduran tidak bergantung pada label Liputan6; kategorinya MUNDUR di semua sensitivitas.
+
+### 11.6 Keterbatasan
+
+- **Satu anotator.** Semua label, termasuk uji ulang dan audit, dari pemilik proyek sendiri; kappa
+  mengukur konsistensi dalam-anotator (0,6341 [0,3077; 0,9112]), bukan kesepakatan antar-anotator.
+  Batas bawah intervalnya di bawah 0,60.
+- **Jeda uji ulang 7 hari** (penyimpangan 7.2), sehingga ingatan bisa menaikkan kappa P2; kappa P1
+  mencampur pergantian aturan dan Narasi utuh.
+- **Berkas terisi pertama tertimpa** (7.2): tidak berubahnya 36 butir lain antara kedua versi hanya
+  bersandar pada pernyataan pemilik proyek.
+- **Recall@3 bersyarat**: hanya pada pasangan yang terjangkau pencarian judul; batas atas.
+- **Label negatif hanya berlaku terhadap daftar kandidat** (5-8 artikel per butir), bukan seluruh basis
+  data; satu kecocokan palsu (P2-17) berada di luar daftar dan belum dinilai.
+- **Kutipan pendek dikeluarkan** (K1/K2, 8 butir); pesan berisi tautan saja tidak terukur.
+- **Prompt generator tidak mengenal aturan gelombang** (Aturan A); 6 dari 9 penolakan palsu terjadi pada
+  pasangan > 30 hari, dan pada strata itu ketepatan 11/18.
+- **n berubah setelah audit** (42/49 -> 46/45); ambang yang dikunci dinyatakan dengan aturan Wilson, jadi
+  diterapkan pada n baru (7.7), tetapi hitungan contoh di 6.1/6.2 tidak lagi berlaku harfiah.
+- **Audit mengubah label hanya ke satu arah** dan butirnya dipilih karena berjejak; dengan label awal
+  kecocokan palsu lebih tinggi (14/49), jadi label final justru menurunkan angka kecocokan palsu.
+- **Kemunduran testset-v1 mencampur efek data**; tiga butir negatif yang kini dicocokkan belum
+  diverifikasi.
+- Hasil adjudikasi (7.8) belum ada; ia tidak akan mengubah angka di atas.
+
+### 11.7 Implikasi (ditulis setelah angka keluar)
+
+Kemampuan sistem mengenali butir negatif **belum cukup** untuk menjadi pemicu langkah korektif bergaya
+CRAG. Pemicunya adalah jawaban "belum ditemukan"; pada set ini ia menyala dengan benar pada 35 dari 45
+klaim yang tidak punya pasangan, tetapi pada **10 dari 45 (22,2%, interval 12,5%-36,3%)** sistem justru
+menampilkan artikel TurnBackHoax yang menurut label bukan klaim yang sama, sehingga klaim itu tidak
+pernah sampai ke langkah korektif dan pengguna melihat klarifikasi serta rujukan dari artikel lain.
+Kategori ini GUGUR di semua sensitivitas, termasuk ketika setiap butir yang labelnya diragukan dihitung
+menguntungkan sistem (paling baik 8/40, batas bawah 10,5%). Sisi positif berlawanan: ketepatan 36/46
+memadai, dan separuh kegagalannya berasal dari retrieval, bukan penilaian.
+
+Yang perlu diperbaiki lebih dulu, berurutan:
+1. **Penilaian kesamaan klaim pada tetangga terdekat.** Sembilan dari sepuluh kecocokan palsu adalah
+   artikel peringkat 1 dengan pola klaim yang sama tetapi unsur inti berbeda menurut label, dan delapan
+   di antaranya bulat 3/3. Ambang skor sudah terbukti tidak memisahkan (bagian 1), jadi yang dibutuhkan
+   adalah pemeriksaan eksplisit unsur inti (lembaga/subjek, tindakan, objek pembeda) sebelum
+   "ditemukan" -- langkah ini harus dirancang dan kriterianya dikunci sebelum diuji.
+2. **Memutuskan kebijakan gelombang bersama butir 1.** Membuat generator menerima pasangan lintas
+   gelombang (Aturan A) bisa memperbaiki sebagian dari 6 penolakan lintas gelombang (2 di antaranya
+   sasarannya sudah di top-3; 4 lainnya gagal di retrieval), tetapi berisiko menambah kecocokan palsu
+   pada penipuan berpola sama -- persis jenis kesalahan yang gugur di sini. Keduanya tidak boleh disetel
+   terpisah.
+3. **Memeriksa tiga butir negatif testset-v1 yang kini dicocokkan** (v1-024, v1-026, v1-027) sebelum
+   kategori MUNDUR ditafsirkan sebagai kemunduran sistem.
+4. **Uji pada sampel baru.** Set 99 butir ini kini **sekali pakai** (bagian 8): perbaikan apa pun pada
+   generator, prompt, retriever, atau indeks tidak boleh dievaluasi ulang di set yang sama; uji akhirnya
+   memerlukan sampel Liputan6 baru dari periode lain.
