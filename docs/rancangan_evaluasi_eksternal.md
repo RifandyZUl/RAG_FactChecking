@@ -277,7 +277,11 @@ anotator pengganti.** Hasil ketiga langkah di bawah **tidak pernah mengganti lab
   kesepakatan), dan dengan 30 butir interval kappa lebar. **Tambahan karena penyimpangan di bawah:**
   jeda 7 hari untuk butir P2 menambah risiko pemilik proyek masih ingat label lama, sehingga kappa
   (terutama kappa P2, ukuran konsistensi) bisa terlalu tinggi; jeda untuk butir P1 di atas 11 hari
-  (pelabelan P1 selesai paling lambat 8 Oktober).
+  (pelabelan P1 selesai paling lambat 8 Oktober). **Tambahan 2026-10-20 (dicatat sebelum sesi
+  diisi):** butir P1 di sesi ini ditampilkan dengan **Narasi TurnBackHoax utuh**, padahal pada
+  pelabelan pertama (`konfirmasi_50`) pemilik proyek melabelnya hanya dari judul dan Kesimpulan. Jadi
+  kesepakatan pada butir P1 mengukur **gabungan** efek pergantian aturan (A/B) dan bukti yang lebih
+  lengkap, bukan konsistensi murni; kedua efek itu tidak dapat dipisahkan dengan rancangan ini.
 - **PENYIMPANGAN RANCANGAN (diputuskan pemilik proyek 2026-10-19, dicatat SEBELUM berkas sesi buta
   dibuat; hasil evaluasi MASIH TERSEGEL saat keputusan diambil -- belum ada metrik atau hasil per butir
   yang dilihat siapa pun):**
@@ -291,6 +295,17 @@ anotator pengganti.** Hasil ketiga langkah di bawah **tidak pernah mengganti lab
     (`testset/eksternal_sesi_buta_pilihan.json`, benih 20261027; catatan "paling cepat 2026-10-27" di
     berkas itu adalah riwayat dan digantikan penyimpangan ini), isi 37 butir, format, dan ambang kappa
     7.4.
+- **Berkas sesi buta DIBUAT 2026-10-20 05:31 UTC, SEBELUM diisi** (`python -m
+  candidates.blind_workbook --make`; folder `data/candidates/sesi_buta_eksternal/` di-gitignore, jadi
+  hash ini, yang ikut di-commit, adalah bukti bertanggal bahwa templat dan pemetaan butir tidak berubah
+  setelah pengisian). 37 butir, 243 baris kandidat; pilihan = blob `a0bfd101...` di `fa7464c`.
+  `--read` mencocokkan ulang ketiga hash ini dan BERHENTI bila ada yang berbeda.
+
+  | Berkas | SHA-256 |
+  | --- | --- |
+  | `sesi_buta_37.xlsx` (templat kosong) | `ba5f6f8a7886f6b880c340132e510053346c54551c41409628a5a0ef5b3ca6c1` |
+  | `kunci_sesi_buta.json` (peta nomor sesi -> butir asli) | `75263881065e111f5d9430046620060c30a88fe5e6e5816e4d94dc6937bd9d17` |
+  | `sidik_jari_templat_sesi_buta.json` | `3efbfa953f888bc8412d56e967abbd4ff03e11aa12a00ee1dd52ae3e791b45c4` |
 
 ### 7.3 Kappa uji ulang
 
