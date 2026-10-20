@@ -218,28 +218,29 @@ def write_session(refs: list[dict[str, Any]], source: dict[int, dict[int, dict[s
     return fp
 
 
-def archive_copy(path: Path) -> dict[str, Any]:
+def archive_copy(path: Path, archive_dir: Path | None = None, log_path: Path | None = None) -> dict[str, Any]:
     """
-    Salin berkas terisi apa adanya ke ARCHIVE_DIR dan catat hash-nya, SEBELUM validasi apa pun. Berkas yang sudah
-    diserahkan tidak boleh ditimpa (koreksi disimpan sebagai _v2, _v3, ...): bila nama yang sama pernah dibaca dengan
-    hash lain, salinan tetap dibuat lalu pembacaan berhenti.
+    Salin berkas terisi apa adanya ke ARCHIVE_DIR (atau `archive_dir`) dan catat hash-nya, SEBELUM validasi apa pun.
+    Berkas yang sudah diserahkan tidak boleh ditimpa (koreksi disimpan sebagai _v2, _v3, ...): bila nama yang sama
+    pernah dibaca dengan hash lain, salinan tetap dibuat lalu pembacaan berhenti.
     """
     if not path.exists():
         raise SystemExit(f"berkas terisi tidak ada: {path}")
+    archive_dir, log_path = archive_dir or ARCHIVE_DIR, log_path or ARCHIVE_LOG
     data = path.read_bytes()
     sha = hashlib.sha256(data).hexdigest()
-    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    archive_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC)
-    dest = ARCHIVE_DIR / f"{stamp.strftime('%Y%m%dT%H%M%S%fZ')}_{sha[:12]}_{path.name}"
+    dest = archive_dir / f"{stamp.strftime('%Y%m%dT%H%M%S%fZ')}_{sha[:12]}_{path.name}"
     with dest.open("xb") as f:  # "x": salinan arsip juga tidak pernah ditimpa
         f.write(data)
     if hashlib.sha256(dest.read_bytes()).hexdigest() != sha:
         raise SystemExit(f"salinan arsip tidak sama dengan berkas asli: {dest}")
-    earlier = [json.loads(line) for line in ARCHIVE_LOG.read_text(encoding="utf-8").splitlines() if line.strip()] \
-        if ARCHIVE_LOG.exists() else []
+    earlier = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()] \
+        if log_path.exists() else []
     entry = {"waktu_utc": stamp.isoformat(timespec="seconds"), "berkas": path.name, "sha256": sha, "ukuran": len(data),
              "salinan": dest.name}
-    with ARCHIVE_LOG.open("a", encoding="utf-8") as f:
+    with log_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     overwritten = sorted({e["sha256"] for e in earlier if e["berkas"] == path.name and e["sha256"] != sha})
     if overwritten:
