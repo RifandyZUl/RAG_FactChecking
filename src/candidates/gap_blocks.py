@@ -71,11 +71,12 @@ def wrapped_height(line: list[str]) -> int:
     return min(MAX_ROW_POINTS, LINE_POINTS * lines)
 
 
-def layout(items: list[dict[str, Any]]) -> tuple[list[list[str]], list[dict[str, Any]]]:
+def layout(items: list[dict[str, Any]], sort_by_date: bool = True) -> tuple[list[list[str]], list[dict[str, Any]]]:
     """
     Isi lembar konfirmasi sebagai kisi teks (baris x 8 kolom) dan peta blok. Blok: judul butir, judul
-    Liputan6, kutipan pesan, baris masukan, judul tabel kandidat, kandidat (tanggal terbaru dulu), baris
-    kosong. Peta blok tidak memuat teks artikel (hanya id, tanggal, label, asal, dan nomor baris).
+    Liputan6, kutipan pesan, baris masukan, judul tabel kandidat, kandidat (tanggal terbaru dulu; urutan
+    masukan apa adanya bila `sort_by_date` False), baris kosong. Peta blok tidak memuat teks artikel (hanya
+    id, tanggal, label, asal, dan nomor baris).
     """
     grid: list[list[str]] = []
     blocks = []
@@ -85,7 +86,7 @@ def layout(items: list[dict[str, Any]]) -> tuple[list[list[str]], list[dict[str,
         return len(grid)
 
     for n, item in enumerate(items, 1):
-        cands = sorted(item["kandidat"], key=lambda c: (tbh_date_key(c["tanggal"]), c["id"]), reverse=True)
+        cands = sorted(item["kandidat"], key=lambda c: (tbh_date_key(c["tanggal"]), c["id"]), reverse=True)             if sort_by_date else list(item["kandidat"])
         row(f"BUTIR {n}", f"Liputan6 terbit {item['tanggal']}", "ujung rentang: YA" if item["ujung_rentang"] else "")
         row("L6_judul", item["judul"])
         row("L6_kutipan_pesan", item["pesan"])
@@ -112,7 +113,21 @@ def evidence_hash(grid: list[list[str]], blocks: list[dict[str, Any]]) -> str:
     return hashlib.sha256(json.dumps(fixed, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
-def write_workbook(grid: list[list[str]], blocks: list[dict[str, Any]], path: Path) -> dict[str, int]:
+GUIDE = [
+    "Berkas ini disiapkan kode (candidates.gap_blocks). KEPUTUSAN, ragu, dan catatan diisi pemilik proyek sendiri.",
+    "Isi HANYA sel kuning di tiap blok. KEPUTUSAN: id artikel TurnBackHoax yang klaimnya SAMA | TIDAK ADA | BUKAN PUTUSAN HOAKS.",
+    "ragu: YA atau kosong; hanya boleh ditandai setelah Narasi kandidat dibaca (aturan B, docs/rancangan_v2.md bagian 11.6).",
+    "Aturan A dan B di bagian 11.6 berlaku untuk berkas ini; 50 butir pertama tidak dilabel ulang.",
+    "Kandidat diurutkan menurut tanggal (terbaru dulu), bukan menurut kemiripan; tidak ada skor.",
+    f"Kandidat tanpa Narasi di sumber ditandai {NO_NARASI}.",
+    "Lembar terkunci tanpa kata sandi. Jangan membuka kuncinya, menyisipkan/menghapus baris, atau mengurutkan ulang: pembacaan memeriksanya.",
+    "kunci_kandidat_49.json memuat skor: JANGAN dibuka sebelum konfirmasi selesai.",
+]
+
+
+def write_workbook(grid: list[list[str]], blocks: list[dict[str, Any]], path: Path,
+                   title: str = "Konfirmasi celah 'belum ditemukan' -- butir sisa (aturan 11.6)",
+                   guide_lines: list[str] = GUIDE, generated_by: str = GENERATED_BY) -> dict[str, int]:
     """Tulis lembar konfirmasi (blok) dan lembar Rekap (rumus saja). Kedua lembar diproteksi tanpa kata sandi;
     hanya sel masukan blok yang tidak terkunci. Semua sel bertipe teks."""
     from openpyxl import Workbook
@@ -124,8 +139,8 @@ def write_workbook(grid: list[list[str]], blocks: list[dict[str, Any]], path: Pa
     wb = Workbook()
     ws = wb.active
     ws.title = SHEET
-    wb.properties.creator = GENERATED_BY
-    wb.properties.title = "Konfirmasi celah 'belum ditemukan' -- butir sisa (aturan 11.6)"
+    wb.properties.creator = generated_by
+    wb.properties.title = title
     wrap, bold = Alignment(wrap_text=True, vertical="top"), Font(bold=True)
     fills = {"judul": PatternFill("solid", fgColor="BDD7EE"), "masukan": PatternFill("solid", fgColor="FFF2CC"),
              "kepala": PatternFill("solid", fgColor="D9D9D9")}
@@ -193,16 +208,7 @@ def write_workbook(grid: list[list[str]], blocks: list[dict[str, Any]], path: Pa
 
     guide = wb.create_sheet("petunjuk")
     guide.column_dimensions["A"].width = 130
-    for k, text in enumerate([
-        "Berkas ini disiapkan kode (candidates.gap_blocks). KEPUTUSAN, ragu, dan catatan diisi pemilik proyek sendiri.",
-        "Isi HANYA sel kuning di tiap blok. KEPUTUSAN: id artikel TurnBackHoax yang klaimnya SAMA | TIDAK ADA | BUKAN PUTUSAN HOAKS.",
-        "ragu: YA atau kosong; hanya boleh ditandai setelah Narasi kandidat dibaca (aturan B, docs/rancangan_v2.md bagian 11.6).",
-        "Aturan A dan B di bagian 11.6 berlaku untuk berkas ini; 50 butir pertama tidak dilabel ulang.",
-        "Kandidat diurutkan menurut tanggal (terbaru dulu), bukan menurut kemiripan; tidak ada skor.",
-        f"Kandidat tanpa Narasi di sumber ditandai {NO_NARASI}.",
-        "Lembar terkunci tanpa kata sandi. Jangan membuka kuncinya, menyisipkan/menghapus baris, atau mengurutkan ulang: pembacaan memeriksanya.",
-        "kunci_kandidat_49.json memuat skor: JANGAN dibuka sebelum konfirmasi selesai.",
-    ], 1):
+    for k, text in enumerate(guide_lines, 1):
         guide.cell(row=k, column=1, value=text).alignment = wrap
     wb.save(path)
     return stats

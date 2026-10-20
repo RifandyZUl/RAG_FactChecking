@@ -791,7 +791,12 @@ Proyek dibangun bertahap dalam dua versi:
   tidak tersimpan dan tidak dilihat) lalu **DISELESAIKAN 2026-10-19 malam oleh pemilik proyek di luar Claude
   Code: KETIGA RUN LENGKAP untuk kedua set, 0 butir hilang**; buku besar 19 Okt 147 = 93 + 54, selisih 1 =
   permintaan butir ke-3 yang terputus (+1 percobaan ulang koneksi tercatat di hasil). Rincian: rancangan
-  bagian 8. **Berikutnya: berkas sesi buta 20 Oktober.** "Gagal 1" hari 1 = satu panggilan gagal 4 percobaan, butirnya diulang; 6 percobaan ulang
+  bagian 8. **Berkas sesi buta DIBUAT 2026-10-20 (`python -m candidates.blind_workbook --make`):
+  `data/candidates/sesi_buta_eksternal/sesi_buta_37.xlsx`, 37 butir / 243 baris kandidat; pilihan = blob `fa7464c`
+  (`a0bfd101...`); kandidat = yang dulu tampil (P1 dicocokkan per sel dengan `konfirmasi_50.csv`, P2 lewat sidik jari
+  templat 49); urutan butir/kandidat `SystemRandom`. Kunci `kunci_sesi_buta.json` -- JANGAN dibuka dan jangan
+  disebut isinya. Diisi pemilik proyek sendiri -> `sesi_buta_37_terisi.xlsx` di folder sama -> `--read` (memetakan
+  ke butir asli; tidak menghitung kappa/metrik).** "Gagal 1" hari 1 = satu panggilan gagal 4 percobaan, butirnya diulang; 6 percobaan ulang
   koneksi, 0 butir kehilangan jawaban. Penanda asal buku besar (`data/quota_ledger_events.jsonl`) sejak
   `cde7ce7`, sebelum run 2. Setiap run didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
   butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
