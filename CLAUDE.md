@@ -813,6 +813,10 @@ Proyek dibangun bertahap dalam dua versi:
   kecocokan palsu terburuk TIDAK KONKLUSIF (5/43; lulus 3/41 hanya bila 2 butir ragu ikut adjudikasi); P2-17 tidak
   sah. Metrik utama tidak berubah (11.9). Draf README lengkap + usulan penggantian di `docs/draf_readme_evaluasi.md`;
   README BELUM diubah (menunggu pemilik proyek). Langkah berikutnya milik pemilik proyek: ingest antrean.
+  **README DIGANTI 2026-10-21 (keputusan pemilik proyek):** `## Hasil Evaluasi` baru (baseline Versi 1 sebagai
+  subbagian), baris status, kolom bukti grader di Rencana Versi 2, dua butir Keterbatasan baru, perintah evaluasi
+  eksternal. Aturan nada: angka resmi lebih dulu, angka adjudikasi selalu "batas yang menguntungkan sistem",
+  "akurasi" selalu dengan set, indeks, dan interval; tanpa teks Liputan6/isi pesan.
   Riwayat di bawah (teks "tersegel" adalah keadaan sebelum 2026-10-20).
   **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
