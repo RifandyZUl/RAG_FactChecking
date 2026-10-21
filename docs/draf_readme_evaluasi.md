@@ -1,7 +1,9 @@
 # DRAF bagian "Evaluasi" untuk README (belum final)
 
-> Draf 2026-10-21, dilengkapi setelah adjudikasi buta dan verifikasi testset-v1 dibaca. Belum menggantikan README;
-> usulan penggantiannya ada di bagian terakhir berkas ini (bukan bagian README). Sumber semua angka:
+> Draf 2026-10-21, dilengkapi setelah adjudikasi buta dan verifikasi testset-v1 dibaca. **SUDAH DITERAPKAN ke
+> README 2026-10-21** (keputusan pemilik proyek; baris status, kolom bukti grader, dan butir keterbatasan label
+> mengikuti rumusan pemilik proyek). README kini sumber yang berlaku; berkas ini dipertahankan sebagai riwayat draf
+> dan tidak diperbarui lagi. Usulan penggantiannya ada di bagian terakhir berkas ini (bukan bagian README). Sumber semua angka:
 > `docs/rancangan_evaluasi_eksternal.md` bagian 7.7, 7.8, 11, 11.8, 11.9, serta `testset/v1_analysis_report.txt`.
 
 ## Evaluasi

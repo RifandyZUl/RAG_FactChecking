@@ -5,7 +5,13 @@ apakah sebuah klaim sudah pernah diverifikasi oleh pemeriksa fakta, lalu
 mengembalikan status verifikasi, klarifikasi faktanya, dan tautan rujukan yang
 sahih.
 
-**Status:** Versi 1 selesai dan terukur. Versi 2 (Corrective RAG) belum dimulai.
+**Status:** Versi 1 terukur pada indeks 150 artikel (`archive/v1`). Evaluasi eksternal pada indeks
+produksi 1.532 artikel sudah selesai: ketepatan positif memadai (36/46 = 78,3%, Wilson 95% [64,4%;
+87,7%]), kecocokan palsu gugur pada label resmi (10/45 = 22,2% [12,5%; 36,3%]), dan uji kemunduran
+set uji v1 mundur pada angka utama (kemunduran bersih 5) tetapi tidak mundur setelah verifikasi (2).
+Sistem belum siap menjadi pemicu langkah korektif bergaya CRAG, dan hasil "ditemukan" perlu diperiksa
+ulang oleh pengguna; peringatan di demo menyatakan ini. Versi 2 (Corrective RAG) belum dimulai.
+Rincian: [Hasil Evaluasi](#hasil-evaluasi).
 
 ---
 
@@ -120,13 +126,41 @@ memaksakan kecocokan.
 
 ## Hasil Evaluasi
 
-Evaluasi dijalankan pada set uji 54 butir yang **dibekukan sebelum evaluasi**
-(tag `testset-v1`), dengan sidik jari prompt dan kode generator dikunci
-sehingga hasil hanya dinyatakan sah bila keduanya tidak berubah. Ambang
-hipotesis dipra-registrasi sebelum data dibuat. Setiap butir dijalankan **tiga
-kali**, dan keputusan modus dipakai sebagai metrik utama.
+Ada dua evaluasi yang dijalankan dengan generator, masing-masing pada indeks yang berbeda: **set uji v1**
+pada indeks arsip 150 artikel (baseline Versi 1), dan **evaluasi eksternal** pada indeks produksi 1.532
+artikel, yaitu indeks yang dipakai demo. Pada keduanya set uji dibekukan dan ambang ditetapkan sebelum
+evaluasi dijalankan, prompt, generator, dan retriever dikunci dengan hash, dan setiap butir dijalankan
+**tiga kali** dengan keputusan modus sebagai metrik utama. Generatornya `gemini-3.5-flash-lite` (thinking
+medium). Semua proporsi disertai interval Wilson 95%.
 
-### Komposisi set uji
+### Ringkasan berdampingan
+
+| Evaluasi | Indeks | Butir | Hasil |
+| --- | --- | --- | --- |
+| Set uji v1 (Versi 1, baseline) | `archive/v1`, 150 artikel | 50 non-batas | Akurasi **48/50** [86,5%; 98,9%]; Recall@3 36/40 |
+| Set uji v1, uji kemunduran | produksi, 1.532 artikel | 44 non-batas (6 butir dikeluarkan karena labelnya tidak berlaku lagi) | Benar **37/44** = 84,1% [70,6%; 92,1%] vs 42/44 di arsip; **kemunduran bersih 5 -> MUNDUR** (ambang >= 3) |
+| Set eksternal Liputan6, positif | produksi, 1.532 artikel | 46 | Ketepatan **36/46 = 78,3%** [64,4%; 87,7%] -> **memadai** (ambang: batas bawah >= 60%) |
+| Set eksternal Liputan6, negatif | produksi, 1.532 artikel | 45 | Kecocokan palsu **10/45 = 22,2%** [12,5%; 36,3%] -> **gugur** (ambang: gugur bila batas bawah > 10%) |
+| Set eksternal, retrieval | produksi, 1.532 artikel | 46 positif | Recall@3 bersyarat **41/46 = 89,1%** [77,0%; 95,3%] |
+
+Angka di tabel ini adalah angka resmi. Pemeriksaan label sesudahnya (adjudikasi dan verifikasi, di bawah)
+dilaporkan sebagai sensitivitas dan tidak menggantikannya; aturan pemakaiannya ditetapkan sebelum berkasnya
+diisi.
+
+**Cara membaca:**
+- Angka Versi 1 dan angka produksi **tidak sebanding langsung**: indeksnya berbeda (150 vs 1.532 artikel),
+  jadi selisihnya mencampur efek data dan bukan uji arsitektur.
+- **Recall@3 bersyarat** hanya dihitung pada pasangan yang memang terjangkau pencarian judul saat set
+  disusun. Ia batas atas; Recall@3 atas seluruh klaim yang ada di TurnBackHoax tidak dapat diukur dari
+  set ini. Sebagai pembanding tanpa LLM: kueri judul Liputan6 menemukan 44/46, kueri kutipan pesan 41/46.
+- **"Lulus" pada kecocokan palsu berarti tidak terbukti buruk, bukan terbukti aman.** Di sini hasilnya
+  gugur: interval seluruhnya di atas 10%.
+- Hasil per butir evaluasi eksternal disegel sampai keandalan label dan label final di-commit.
+
+### Baseline Versi 1 (set uji v1, `archive/v1`, 150 artikel)
+
+Set uji 54 butir dibekukan sebelum evaluasi (tag `testset-v1`), dengan ambang hipotesis dipra-registrasi
+sebelum data dibuat.
 
 | Tipe | Jumlah | Keterangan |
 | --- | --- | --- |
@@ -135,12 +169,10 @@ kali**, dan keputusan modus dipakai sebagai metrik utama.
 | Negatif mudah | 10 | Topik jauh dari basis data |
 | Batas | 4 | Kasus ambigu, dilaporkan terpisah, tidak masuk metrik utama |
 
-### Metrik utama
-
-| Metrik | Hasil | Wilson 95% |
+| Metrik (set uji v1, `archive/v1`) | Hasil | Wilson 95% |
 | --- | --- | --- |
-| Akurasi (50 butir non-batas) | 48/50 | 0,865 – 0,989 |
-| Akurasi butir batas (terpisah) | 3/4 | 0,301 – 0,954 |
+| Akurasi, 50 butir non-batas | 48/50 | 0,865 – 0,989 |
+| Akurasi, 4 butir batas (terpisah) | 3/4 | 0,301 – 0,954 |
 | Kecocokan palsu (negatif dijawab ditemukan) | 1/30 | — |
 | Penolakan palsu (positif dijawab belum ditemukan) | 1/20 | — |
 | Artikel salah dipilih | 0/20 | — |
@@ -148,54 +180,27 @@ kali**, dan keputusan modus dipakai sebagai metrik utama.
 | Pelanggaran format | 0/162 panggilan | — |
 | URL di luar metadata | 0/162 panggilan | — |
 
-### Status hipotesis
-
 | Hipotesis | Status |
 | --- | --- |
-| **H1** — LLM yang membaca Narasi dapat membedakan klaim identik dari klaim yang sekadar bertetangga topik | Terdukung: 1/20 kecocokan palsu pada basis penuh, **1/17 pada basis benar-benar teruji** (ambang ≤1 pada keduanya) — lihat catatan di bawah |
+| **H1** — LLM yang membaca Narasi dapat membedakan klaim identik dari klaim yang sekadar bertetangga topik | Terdukung: 1/20 kecocokan palsu pada basis penuh, **1/17 pada basis benar-benar teruji** (ambang ≤1 pada keduanya) |
 | **H3** — Model kelas Flash Lite cukup untuk tugas ini | Terdukung pada sampel ini (2/50 kesalahan, 0 pelanggaran format) |
 
-### Temuan terpenting: dua mode kegagalan yang terpisah
+**Dua mode kegagalan yang terpisah.** Empat kegagalan retrieval semuanya pada butir negatif, sehingga pada
+3 dari 7 butir "pola sama entitas beda" generator tidak pernah benar-benar diuji (dasar angka 1/17 di atas).
+Sebaliknya, pada semua kesalahan dan keputusan tidak bulat generator, artikel yang benar sudah ada di top-3.
 
-**Kegagalan retrieval (4 butir).** Artikel yang seharusnya dibandingkan tidak
-masuk tiga besar — dua nyaris masuk (peringkat 4), dua jauh (peringkat 6 dan
-19). Pada keempatnya jawaban akhirnya kebetulan benar, karena butirnya negatif
-dan LLM memang menolak mencocokkan. Artinya pada 3 dari 7 butir subtipe "pola
-sama entitas beda", generator **tidak pernah benar-benar diuji** membedakan
-klaim: kandidatnya sudah tersingkir sebelum sampai ke LLM. Dukungan H1 karena
-itu bertumpu pada 17 butir yang benar-benar teruji, bukan 20.
+**Caveat yang wajib dibaca bersama angka ini:**
+1. **Ketergantungan antar-butir.** 44% butir berbagi artikel jangkar (satu artikel dipakai hingga 4
+   butir), sehingga interval Wilson yang menganggap butir saling bebas bersifat terlalu percaya diri.
+2. **Pasangan minimal sebagian hasil konstruksi.** Pada subtipe "angka atau waktu beda", seluruh butir
+   sengaja diarahkan ke artikel yang sudah punya butir positif, sehingga angka pasangannya bukan hasil
+   pengamatan.
+3. **Confound sumber.** Subtipe "angka atau waktu beda" 100% buatan model; negatif mudah 0% buatan model.
+   Pada kedua sel itu, efek sumber dan tipe butir tidak dapat dipisahkan.
+4. **Ukuran sampel.** 50 butir non-batas hanya mampu mendeteksi kegagalan yang jelas; batas bawah Wilson
+   86,5% tidak mendukung klaim bahwa akurasi pada set ini di atas 95%.
 
-**Kegagalan penilaian generator (2 kesalahan + 6 keputusan tidak bulat
-antar-run).** Pada seluruh kasus ini artikel yang benar **selalu tersedia** di
-top-3, sehingga kegagalannya murni pada penilaian LLM, bukan retrieval.
-
-Pemisahan ini memetakan langsung kebutuhan Versi 2.
-
-### Caveat yang wajib dibaca bersama angka di atas
-
-1. **Ketergantungan antar-butir.** 44% butir berbagi artikel jangkar (satu
-   artikel dipakai hingga 4 butir), sehingga interval Wilson yang menganggap
-   butir saling bebas bersifat terlalu percaya diri.
-2. **Pasangan minimal sebagian hasil konstruksi.** Pada subtipe "angka atau
-   waktu beda", seluruh butir sengaja diarahkan ke artikel yang sudah punya
-   butir positif, sehingga angka pasangannya bukan hasil pengamatan.
-3. **Confound sumber.** Subtipe "angka atau waktu beda" 100% buatan model;
-   negatif mudah 0% buatan model. Pada kedua sel itu, efek sumber dan tipe butir
-   tidak dapat dipisahkan.
-4. **Ukuran sampel.** 50 butir non-batas hanya mampu mendeteksi kegagalan yang
-   jelas; angka ini tidak mendukung klaim akurasi di atas 95%.
-
-### Cakupan evaluasi: angka di atas berlaku untuk basis data 150 artikel
-
-Seluruh angka di atas, termasuk akurasi **48/50**, diukur pada basis data **150
-artikel** (indeks arsip `archive/v1/`). Demo berjalan pada **indeks produksi yang
-lebih besar: 1.532 artikel (4.593 chunk), mencakup satu tahun penuh, 30 September
-2025 sampai 27 September 2026**. Indeks itu **belum pernah dievaluasi dengan
-menjalankan generator**.
-
-Yang sudah diukur pada indeks besar hanya **retrieval**: perbandingan indeks arsip
-(150 artikel, 450 chunk) dengan indeks produksi, tanpa panggilan LLM. Recall@k butir
-positif (artikel yang benar berada di k teratas), dari 20:
+**Riwayat retrieval saat indeks diperluas** (tanpa LLM; Recall@k butir positif set uji v1, dari 20):
 
 | Indeks | @1 | @3 | @5 | @10 | @20 |
 | --- | --- | --- | --- | --- | --- |
@@ -203,15 +208,116 @@ positif (artikel yang benar berada di k teratas), dari 20:
 | Produksi, 922 artikel (2026-09-27) | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
 | Produksi, 1.532 artikel (2026-10-03) | 18/20 | 20/20 | 20/20 | 20/20 | 20/20 |
 
-Dua butir positif turun peringkat sejak indeks 922 artikel dan tidak berubah lagi
-pada 1.532: v1-002 dari 2 ke 3 dan v1-019 dari 1 ke 2. Angka ini **hanya mengukur
-retrieval**; **akurasi akhir sistem pada indeks besar belum terukur**. Label negatif
-set uji v1 juga tidak otomatis berlaku pada indeks besar (enam butir negatif kini
-menemukan klaim yang sama atau artikel asalnya di basis data, termasuk v1-029 yang
-artikel asalnya masuk pada perluasan terakhir), sehingga set uji v1 tetap sah hanya pada `archive/v1/`.
-Rincian: `testset/v1_perbandingan_indeks_1532.json`,
-`testset/retrieval_ablation_prod1532_report.txt` (ablasi lengkap pada 1.532 artikel),
-dan `testset/v1_temuan_untuk_v2.md` bagian 8.
+Label negatif set uji v1 tidak otomatis berlaku pada indeks yang lebih besar: kini **sembilan** butir
+negatif menemukan klaim yang sama di basis data 1.532 artikel (enam tercatat saat perluasan, tiga lagi
+diverifikasi setelah evaluasi; lihat di bawah). Karena itu set uji v1 tetap sah sebagai baseline hanya pada
+`archive/v1/`. Rincian: `testset/v1_analysis_report.txt`, `testset/v1_perbandingan_indeks_1532.json`,
+`testset/v1_temuan_untuk_v2.md`.
+
+### Set evaluasi eksternal
+
+91 klaim nyata dari artikel cek fakta Liputan6 (dari 99; 8 kutipan yang hanya berisi tautan atau salam
+dikeluarkan dengan aturan yang ditetapkan sebelum hasil dilihat). Kueri adalah kutipan pesan apa adanya,
+seperti yang akan ditempel pengguna. Label emas diberikan pemilik proyek sendiri, tanpa bantuan AI:
+**positif** = id artikel TurnBackHoax yang memuat klaim yang sama, **negatif** = tidak ada yang cocok di
+daftar 5-8 kandidat yang diperiksanya. Teks pesan dan artikel Liputan6 tidak diterbitkan di repositori ini;
+yang di-commit hanya id, label, dan keputusan per butir. Rancangan lengkap, ambang, dan hasil:
+[`docs/rancangan_evaluasi_eksternal.md`](docs/rancangan_evaluasi_eksternal.md).
+
+### Keandalan label
+
+Hanya ada satu anotator, jadi yang diukur adalah konsistensi dalam-anotator, bukan kesepakatan
+antar-anotator.
+
+- **Uji ulang buta 30 butir acak** (jeda 7 hari, urutan diacak, label lama disembunyikan): kappa biner
+  **0,634** [0,308; 0,911] (bootstrap 10.000 ulangan), kappa id persis 0,707 [0,416; 0,921]; 25 dari 30
+  sama. Lima yang berubah semuanya soal ada/tidaknya pasangan, tidak ada yang berpindah ke artikel lain.
+  Menurut ambang yang dikunci (0,60-0,79), setiap metrik juga dihitung dengan kelima butir itu dibalik ke
+  dua arah; kategorinya tidak berubah.
+- **Audit jejak identik** (tanpa LLM: rangkaian 8 kata yang sama antara pesan dan Narasi artikel): 7
+  butir negatif berjejak ditinjau ulang secara buta, dicampur dengan butir uji ulang. **4 dari 7 berubah
+  menjadi cocok**, keempatnya ke artikel yang ditunjuk jejak itu. Label final memakai hasil ini, sehingga
+  set menjadi 46 positif dan 45 negatif. Dengan label awal (42/49) kecocokan palsu justru lebih tinggi
+  (14/49).
+
+### Adjudikasi buta (sensitivitas)
+
+Setelah segel dibuka, ke-20 butir yang keputusan sistemnya berbeda dari label ditinjau ulang oleh
+pemilik proyek: dua pilihan per butir dalam urutan acak, tanpa keterangan mana pilihan sistem.
+
+| Jenis | Butir | Ternyata kesalahan label | Tetap kesalahan sistem |
+| --- | --- | --- | --- |
+| Kecocokan palsu | 10 | 7 (2 di antaranya ditandai ragu) | 3 |
+| Penolakan palsu | 9 | 3 | 6 |
+| Artikel salah | 1 | 1 | 0 |
+
+Angka resmi lebih dulu, lalu angka bila label diganti dengan hasil adjudikasi:
+
+| | Positif benar | Kecocokan palsu |
+| --- | --- | --- |
+| **Label final (angka resmi)** | 36/46 = 78,3% [64,4; 87,7], memadai | 10/45 = 22,2% [12,5; 36,3], gugur |
+| Batas yang menguntungkan sistem: adjudikasi, butir ragu tetap berlabel lama | 42/48 = 87,5% [75,3; 94,1], memadai | 5/43 = 11,6% [5,1; 24,5], tidak konklusif |
+| Batas yang menguntungkan sistem: adjudikasi, butir ragu ikut adjudikasi | 44/50 = 88,0% [76,2; 94,4], memadai | 3/41 = 7,3% [2,5; 19,4], lulus |
+
+- **Ini batas yang menguntungkan sistem, bukan perkiraan yang lebih akurat.** Hanya butir yang tidak
+  sepakat yang ditinjau, jadi adjudikasi hanya bisa menggeser hasil ke arah sistem; kesalahan label pada
+  butir yang sepakat tidak dicari. Tingkat kecocokan palsu sebenarnya berada di antara batas ini dan angka
+  resmi.
+- Kategori terburuk pada batas ini: positif **memadai**, kecocokan palsu **tidak konklusif**. Bahkan di
+  batas ini kecocokan palsu tidak lulus dengan kokoh: "lulus" hanya tercapai kalau kedua butir ragu
+  dihitung ke arah sistem, dengan batas atas 19,4%, tepat di bawah patokan 20%.
+- Satu kecocokan palsu mengarah ke artikel di luar daftar kandidat yang dulu diperiksa. Adjudikasi
+  menyatakannya bukan klaim yang sama (tokohnya berbeda), jadi itu tetap kesalahan sistem.
+- Temuan yang lebih penting dari angkanya: **pada butir yang sulit, label sendiri tidak stabil** (lihat
+  [Keterbatasan](#keterbatasan)).
+
+### Verifikasi testset-v1 (sensitivitas)
+
+Tiga butir negatif set uji v1 dijawab "ditemukan" pada indeks 1.532 karena ada artikel baru yang
+dicocokkan sistem. Pemilik proyek membaca ketiga pasangan itu sendiri: **ketiganya memuat klaim yang
+sama**. Jadi label negatifnya tidak berlaku lagi pada indeks besar, dan ketiga butir itu bukan kesalahan
+sistem.
+
+- Angka resmi tetap **kemunduran bersih 5/44, MUNDUR**. Dengan ketiga butir dikeluarkan (sensitivitas),
+  kemunduran bersih menjadi **2 dari 41 -> tidak mundur** (ambang >= 3).
+- Dua kemunduran yang tersisa nyata: dua butir positif kini ditolak walau artikel yang benar ada di
+  top-3.
+- Berkas set uji v1 tidak diubah; status ketiga butir hanya dicatat di `testset/v1.meta.json`.
+
+### Pola kegagalan utama
+
+- **Kecocokan ke artikel berpola sama dengan unsur inti berbeda** (10 dari 45 negatif, angka resmi).
+  Sembilan dari sepuluh adalah artikel peringkat 1 retrieval, umumnya tautan penipuan dengan pola yang
+  sama tetapi lembaga, tokoh, atau programnya berbeda; delapan bulat di ketiga run. Kesalahannya stabil,
+  bukan acak. Adjudikasi menunjukkan sebagian dari sepuluh ini sebenarnya kesalahan label, tetapi tidak
+  cukup untuk membuat kategorinya lulus.
+- **Penolakan pasangan lintas gelombang** (6 dari 10 kegagalan positif). Pada pasangan yang terbit
+  terpaut lebih dari 30 hari, ketepatan 11/18, dibanding 25/28 pada yang <= 30 hari. Label mengikuti
+  aturan "lembaga dan tawaran yang sama = cocok walau gelombangnya berbeda", sedangkan prompt generator
+  tidak mengenal aturan itu. Penolakan palsu lebih tahan adjudikasi: 6 dari 9 tetap kesalahan sistem.
+- Separuh kegagalan positif (5 dari 10) terjadi di retrieval (artikel yang benar tidak masuk top-3),
+  separuh di penilaian LLM.
+
+Kemampuan mengenali klaim yang tidak ada di basis data saat ini **belum cukup** untuk memicu langkah
+korektif bergaya CRAG (mencari ke situs cek fakta lain): menurut angka resmi sekitar satu dari lima klaim
+semacam itu tidak akan pernah sampai ke langkah tersebut karena sistem sudah menampilkan artikel yang
+keliru, dan bahkan pada batas yang menguntungkan sistem hasilnya baru tidak konklusif.
+
+### Kepatuhan aturan wajib
+
+- **Tautan tidak dikarang LLM:** 0 URL dari LLM yang tampil ke pengguna. Pada keluaran mentah ditemukan
+  4 URL yang tidak berasal dari metadata rujukan (2 di set eksternal, 2 di set uji v1 pada indeks
+  1.532). Keempatnya berdomain `.go.id`, tersalin dari teks seksi artikel kandidat (bukan karangan
+  model), dan dibuang sebelum jawaban disimpan atau ditampilkan.
+- **Format:** 0 pelanggaran format terstruktur pada 274 panggilan set eksternal dan 162 panggilan set uji
+  v1 pada indeks 1.532.
+
+### Perubahan tampilan setelah evaluasi
+
+Sejak 2026-10-21 demo menampilkan peringatan pada setiap hasil "ditemukan": pengguna diminta memastikan
+sendiri bahwa tokoh, lembaga, dan program di artikel sama dengan pesan yang diperiksa, dengan judul dan
+tanggal artikel di dekatnya. Ini perubahan tampilan saja; **angka di atas mengukur keputusan generator dan
+tidak terpengaruh olehnya.**
 
 ---
 
@@ -260,14 +366,14 @@ dijawab "belum ditemukan"; evaluasi eksternal mengeluarkannya
 deterministik ke sumber hoaks yang tercatat di artikel, tanpa LLM, dicatat sebagai
 fitur masa depan dan belum dibangun.
 
-**Rentang waktu.** Basis data yang dievaluasi (150 artikel) berasal dari
-Agustus–September 2026. Basis data demo memuat 1.532 artikel dari 30 September 2025
-sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
+**Rentang waktu.** Basis data baseline Versi 1 (150 artikel) berasal dari
+Agustus–September 2026. Basis data demo, yang juga dipakai evaluasi eksternal, memuat 1.532 artikel dari
+30 September 2025 sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
 yang sudah diambil tidak disegarkan bila diperbarui di sumbernya.
 
 **Rujukan tidak selalu tersedia.** Pada basis data demo, 205 dari 1.532 artikel
 tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (16 dari 150 pada
-basis data yang dievaluasi, dengan aturan saat itu); jawaban untuk artikel tersebut
+basis data baseline Versi 1, dengan aturan saat itu); jawaban untuk artikel tersebut
 disusun tanpa bagian rujukan.
 
 **Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
@@ -289,6 +395,22 @@ kesepakatan antar-anotator tidak terukur. Draf awal label tahap pertama dibuat
 dengan bantuan LLM (ChatGPT, OpenAI) dan telah dilihat anotator sebelum label
 final ditetapkan — tercatat lengkap di `testset/v1.meta.json`.
 
+**Label manusia pada penipuan berpola sama tidak stabil.** Pada evaluasi eksternal, kappa biner uji
+ulang 0,63 dengan interval lebar [0,31; 0,91], 11 dari 20 pilihan adjudikasi berbeda dari label final,
+dan satu butir dinilai tiga kali dengan hasil berbeda. Karena itu tingkat kecocokan palsu sebenarnya
+berada di antara batas yang menguntungkan sistem (5/43 = 11,6% [5,1%; 24,5%]) dan angka resmi
+(10/45 = 22,2% [12,5%; 36,3%]), dan definisi "klaim yang sama" untuk penipuan berulang perlu
+dipertajam sebelum pengukuran berikutnya.
+
+**Batas evaluasi eksternal.** Adjudikasi hanya meninjau butir yang tidak sepakat, dan anotator tahu
+setiap butirnya adalah ketidaksesuaian, jadi hasilnya berat sebelah ke arah sistem. Recall@3 bersyarat
+adalah batas atas. Label negatif hanya berlaku terhadap daftar kandidat yang diperiksa, bukan seluruh
+basis data. Prompt generator tidak mengenal aturan lintas gelombang yang dipakai label. Uji kemunduran
+pada indeks produksi mencampur efek data dengan efek sistem, dan label negatif set uji v1 tidak otomatis
+berlaku saat basis data membesar. Dua berkas label tercatat tidak bersih (satu berkas tertimpa koreksi
+salah ketik; satu berkas adjudikasi ditolak lalu diperbaiki formatnya oleh anotator sendiri, hanya enam
+sel yang berubah); keduanya tercatat di `docs/rancangan_evaluasi_eksternal.md` bagian 7.2 dan 7.8.
+
 **Tier gratis.** Batas kuota penyedia dapat berubah tanpa pemberitahuan.
 Lapisan penyedia dibuat agnostik agar model dapat ditukar tanpa mengubah
 pipeline.
@@ -307,8 +429,19 @@ masalahnya terukur.
 | **Penanganan pesan panjang** (klaim terdorong keluar jendela 512 token) | Masuk, **menunggu pengukuran pada pesan berantai asli** | Mekanismenya terukur: Recall@3 butir positif pada pesan ~5.000 karakter 2/20 (150 artikel) dan 0/20 (1.532 artikel), tetapi teks pengganggunya sintetis; besar dampaknya pada pesan nyata belum diketahui |
 | **Pengukuran kebersihan rujukan** | Masuk | Evaluasi Versi 1 tidak pernah mengukur kebersihan rujukan yang berasal dari data |
 | Penulisan ulang kueri saat retrieval gagal | **Dicoret** | Tidak ada bukti masalah: empat kegagalan Recall@3 Versi 1 seluruhnya butir negatif (yang di luar tiga besar adalah artikel tetangga); untuk butir positif Recall@3 20/20 pada semua ukuran indeks |
-| Grader relevansi | **Tidak masuk** | Buktinya lemah (2 kesalahan dan 5 keputusan tidak bulat dari 50 butir), generator sudah menilai kesamaan klaim, dan tidak ada bukti bahwa grader terpisah menilai lebih baik |
+| Grader relevansi | **Tidak masuk** | Masalah terbukti (kecocokan palsu ke artikel berpola sama dengan unsur inti berbeda); solusi belum diuji |
 | Penilaian kredibilitas sumber oleh LLM | **Tidak masuk** | Semua dokumen berasal dari satu sumber; masalah rujukan ditangani dengan aturan penyaringan yang dapat diaudit |
+
+Dari evaluasi eksternal, yang perlu diperbaiki lebih dulu, berurutan:
+
+1. **Pemeriksaan unsur inti** (subjek/lembaga, tindakan, objek pembeda) sebelum sistem menyatakan
+   "ditemukan". Ambang skor kemiripan sudah tiga kali terbukti tidak memisahkan klaim yang sama dari
+   tetangganya, jadi pemeriksaannya harus eksplisit. Kriterianya perlu cukup tegas untuk juga dipakai
+   sebagai pedoman label, karena label pada kasus yang sama terbukti tidak stabil.
+2. **Kebijakan lintas gelombang**, diputuskan bersama butir 1: menerima pasangan lintas gelombang bisa
+   memperbaiki sebagian penolakan, tetapi berisiko menambah kecocokan palsu pada penipuan berpola sama.
+3. **Uji pada sampel baru** dari periode lain, dengan ambang dikunci sebelum dijalankan. Set 99 butir
+   Liputan6 sudah dipakai sekali dan tidak boleh dipakai lagi untuk menilai perbaikan.
 
 Evaluasi Versi 2 akan memakai set uji baru — set uji v1 sudah dibekukan dan
 tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
@@ -351,6 +484,10 @@ $env:PYTHONPATH = "src"
 $env:PYTHONPATH = "src"                             # wajib diatur ulang bila sesi baru
 .\.venv\Scripts\python.exe -m evaluation.testset_eval      # 3 run pada set uji beku
 .\.venv\Scripts\python.exe -m evaluation.testset_analysis  # hitung metrik (tanpa panggilan API)
+
+# evaluasi eksternal (indeks produksi; butuh berkas label lokal yang tidak di-commit)
+.\.venv\Scripts\python.exe -m evaluation.external_eval --set liputan6 --run 1   # satu run; --status untuk status teknis
+.\.venv\Scripts\python.exe -m evaluation.external_analysis --metrik            # metrik (tanpa panggilan API)
 ```
 
 Evaluasi yang hasilnya akan **dibandingkan dengan baseline Versi 1** wajib memakai
