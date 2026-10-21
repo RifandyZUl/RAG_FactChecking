@@ -44,6 +44,7 @@ from presentation import (
     LIMITATION_NOTE,
     LONG_CLAIM_CONFIRM,
     LONG_CLAIM_WARNING,
+    MATCH_CHECK_HEADING,
     MAX_INPUT_CHARS,
     PAGE_SUBTITLE,
     PAGE_TITLE,
@@ -74,6 +75,7 @@ from presentation import (
     is_long_claim,
     load_related_threshold_config,
     markdown_link,
+    match_check_lines,
     parse_flag,
     resolve_related_threshold,
     validate_claim,
@@ -247,6 +249,7 @@ def check_claim(claim: str, on_step: Callable[[str], None]) -> ResultView:
         query_tokens=count_query_tokens(embedder, claim),
         query_token_limit=MAX_SEQ_LENGTH,
         related_threshold=load_related_threshold(collection.count()),
+        article_dates={h.article_id: h.date for h in hits},
     )
 
 
@@ -272,6 +275,10 @@ def render_status(view: ResultView) -> None:
         if view.article_url:
             link = markdown_link(view.article_title, view.article_url)
             st.markdown(f"{ARTICLE_LINK_PREFIX} {link}", width=READING_WIDTH_PX)
+        check = match_check_lines(view)
+        if check:
+            st.markdown(f"**{MATCH_CHECK_HEADING}**", width=READING_WIDTH_PX)
+            st.caption("  \n".join(escape_markdown(line) for line in check), width=READING_WIDTH_PX)
         if view.advice:
             st.divider()
             st.markdown(
