@@ -829,3 +829,33 @@ Yang perlu diperbaiki lebih dulu, berurutan:
 4. **Uji pada sampel baru.** Set 99 butir ini kini **sekali pakai** (bagian 8): perbaikan apa pun pada
    generator, prompt, retriever, atau indeks tidak boleh dievaluasi ulang di set yang sama; uji akhirnya
    memerlukan sampel Liputan6 baru dari periode lain.
+
+### 11.8 Verifikasi tiga butir negatif testset-v1 (berkas DIBUAT 2026-10-21 13:11 UTC, SEBELUM diisi)
+
+- **Pertanyaan:** apakah artikel yang kini dicocokkan sistem pada indeks 1.532 (v1-024 -> 36811,
+  v1-026 -> 31607, v1-027 -> 36776; modus 3 run, semuanya bulat) memuat klaim yang SAMA dengan kueri butir
+  menurut pedoman v1.0? Ini keputusan label, dinilai pemilik proyek sendiri, tanpa AI.
+- **Berkas:** `data/candidates/verifikasi_v1/verifikasi_v1_negatif.xlsx` (`python -m
+  candidates.v1_verification --make`; uji `tests/test_v1_verification.py`). Format dan proteksi seperti
+  berkas sesi: per butir kueri set uji v1 dan satu artikel (judul, tanggal, label, Narasi, Kesimpulan).
+  **Keputusan dan penjelasan generator tidak ditampilkan**; nomor butir v1 hanya di kunci; urutan
+  `SystemRandom`. KEPUTUSAN: SAMA | BEDA | RAGU, alasan di catatan. Folder di-gitignore. Hash yang
+  di-commit sebelum diisi (`--read` mencocokkannya dan mengarsipkan berkas terisi sebelum validasi):
+
+  | Berkas | SHA-256 |
+  | --- | --- |
+  | `verifikasi_v1_negatif.xlsx` (templat kosong) | `2a1cff46132444add6d9973bc5883c9bdd0cd41c48be4f4bbd0656bb66efea83` |
+  | `kunci_verifikasi_v1.json` (peta butir -> id v1 dan artikel) | `f824f4fb293e3bdcd3db5d21b8a528aa36410fe4791abed344946dd906243244` |
+  | `sidik_jari_templat_verifikasi_v1.json` | `829d7771a4eaf49f1c160d3486bb93531a3b3993ff825746efc3793341053f43` |
+
+- **Aturan pemakaian (DITETAPKAN 2026-10-21, SEBELUM diisi):**
+  1. **SAMA** -> butir itu dikeluarkan dari analisis kemunduran sebagai **perubahan status label**
+     (seperti enam butir di 6.3), bukan kemunduran. **BEDA** -> tetap dihitung kemunduran. **RAGU** ->
+     dihitung dua arah (tetap / dikeluarkan) dan dilaporkan keduanya.
+  2. Kemunduran bersih dihitung ulang **hanya sebagai sensitivitas**; angka utama (5/44, MUNDUR) tidak
+     diganti. Ambang tetap >= 3 (6.3), tidak disesuaikan dengan jumlah butir yang tersisa.
+     Hasil yang mungkin: 0 SAMA -> 5 (mundur); 1 -> 4 (mundur); 2 -> 3 (mundur); 3 -> 2 (tidak mundur).
+     Dua kemunduran pada butir positif (v1-010, v1-019) tidak tersentuh verifikasi ini.
+  3. **`testset/v1.jsonl` yang beku tidak diubah** (uji kunci tetap lolos); status butir dicatat di
+     rancangan ini dan, bila SAMA, di `testset/v1.meta.json` seperti butir yang statusnya berubah
+     sebelumnya.

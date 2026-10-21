@@ -794,7 +794,18 @@ Proyek dibangun bertahap dalam dua versi:
   atau menyebut isi `kunci_adjudikasi.json`; hasil adjudikasi tidak mengubah metrik utama. Berkas terisi tidak pernah
   ditimpa (koreksi = `_v2`, `_v3`); `--read` mengarsipkan ke `arsip_baca/` sebelum validasi. SET 99 BUTIR INI KINI
   SEKALI PAKAI: jangan ubah sistem lalu mengevaluasi ulang di set yang sama. Ingest antrean oleh pemilik proyek
-  setelah adjudikasi.** Riwayat di bawah (teks "tersegel" adalah keadaan sebelum 2026-10-20).
+  setelah adjudikasi.** **2026-10-21:** (1) aturan pemakaian adjudikasi dikunci di 7.8 sebelum diisi (hanya
+  sensitivitas, batas yang menguntungkan sistem); dasar ambang kappa = 7.4 (30 butir), dikoreksi di 7.7.
+  (2) VERIFIKASI 3 NEGATIF testset-v1 SIAP, BELUM DIISI: `data/candidates/verifikasi_v1/verifikasi_v1_negatif.xlsx`
+  (`python -m candidates.v1_verification --read`; hash dan aturan SAMA -> dikeluarkan sebagai perubahan status
+  label, sensitivitas saja, di rancangan 11.8; `v1.jsonl` tidak diubah; jangan membuka `kunci_verifikasi_v1.json`).
+  (3) **Demo: peringatan pencocokan pada setiap hasil "ditemukan"** (`presentation.match_check_lines`, judul +
+  tanggal artikel dari hasil retrieval; `build_view(article_dates=...)`). **Perubahan TAMPILAN saja: generator,
+  prompt, retriever, dan keputusan tidak disentuh (uji kunci lolos), jadi angka evaluasi -- yang mengukur keputusan
+  generator -- tidak terpengaruh.** (4) Draf bagian Evaluasi README: `docs/draf_readme_evaluasi.md` (belum
+  menggantikan README; angka adjudikasi dan verifikasi menyusul). Jangan menjalankan `--read` adjudikasi/verifikasi
+  sebelum diminta pemilik proyek.
+  Riwayat di bawah (teks "tersegel" adalah keadaan sebelum 2026-10-20).
   **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
   `--status` untuk status teknis). **Run 2 lengkap kedua set (2026-10-19, jendela kuota 18 Okt; buku besar 148 =

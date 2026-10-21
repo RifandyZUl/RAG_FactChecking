@@ -143,6 +143,16 @@ STEP_SEARCH = "Mencari artikel cek fakta yang mirip…"
 STEP_COMPARE = "Membandingkan pesan Anda dengan artikel yang ditemukan…"
 
 ARTICLE_LINK_PREFIX = "Artikel cek fakta:"
+# Peringatan untuk setiap hasil "ditemukan" (tampilan saja; keputusan generator tidak berubah). Dasar: evaluasi
+# eksternal 2026-10-20 (docs/rancangan_evaluasi_eksternal.md 11.3) -- kecocokan palsu 10/45, umumnya artikel
+# berpola sama dengan tokoh/lembaga/program berbeda.
+MATCH_CHECK_HEADING = "Pastikan klaimnya benar-benar sama"
+MATCH_CHECK_NOTE = (
+    "Sistem bisa keliru mencocokkan pesan dengan artikel yang mirip. Periksa sendiri apakah tokoh, "
+    "lembaga, dan program di artikel ini sama dengan yang disebut di pesan Anda."
+)
+MATCH_CHECK_ARTICLE = "Artikel: {title} ({date})"
+MATCH_CHECK_ARTICLE_NO_DATE = "Artikel: {title} (tanggal tidak tercatat)"
 CLARIFICATION_HEADING = "Faktanya"
 REFERENCES_HEADING = "Rujukan"
 ADVICE_HEADING = "Saran umum"
@@ -485,6 +495,7 @@ class ResultView:
     summary: str
     article_title: str = ""
     article_url: str = ""
+    article_date: str = ""  # tanggal terbit artikel dari hasil retrieval (metadata), hanya "found"
     clarification: str = ""
     advice: str = ""  # saran umum statis; hanya untuk PENIPUAN
     references: list[str] = field(default_factory=list)
@@ -523,6 +534,19 @@ _TITLE_LABEL_PREFIX = re.compile(r"^\s*\[[^\]]*\]\s*")
 def display_title(title: str) -> str:
     """Buang label dalam kurung siku di awal judul ("[SALAH] ..."): status sudah tampil."""
     return _TITLE_LABEL_PREFIX.sub("", title).strip() or title.strip()
+
+
+def match_check_lines(view: ResultView) -> list[str]:
+    """
+    Peringatan pencocokan untuk hasil "ditemukan": catatan + judul dan tanggal artikel. Kosong untuk hasil lain.
+    Hanya teks tampilan; tidak membaca atau mengubah keputusan generator.
+    """
+    if view.kind != "found":
+        return []
+    title = view.article_title or "(tanpa judul)"
+    article = (MATCH_CHECK_ARTICLE.format(title=title, date=view.article_date) if view.article_date
+               else MATCH_CHECK_ARTICLE_NO_DATE.format(title=title))
+    return [MATCH_CHECK_NOTE, article]
 
 
 def _sum_tokens(values: list[int | None]) -> int | None:
@@ -651,6 +675,7 @@ def build_view(
     query_tokens: int | None = None,
     query_token_limit: int | None = None,
     related_threshold: RelatedThreshold = RELATED_DISABLED_NO_CONFIG,
+    article_dates: dict[str, str] | None = None,
 ) -> ResultView:
     """
     Ubah `Answer` generator menjadi `ResultView`. Fungsi murni: tanpa UI dan tanpa API.
@@ -686,6 +711,7 @@ def build_view(
             summary=style.summary,
             article_title=display_title(ans.title),
             article_url=ans.article_url,
+            article_date=(article_dates or {}).get(str(ans.article_id or ""), ""),
             clarification=ans.klarifikasi,
             advice=SCAM_ADVICE if label.upper() == "PENIPUAN" else "",
             # dari metadata, bukan dari LLM; disaring ulang dengan kebijakan terkini

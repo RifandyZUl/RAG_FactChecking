@@ -573,3 +573,38 @@ def test_belum_terbukti_is_visibly_different_from_belum_ditemukan_and_other_stat
     assert style.color not in {s.color for s in others} and style.icon not in {s.icon for s in others}
     assert style.color not in {"green", "blue", "red", "orange", "yellow", "gray"}
     assert not re.search(r"\b(salah|penipuan|hoaks|dokter|obat|medis)\b", style.summary.lower())
+
+
+# --- peringatan pencocokan pada hasil "ditemukan" (tampilan saja; 2026-10-21) ---------------------------
+
+
+def test_found_view_carries_article_date_from_retrieval_metadata() -> None:
+    view = build_view(_found(), article_dates={"36214": "05/01/2026", "1": "x"})
+    assert view.article_date == "05/01/2026"
+    assert build_view(_found()).article_date == ""
+
+
+def test_match_check_shows_note_with_title_and_date_on_found() -> None:
+    import presentation
+    view = build_view(_found(), article_dates={"36214": "05/01/2026"})
+    lines = presentation.match_check_lines(view)
+    assert lines[0] == presentation.MATCH_CHECK_NOTE
+    assert all(w in lines[0] for w in ("tokoh", "lembaga", "program"))
+    assert lines[1] == "Artikel: Judul Artikel (05/01/2026)"
+    assert presentation.match_check_lines(build_view(_found()))[1] == "Artikel: Judul Artikel (tanggal tidak tercatat)"
+
+
+def test_match_check_is_absent_for_not_found_and_failed() -> None:
+    import presentation
+    not_found = build_view(_found(verdict="tidak_ditemukan", article_id=None, status_label=None))
+    assert not_found.kind == "not_found" and presentation.match_check_lines(not_found) == []
+    failed = build_view(_failed())
+    assert failed.kind == "failed" and presentation.match_check_lines(failed) == []
+
+
+def test_match_check_does_not_change_the_decision_fields() -> None:
+    a = build_view(_found("PENIPUAN"))
+    b = build_view(_found("PENIPUAN"), article_dates={"36214": "05/01/2026"})
+    for f in ("kind", "status_label", "status_color", "summary", "article_title", "article_url", "clarification",
+              "advice", "references"):
+        assert getattr(a, f) == getattr(b, f), f
