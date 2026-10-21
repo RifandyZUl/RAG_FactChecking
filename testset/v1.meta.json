@@ -820,5 +820,36 @@
       "koreksi": "Dugaan awal bahwa ambang 0,57 meloloskan hampir semua artikel bertopik jauh (skor maks negatif mudah 0,849) tidak didukung data: skor 0,849 berasal dari v1-043, yang artikel asalnya kini ada di basis data."
     },
     "sumber": "testset/v1_perbandingan_indeks_922.json (butir, top-3 per indeks); set pengembangan diukur 2026-09-28 (retrieval saja, tanpa LLM). Dicatat atas permintaan pemilik proyek 2026-09-28."
+  },
+  "butir_negatif_berubah_status_indeks_1532_verifikasi_2026-10-21": {
+    "pernyataan": "Pemilik proyek memverifikasi sendiri, tanpa AI, bahwa artikel yang kini dicocokkan sistem pada indeks produksi 1.532 artikel memuat klaim yang SAMA dengan kueri butir v1-024 (36811), v1-026 (31607), dan v1-027 (36776), menurut pedoman v1.0. Pada indeks itu label negatif ketiga butir TIDAK BERLAKU; pada archive/v1 (150 artikel) labelnya tetap sah.",
+    "yang_tidak_diubah": "testset/v1.jsonl TIDAK diubah, dan label di v1.meta.json juga tidak diubah: entri ini hanya mencatat status butir, seperti butir_negatif_berubah_status_indeks_1532_2026-10-03. Uji kunci tetap lolos.",
+    "rincian_butir": [
+      {
+        "id": "v1-024",
+        "artikel_dicocokkan_sistem": "36811",
+        "keputusan": "SAMA",
+        "catatan_pemilik_proyek": "Menyebut hal yang sama dan tanggal serta tahun yang sama"
+      },
+      {
+        "id": "v1-026",
+        "artikel_dicocokkan_sistem": "31607",
+        "keputusan": "SAMA",
+        "catatan_pemilik_proyek": "Memiliki narasi yang sama"
+      },
+      {
+        "id": "v1-027",
+        "artikel_dicocokkan_sistem": "36776",
+        "keputusan": "SAMA",
+        "catatan_pemilik_proyek": "Menyebut tokoh yang sama dan narasi yang sama"
+      }
+    ],
+    "berkas": {
+      "terisi": "data/candidates/verifikasi_v1/verifikasi_v1_negatif_terisi.xlsx (lokal)",
+      "sha256_terisi": "6e23979caba0b6fb8e23aad56e626c63a256a7f5171d639fea8dee40384b97f3",
+      "alat": "python -m candidates.v1_verification --read"
+    },
+    "akibat": "Sensitivitas uji kemunduran (docs/rancangan_evaluasi_eksternal.md 11.8, aturan ditetapkan sebelum diisi): ketiganya dikeluarkan sebagai perubahan status label -> 41 butir non-batas, benar->salah v1-010 dan v1-019, salah->benar 0, kemunduran bersih 2 -> tidak mundur (ambang >= 3). Angka utama tetap 5/44, MUNDUR.",
+    "dicatat_pada": "2026-10-21"
   }
 }

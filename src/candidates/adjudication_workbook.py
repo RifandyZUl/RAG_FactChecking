@@ -14,6 +14,7 @@ catatan diisi pemilik proyek sendiri, tanpa bantuan AI (Aturan Wajib #5).
 Pemakaian (dari root proyek):
   PYTHONPATH=src python -m candidates.adjudication_workbook --make   # menolak menimpa
   PYTHONPATH=src python -m candidates.adjudication_workbook --read [--berkas <..._terisi_v2.xlsx>]
+  PYTHONPATH=src python -m candidates.adjudication_workbook --sensitivitas   # 7.8, dari hasil --read
 """
 
 import argparse
@@ -189,13 +190,74 @@ def read(path: Path = FILLED_PATH) -> int:
     return 0
 
 
+SENSITIVITY_PATH = ADJ_DIR / "sensitivitas_adjudikasi.json"
+
+
+def adjudicated_labels(labels: dict[str, dict[str, Any]], decisions: list[dict[str, Any]],
+                       keep_doubtful: bool) -> dict[str, dict[str, Any]]:
+    """
+    7.8 butir 2-3 (ditetapkan sebelum diisi): pilihan adjudikasi menggantikan label kecuali memihak label; TIDAK ADA ->
+    negatif, id -> positif dengan sasaran id itu. keep_doubtful=True: butir ragu tetap berlabel lama (arah kedua).
+    """
+    from evaluation.external_analysis import flip
+    codes = {d["kode"]: (None if d["keputusan"] == NONE else {d["keputusan"]}) for d in decisions
+             if d["memihak"] != "label" and not (keep_doubtful and d["ragu"])}
+    return flip(labels, codes)
+
+
+def sensitivity(labels: dict[str, dict[str, Any]], modes: dict[str, dict[str, Any]], cands: dict[str, list[str]],
+                decisions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Hitungan label vs sistem per jenis, metrik yang disesuaikan dua arah untuk butir ragu, dan kategori terburuk."""
+    from evaluation.external_analysis import summarize, worst
+
+    def brief(s: dict[str, Any]) -> dict[str, Any]:
+        return {m: {k: v for k, v in s[m].items() if k != "per_hasil"} for m in ("positif", "kecocokan_palsu")}
+
+    variants = {"ragu_ikut_adjudikasi": adjudicated_labels(labels, decisions, False),
+                "ragu_label_tetap": adjudicated_labels(labels, decisions, True)}
+    sums = {n: brief(summarize(lab, modes, cands)) for n, lab in variants.items()}
+    per_kind = {j: {"butir": sum(d["jenis_ketidaksesuaian"] == j for d in decisions),
+                    "kesalahan_label": sorted(d["kode"] for d in decisions if d["jenis_ketidaksesuaian"] == j and d["memihak"] != "label"),
+                    "tetap_kesalahan_sistem": sorted(d["kode"] for d in decisions if d["jenis_ketidaksesuaian"] == j and d["memihak"] == "label")}
+                for j in sorted({d["jenis_ketidaksesuaian"] for d in decisions})}
+    return {"utama": brief(summarize(labels, modes, cands)), "per_jenis": per_kind,
+            "ragu": sorted(d["kode"] for d in decisions if d["ragu"]), "disesuaikan": sums,
+            "kategori_terburuk": {m: worst(m, [s[m]["kategori"] for s in sums.values()]) for m in ("positif", "kecocokan_palsu")},
+            "sifat": "batas yang menguntungkan sistem (7.6, 7.8 butir 5), bukan perkiraan tak bias; metrik utama tidak berubah"}
+
+
+def cmd_sensitivity() -> int:
+    """Terapkan 7.8 pada hasil_adjudikasi.json yang sudah lolos --read; tulis SENSITIVITY_PATH (lokal)."""
+    from evaluation.external_analysis import (
+        LIPUTAN6_EVAL,
+        candidate_lists,
+        item_mode,
+        label_view,
+        locked_final_labels,
+    )
+    from evaluation.testset_analysis import load_eval_records
+    res = json.loads(RESULT_PATH.read_text(encoding="utf-8"))
+    modes = {k: item_mode(v) for k, v in load_eval_records(LIPUTAN6_EVAL).items()}
+    out = {"berkas_adjudikasi": res["berkas"], **sensitivity(label_view(locked_final_labels()), modes, candidate_lists(), res["keputusan"])}
+    p217 = next((d for d in res["keputusan"] if d["kode"] == "P2-17"), None)
+    if p217:  # 7.8 butir 4: kecocokan ke artikel di luar daftar kandidat
+        out["P2_17_cocok_di_luar_daftar"] = {"keputusan": p217["keputusan"], "memihak": p217["memihak"], "ragu": p217["ragu"],
+                                             "status": "tidak_sah" if p217["memihak"] == "label" else "sah"}
+    SENSITIVITY_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(out, ensure_ascii=False, indent=1))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--make", action="store_true")
     g.add_argument("--read", action="store_true")
+    g.add_argument("--sensitivitas", action="store_true", help="7.8: metrik yang disesuaikan dari hasil --read")
     ap.add_argument("--berkas", type=Path, default=FILLED_PATH)
     args = ap.parse_args()
+    if args.sensitivitas:
+        return cmd_sensitivity()
     return make() if args.make else read(args.berkas)
 
 

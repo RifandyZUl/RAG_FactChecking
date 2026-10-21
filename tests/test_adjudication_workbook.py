@@ -102,3 +102,35 @@ def test_recorded_hashes_match_design_document():
 def test_make_refuses_to_overwrite(adj):
     with pytest.raises(SystemExit):
         aw.make()
+
+
+def _labels():
+    def lab(art):
+        return {"positif": art is not None, "sasaran": {art} if art else set(), "ragu": False, "putaran": 1, "strata_selisih": None}
+    return {"P1-1": lab("11"), "P1-2": lab("12"), "P1-3": lab(None), "P2-4": lab(None), "P2-5": lab("15")}
+
+
+DECISIONS = [  # P1-2 penolakan palsu -> TIDAK ADA (label keliru); P1-3 kecocokan palsu -> 13, ragu; P2-5 tetap label
+    {"kode": "P1-2", "jenis_ketidaksesuaian": "penolakan_palsu", "keputusan": aw.NONE, "memihak": "sistem", "ragu": False},
+    {"kode": "P1-3", "jenis_ketidaksesuaian": "kecocokan_palsu", "keputusan": "13", "memihak": "sistem", "ragu": True},
+    {"kode": "P2-5", "jenis_ketidaksesuaian": "artikel_salah", "keputusan": "15", "memihak": "label", "ragu": False}]
+
+
+def test_adjudicated_labels_apply_choice_except_label_side_and_doubtful_when_kept():
+    full = aw.adjudicated_labels(_labels(), DECISIONS, keep_doubtful=False)
+    assert not full["P1-2"]["positif"] and full["P1-3"]["sasaran"] == {"13"} and full["P2-5"]["sasaran"] == {"15"}
+    kept = aw.adjudicated_labels(_labels(), DECISIONS, keep_doubtful=True)
+    assert not kept["P1-2"]["positif"] and not kept["P1-3"]["positif"]
+    assert _labels()["P1-2"]["positif"]  # label asli tidak diubah di tempat
+
+
+def test_sensitivity_counts_both_directions_and_reports_worst_category():
+    modes = {k: v for k, v in MODES.items() if k != "P1-4"}
+    s = aw.sensitivity(_labels(), modes, {k: [] for k in modes}, DECISIONS)
+    assert s["per_jenis"]["kecocokan_palsu"] == {"butir": 1, "kesalahan_label": ["P1-3"], "tetap_kesalahan_sistem": []}
+    assert s["per_jenis"]["artikel_salah"]["tetap_kesalahan_sistem"] == ["P2-5"]
+    assert (s["utama"]["positif"]["k"], s["utama"]["positif"]["n"]) == (1, 3)
+    full, kept = s["disesuaikan"]["ragu_ikut_adjudikasi"], s["disesuaikan"]["ragu_label_tetap"]
+    assert (full["positif"]["k"], full["positif"]["n"], full["kecocokan_palsu"]["k"], full["kecocokan_palsu"]["n"]) == (2, 3, 0, 2)
+    assert (kept["positif"]["k"], kept["positif"]["n"], kept["kecocokan_palsu"]["k"], kept["kecocokan_palsu"]["n"]) == (1, 2, 1, 3)
+    assert s["ragu"] == ["P1-3"] and "menguntungkan sistem" in s["sifat"]

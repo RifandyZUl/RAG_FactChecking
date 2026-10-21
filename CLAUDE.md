@@ -805,6 +805,14 @@ Proyek dibangun bertahap dalam dua versi:
   generator -- tidak terpengaruh.** (4) Draf bagian Evaluasi README: `docs/draf_readme_evaluasi.md` (belum
   menggantikan README; angka adjudikasi dan verifikasi menyusul). Jangan menjalankan `--read` adjudikasi/verifikasi
   sebelum diminta pemilik proyek.
+  **2026-10-21 malam: KEDUANYA SUDAH DIBACA (atas permintaan pemilik proyek).** Verifikasi: 3/3 SAMA -> kemunduran
+  bersih sensitivitas 2, tidak mundur; utama tetap 5/44 MUNDUR; status dicatat di 11.8 dan entri baru `v1.meta.json`
+  (`..._verifikasi_2026-10-21`), label tidak diubah. Adjudikasi: versi pertama ditolak (6 isian "Tidak sama"), v2
+  (`b25f1ff6...`) lolos, hanya 6 sel KEPUTUSAN berbeda (7.8). Kecocokan palsu 7/10 dan penolakan palsu 3/9 menurut
+  adjudikasi kesalahan label; disesuaikan (`--sensitivitas`, batas yang menguntungkan sistem): positif memadai,
+  kecocokan palsu terburuk TIDAK KONKLUSIF (5/43; lulus 3/41 hanya bila 2 butir ragu ikut adjudikasi); P2-17 tidak
+  sah. Metrik utama tidak berubah (11.9). Draf README lengkap + usulan penggantian di `docs/draf_readme_evaluasi.md`;
+  README BELUM diubah (menunggu pemilik proyek). Langkah berikutnya milik pemilik proyek: ingest antrean.
   Riwayat di bawah (teks "tersegel" adalah keadaan sebelum 2026-10-20).
   **EVALUASI EKSTERNAL: DISETUJUI 2026-10-17, 3 RUN SELESAI 2026-10-19.** Hari 1 (2026-10-17) selesai:
   run 1 Liputan6 91/91 dan testset-v1 54/54 (`python -m evaluation.external_eval --set liputan6|v1 --run N`;
