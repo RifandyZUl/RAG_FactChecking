@@ -455,7 +455,7 @@ disimpan berdampingan di berkas yang sama untuk sensitivitas.
 - **Kode analisis metrik (bagian 6, sensitivitas, kemunduran, kepatuhan) ditulis dan di-commit
   bersama catatan ini, sebelum segel dibuka** (`external_analysis.py`).
 
-### 7.8 Berkas adjudikasi buta (DIBUAT 2026-10-20 16:00 UTC, SEBELUM diisi; belum dijalankan)
+### 7.8 Berkas adjudikasi buta (DIBUAT 2026-10-20 16:00 UTC, SEBELUM diisi; dibaca 2026-10-21, hasil di 11.9)
 
 - Alat: `python -m candidates.adjudication_workbook --make` (uji `tests/test_adjudication_workbook.py`).
   Isi: **20 butir** = semua butir analisis yang keputusan modus sistemnya berbeda dari label final:
@@ -501,6 +501,29 @@ disimpan berdampingan di berkas yang sama untuk sensitivitas.
      "cocok di luar daftar: sah / tidak sah" (bagian 3).
   5. Karena adjudikasi hanya bisa menggeser hasil ke arah sistem (7.6), angka yang disesuaikan adalah
      **batas yang menguntungkan sistem**, bukan perkiraan tak bias; laporan wajib menyebutnya begitu.
+- **Pembacaan (2026-10-21), dicatat apa adanya:**
+  1. *Versi pertama DITOLAK.* `adjudikasi_buta_terisi.xlsx`, sha256
+     `839415be92e7e4537b2dbcc2fafe9e2e5b7d6379f48f36356a4ece666039625b` (disimpan Excel 14:46:46 UTC),
+     diarsipkan `--read` 14:51:49 UTC sebelum validasi. Hash templat, kunci, dan sidik jari sama dengan tabel di
+     atas; sel bukti sama dengan templat. Ditolak karena KEPUTUSAN butir **2, 3, 4, 6, 7, 13** berisi
+     "Tidak sama" (butir 6: "tidak sama"), bukan id artikel atau TIDAK ADA. Hasil tidak dipetakan dan kunci
+     tidak dibuka; isinya tidak ditafsirkan.
+  2. *Versi kedua.* `adjudikasi_buta_terisi_v2.xlsx`, sha256
+     `b25f1ff6f02580c3cc5106208d063294e673c64eeadad2f5824c2b9a99e89c82` (disimpan Excel 15:39:15 UTC), diarsipkan
+     15:42:28 UTC sebelum dibandingkan dan lagi oleh `--read` 15:42:59 UTC. Pemilik proyek menyatakan ini
+     **perbaikan format oleh dirinya sendiri, tanpa AI**: isian "Tidak sama" diganti nilai sah sesuai maksudnya saat
+     mengerjakan, butir lain tidak diubah. **Perbandingan sel demi sel dengan salinan arsip versi pertama (ketiga
+     lembar, dimensi, proteksi, sel gabungan): tepat 6 sel berbeda, semuanya KEPUTUSAN butir 2, 3, 4, 6, 7, 13**,
+     masing-masing "Tidak sama" -> "Tidak ada" (butir 7: "Tidak Ada"; dibaca sebagai TIDAK ADA). Tidak ada sel lain
+     yang berbeda. `--read`: lolos, 0 butir bermasalah.
+  3. *Dua hal yang tidak sesuai pernyataan, dicatat tanpa diubah:* (a) pemilik proyek menyatakan perbaikannya
+     dicatat di kolom catatan tiap butir, tetapi **kolom catatan keenam butir tidak berubah** dari versi pertama, jadi
+     di berkas tidak ada jejak perbaikan; catatan ini satu-satunya rekamannya. (b) **Berkas versi pertama di disk ikut
+     tersimpan ulang** (15:38:11 UTC, sha256 `3ce2d0136477365b61980050439917675171b4cf23d43a4d4bbfa3c7f07c1737`;
+     selnya sama dengan v2), bertentangan dengan aturan "berkas yang sudah diserahkan tidak pernah ditimpa". Versi
+     yang diserahkan utuh hanya di `arsip_baca/` (salinan berhash `839415be...`), dan itulah pembanding di butir 2.
+     Pengarsipan sebelum validasi bekerja seperti yang dimaksudkan.
+  4. Hasil: bagian 11.9.
 
 ---
 
@@ -825,12 +848,13 @@ Yang perlu diperbaiki lebih dulu, berurutan:
    pada penipuan berpola sama -- persis jenis kesalahan yang gugur di sini. Keduanya tidak boleh disetel
    terpisah.
 3. **Memeriksa tiga butir negatif testset-v1 yang kini dicocokkan** (v1-024, v1-026, v1-027) sebelum
-   kategori MUNDUR ditafsirkan sebagai kemunduran sistem.
+   kategori MUNDUR ditafsirkan sebagai kemunduran sistem. *(Selesai 2026-10-21: ketiganya SAMA; kemunduran
+   bersih sensitivitas 2, tidak mundur; angka utama tetap MUNDUR -- 11.8.)*
 4. **Uji pada sampel baru.** Set 99 butir ini kini **sekali pakai** (bagian 8): perbaikan apa pun pada
    generator, prompt, retriever, atau indeks tidak boleh dievaluasi ulang di set yang sama; uji akhirnya
    memerlukan sampel Liputan6 baru dari periode lain.
 
-### 11.8 Verifikasi tiga butir negatif testset-v1 (berkas DIBUAT 2026-10-21 13:11 UTC, SEBELUM diisi)
+### 11.8 Verifikasi tiga butir negatif testset-v1 (berkas DIBUAT 2026-10-21 13:11 UTC, SEBELUM diisi; dibaca 2026-10-21)
 
 - **Pertanyaan:** apakah artikel yang kini dicocokkan sistem pada indeks 1.532 (v1-024 -> 36811,
   v1-026 -> 31607, v1-027 -> 36776; modus 3 run, semuanya bulat) memuat klaim yang SAMA dengan kueri butir
@@ -859,3 +883,65 @@ Yang perlu diperbaiki lebih dulu, berurutan:
   3. **`testset/v1.jsonl` yang beku tidak diubah** (uji kunci tetap lolos); status butir dicatat di
      rancangan ini dan, bila SAMA, di `testset/v1.meta.json` seperti butir yang statusnya berubah
      sebelumnya.
+- **Hasil (dibaca 2026-10-21):** `verifikasi_v1_negatif_terisi.xlsx`, sha256
+  `6e23979caba0b6fb8e23aad56e626c63a256a7f5171d639fea8dee40384b97f3` (disimpan Excel 14:50:05 UTC), diarsipkan
+  `--read` 14:52:07 UTC sebelum validasi. Hash templat, kunci, dan sidik jari sama dengan tabel di atas; sel bukti
+  sama dengan templat; 0 butir bermasalah. Diisi pemilik proyek sendiri, tanpa AI. Excel masih membuka berkas saat
+  dibaca; pemilik proyek menyatakan menutupnya tanpa menyimpan ulang, jadi hash di atas yang berlaku.
+
+  | Butir | Artikel yang dicocokkan sistem | Keputusan | Catatan pemilik proyek |
+  | --- | --- | --- | --- |
+  | v1-024 | 36811 | SAMA | Menyebut hal yang sama dan tanggal serta tahun yang sama |
+  | v1-026 | 31607 | SAMA | Memiliki narasi yang sama |
+  | v1-027 | 36776 | SAMA | Menyebut tokoh yang sama dan narasi yang sama |
+
+  - **Sensitivitas kemunduran (aturan 1-2):** ketiganya dikeluarkan sebagai perubahan status label -> 41 butir
+    non-batas; benar -> salah tinggal v1-010 dan v1-019 (keduanya positif); salah -> benar 0. **Kemunduran bersih 2
+    -> TIDAK MUNDUR** (ambang >= 3, tidak disesuaikan). Tidak ada RAGU, jadi tidak ada arah kedua.
+  - **Angka utama tidak diganti: 5/44, MUNDUR.** Yang dikatakan sensitivitas ini: dari lima kemunduran, tiga
+    ternyata artikel yang baru masuk indeks memang memuat klaim butir itu, jadi label negatifnya yang tidak berlaku
+    pada indeks 1.532; dua sisanya (penolakan pada butir positif yang artikelnya ada di top-3) tetap kemunduran
+    penilaian generator.
+  - **`testset/v1.jsonl` tidak diubah, dan label di `testset/v1.meta.json` juga tidak diubah.** Sesuai aturan 3,
+    statusnya dicatat sebagai entri baru `butir_negatif_berubah_status_indeks_1532_verifikasi_2026-10-21` (status
+    saja, seperti entri 2026-10-03); uji kunci lolos. Dengan ini butir negatif testset-v1 yang labelnya tidak berlaku
+    pada indeks 1.532 menjadi sembilan.
+
+### 11.9 Hasil adjudikasi buta (sensitivitas; aturan 7.8, dibaca 2026-10-21)
+
+Berkas yang dihitung: `adjudikasi_buta_terisi_v2.xlsx` (`b25f1ff6...`; riwayat penolakan versi pertama di 7.8).
+Alat: `python -m candidates.adjudication_workbook --read --berkas <v2>` lalu `--sensitivitas` (hasil lokal
+`hasil_adjudikasi.json`, `sensitivitas_adjudikasi.json`). Diisi pemilik proyek sendiri, tanpa AI. **Metrik utama
+(11.2-11.5) tidak berubah; semua angka di bawah adalah batas yang menguntungkan sistem, bukan perkiraan tak bias.**
+
+| Jenis ketidaksesuaian | Butir | Menurut adjudikasi kesalahan label | Tetap kesalahan sistem |
+| --- | --- | --- | --- |
+| Kecocokan palsu | 10 | **7** (P1-15, P1-16, P1-17, P1-21, P1-23*, P2-2*, P2-41) | **3** (P2-17, P2-33, P2-38) |
+| Penolakan palsu | 9 | **3** (P1-8, P1-28, P1-31) | **6** (P1-26, P1-49, P2-4, P2-15, P2-35, P2-37) |
+| Artikel salah | 1 | 1 (P2-1: artikel sistem 29505) | 0 |
+
+\* ditandai ragu saat adjudikasi (P1-23 tanpa catatan). Tidak ada pilihan "keduanya tidak".
+
+| Set label | Positif benar | Kategori | Kecocokan palsu | Kategori |
+| --- | --- | --- | --- | --- |
+| Utama (label final, tidak berubah) | 36/46 = 78,3% [64,4; 87,7] | memadai | 10/45 = 22,2% [12,5; 36,3] | gugur |
+| Adjudikasi, butir ragu ikut adjudikasi | 44/50 = 88,0% [76,2; 94,4] | memadai | 3/41 = 7,3% [2,5; 19,4] | lulus |
+| Adjudikasi, butir ragu tetap berlabel lama | 42/48 = 87,5% [75,3; 94,1] | memadai | 5/43 = 11,6% [5,1; 24,5] | tidak konklusif |
+| **Kategori terburuk yang dilaporkan (7.8 butir 3)** | | **memadai** | | **tidak konklusif** |
+
+- **P2-17 (kecocokan ke artikel di luar daftar kandidat, 7.8 butir 4):** adjudikasi memilih TIDAK ADA, memihak
+  label, tidak ragu (catatan: "Tokoh yang disebut berbeda") -> **cocok di luar daftar: tidak sah**; tetap
+  kecocokan palsu.
+- **Cara membaca.** Hanya 20 butir yang tidak sepakat yang ditinjau, dan pemilik proyek tahu setiap butir adalah
+  ketidaksesuaian (7.6). Kesalahan label pada butir yang sistem dan label sepakat -- yang hanya bisa merugikan
+  sistem -- tidak dicari. Jadi angka yang disesuaikan menggeser hasil sejauh mungkin ke arah sistem; kebenarannya
+  berada di antara baris utama dan baris adjudikasi.
+- **Bahkan di batas yang menguntungkan sistem, kecocokan palsu tidak lulus dengan kokoh:** kategori terburuk tidak
+  konklusif (5/43, batas atas 24,5% > 20%), dan "lulus" hanya tercapai bila kedua butir ragu dihitung ke arah
+  sistem, dengan batas atas 19,4% -- tepat di bawah 20%. Kesimpulan 11.7 (pemicu CRAG belum layak) tetap.
+- **Yang lebih kuat dari angka itu: label pada butir yang sulit tidak stabil.** 11 dari 20 pilihan adjudikasi
+  berbeda dari label final (7 dari 10 kecocokan palsu), padahal kappa uji ulang 0,63. P2-2 kini sudah dinilai tiga
+  kali: TIDAK ADA (label awal), TIDAK ADA (sesi buta, audit), dan 31894 dengan ragu (adjudikasi). Ini sejalan dengan
+  pola kegagalan utama (11.3): pada penipuan berpola sama, batas "klaim sama" kabur bagi anotator maupun sistem.
+  Rancangan pemeriksaan unsur inti (11.7 butir 1) perlu kriteria yang cukup tegas untuk juga menstabilkan label.
+- Penolakan palsu lebih tahan: 6 dari 9 tetap kesalahan sistem.
