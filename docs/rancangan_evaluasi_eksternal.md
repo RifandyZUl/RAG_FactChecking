@@ -407,10 +407,13 @@ proyek sendiri, tanpa AI.
   A/B) dan bukti yang lebih lengkap (Narasi utuh), lihat 7.2; dengan 10 butir intervalnya mencakup 0.
 - **Ambang 7.4 diterapkan apa adanya:** dasar terkunci = estimasi titik kappa biner 30 butir = 0,6341 ->
   **kategori 0,60-0,79**: label final tetap dipakai, setiap metrik dilaporkan juga dengan kelima butir
-  yang berubah dibalik ke dua arah, dan "lulus" hanya dinyatakan bila lulus pada kedua arah. Pemilik
-  proyek dalam perintahnya menyebut kappa putaran 2; nilai itu (0,6809) jatuh di kategori yang sama, jadi
-  perbedaan dasar tidak mengubah tindakan. Batas bawah interval kedua kappa di bawah 0,60, jadi
-  kategori ini sendiri tidak pasti.
+  yang berubah dibalik ke dua arah, dan "lulus" hanya dinyatakan bila lulus pada kedua arah. Batas bawah
+  interval kedua kappa di bawah 0,60, jadi kategori ini sendiri tidak pasti.
+- **Ketidaksesuaian perintah dengan rancangan (dikoreksi pemilik proyek 2026-10-21, setelah hasil
+  dilihat):** perintah pelaksanaan 2026-10-20 meminta ambang diterapkan pada "kappa putaran 2", padahal
+  yang dikunci di 7.4 adalah estimasi titik kappa biner 30 butir. **Yang berlaku adalah 7.4 (30 butir,
+  0,6341).** Kappa biner putaran 2 (0,6809) jatuh di kategori yang sama (0,60-0,79), jadi tindakan dan
+  seluruh hasil di bagian 11 tidak berubah oleh ketidaksesuaian ini.
 - Hasil uji ulang **tidak mengubah label** (7.5).
 
 **Tujuh butir audit** (tidak ikut kappa; sinyal dibuka setelah keputusan sesi tercatat):
@@ -478,6 +481,26 @@ disimpan berdampingan di berkas yang sama untuk sensitivitas.
   mengubah label final maupun metrik utama**. Bias yang disadari (7.6): hanya butir yang tidak sepakat
   yang ditinjau, jadi adjudikasi hanya bisa menggeser hasil ke arah sistem; dan pemilik proyek kini
   sudah tahu bahwa setiap butir di berkas ini adalah ketidaksesuaian.
+- Judul dan tanggal Liputan6 tetap ditampilkan (keputusan pemilik proyek 2026-10-21): keduanya bagian
+  dari bukti yang dilihat saat pelabelan. Berkas tidak diubah; hash di atas tetap berlaku.
+- **Cara hasil adjudikasi dipakai (DITETAPKAN 2026-10-21, SEBELUM berkas diisi):**
+  1. **Metrik utama tidak berubah** (bagian 11 tetap angka resmi, termasuk kategori GUGUR/MEMADAI/MUNDUR).
+  2. Hasil hanya dilaporkan sebagai **sensitivitas "label setelah adjudikasi"**, berdampingan dengan
+     metrik utama, tanpa uji beda:
+     - jumlah **kecocokan palsu** (dari 10) yang menurut adjudikasi sebenarnya kesalahan label (pemilik
+       proyek memilih artikel sistem) -- butir itu dihitung positif dengan sasaran artikel sistem;
+     - jumlah **penolakan palsu** (dari 9) yang menurut adjudikasi sebenarnya kesalahan label (memilih
+       TIDAK ADA) -- butir itu dihitung negatif;
+     - **artikel salah** (1): memilih artikel sistem -> sasaran diganti; memilih TIDAK ADA -> negatif;
+     - memilih opsi label -> label tetap.
+     - Metrik yang disesuaikan: ketepatan positif dan kecocokan palsu dengan Wilson 95% dan kategori
+       ambang 6.1/6.2 pada n hasil penyesuaian.
+  3. Butir yang ditandai **ragu** saat adjudikasi dihitung dua arah (label tetap / pilihan adjudikasi),
+     dan dilaporkan kategori terburuknya, seperti 6.2.
+  4. Kecocokan palsu di luar daftar kandidat (P2-17) diperlakukan sama; hasilnya juga dicatat sebagai
+     "cocok di luar daftar: sah / tidak sah" (bagian 3).
+  5. Karena adjudikasi hanya bisa menggeser hasil ke arah sistem (7.6), angka yang disesuaikan adalah
+     **batas yang menguntungkan sistem**, bukan perkiraan tak bias; laporan wajib menyebutnya begitu.
 
 ---
 
