@@ -934,8 +934,12 @@ Alat: `python -m candidates.adjudication_workbook --read --berkas <v2>` lalu `--
   kecocokan palsu.
 - **Cara membaca.** Hanya 20 butir yang tidak sepakat yang ditinjau, dan pemilik proyek tahu setiap butir adalah
   ketidaksesuaian (7.6). Kesalahan label pada butir yang sistem dan label sepakat -- yang hanya bisa merugikan
-  sistem -- tidak dicari. Jadi angka yang disesuaikan menggeser hasil sejauh mungkin ke arah sistem; kebenarannya
-  berada di antara baris utama dan baris adjudikasi.
+  sistem -- tidak dicari. Jadi angka yang disesuaikan menggeser hasil sejauh mungkin ke arah sistem. Nilai
+  sebenarnya **kemungkinan besar** berada di antara baris utama dan baris adjudikasi, **tetapi tidak dijamin**:
+  sebagian kesalahan label yang tidak diperiksa (mis. butir berlabel positif yang sebenarnya negatif) justru
+  menaikkan kecocokan palsu di atas angka resmi, dan penilai yang diperlihatkan dua opsi bisa cenderung menerima
+  opsi yang tampak masuk akal, sehingga adjudikasi sendiri berpotensi bias ke arah sistem. *(Rumusan dikoreksi
+  2026-10-21 atas permintaan pemilik proyek; sebelumnya "kebenarannya berada di antara".)*
 - **Bahkan di batas yang menguntungkan sistem, kecocokan palsu tidak lulus dengan kokoh:** kategori terburuk tidak
   konklusif (5/43, batas atas 24,5% > 20%), dan "lulus" hanya tercapai bila kedua butir ragu dihitung ke arah
   sistem, dengan batas atas 19,4% -- tepat di bawah 20%. Kesimpulan 11.7 (pemicu CRAG belum layak) tetap.

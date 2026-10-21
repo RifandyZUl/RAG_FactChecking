@@ -5,6 +5,16 @@ apakah sebuah klaim sudah pernah diverifikasi oleh pemeriksa fakta, lalu
 mengembalikan status verifikasi, klarifikasi faktanya, dan tautan rujukan yang
 sahih.
 
+Proyek ini mencocokkan klaim yang beredar dengan artikel cek fakta TurnBackHoax.id lewat RAG (embedding
+BGE-M3, basis vektor ChromaDB, generator Gemini): bila klaimnya pernah diperiksa, sistem menampilkan label,
+klarifikasi, dan rujukan dari artikel itu. Sistem ini bukan pemeriksa fakta; ia tidak menilai sendiri
+benar-salahnya klaim baru. Sistem diuji dengan set uji yang dibekukan dan dengan set eksternal 91 klaim
+nyata dari Liputan6 Cek Fakta, dengan ambang lulus/gugur yang ditetapkan sebelum evaluasi dijalankan.
+Hasilnya: pada klaim yang ada di basis data, ketepatannya memadai (36/46 = 78,3%, Wilson 95% [64,4%;
+87,7%]), tetapi pada klaim yang tidak ada, sistem terlalu sering menampilkan artikel yang keliru (kecocokan
+palsu 10/45 = 22,2% [12,5%; 36,3%], gugur), terutama pada penipuan berpola sama. Pelajaran utamanya: pada
+penipuan yang berulang, definisi "klaim yang sama" belum cukup tajam, bahkan bagi penilai manusia.
+
 **Status:** Versi 1 terukur pada indeks 150 artikel (`archive/v1`). Evaluasi eksternal pada indeks
 produksi 1.532 artikel sudah selesai: ketepatan positif memadai (36/46 = 78,3%, Wilson 95% [64,4%;
 87,7%]), kecocokan palsu gugur pada label resmi (10/45 = 22,2% [12,5%; 36,3%]), dan uji kemunduran
@@ -143,6 +153,11 @@ medium). Semua proporsi disertai interval Wilson 95%.
 | Set eksternal Liputan6, negatif | produksi, 1.532 artikel | 45 | Kecocokan palsu **10/45 = 22,2%** [12,5%; 36,3%] -> **gugur** (ambang: gugur bila batas bawah > 10%) |
 | Set eksternal, retrieval | produksi, 1.532 artikel | 46 positif | Recall@3 bersyarat **41/46 = 89,1%** [77,0%; 95,3%] |
 
+Angka produksi berlaku untuk indeks 1.532 artikel / 4.593 chunk yang dibekukan selama evaluasi, dengan
+sidik jari tercatat (embedding `9851a6dc`, teks dan metadata `6283f0f6`;
+[`docs/rancangan_evaluasi_eksternal.md`](docs/rancangan_evaluasi_eksternal.md) bagian 5). Indeks demo bisa
+bertambah setelah pembaruan berkala, jadi angka ini tidak otomatis berlaku untuk indeks yang lebih besar.
+
 Angka di tabel ini adalah angka resmi. Pemeriksaan label sesudahnya (adjudikasi dan verifikasi, di bawah)
 dilaporkan sebagai sensitivitas dan tidak menggantikannya; aturan pemakaiannya ditetapkan sebelum berkasnya
 diisi.
@@ -218,11 +233,16 @@ diverifikasi setelah evaluasi; lihat di bawah). Karena itu set uji v1 tetap sah 
 
 91 klaim nyata dari artikel cek fakta Liputan6 (dari 99; 8 kutipan yang hanya berisi tautan atau salam
 dikeluarkan dengan aturan yang ditetapkan sebelum hasil dilihat). Kueri adalah kutipan pesan apa adanya,
-seperti yang akan ditempel pengguna. Label emas diberikan pemilik proyek sendiri, tanpa bantuan AI:
-**positif** = id artikel TurnBackHoax yang memuat klaim yang sama, **negatif** = tidak ada yang cocok di
-daftar 5-8 kandidat yang diperiksanya. Teks pesan dan artikel Liputan6 tidak diterbitkan di repositori ini;
-yang di-commit hanya id, label, dan keputusan per butir. Rancangan lengkap, ambang, dan hasil:
+seperti yang akan ditempel pengguna. **Positif** = id artikel TurnBackHoax yang memuat klaim yang sama,
+**negatif** = tidak ada yang cocok di daftar 5-8 kandidat yang diperiksa. Teks pesan dan artikel Liputan6 tidak diterbitkan di repositori ini; yang
+di-commit hanya id, label, dan keputusan per butir. Rancangan lengkap, ambang, dan hasil:
 [`docs/rancangan_evaluasi_eksternal.md`](docs/rancangan_evaluasi_eksternal.md).
+
+**Asal-usul label.** Semua label diputuskan pemilik proyek. Butir 1-5 putaran pertama dibahas bersama
+asisten AI sebagai contoh cara mengisi. Sesudah putaran pertama, asisten AI memeriksa berkas terisi dan
+menunjukkan aturan yang diterapkan tidak konsisten, tanpa mengubah label. Butir lain putaran pertama,
+seluruh putaran kedua (asisten AI hanya membantu teknis berkas), sesi buta, adjudikasi, dan verifikasi
+dikerjakan tanpa bantuan AI.
 
 ### Keandalan label
 
@@ -234,7 +254,9 @@ antar-anotator.
   sama. Lima yang berubah semuanya soal ada/tidaknya pasangan, tidak ada yang berpindah ke artikel lain.
   Menurut ambang yang dikunci (0,60-0,79), setiap metrik juga dihitung dengan kelima butir itu dibalik ke
   dua arah; kategorinya tidak berubah.
-- **Audit jejak identik** (tanpa LLM: rangkaian 8 kata yang sama antara pesan dan Narasi artikel): 7
+- **Audit jejak identik** (tanpa LLM dan tanpa embedding) mencocokkan dua sinyal antara pesan dan setiap
+  kandidat: (a) domain tautan hoaks yang sama, setelah pemendek URL, domain media sosial dan arsip, serta
+  sumber tepercaya disaring; dan (b) rangkaian minimal 8 kata identik antara pesan dan Narasi artikel. 7
   butir negatif berjejak ditinjau ulang secara buta, dicampur dengan butir uji ulang. **4 dari 7 berubah
   menjadi cocok**, keempatnya ke artikel yang ditunjuk jejak itu. Label final memakai hasil ini, sehingga
   set menjadi 46 positif dan 45 negatif. Dengan label awal (42/49) kecocokan palsu justru lebih tinggi
@@ -261,8 +283,12 @@ Angka resmi lebih dulu, lalu angka bila label diganti dengan hasil adjudikasi:
 
 - **Ini batas yang menguntungkan sistem, bukan perkiraan yang lebih akurat.** Hanya butir yang tidak
   sepakat yang ditinjau, jadi adjudikasi hanya bisa menggeser hasil ke arah sistem; kesalahan label pada
-  butir yang sepakat tidak dicari. Tingkat kecocokan palsu sebenarnya berada di antara batas ini dan angka
-  resmi.
+  butir yang sepakat tidak dicari. Nilai kecocokan palsu sebenarnya kemungkinan besar berada di antara batas
+  ini dan angka resmi, tetapi tidak dijamin: kesalahan label pada butir yang sepakat tidak diperiksa, dan
+  sebagian kesalahan semacam itu (misalnya butir berlabel positif yang sebenarnya negatif) justru akan
+  menaikkan kecocokan palsu di atas angka resmi. Selain itu penilai yang diperlihatkan dua opsi bisa
+  cenderung menerima opsi yang tampak masuk akal, sehingga adjudikasi sendiri berpotensi bias ke arah
+  sistem.
 - Kategori terburuk pada batas ini: positif **memadai**, kecocokan palsu **tidak konklusif**. Bahkan di
   batas ini kecocokan palsu tidak lulus dengan kokoh: "lulus" hanya tercapai kalau kedua butir ragu
   dihitung ke arah sistem, dengan batas atas 19,4%, tepat di bawah patokan 20%.
@@ -289,8 +315,8 @@ sistem.
 - **Kecocokan ke artikel berpola sama dengan unsur inti berbeda** (10 dari 45 negatif, angka resmi).
   Sembilan dari sepuluh adalah artikel peringkat 1 retrieval, umumnya tautan penipuan dengan pola yang
   sama tetapi lembaga, tokoh, atau programnya berbeda; delapan bulat di ketiga run. Kesalahannya stabil,
-  bukan acak. Adjudikasi menunjukkan sebagian dari sepuluh ini sebenarnya kesalahan label, tetapi tidak
-  cukup untuk membuat kategorinya lulus.
+  bukan acak. Menurut adjudikasi, 7 dari 10 adalah kesalahan label (batas yang menguntungkan sistem),
+  tetapi itu tidak cukup untuk membuat kategorinya lulus.
 - **Penolakan pasangan lintas gelombang** (6 dari 10 kegagalan positif). Pada pasangan yang terbit
   terpaut lebih dari 30 hari, ketepatan 11/18, dibanding 25/28 pada yang <= 30 hari. Label mengikuti
   aturan "lembaga dan tawaran yang sama = cocok walau gelombangnya berbeda", sedangkan prompt generator
@@ -393,13 +419,15 @@ menyatakan klaimnya palsu, tanpa uraian fakta.
 **Anotasi satu orang.** Seluruh label ditetapkan satu anotator manusia, sehingga
 kesepakatan antar-anotator tidak terukur. Draf awal label tahap pertama dibuat
 dengan bantuan LLM (ChatGPT, OpenAI) dan telah dilihat anotator sebelum label
-final ditetapkan — tercatat lengkap di `testset/v1.meta.json`.
+final ditetapkan — tercatat lengkap di `testset/v1.meta.json`. Untuk set eksternal, asal-usul label
+(termasuk bagian yang dibahas bersama asisten AI) ada di [Set evaluasi eksternal](#set-evaluasi-eksternal).
 
 **Label manusia pada penipuan berpola sama tidak stabil.** Pada evaluasi eksternal, kappa biner uji
 ulang 0,63 dengan interval lebar [0,31; 0,91], 11 dari 20 pilihan adjudikasi berbeda dari label final,
 dan satu butir dinilai tiga kali dengan hasil berbeda. Karena itu tingkat kecocokan palsu sebenarnya
-berada di antara batas yang menguntungkan sistem (5/43 = 11,6% [5,1%; 24,5%]) dan angka resmi
-(10/45 = 22,2% [12,5%; 36,3%]), dan definisi "klaim yang sama" untuk penipuan berulang perlu
+kemungkinan besar berada di antara batas yang menguntungkan sistem (5/43 = 11,6% [5,1%; 24,5%]) dan angka
+resmi (10/45 = 22,2% [12,5%; 36,3%]), tetapi tidak dijamin (lihat
+[Adjudikasi buta](#adjudikasi-buta-sensitivitas)), dan definisi "klaim yang sama" untuk penipuan berulang perlu
 dipertajam sebelum pengukuran berikutnya.
 
 **Batas evaluasi eksternal.** Adjudikasi hanya meninjau butir yang tidak sepakat, dan anotator tahu
