@@ -28,6 +28,12 @@ os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 # sampai unduhan selesai (use_safetensors=False tidak mencegahnya). Variabel
 # ini mematikan konversi otomatis itu (transformers/modeling_utils.py).
 os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
+# Ingest, pembaruan metadata, dan semua skrip yang mengimpor modul ini membaca model DAN tokenizer dari
+# cache lokal saja. Wajib: tokenizer `chunker.make_token_counter` (berkas terkunci) tidak memakai revisi
+# yang dipatok, jadi tanpa ini ia bisa mengambil `main` terbaru dari Hub. Unduhan pertama di mesin baru:
+# jalankan sekali dengan HF_HUB_OFFLINE=0 (README, "Menjalankan demo"). Harus di-set sebelum
+# huggingface_hub/transformers diimpor.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 import chromadb
 from chromadb.config import Settings

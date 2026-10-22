@@ -50,7 +50,7 @@ BACK_LABEL = "Kembali"
 # telepon atau nama orang biasa.
 EXAMPLE_CLAIMS: tuple[str, ...] = (
     "Link pemutihan pajak motor dan mobil gratis seluruh Indonesia",  # dari 31781 (PENIPUAN)
-    "China kembangkan robot yang bisa mengandung bayi",  # dari 32989 (SALAH)
+    "Sabah dan Sarawak lepas dari Malaysia, resmi jadi bagian Indonesia",  # dari 35133 (SALAH)
     "Tautan pendaftaran bantuan bibit ikan lele",  # dari 36119 dengan objek pembeda diganti -> belum ditemukan
 )
 
@@ -68,7 +68,7 @@ LONG_CLAIM_WARNING = (
 LONG_CLAIM_CONFIRM = "Tekan “{button}” sekali lagi untuk tetap memeriksa pesan ini apa adanya."
 
 # Proses (BARU: berkas acuan tidak memuat keadaan ini)
-PROGRESS_CHECKING = "Memeriksa pesan Anda… Biasanya selesai dalam 10–20 detik."
+PROGRESS_CHECKING = "Memeriksa pesan Anda… Biasanya selesai dalam setengah menit, kadang lebih lama saat layanan AI sedang sibuk."
 PROGRESS_PREPARING = "Menyiapkan sistem untuk pemeriksaan pertama… Ini bisa memakan sekitar satu menit."
 PROGRESS_QUEUED = "Ada pemeriksaan lain yang sedang berjalan. Pesan Anda menunggu giliran…"
 WARMUP_NOTE = "Sistem sedang disiapkan. Pemeriksaan pertama bisa sedikit lebih lama."
@@ -135,10 +135,10 @@ ABOUT_STEPS = (
 )
 RELIABILITY_HEADING = "Seberapa bisa diandalkan?"
 RELIABILITY_INTRO = "Diuji dengan {total} klaim hoaks nyata dari Cek Fakta Liputan6. Batas lulus ditetapkan sebelum pengujian."
-RELIABILITY_FOUND = "klaim yang ada di arsip ditemukan dengan benar ({pct}). {category}."
+RELIABILITY_FOUND = "klaim yang ada di arsip ditemukan dengan benar ({pct})."
 RELIABILITY_FALSE = (
     "klaim yang tidak ada di arsip keliru dicocokkan dengan artikel lain ({pct}), terutama penipuan berpola "
-    "sama. {category}."
+    "sama."
 )
 RELIABILITY_ADVICE = "Karena itu, selalu cocokkan sendiri lembaga, program, dan tautan di hasil dengan pesan Anda."
 RELIABILITY_FOOTNOTE = (
@@ -157,14 +157,31 @@ LIMITS = (
 )
 DATA_SOURCE_HEADING = "Sumber data"
 DATA_SOURCE_BODY = (
-    "Artikel cek fakta TurnBackHoax.id (Mafindo), diperbarui berkala. Data terakhir: {date}. Ini proyek "
+    "Artikel cek fakta TurnBackHoax.id (Mafindo), diperbarui berkala. Artikel terbaru: {date}. Ini proyek "
     "portofolio pribadi, bukan layanan resmi Mafindo."
 )
 SOURCE_CODE_LABEL = "Kode dan laporan evaluasi di GitHub"
-FOOTER_ARCHIVE = "Arsip: {articles} artikel TurnBackHoax.id · diperbarui {date}"
+FOOTER_ARCHIVE = "Arsip: {articles} artikel TurnBackHoax.id · artikel terbaru: {date}"
 UNKNOWN_VALUE = "(tidak terbaca)"
 
 DIAGNOSTICS_LABEL = "Detail untuk penguji"
+
+def about_steps(current_articles: int | None) -> tuple[str, ...]:
+    """Langkah "Cara kerjanya" di halaman Tentang: jumlah artikel = indeks yang SEDANG dipakai (dinamis)."""
+    count = UNKNOWN_VALUE if current_articles is None else format_count(current_articles)
+    return (ABOUT_STEPS[0].format(articles=count), *ABOUT_STEPS[1:])
+
+
+def reliability_footnote(evaluated_articles: int) -> str:
+    """Catatan angka evaluasi: ukuran indeks SAAT EVALUASI (tetap, dari sumber evaluasi), bukan indeks kini."""
+    return RELIABILITY_FOOTNOTE.format(articles=format_count(evaluated_articles))
+
+
+def footer_archive(current_articles: int | None, latest: date | None) -> str:
+    """Kaki beranda: jumlah artikel dan tanggal artikel TERBARU di indeks yang sedang dipakai."""
+    count = UNKNOWN_VALUE if current_articles is None else format_count(current_articles)
+    return FOOTER_ARCHIVE.format(articles=count, date=format_date(latest))
+
 
 _MONTHS = ("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
            "Oktober", "November", "Desember")
@@ -214,7 +231,7 @@ class StatusStyle:
 STATUS_STYLES: dict[str, StatusStyle] = {
     "PENIPUAN": StatusStyle(
         color="red",
-        headline="Pesan serupa pernah diperiksa dan dinyatakan penipuan.",
+        headline="Klaim serupa pernah diperiksa dan dinyatakan penipuan.",
         advice="Jangan klik tautannya, jangan isi formulirnya, dan jangan teruskan pesannya.",
     ),
     "SALAH": StatusStyle(
@@ -224,8 +241,8 @@ STATUS_STYLES: dict[str, StatusStyle] = {
     ),
     "PARODI": StatusStyle(
         color="yellow",
-        headline="Konten serupa pernah diperiksa: ini konten humor, bukan berita sungguhan.",
-        advice="Jangan teruskan sebagai berita sungguhan.",
+        headline="Klaim serupa pernah diperiksa dan dinyatakan konten humor.",
+        advice="Ini parodi, satire, atau komedi, bukan berita sungguhan, jadi jangan teruskan sebagai kabar yang benar.",
     ),
     # Kalimat saran = kalimat persis yang ditetapkan pemilik proyek 2026-10-03 (tanpa saran medis atau
     # kalimat lain); ungu berada di luar skala bahaya dan berbeda dari abu-abu "belum ditemukan".
@@ -246,12 +263,12 @@ STATUS_ALIASES: dict[str, str] = {"SATIRE": "PARODI", "SATIR": "PARODI", "KOMEDI
 # Label di luar yang dikenal: NETRAL (keputusan 2026-10-02). Artinya tidak ditafsirkan; label asli
 # dikutip apa adanya, dan setiap kemunculan dicatat ke log agar ditinjau manusia (Aturan Wajib #7).
 FALLBACK_STATUS_COLOR = "gray"
-FALLBACK_HEADLINE = "Klaim serupa pernah diperiksa TurnBackHoax.id dengan label “{label}”."
+FALLBACK_HEADLINE = "Klaim serupa pernah diperiksa dan diberi label “{label}”."
 FALLBACK_ADVICE = "Aplikasi ini belum mengenali label tersebut. Baca artikelnya untuk mengetahui hasil pemeriksaannya."
 # Label kosong atau penanda parser "TIDAK DIKETAHUI" bukan label dari TurnBackHoax: tidak dikutip.
 UNREADABLE_LABELS = frozenset({"", "TIDAK DIKETAHUI"})
 UNREADABLE_PILL = "SUDAH DIPERIKSA"
-UNREADABLE_HEADLINE = "Klaim serupa pernah diperiksa TurnBackHoax.id, tetapi labelnya tidak terbaca."
+UNREADABLE_HEADLINE = "Klaim serupa pernah diperiksa dan labelnya tidak terbaca."
 UNREADABLE_ADVICE = "Baca artikelnya untuk mengetahui hasil pemeriksaannya."
 
 NOT_FOUND_COLOR = "gray"  # pil "belum ditemukan" memakai gaya netral berkas acuan (lihat style.css)

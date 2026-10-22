@@ -43,8 +43,9 @@ GLOBAL_MAX_PER_HOUR = 60
 DAILY_STOP_REQUESTS = 400  # dari RPD 500; 100 dicadangkan untuk evaluasi dan uji
 
 # Pemeriksaan diserialkan per proses (service.py). Pengguna yang menunggu giliran lebih lama dari ini
-# diberi pesan "coba lagi" alih-alih menunggu tanpa batas.
-QUEUE_TIMEOUT_S = 90
+# diberi pesan "coba lagi" alih-alih menunggu tanpa batas. 150 dtk: satu pemeriksaan bisa ~97 dtk saat
+# Gemini membalas 503 dan penyedia menunggu sesuai saran server (terukur 2026-10-22).
+QUEUE_TIMEOUT_S = 150
 
 # -- Mode penguji (panel diagnostik). Bawaan MATI; hanya dari variabel lingkungan atau
 # .streamlit/secrets.toml (tidak pernah dari URL atau masukan pengguna). -------------------------

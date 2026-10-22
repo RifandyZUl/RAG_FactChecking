@@ -81,6 +81,7 @@ a:hover { color: var(--accent-hover); }
 @media (max-width: 360px) { .cp-compare { grid-template-columns: 1fr; } }
 .st-key-kartu-cek .stCheckbox label p { font-size: 14px; line-height: 1.4; color: var(--theme-text); }
 .st-key-kartu-cek .stCheckbox label { min-height: 44px; align-items: center; }
+.st-key-cek-daftar { gap: 0; }
 
 /* -- Artikel -- */
 .cp-article-title { font-size: 16px; font-weight: 600; line-height: 1.4; color: var(--theme-text); }
@@ -138,11 +139,12 @@ a:hover { color: var(--accent-hover); }
 .stButton button, [data-testid="stLinkButton"] a { min-height: 44px; border-radius: 12px; font-family: inherit; }
 button[data-testid="stBaseButton-primary"] { height: 50px; font-size: 16px; font-weight: 600; }
 button[data-testid="stBaseButton-primary"] p { font-size: 16px; font-weight: 600; }
-.st-key-contoh { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-.st-key-contoh .stButton, .st-key-contoh [data-testid="stElementContainer"] { width: auto; }
-.st-key-contoh .stButton button { border-radius: 22px; padding: 0 14px; background: var(--surface);
-  border: 1px solid var(--theme-border); color: var(--theme-text); font-weight: 400; }
-.st-key-contoh .stButton button p { font-size: 14px; }
+.st-key-contoh { flex-wrap: wrap; gap: 8px; }
+.st-key-contoh .stButton button { border-radius: 22px; padding: 10px 14px; min-height: 44px; height: auto;
+  background: var(--surface); border: 1px solid var(--theme-border); color: var(--theme-text); font-weight: 400;
+  justify-content: flex-start; text-align: left; }
+.st-key-contoh .stButton button p, .st-key-contoh .stButton button div { font-size: 14px; text-align: left;
+  justify-content: flex-start; }
 button[data-testid="stBaseButton-tertiary"] { min-height: 44px; padding: 0; color: var(--theme-primary); font-weight: 600; }
 button[data-testid="stBaseButton-tertiary"] p { font-size: 14px; font-weight: 600; }
 [data-testid="stLinkButton"] a { justify-content: center; border: 1px solid var(--theme-primary);
