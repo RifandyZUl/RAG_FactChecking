@@ -23,8 +23,11 @@ RESULT_TIMEOUT_MS = 240_000  # pemeriksaan pertama memuat model
 def _settle(page: Page) -> None:
     """Tunggu Streamlit selesai menggambar (tidak ada indikator 'running') dan font termuat."""
     page.wait_for_load_state("networkidle")
-    page.wait_for_function("document.fonts.status === 'loaded'")
     page.wait_for_selector('[data-testid="stApp"][data-test-script-state="notRunning"]', timeout=RESULT_TIMEOUT_MS)
+    # Font dimuat malas per bobot: `document.fonts.status` bisa sudah "loaded" sebelum bobot yang dipakai
+    # diminta, sehingga foto sesekali memakai font cadangan (terlihat 2026-10-23). Muat bobotnya eksplisit.
+    page.evaluate("""() => Promise.all(['400', '500', '600', '700'].map(
+        w => document.fonts.load(`${w} 16px "IBM Plex Sans"`))).then(() => document.fonts.ready)""")
     time.sleep(1.0)
 
 
