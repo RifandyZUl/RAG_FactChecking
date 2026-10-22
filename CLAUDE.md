@@ -23,7 +23,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (3) demo memakai `HF_HUB_OFFLINE=1` dan revisi bge-m3 dipatok `5617a9f6...` (`ingest.MODEL_REVISION`);
 > (4) Python untuk Tahap 2 = **3.13** (keputusan pemilik proyek 2026-10-22; 3.14 setelah
 > sentence-transformers 6.2.0 cukup berumur); (5) pemantau berkas Streamlit dimatikan
-> (`fileWatcherType = "none"`): ia mengimpor semua submodul `transformers` dan menahan halaman.
+> (`fileWatcherType = "none"`): ia mengimpor semua submodul `transformers` dan menahan halaman;
+> (6) **ingest dan pembaruan indeks SELALU dengan `HF_HUB_OFFLINE=1`** (di-set di awal `src/ingest.py`,
+> berlaku untuk semua skrip yang mengimpor `ingest`): tokenizer `chunker.make_token_counter` (terkunci) tidak
+> dipatok revisinya, jadi tanpa mode offline ia bisa mengambil `main` terbaru dari Hub; unduhan pertama di
+> mesin baru dengan `HF_HUB_OFFLINE=0`; (7) batas tunggu antrean demo 150 dtk (LLM bisa ~97 dtk saat Gemini
+> membalas 503).
 > Tahap 2 (Docker, Python 3.13, pembuktian embedding di container Linux, requests 2.34.2, CI) dan Tahap 3
 > (catatan aktivitas tanpa isi pesan, ringkasan, pola galat) BELUM dimulai.
 
@@ -1093,6 +1098,13 @@ memakai objek palsu dan aman dijalankan kapan saja.
 `requirements.txt` mengunci versi (`torch==2.14.0`, build CPU dari PyPI).
 torch harus >= 2.6 agar `transformers` 5.x mau memuat
 `pytorch_model.bin` bge-m3 (CVE-2025-32434).
+
+### Demo, container, dan evaluasi
+
+**Jangan menjalankan demo di container Docker dan skrip evaluasi di host secara bersamaan.** Buku besar
+kuota (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS, yang andal untuk proses di
+mesin yang sama, tetapi kunci berkas **tidak andal menembus folder bersama antara Windows dan container**
+(bind mount WSL2): kedua sisi bisa saling menimpa hitungan kuota.
 
 ### Catatan PowerShell
 

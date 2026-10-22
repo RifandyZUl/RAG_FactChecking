@@ -62,7 +62,7 @@ penuh isi):
 `beranda-390.png`, `beranda-1280.png`, `ditemukan-390.png`, `ditemukan-1280.png`,
 `belum-ditemukan-390.png`, `belum-ditemukan-1280.png`, `tentang-390.png`, `tentang-1280.png`.
 
-Hasil "ditemukan" = contoh 2 (SALAH, 32989); "belum ditemukan" = contoh 3. Keduanya pemeriksaan sungguhan.
+Hasil "ditemukan" = contoh 2 (SALAH, 35133); "belum ditemukan" = contoh 3. Keduanya pemeriksaan sungguhan.
 
 ## 4. Penyimpangan dari berkas acuan
 
@@ -84,7 +84,8 @@ Hasil "ditemukan" = contoh 2 (SALAH, 32989); "belum ditemukan" = contoh 3. Kedua
 | 14 | Contoh klaim satu baris | di 390px, contoh panjang terbungkus dua baris (tinggi tetap ≥ 44px) | teks contoh lebih panjang daripada mockup |
 
 **Teks BARU (tidak ada di berkas acuan), ditulis lugas:**
-- keadaan proses: "Memeriksa pesan Anda… Biasanya selesai dalam 10–20 detik.", "Menyiapkan sistem untuk
+- keadaan proses: "Memeriksa pesan Anda… Biasanya selesai dalam setengah menit, kadang lebih lama saat
+  layanan AI sedang sibuk." (diganti di Bagian A; kalimat lama "10–20 detik" tidak sesuai data), "Menyiapkan sistem untuk
   pemeriksaan pertama… Ini bisa memakan sekitar satu menit.", "Ada pemeriksaan lain yang sedang berjalan.
   Pesan Anda menunggu giliran…", "Sistem sedang disiapkan. Pemeriksaan pertama bisa sedikit lebih lama.";
 - pesan galat baru: "Tunggu sebentar sebelum memeriksa lagi" (batas laju) dan "Sedang banyak yang
@@ -100,43 +101,42 @@ kuota harian habis (termasuk batas 400), batas laju (dengan "coba lagi dalam N d
 layanan Gemini timeout/tidak tersedia, format tidak dikenali, konfigurasi, indeks tidak ada, galat lain.
 Tidak satu pun menampilkan jejak teknis; detailnya hanya di panel penguji (tersembunyi) dan log server.
 
-## 5. Judul dan saran per label (ditulis manual, bukan LLM)
+## 5. Judul dan saran per label (ditulis manual, bukan LLM; diseragamkan di Bagian A)
 
 | Label (metadata) | Pil | Warna | Judul satu kalimat | Kalimat saran |
 | --- | --- | --- | --- | --- |
-| PENIPUAN | PENIPUAN | merah | Pesan serupa pernah diperiksa dan dinyatakan penipuan. | Jangan klik tautannya, jangan isi formulirnya, dan jangan teruskan pesannya. *(kalimat dari Anda)* |
+| PENIPUAN | PENIPUAN | merah | Klaim serupa pernah diperiksa dan dinyatakan penipuan. | Jangan klik tautannya, jangan isi formulirnya, dan jangan teruskan pesannya. *(kalimat dari pemilik proyek)* |
 | SALAH | SALAH | jingga | Klaim serupa pernah diperiksa dan dinyatakan salah. | Jangan teruskan pesan ini sebagai kabar yang benar. |
-| PARODI, SATIRE, SATIR, KOMEDI | label asli | kuning zaitun | Konten serupa pernah diperiksa: ini konten humor, bukan berita sungguhan. | Jangan teruskan sebagai berita sungguhan. |
-| BELUM TERBUKTI | BELUM TERBUKTI | ungu | Klaim serupa pernah diperiksa dan belum terbukti. | Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, sehingga belum dapat dianggap benar. *(kalimat persis keputusan 2026-10-03)* |
-| label lain (tak dikenal) | label asli apa adanya | abu-abu | Klaim serupa pernah diperiksa TurnBackHoax.id dengan label “X”. | Aplikasi ini belum mengenali label tersebut. Baca artikelnya untuk mengetahui hasil pemeriksaannya. *(dicatat ke log untuk ditinjau)* |
-| kosong / TIDAK DIKETAHUI | SUDAH DIPERIKSA | abu-abu | Klaim serupa pernah diperiksa TurnBackHoax.id, tetapi labelnya tidak terbaca. | Baca artikelnya untuk mengetahui hasil pemeriksaannya. |
+| PARODI, SATIRE, SATIR, KOMEDI | label asli | kuning zaitun | Klaim serupa pernah diperiksa dan dinyatakan konten humor. | Ini parodi, satire, atau komedi, bukan berita sungguhan, jadi jangan teruskan sebagai kabar yang benar. |
+| BELUM TERBUKTI | BELUM TERBUKTI | ungu | Klaim serupa pernah diperiksa dan belum terbukti. | Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, sehingga belum dapat dianggap benar. *(kalimat persis keputusan 2026-10-03, utuh)* |
+| label lain (tak dikenal) | label asli apa adanya | abu-abu | Klaim serupa pernah diperiksa dan diberi label “X”. | Aplikasi ini belum mengenali label tersebut. Baca artikelnya untuk mengetahui hasil pemeriksaannya. *(dicatat ke log untuk ditinjau)* |
+| kosong / TIDAK DIKETAHUI | SUDAH DIPERIKSA | abu-abu | Klaim serupa pernah diperiksa dan labelnya tidak terbaca. | Baca artikelnya untuk mengetahui hasil pemeriksaannya. |
 
-**Perlu keputusan Anda:** keputusan 2026-10-03 untuk BELUM TERBUKTI berbunyi "kalimat persis, TANPA saran
-medis atau kalimat lain". Spesifikasi baru meminta judul + saran untuk setiap label. Saya menaruh kalimat
-persis itu di slot saran dan menambahkan judul templat. Bila judul dianggap "kalimat lain", judul bisa
-diganti dengan kalimat persis itu dan slot saran dikosongkan.
+Semua judul berpola "Klaim serupa pernah diperiksa dan …" (diuji `test_every_headline_follows_one_pattern`).
+Penjelasan "bukan berita sungguhan" untuk kategori humor pindah ke kalimat saran.
 
-## 6. Tiga contoh klaim (USULAN, belum dikunci)
+## 6. Tiga contoh klaim
 
 Dipilih dari judul artikel publik di `articles.json`, bukan artikel sasaran set eksternal (label final +
 artikel modus, 91 butir), set uji v1 (`v1.jsonl`, `targets_v1.json`), atau enam artikel set pengembangan;
-Narasi tanpa nomor telepon/wa.me. Dijalankan lewat layanan sungguhan 2026-10-22 (dan sekali lagi saat
-mengambil tangkapan layar, hasil sama):
+tanpa nomor telepon/wa.me. Contoh 2 diganti di Bagian A (keputusan pemilik proyek): yang lama (32989)
+menyebut nama orang di Kesimpulan.
 
-| Teks contoh (mengisi kotak) | Asal | Hasil | Artikel |
+| # | Teks contoh (mengisi kotak) | Asal | Hasil pada 3 run |
 | --- | --- | --- | --- |
-| Link pemutihan pajak motor dan mobil gratis seluruh Indonesia | 31781 [PENIPUAN] Tautan Layanan “Gratis Pemutihan Pajak Motor dan Mobil Seluruh Indonesia” | **ditemukan, PENIPUAN** | 31781 |
-| China kembangkan robot yang bisa mengandung bayi | 32989 [SALAH] China Kembangkan Robot yang Dapat Mengandung Bayi | **ditemukan, SALAH** | 32989 |
-| Tautan pendaftaran bantuan bibit ikan lele | 36119 [PENIPUAN] Tautan Pendaftaran Bantuan Bibit Tanaman Buah, objek pembeda diganti | **belum ditemukan** | - |
+| 1 | Link pemutihan pajak motor dan mobil gratis seluruh Indonesia | 31781 [PENIPUAN] Tautan Layanan “Gratis Pemutihan Pajak Motor dan Mobil Seluruh Indonesia” | ditemukan 31781 PENIPUAN, 3/3 |
+| 2 | Sabah dan Sarawak lepas dari Malaysia, resmi jadi bagian Indonesia | 35133 [SALAH] Lepas dari Malaysia, Sabah-Sarawak Resmi Jadi Bagian Indonesia | ditemukan 35133 SALAH, 3/3 |
+| 3 | Tautan pendaftaran bantuan bibit ikan lele | rekaan: judul 36119 [PENIPUAN] dengan objek pembeda diganti (disetujui) | belum ditemukan, 3/3 |
 
-Catatan untuk dipertimbangkan sebelum dikunci:
-- Contoh 2: judul dan klaimnya tanpa nama orang, tetapi **Kesimpulan artikelnya menyebut nama
-  "Zhang Qifeng"** (ilmuwan yang menurut artikel tidak ada; disebut dalam hoaks). Bila ini dihitung
-  "nama orang", saya ganti dengan artikel SALAH lain.
-- Contoh 3 bukan judul asli: ia judul 36119 dengan objek pembeda diganti, sehingga klaimnya rekaan. Ia
-  sengaja memperlihatkan bahwa pola yang mirip tidak otomatis "ditemukan". Alternatif yang benar-benar
-  judul publik: artikel antrean (`forward_2026-10-03.json`, belum di-ingest); hasilnya bisa berubah
-  setelah antrean di-ingest.
+**Pemilihan contoh 2:** dari artikel SALAH yang memenuhi kriteria, judul/Narasi/Kesimpulan dibaca
+manual. 35133: tanpa nama orang; akun pengunggah adalah kanal "KajianOnline", bukan nama orang. Calon lain
+yang ditolak: 35747 ("Pengisian BBM Dibatasi Empat Hari Sekali"), karena Narasinya menyebut akun pribadi
+"Alexs".
+
+**Konsistensi (2026-10-23, layanan sungguhan, sesi baru tiap run):** 9 pemeriksaan, semuanya konsisten
+(tabel di atas); 9 panggilan LLM, masing-masing 1 percobaan HTTP, 0 percobaan ulang; waktu LLM 7,3-26,7 dtk.
+Buku besar kuota: 12 → 21 (**9 permintaan Gemini**). Tangkapan layar Bagian A memakai 2 pemeriksaan
+lagi (contoh 2 dan 3); total buku besar hari Pasifik itu dilaporkan di bagian 11.
 
 ## 7. Struktur dan perubahan kode
 
@@ -191,7 +191,7 @@ harian → batas per jam → kunci proses) → `AnswerGenerator(provider, retrie
 - **Batas laju:** 15 dtk, 10/jam per sesi, 60/jam per proses, berhenti di 400/hari menurut buku besar
   bersama. Pemeriksaan yang terkena batas tidak memanggil LLM (diuji).
 - **Konkurensi:**
-  - pemeriksaan diserialkan per proses, dengan pesan "menunggu giliran" dan batas tunggu 90 dtk;
+  - pemeriksaan diserialkan per proses, dengan pesan "menunggu giliran" dan batas tunggu 150 dtk (Bagian A);
   - uji membuktikan catatan panggilan dua pemeriksaan serentak tidak tercampur; tanpa kunci, uji itu
     gagal dengan catatan "klaim A" masuk ke hasil "klaim B";
   - buku besar memakai `threading.Lock` + kunci berkas OS (`msvcrt.locking` / `fcntl.flock`), yang
@@ -234,3 +234,48 @@ harian → batas per jam → kunci proses) → `AnswerGenerator(provider, retrie
 5. Gemini membalas 503 "high demand" pada sebagian panggilan 2026-10-22. Penyedia menunggu sesuai saran
    server, sehingga waktu LLM hari ini tidak mewakili kondisi normal.
 6. `docs/desain_tampilan/` (berkas acuan) masih belum di-track git. Saya tidak meng-commit-nya.
+
+## 11. Penyelesaian Tahap 1 (Bagian A, 2026-10-23)
+
+**Perubahan:**
+1. Contoh 2 diganti (bagian 6); ketiga contoh konsisten 3/3.
+2. Judul per label diseragamkan (bagian 5).
+3. Teks proses: "Biasanya selesai dalam setengah menit, kadang lebih lama saat layanan AI sedang sibuk."
+4. Kaki beranda: "Arsip: N artikel TurnBackHoax.id · artikel terbaru: [tanggal]"; halaman Tentang:
+   "Artikel terbaru: [tanggal]" (sebelumnya "Data terakhir"). Kata "diperbarui" yang tersisa ("diperbarui
+   berkala") merujuk situs sumber, bukan tanggal data.
+5. Tombol contoh: rata kiri, terbungkus bila panjang (`st.button(wrap=True)`; tanpa itu Streamlit memotong
+   label dengan elipsis di wadah horizontal), tinggi minimum 44px. Wadahnya `st.container(horizontal=True,
+   wrap=True)`, jadi contoh berjajar bila muat. Di 1280px ketiga contoh tetap satu per baris karena dua yang
+   pertama lebih lebar daripada setengah kolom 640px.
+6. Checkbox di kotak "Pastikan klaimnya benar-benar sama" dibungkus wadah tanpa jarak; tiap baris tetap
+   44px (target sentuh), jarak antarbaris turun dari ~58px ke 44px.
+7. Halaman Tentang: "**Memadai.**" dan "**Belum lulus.**" dicetak tebal.
+8. Batas tunggu antrean 90 → **150 dtk** (`settings.QUEUE_TIMEOUT_S`; uji memeriksa nilai produksinya).
+
+**Yang dipastikan:**
+
+9. **Angka 1.532.** "Cara kerjanya" memakai `presentation.about_steps(stats.article_count)`, dengan
+   `stats = components.cached_index_stats()` (= `resources.index_stats()`, sqlite indeks yang sedang
+   dipakai). "Angka berlaku untuk arsip N artikel" memakai `presentation.reliability_footnote(ev.index_articles)`,
+   dengan `ev = evaluation_facts.external_evaluation()` dan `index_articles` dari
+   `testset/eksternal_butir.json` → `indeks_beku.jumlah_artikel`. Uji
+   `test_about_page_uses_live_index_count_and_frozen_evaluation_count` menjalankan halaman Tentang dengan
+   statistik indeks palsu 2.000 artikel: langkah 1 berbunyi "2.000 artikel", catatan evaluasi tetap
+   "arsip 1.532 artikel", dan tidak ada yang tertukar. `test_home_footer_shows_live_count_and_latest_article_date`
+   memeriksa kaki beranda dengan cara yang sama.
+10. **Tautan GitHub:** `https://github.com/RifandyZUl/RAG_FactChecking` (`settings.SOURCE_CODE_URL`; sama
+    dengan `git remote get-url origin`; membalas HTTP 200 pada 2026-10-23).
+11. **Ingest selalu offline:** `src/ingest.py` kini menyetel `HF_HUB_OFFLINE=1` (`setdefault`) sebelum
+    transformers diimpor. Ini berlaku untuk ingest, `--update-metadata`, `index_check`, dan semua skrip
+    yang mengimpor `ingest`; `chunker.py` tidak disentuh. Dicatat di CLAUDE.md (status Tahap 1, butir 6)
+    dan README ("Membangun basis pengetahuan"). Unduhan pertama di mesin baru: `HF_HUB_OFFLINE=0`.
+12. **Aturan container/host** ada di CLAUDE.md (status Tahap 1 dan subbagian baru "Demo, container, dan
+    evaluasi" di "Lingkungan Pengembangan") dan README ("Menjalankan demo"), dengan kalimat yang sama.
+
+**Bukti:**
+- 8 tangkapan layar diambil ulang (contoh 2 baru di halaman "ditemukan"; beranda diambil sekali lagi
+  setelah perbaikan pembungkusan label).
+- `pytest` **548 lolos**; uji kunci **9 lolos**; `ruff check src tests scripts` bersih.
+- Log server: setiap sumber daya dimuat sekali (4 baris `memuat`).
+- Kuota Gemini Bagian A: **11 permintaan** (9 untuk uji konsistensi + 2 untuk tangkapan layar); buku besar hari Pasifik 2026-10-22: 12 -> 23, tanpa percobaan ulang.

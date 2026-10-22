@@ -106,9 +106,10 @@ def _render_home() -> None:
 
     if p.EXAMPLE_CLAIMS:
         st.html(f'<div class="cp-overline" style="font-size:13px;letter-spacing:0">{c.esc(p.EXAMPLES_HEADING)}</div>')
-        with st.container(key="contoh"):
+        with st.container(key="contoh", horizontal=True, wrap=True, gap="small"):  # berjajar bila muat, terbungkus bila tidak
             for i, example in enumerate(p.EXAMPLE_CLAIMS):
-                st.button(example, key=f"contoh-{i}", on_click=_use_example, args=(example,))
+                st.button(example, key=f"contoh-{i}", on_click=_use_example, args=(example,), width="content",
+                          wrap=True)  # label panjang terbungkus, bukan terpotong elipsis
 
     steps = "".join(f'<div><span class="cp-num">{i}</span>{c.esc(s)}</div>'
                     for i, s in enumerate(p.HOW_IT_WORKS_STEPS, start=1))
@@ -119,9 +120,8 @@ def _render_home() -> None:
 
 def _render_footer() -> None:
     stats = c.cached_index_stats()
-    count = p.format_count(stats.article_count) if stats.article_count else p.UNKNOWN_VALUE
     st.html(f'<div class="cp-footer"><p class="cp-caption">'
-            f'{c.esc(p.FOOTER_ARCHIVE.format(articles=count, date=p.format_date(stats.latest_date)))}</p></div>')
+            f'{c.esc(p.footer_archive(stats.article_count, stats.latest_date))}</p></div>')
     st.page_link(c.page("tentang"), label=p.ABOUT_LINK_LABEL)
 
 
@@ -156,8 +156,9 @@ def _render_found(view: p.ResultView) -> None:
                 f'<div><div class="cp-overline">{c.esc(p.MATCH_CHECK_CHECKED)}</div>'
                 f'<div class="cp-quote">{c.esc(view.article_title)}</div></div></div></div>')
         n = st.session_state.get(RESULT_COUNTER_KEY, 0)
-        for i, question in enumerate(p.MATCH_CHECK_QUESTIONS):
-            st.checkbox(question, key=f"cek-{n}-{i}")  # hanya membantu pengguna; tidak memengaruhi apa pun
+        with st.container(key="cek-daftar"):  # jarak antar-checkbox dirapatkan (style.css)
+            for i, question in enumerate(p.MATCH_CHECK_QUESTIONS):
+                st.checkbox(question, key=f"cek-{n}-{i}")  # hanya membantu pengguna; tidak memengaruhi apa pun
         st.html(f'<p class="cp-warn-note">{c.esc(p.MATCH_CHECK_CLOSING)}</p>')
 
     with st.container(key="kartu-artikel"):

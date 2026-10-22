@@ -242,3 +242,20 @@ def test_dates_in_indonesian() -> None:
     assert format_metadata_date("09/09/2026") == "9 September 2026"
     assert format_metadata_date("bukan tanggal") == "bukan tanggal"
     assert format_date(None) == "(tidak terbaca)"
+
+
+def test_every_headline_follows_one_pattern() -> None:
+    from presentation import FALLBACK_HEADLINE, UNREADABLE_HEADLINE
+
+    headlines = [s.headline for s in STATUS_STYLES.values()] + [FALLBACK_HEADLINE, UNREADABLE_HEADLINE]
+    assert all(h.startswith("Klaim serupa pernah diperiksa dan ") for h in headlines)
+    assert "humor, bukan berita sungguhan" not in STATUS_STYLES["PARODI"].headline
+    assert "bukan berita sungguhan" in STATUS_STYLES["PARODI"].advice
+
+
+def test_about_numbers_are_not_swapped() -> None:
+    from presentation import about_steps, footer_archive, reliability_footnote
+
+    assert "2.000 artikel" in about_steps(2000)[0] and "1.532" not in about_steps(2000)[0]
+    assert reliability_footnote(1532).startswith("Angka berlaku untuk arsip 1.532 artikel")
+    assert "artikel terbaru" in footer_archive(2000, None) and "diperbarui" not in footer_archive(2000, None)

@@ -509,6 +509,12 @@ $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m evaluation.index_check   # verifikasi indeks segar
 ```
 
+Ingest dan semua skrip yang mengimpor `ingest` berjalan dengan **`HF_HUB_OFFLINE=1`** (di-set di awal
+`src/ingest.py`): model dan tokenizer hanya dibaca dari cache lokal. Ini wajib karena tokenizer di
+`chunker.py` (berkas terkunci) tidak memakai revisi yang dipatok, sehingga tanpa mode offline ia bisa
+mengambil versi terbaru dari Hugging Face Hub. Di mesin baru, unduh model sekali dengan
+`HF_HUB_OFFLINE=0` (lihat "Menjalankan demo").
+
 ### Menjalankan evaluasi
 
 ```powershell
@@ -639,7 +645,7 @@ menampilkan peringatan.
 proses, dan demo berhenti di **400 permintaan per hari** menurut buku besar kuota yang sama dengan skrip
 evaluasi (panggilan evaluasi ikut terhitung). Batas per sesi bisa dilewati dengan memuat ulang halaman
 (sesi Streamlit baru); perlindungan sebenarnya ada di batas per proses dan batas harian. Pemeriksaan
-diserialkan per proses: pengguna kedua melihat pesan "menunggu giliran", dan setelah 90 detik menunggu
+diserialkan per proses: pengguna kedua melihat pesan "menunggu giliran", dan setelah 150 detik menunggu
 diberi pesan untuk mencoba lagi.
 
 **Mode penguji** (bawaan mati) menampilkan panel "Detail untuk penguji": kandidat retrieval beserta skor,
@@ -653,7 +659,7 @@ $env:DEMO_TESTER_MODE = "1"          # variabel lingkungan (diutamakan), sesi Po
 atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = true`. Nilai
 `1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain atau tidak diatur berarti mati.
 
-> **Jangan menjalankan demo dan evaluasi bersamaan di dua lingkungan berbeda.** Buku besar kuota
+> **Jangan menjalankan demo di container Docker dan skrip evaluasi di host secara bersamaan.** Buku besar kuota
 > (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS (Windows dan Linux), jadi demo
 > dan skrip evaluasi di mesin yang sama aman. Tetapi kunci berkas **tidak andal menembus folder bersama
 > antara Windows dan container Docker** (bind mount WSL2): demo di container dan evaluasi di host yang

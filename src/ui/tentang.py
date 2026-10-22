@@ -17,10 +17,9 @@ def render() -> None:
             f'<div><div class="cp-overline">{c.esc(p.ABOUT_DOES_NOT_HEADING)}</div>'
             f'<div class="cp-text">{c.esc(p.ABOUT_DOES_NOT)}</div></div></div>')
 
-    stats = c.cached_index_stats()
-    current = p.format_count(stats.article_count) if stats.article_count else p.UNKNOWN_VALUE
+    stats = c.cached_index_stats()  # indeks yang SEDANG dipakai demo (dinamis)
     with st.container(key="kartu-tentang-cara"):
-        steps = (p.ABOUT_STEPS[0].format(articles=current),) + p.ABOUT_STEPS[1:]
+        steps = p.about_steps(stats.article_count)
         st.html(f'<div class="cp-stack-12"><h2 class="cp-h2">{c.esc(p.HOW_IT_WORKS_HEADING)}</h2>'
                 f'{c.numbered_steps_html(steps)}</div>')
 
@@ -31,11 +30,13 @@ def render() -> None:
             f'<div class="cp-stack-12"><h2 class="cp-h2">{c.esc(p.RELIABILITY_HEADING)}</h2>'
             f'<p class="cp-small">{c.esc(p.RELIABILITY_INTRO.format(total=ev.total_items))}</p>'
             f'<div class="cp-figure"><div class="cp-number">{found.k} dari {found.n}</div>'
-            f'<div class="cp-text">{c.esc(p.RELIABILITY_FOUND.format(pct=p.format_percent(found.rate), category=ev.positive_category.capitalize()))}</div></div>'
+            f'<div class="cp-text">{c.esc(p.RELIABILITY_FOUND.format(pct=p.format_percent(found.rate)))} '
+            f'<strong>{c.esc(ev.positive_category.capitalize())}.</strong></div></div>'
             f'<div class="cp-figure"><div class="cp-number">{false.k} dari {false.n}</div>'
-            f'<div class="cp-text">{c.esc(p.RELIABILITY_FALSE.format(pct=p.format_percent(false.rate), category=ev.false_match_category.capitalize()))}</div></div>'
+            f'<div class="cp-text">{c.esc(p.RELIABILITY_FALSE.format(pct=p.format_percent(false.rate)))} '
+            f'<strong>{c.esc(ev.false_match_category.capitalize())}.</strong></div></div>'
             f'<p class="cp-advice" style="font-size:14px">{c.esc(p.RELIABILITY_ADVICE)}</p>'
-            f'<p class="cp-caption">{c.esc(p.RELIABILITY_FOOTNOTE.format(articles=p.format_count(ev.index_articles)))}</p></div>')
+            f'<p class="cp-caption">{c.esc(p.reliability_footnote(ev.index_articles))}</p></div>')
 
     with st.container(key="kartu-tentang-batas"):
         st.html(f'<div class="cp-stack-12"><h2 class="cp-h2">{c.esc(p.LIMITS_HEADING)}</h2>'

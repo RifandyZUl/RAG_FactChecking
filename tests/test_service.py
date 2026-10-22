@@ -212,6 +212,7 @@ def test_concurrent_checks_never_mix_call_records() -> None:
 
 
 def test_waiting_too_long_returns_busy(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert settings.QUEUE_TIMEOUT_S == 150  # nilai produksi; uji memakai batas pendek
     monkeypatch.setattr(settings, "QUEUE_TIMEOUT_S", 0.2)
     provider = FakeProvider()
     service._check_lock.acquire()

@@ -93,3 +93,39 @@ def test_example_button_fills_the_input() -> None:
     at = _run()
     at.button(key="contoh-0").click().run()
     assert at.text_area(key="pesan").value == p.EXAMPLE_CLAIMS[0]
+
+
+def _about_page_script() -> None:
+    """Halaman Tentang sebagai halaman bawaan (AppTest hanya bisa berpindah ke halaman berbasis berkas)."""
+    import streamlit as st
+
+    from ui import beranda, components, tentang
+
+    pages = {"beranda": st.Page(beranda.render, title="b", url_path="beranda"),
+             "tentang": st.Page(tentang.render, title="t", url_path="tentang", default=True)}
+    components.register_pages(pages)
+    st.navigation(list(pages.values()), position="hidden").run()
+
+
+def test_about_page_uses_live_index_count_and_frozen_evaluation_count(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Indeks palsu 2.000 artikel: "Cara kerjanya" ikut indeks kini, catatan angka evaluasi tetap 1.532."""
+    from datetime import date
+
+    monkeypatch.setattr(c, "cached_index_stats", lambda: resources.IndexStats(2000, date(2026, 12, 1)))
+    at = AppTest.from_function(_about_page_script, default_timeout=60).run()
+    assert not at.exception
+    html = _bodies(at)
+    assert "dibandingkan dengan 2.000 artikel TurnBackHoax.id" in html
+    assert "Angka berlaku untuk arsip 1.532 artikel" in html
+    assert "1.532 artikel TurnBackHoax.id" not in html and "arsip 2.000" not in html
+    assert "Artikel terbaru: 1 Desember 2026" in html
+    assert "<strong>Memadai.</strong>" in html and "<strong>Belum lulus.</strong>" in html
+
+
+def test_home_footer_shows_live_count_and_latest_article_date(monkeypatch: pytest.MonkeyPatch) -> None:
+    from datetime import date
+
+    monkeypatch.setattr(c, "cached_index_stats", lambda: resources.IndexStats(2000, date(2026, 12, 1)))
+    html = _bodies(_run())
+    assert "Arsip: 2.000 artikel TurnBackHoax.id · artikel terbaru: 1 Desember 2026" in html
+    assert "diperbarui" not in html
