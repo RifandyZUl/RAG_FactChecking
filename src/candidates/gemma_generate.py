@@ -37,7 +37,7 @@ import csv
 import difflib
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -337,7 +337,7 @@ def generate_for_job(
         return [{
             "slot": slot, "target_article": target_article, "klaim": None,
             "model": provider.model, "versi": versi,
-            "dibuat_pada": datetime.now(timezone.utc).isoformat(),
+            "dibuat_pada": datetime.now(UTC).isoformat(),
             "prompt_pembuat": f"{slot}_v1", "sumber": "buatan_model",
             "galat": "gagal urai JSON",
             "raw": RAW_WITHHELD if raw_flags else raw[:500],
@@ -351,7 +351,7 @@ def generate_for_job(
         out.append({
             "slot": slot, "target_article": target_article, "klaim": text,
             "model": provider.model, "versi": versi,
-            "dibuat_pada": datetime.now(timezone.utc).isoformat(),
+            "dibuat_pada": datetime.now(UTC).isoformat(),
             "prompt_pembuat": f"{slot}_v1", "sumber": "buatan_model",
             "pemeriksaan": checks, "lolos_pemeriksaan_otomatis": passed_checks(slot, checks),
             "status": "kandidat, belum ditinjau",

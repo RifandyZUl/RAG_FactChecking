@@ -5,18 +5,20 @@
 # Terang dipaksa agar semantik warna status sama di semua perangkat.
 base = "light"
 
-# Aksen tunggal: biru tinta (tombol Periksa, tautan, fokus input).
-primaryColor = "#1F4E79"
-linkColor = "#1F4E79"
+# Palet berkas acuan docs/desain_tampilan/ (2026-10-22). Warna pendukung tanpa slot tema ada di
+# src/ui/style.css; warna di bawah diteruskan ke CSS sebagai --theme-* oleh ui/components.py.
+# Aksen tunggal: biru (tombol Periksa, tautan, fokus input).
+primaryColor = "#1F4E9E"
+linkColor = "#1F4E9E"
 
 # Skala netral.
-backgroundColor = "#FAFAF8"
-secondaryBackgroundColor = "#F0F1EE"
-textColor = "#1C1F23"
-borderColor = "#D9DBDE"
+backgroundColor = "#F6F7F9"
+secondaryBackgroundColor = "#F2F4F7"
+textColor = "#14213D"
+borderColor = "#D0D5DD"
 
 # Satu keluarga huruf: IBM Plex Sans (400 isi, 600 judul/tebal).
-font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap"
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
 baseFontSize = 17
 baseFontWeight = 400
 # h1 = judul halaman (24px), h2 = status (28px, paling menonjol), h3 = subjudul (18px).
@@ -44,6 +46,15 @@ violetBackgroundColor = "#F5F0FA"
 
 [client]
 toolbarMode = "minimal"
+# Pilihan paling ketat di Streamlit 1.64 (`streamlit config show`): browser hanya menampilkan pesan galat
+# umum; jenis galat, pesan lengkap, dan traceback hanya ke konsol server.
+showErrorDetails = "none"
 
 [browser]
 gatherUsageStats = false
+
+[server]
+# Tanpa pemantau berkas: pemantau menelusuri SEMUA modul termuat, termasuk submodul malas `transformers`,
+# dan mengimpornya satu per satu (2026-10-22: 204 galat torchvision di log, skrip halaman tertahan).
+# Demo tidak butuh muat-ulang otomatis saat kode disimpan; jalankan ulang server setelah mengubah kode.
+fileWatcherType = "none"

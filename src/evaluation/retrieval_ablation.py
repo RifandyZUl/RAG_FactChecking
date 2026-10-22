@@ -31,7 +31,7 @@ import statistics
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -656,7 +656,7 @@ def main() -> int:
 
     res: dict[str, Any] = {
         "meta": {
-            "tanggal": datetime.now(timezone.utc).date().isoformat(),
+            "tanggal": datetime.now(UTC).date().isoformat(),
             "model_embedding": MODEL_NAME,
             "jumlah_chunk": len(matrix.meta),
             "batas_token": int(model.max_seq_length),

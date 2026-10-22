@@ -7,7 +7,7 @@ Pipeline hanya bergantung pada `LLMProvider.generate`; penyedia dipilih lewat ko
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger("llm")
@@ -57,7 +57,7 @@ class LLMProvider(ABC):
         api_version = last_ok.model_version if last_ok else None
         info: dict[str, Any] = {
             "model_id": self.model,
-            "tanggal": datetime.now(timezone.utc).date().isoformat(),
+            "tanggal": datetime.now(UTC).date().isoformat(),
         }
         if api_version:
             info["model_version"] = api_version

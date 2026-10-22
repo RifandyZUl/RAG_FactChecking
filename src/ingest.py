@@ -43,6 +43,11 @@ from chunker import (
 from paths import INDEX_CHROMA_DIR, is_archive_path
 
 MODEL_NAME = "BAAI/bge-m3"
+# Revisi dipatok ke commit yang dipakai membangun indeks 1.532 artikel (bukti: satu-satunya snapshot di
+# cache HF sejak 2026-09-19, `main` di Hub = commit ini sejak 2024-07-03, index_check 2026-10-03 kosinus
+# 1,000000; docs/audit_tahap0.md 8.3). Tanpa ini, perubahan `main` oleh BAAI akan mengubah embedding
+# kueri tanpa ketahuan. Tokenizer `chunker.make_token_counter` (berkas terkunci) tidak ikut dipatok.
+MODEL_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 # Model dimuat dari branch main (pytorch_model.bin resmi BAAI). transformers
 # >= 5 hanya mau memuat .bin bila torch >= 2.6 (CVE-2025-32434), yang dipenuhi
 # venv proyek (lihat requirements.txt). Embedding awal sempat dibuat dari
@@ -151,7 +156,7 @@ def load_model() -> Any:
 
     # CPU eksplisit: build torch terpasang hanya CPU, dan GPU MX550 (2 GB VRAM)
     # sengaja tidak dipakai.
-    model = SentenceTransformer(MODEL_NAME, device="cpu")
+    model = SentenceTransformer(MODEL_NAME, device="cpu", revision=MODEL_REVISION)
     model.max_seq_length = MAX_SEQ_LENGTH
     return model
 

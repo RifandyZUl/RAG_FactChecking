@@ -1,13 +1,8 @@
 # Konfigurasi ruff proyek. Aturan bawaan ruff (versi dikunci di requirements-dev.txt)
 # dipakai apa adanya; di sini hanya pengecualian yang disengaja.
+target-version = "py311"  # tomllib dan sintaks 3.11 adalah pustaka standar
 
 [lint.per-file-ignores]
-# src/app.py SENGAJA mengimpor `ingest` sebelum paket pihak ketiga (chromadb,
-# streamlit): `ingest` men-set DISABLE_SAFETENSORS_CONVERSION=1 sebelum transformers
-# termuat. Tanpa itu transformers menjalankan Thread non-daemon yang mengunduh varian
-# safetensors bge-m3 (2,3 GB) dan proses menggantung (lihat CLAUDE.md, "Jebakan").
-# Mengurutkan ulang impor sesuai I001 akan merusak jaminan urutan itu.
-"src/app.py" = ["I001"]
 # Berkas TERKUNCI (hash-nya bukti evaluasi; tests/test_testset_locks.py): temuan lama ini tidak
 # diperbaiki dengan menyunting berkasnya, karena itu mengubah hash. Pengecualian per berkas, per aturan.
 "src/generator.py" = ["ISC004"]

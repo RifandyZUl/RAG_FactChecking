@@ -342,8 +342,11 @@ keliru, dan bahkan pada batas yang menguntungkan sistem hasilnya baru tidak konk
 
 Sejak 2026-10-21 demo menampilkan peringatan pada setiap hasil "ditemukan": pengguna diminta memastikan
 sendiri bahwa tokoh, lembaga, dan program di artikel sama dengan pesan yang diperiksa, dengan judul dan
-tanggal artikel di dekatnya. Ini perubahan tampilan saja; **angka di atas mengukur keputusan generator dan
-tidak terpengaruh olehnya.**
+tanggal artikel di dekatnya. Sejak tampilan baru (branch `tahap-1-tampilan`), kotak itu memuat potongan
+pesan pengguna berdampingan dengan judul artikel, dan hasil "ditemukan" menampilkan **Kesimpulan
+TurnBackHoax apa adanya**, bukan parafrase LLM (parafrase hanya di panel penguji). Keduanya perubahan
+tampilan saja; **angka di atas mengukur keputusan generator dan tidak terpengaruh olehnya** (generator,
+prompt, retriever, dan chunker tidak disentuh; hash-nya dijaga `tests/test_testset_locks.py`).
 
 ---
 
@@ -598,41 +601,63 @@ Jalur jaringan belum diuji.
 
 ### Menjalankan demo
 
-Antarmuka Streamlit satu halaman (`src/app.py`) di atas pipeline yang sama
-dengan yang dievaluasi; tidak ada logika retrieval atau generasi tambahan.
-Butuh indeks di `data/chroma/` (lihat "Membangun basis pengetahuan") dan
-`GEMINI_API_KEY` di `.env`.
-
-Masukan dibatasi **1.500 karakter** (wilayah yang terukur bekerja; lihat
-"Keterbatasan"). Sejak ~220 token (sekitar 1.000–1.300 karakter), demo menampilkan
-peringatan **sebelum** pemeriksaan dan menyarankan menyalin inti klaimnya saja.
-Kalau teks panjang ditempel lalu tombol langsung ditekan, klik pertama hanya
-menampilkan peringatan; klik berikutnya baru menjalankan pemeriksaan.
+Antarmuka Streamlit dua halaman (beranda + "Tentang sistem ini") di atas pipeline yang sama dengan yang
+dievaluasi. Lapisannya: `src/ui/` (tampilan) -> `src/service.py` (validasi, batas laju, serialisasi) ->
+`generator.py` + `retriever.py` (terkunci). Butuh indeks di `data/chroma/` (lihat "Membangun basis
+pengetahuan") dan `GEMINI_API_KEY` di `.env`.
 
 ```powershell
-.\.venv\Scripts\python.exe -m streamlit run src\app.py   # dari root repositori
+.\.venv\Scripts\python.exe -m streamlit run srcpp.py   # dari root repositori
 ```
 
-Di Command Prompt (cmd), perintahnya sama tanpa `.\` di depan:
-`.venv\Scripts\python.exe -m streamlit run src\app.py`. Browser terbuka ke
-`http://localhost:8501`; hentikan dengan Ctrl+C.
+Di Command Prompt (cmd), perintahnya sama tanpa `.\` di depan. Browser terbuka ke
+`http://localhost:8501`; hentikan dengan Ctrl+C. Pemantau berkas Streamlit dimatikan
+(`.streamlit/config.toml`), jadi **jalankan ulang server setelah mengubah kode**.
 
-**Waktu muat pertama sekitar 67 detik** (terukur di mesin pengembangan, CPU):
-pemeriksaan pertama sejak aplikasi dinyalakan memuat model embedding bge-m3.
-Indikator proses menampilkan langkah yang sedang berjalan. Pemeriksaan
-berikutnya sekitar 4 detik.
+**Model dibaca dari cache lokal tanpa cek ke Hugging Face Hub** (`HF_HUB_OFFLINE=1` di `src/settings.py`;
+revisi bge-m3 dipatok di `ingest.MODEL_REVISION`). Di mesin baru, unduh sekali dengan Hub menyala:
 
-**Mode penguji** (bawaan mati) menampilkan panel "Detail untuk penguji":
-kandidat hasil retrieval beserta skor kemiripan, alasan LLM, latensi, token,
-dan jenis galat. Aktifkan dengan salah satu cara:
+```powershell
+$env:HF_HUB_OFFLINE = "0"; $env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -c "import ingest; ingest.load_model()"
+Remove-Item Env:HF_HUB_OFFLINE
+```
+
+**Pemanasan:** saat halaman pertama kali dibuka, satu utas latar memuat tokenizer, indeks, dan model
+embedding (tanpa memanggil LLM), sementara pengguna masih mengetik. Setiap sumber daya dimuat sekali per
+proses (log server: satu baris `memuat <nama>` per sumber daya). Terukur 2026-10-22, laptop 16 GB:
+pemanasan 21 dtk saat memori lega, 40-60 dtk saat memori sesak; setelah itu embedding kueri 0,1-0,3 dtk
+dan pencarian di bawah 0,05 dtk per pemeriksaan. Waktu selebihnya adalah panggilan Gemini (median ~7 dtk
+pada evaluasi; bisa puluhan detik saat layanan membalas 503).
+
+Masukan dibatasi **1.500 karakter** (wilayah yang terukur bekerja; lihat "Keterbatasan"); validasinya di
+lapisan layanan, termasuk pembuangan karakter kontrol. Sejak ~220 token demo menampilkan peringatan
+**sebelum** pemeriksaan; kalau teks panjang ditempel lalu tombol langsung ditekan, klik pertama hanya
+menampilkan peringatan.
+
+**Batas laju** (`src/settings.py`): jeda 15 detik dan 10 pemeriksaan per jam per sesi, 60 per jam per
+proses, dan demo berhenti di **400 permintaan per hari** menurut buku besar kuota yang sama dengan skrip
+evaluasi (panggilan evaluasi ikut terhitung). Batas per sesi bisa dilewati dengan memuat ulang halaman
+(sesi Streamlit baru); perlindungan sebenarnya ada di batas per proses dan batas harian. Pemeriksaan
+diserialkan per proses: pengguna kedua melihat pesan "menunggu giliran", dan setelah 90 detik menunggu
+diberi pesan untuk mencoba lagi.
+
+**Mode penguji** (bawaan mati) menampilkan panel "Detail untuk penguji": kandidat retrieval beserta skor,
+alasan dan parafrase LLM, waktu per tahap, token, dan jenis galat. Hanya bisa dinyalakan dari sisi server,
+tidak dari URL:
 
 ```powershell
 $env:DEMO_TESTER_MODE = "1"          # variabel lingkungan (diutamakan), sesi PowerShell ini saja
 ```
 
-atau buat `.streamlit/secrets.toml` (di-gitignore) berisi
-`demo_tester_mode = true`. Nilai `1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain
-atau tidak diatur berarti mati. `.env` tidak dibaca untuk setelan ini.
+atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = true`. Nilai
+`1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain atau tidak diatur berarti mati.
+
+> **Jangan menjalankan demo dan evaluasi bersamaan di dua lingkungan berbeda.** Buku besar kuota
+> (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS (Windows dan Linux), jadi demo
+> dan skrip evaluasi di mesin yang sama aman. Tetapi kunci berkas **tidak andal menembus folder bersama
+> antara Windows dan container Docker** (bind mount WSL2): demo di container dan evaluasi di host yang
+> berjalan bersamaan bisa saling menimpa hitungan.
 
 > **Kuota bersama dengan evaluasi.** Demo dan evaluasi berbagi kuota harian
 > yang sama: 500 permintaan per hari untuk `gemini-3.5-flash-lite`, tercatat di
@@ -660,13 +685,19 @@ src/
   llm/          abstraksi penyedia, pembatas laju, buku besar kuota
   evaluation/   runner evaluasi, analisis metrik, pemeriksaan indeks
   candidates/   pengumpulan & penyaringan kandidat set uji
-  chunker.py    pemotongan per seksi
-  ingest.py     embedding & vector store
-  retriever.py  pencarian + agregasi per artikel
+  chunker.py    pemotongan per seksi  [terkunci: hash = pembekuan evaluasi eksternal]
+  ingest.py     embedding & vector store (revisi bge-m3 dipatok)
+  retriever.py  pencarian + agregasi per artikel  [terkunci: hash = pembekuan evaluasi eksternal]
   generator.py  penyusunan jawaban  [terkunci sejak tag testset-v1]
-  presentation.py  data tampilan demo (tanpa Streamlit, teruji offline)
-  app.py        demo Streamlit (adapter tipis)
+  settings.py   setelan demo terpusat (batas masukan, batas laju, tautan, mode penguji)
+  resources.py  indeks, model, tokenizer, penyedia LLM: dimuat sekali + pemanasan
+  service.py    validasi, batas laju, serialisasi, lalu generator + retriever apa adanya
+  evaluation_facts.py  angka halaman "Tentang", dihitung dari testset/eksternal_hasil_per_butir.json
+  presentation.py  hasil layanan -> data tampilan + seluruh teks antarmuka (tanpa Streamlit)
+  ui/           halaman Streamlit (beranda, tentang), komponen ber-escape, style.css
+  app.py        titik masuk demo (st.navigation)
   paths.py      jalur proyek terpusat (root, data/, cache, articles.json)
+assets/brand/   logo (asli 500x500, turunan 32 dan 96 px)
 testset/
   v1.jsonl                   set uji beku (54 butir)
   v1.meta.json               pra-registrasi, penyimpangan, catatan analisis

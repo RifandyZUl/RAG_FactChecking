@@ -10,6 +10,23 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-23)*
+
+> **DEMO PORTOFOLIO, TAHAP 1 (branch `tahap-1-tampilan`, BELUM digabung ke main; menunggu persetujuan
+> pemilik proyek):** tampilan baru dari `docs/desain_tampilan/` (beranda, hasil, "Tentang"), struktur
+> `settings.py` / `resources.py` / `service.py` / `evaluation_facts.py` / `ui/`, kunci antar-utas dan
+> antar-proses buku besar kuota, serialisasi pemeriksaan per proses, pemanasan, batas laju, escape semua
+> teks dinamis. Laporan: `docs/laporan_tahap1.md`; audit dan keputusan: `docs/audit_tahap0.md`.
+> **Aturan baru:** (1) `retriever.py` dan `chunker.py` kini dikunci uji (hash = `testset/eksternal_butir.json`,
+> pembekuan 2026-10-17), bersama `generator.py`; (2) **jangan menjalankan demo di container Docker dan
+> evaluasi di host bersamaan**: kunci berkas buku besar tidak andal menembus bind mount Windows/WSL2;
+> (3) demo memakai `HF_HUB_OFFLINE=1` dan revisi bge-m3 dipatok `5617a9f6...` (`ingest.MODEL_REVISION`);
+> (4) Python untuk Tahap 2 = **3.13** (keputusan pemilik proyek 2026-10-22; 3.14 setelah
+> sentence-transformers 6.2.0 cukup berumur); (5) pemantau berkas Streamlit dimatikan
+> (`fileWatcherType = "none"`): ia mengimpor semua submodul `transformers` dan menahan halaman.
+> Tahap 2 (Docker, Python 3.13, pembuktian embedding di container Linux, requests 2.34.2, CI) dan Tahap 3
+> (catatan aktivitas tanpa isi pesan, ringkasan, pola galat) BELUM dimulai.
+
 *(2026-10-03)*
 
 > **KEADAAN (2026-10-03 malam): PERLUASAN BASIS DATA SELESAI. INDEKS PRODUKSI = 1.532 ARTIKEL /

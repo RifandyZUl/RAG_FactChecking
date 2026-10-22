@@ -1,610 +1,244 @@
-"""Uji penyiapan data tampilan demo (offline: `Answer` tiruan, tanpa API, tanpa model)."""
+"""Uji penyiapan data tampilan demo (offline: hasil layanan tiruan, tanpa API, tanpa model)."""
 
 import logging
 import re
-from pathlib import Path
 
 import pytest
 
+import settings
 from generator import MAX_FORMAT_RETRIES, Answer
 from llm import CallRecord
 from presentation import (
     EMPTY_INPUT_MESSAGE,
     FAILURE_MESSAGES,
-    FALLBACK_STATUS_LABEL,
-    LONG_CLAIM_CONFIRM,
-    LONG_CLAIM_WARN_CHARS,
-    LONG_CLAIM_WARN_TOKENS,
-    LONG_CLAIM_WARNING,
-    MAX_INPUT_CHARS,
-    NOT_FOUND_STYLE,
-    RELATED_DISABLED_NO_CONFIG,
-    RELATED_NOTE,
-    RELATED_THRESHOLD_CONFIG,
-    RETRIEVAL_MEASUREMENT,
-    SCAM_ADVICE,
+    NOT_FOUND_PILL,
     STATUS_STYLES,
     FailureKind,
-    RelatedArticle,
-    RelatedThreshold,
     build_view,
     classify_call_error,
     classify_failure,
-    count_indexed_articles,
     display_references,
     display_title,
-    escape_markdown,
-    evaluation_scope_note,
-    failure_view,
-    index_key,
-    is_long_claim,
-    load_related_threshold_config,
-    markdown_link,
-    parse_flag,
-    related_articles,
-    resolve_related_threshold,
+    excerpt,
+    format_date,
+    format_metadata_date,
+    input_problem_message,
+    is_safe_url,
+    kesimpulan_preview,
     status_style_key,
-    validate_claim,
 )
-
-ROOT = Path(__file__).resolve().parent.parent
+from retriever import ArticleHit
+from service import CheckError, CheckOutcome
 
 REFS = ["https://www.kemkes.go.id/rilis", "https://cekfakta.example.org/a"]
 CANDIDATES = [
     {"article_id": "36214", "title": "[SALAH] Vaksin HPV Bikin Impoten", "label": "SALAH", "score": 0.6671},
     {"article_id": "36577", "title": "[SALAH] Cacar Air", "label": "SALAH", "score": 0.61},
-    {"article_id": "36053", "title": "[PENIPUAN] Link Bantuan", "label": "PENIPUAN", "score": 0.59},
 ]
+KESIMPULAN = "Faktanya, klaim vaksin HPV bikin impoten tidak benar menurut Kemenkes."
 
 
-def _ok_call(latency: float = 3.0, tokens_in: int | None = 1800, tokens_out: int | None = 120) -> CallRecord:
-    return CallRecord("gemini", "gemini-3.5-flash-lite", latency, True, 1,
-                      input_tokens=tokens_in, output_tokens=tokens_out)
+def _ok_call() -> CallRecord:
+    return CallRecord("gemini", "gemini-3.5-flash-lite", 3.0, True, 1, input_tokens=1800, output_tokens=120)
 
 
-def _failed_call(error: str) -> CallRecord:
-    return CallRecord("gemini", "gemini-3.5-flash-lite", 90.0, False, 3, error=error)
+def _hit(article_id: str = "36214", kesimpulan: str = KESIMPULAN, date: str = "14/08/2026") -> ArticleHit:
+    return ArticleHit(article_id=article_id, title="[SALAH] Vaksin HPV Bikin Impoten",
+                      url=f"https://turnbackhoax.id/articles/{article_id}-x", label="SALAH", score=0.66,
+                      best_section="narasi", references=list(REFS), date=date, kesimpulan=kesimpulan)
 
 
-def _found(label: str = "SALAH", **kw: object) -> Answer:
+def _found_answer(label: str = "SALAH", **kw: object) -> Answer:
     base: dict = {
         "claim": "klaim", "verdict": "ditemukan", "status_label": label, "article_id": "36214",
-        "title": f"[{label}] Judul Artikel",
-        "article_url": "https://turnbackhoax.id/articles/36214-judul",
-        "klarifikasi": "Faktanya, klaim itu tidak benar.", "alasan": "Klaim sama dengan judul.",
+        "title": f"[{label}] Vaksin HPV Bikin Impoten",
+        "article_url": "https://turnbackhoax.id/articles/36214-x",
+        "klarifikasi": "PARAFRASE LLM yang tidak boleh tampil ke pengguna umum.", "alasan": "Klaim sama.",
         "references": list(REFS), "candidates": list(CANDIDATES), "calls": [_ok_call()],
     }
     base.update(kw)
     return Answer(**base)
 
 
-def _failed(**kw: object) -> Answer:
-    base: dict = {"claim": "klaim", "verdict": "gagal", "candidates": list(CANDIDATES)}
+def _outcome(answer: Answer | None = None, **kw: object) -> CheckOutcome:
+    base: dict = {"message": "vaksin hpv bikin anak cowok impoten katanya", "answer": answer,
+                  "hits": [_hit()], "penjelasan": "Penelusuran tim.\n\nParagraf kedua.", "model": "m"}
     base.update(kw)
-    return Answer(**base)
+    return CheckOutcome(**base)
 
 
-# -- status ditemukan -------------------------------------------------------
+# -- ditemukan -----------------------------------------------------------------
 
-@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "BELUM TERBUKTI"])
-def test_found_uses_status_style_from_metadata_label(label: str) -> None:
-    view = build_view(_found(label), model="m")
+
+@pytest.mark.parametrize("label", ["PENIPUAN", "SALAH", "PARODI", "BELUM TERBUKTI"])
+def test_found_uses_label_from_metadata_with_fixed_headline_and_advice(label: str) -> None:
+    view = build_view(_outcome(_found_answer(label)))
     style = STATUS_STYLES[label]
-    assert view.kind == "found"
-    assert (view.status_label, view.status_color, view.status_icon, view.summary) == (
-        style.label, style.color, style.icon, style.summary)
-    assert view.article_title == "Judul Artikel"  # label dalam kurung siku dibuang
-    assert view.clarification == "Faktanya, klaim itu tidak benar."
-    assert view.references == REFS
+    assert view.kind == "found" and view.pill_text == label
+    assert (view.status_color, view.headline, view.advice) == (style.color, style.headline, style.advice)
 
 
-@pytest.mark.parametrize("label", ["SATIRE", "SATIR", "satire", " Satir ", "KOMEDI", "komedi"])
-def test_humor_labels_use_parodi_style(label: str) -> None:
-    view = build_view(_found(label))
-    style = STATUS_STYLES["PARODI"]
-    assert (view.status_label, view.status_color, view.status_icon, view.summary) == (
-        style.label, style.color, style.icon, style.summary)
-    assert view.advice == ""
+def test_found_shows_turnbackhoax_kesimpulan_as_is_and_llm_paraphrase_only_in_diagnostics() -> None:
+    view = build_view(_outcome(_found_answer()))
+    assert view.kesimpulan == KESIMPULAN
+    assert "PARAFRASE" not in view.kesimpulan + view.headline + view.advice
+    assert view.diagnostics.llm_paraphrase.startswith("PARAFRASE")
+
+
+def test_penipuan_advice_is_the_sentence_set_by_the_owner() -> None:
+    assert STATUS_STYLES["PENIPUAN"].advice == "Jangan klik tautannya, jangan isi formulirnya, dan jangan teruskan pesannya."
+
+
+def test_belum_terbukti_keeps_the_exact_sentence_from_2026_10_03() -> None:
+    assert STATUS_STYLES["BELUM TERBUKTI"].advice == (
+        "Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, "
+        "sehingga belum dapat dianggap benar.")
+    assert STATUS_STYLES["BELUM TERBUKTI"].color == "violet"
+
+
+@pytest.mark.parametrize("label", ["SATIRE", "SATIR", "KOMEDI", "parodi"])
+def test_humor_labels_use_parodi_style_but_pill_shows_original_label(label: str) -> None:
+    view = build_view(_outcome(_found_answer(label)))
     assert status_style_key(label) == "PARODI"
+    assert view.status_color == "yellow" and view.pill_text == label.upper()
 
 
-def test_parodi_summary_names_every_aliased_category() -> None:
-    summary = STATUS_STYLES["PARODI"].summary.lower()
-    assert all(word in summary for word in ("parodi", "satire", "komedi"))
+def test_status_colors_are_distinct_and_never_green() -> None:
+    colors = [s.color for s in STATUS_STYLES.values()]
+    assert len(set(colors)) == len(colors) and "green" not in colors
 
 
-def test_status_colors_are_distinct_and_never_success_green() -> None:
-    colors = [s.color for s in STATUS_STYLES.values()] + [NOT_FOUND_STYLE.color]
-    assert len(set(colors)) == len(colors)
-    assert "green" not in colors and "blue" not in colors
-    assert NOT_FOUND_STYLE.color == "gray"
-
-
-def test_scam_advice_only_for_penipuan_and_always_identical() -> None:
-    a = build_view(_found("PENIPUAN", klarifikasi="Faktanya A", title="[PENIPUAN] Link X"))
-    b = build_view(_found("PENIPUAN", klarifikasi="Faktanya B", title="[PENIPUAN] Link Y"))
-    assert a.advice == b.advice == SCAM_ADVICE
-    assert SCAM_ADVICE not in a.clarification  # terpisah dari klarifikasi
-    assert build_view(_found("SALAH")).advice == ""
-    assert build_view(_found("PARODI")).advice == ""
-
-
-def test_unknown_label_is_neutral_in_style_and_wording(caplog: pytest.LogCaptureFixture) -> None:
+def test_unknown_label_is_neutral_quoted_and_logged(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="presentation"):
-        view = build_view(_found("MENYESATKAN"))
-    assert view.kind == "found"
-    assert view.status_label == FALLBACK_STATUS_LABEL
-    assert "“MENYESATKAN”" in view.summary, "label asli ditampilkan apa adanya"
-    assert "sudah diperiksa" in view.summary
-    # netral: bukan warna/ikon/kalimat status yang dikenal, dan tidak menyatakan klaimnya salah
-    known = STATUS_STYLES.values()
-    assert view.status_color == "gray" and view.status_color not in {s.color for s in known}
-    assert view.status_icon not in {s.icon for s in known} | {NOT_FOUND_STYLE.icon}
-    assert not re.search(r"\b(salah|penipuan|parodi|hoaks|keliru)\b", view.summary.lower())
-    assert view.advice == ""
-    assert view.article_url and view.references == REFS, "artikel dan rujukan tetap ditampilkan"
-    # dicatat ke log setiap kali muncul, dengan label dan id artikel
-    assert [(r.levelname, r.name) for r in caplog.records] == [("WARNING", "presentation")]
-    assert "MENYESATKAN" in caplog.text and "36214" in caplog.text
+        view = build_view(_outcome(_found_answer("HOAKS BARU")))
+    assert view.status_color == "gray" and view.pill_text == "HOAKS BARU"
+    assert "“HOAKS BARU”" in view.headline and "salah" not in view.headline.lower()
+    assert "HOAKS BARU" in caplog.text and "36214" in caplog.text
 
 
 @pytest.mark.parametrize("label", ["", "TIDAK DIKETAHUI"])
-def test_unreadable_label_is_not_quoted_as_a_label(label: str, caplog: pytest.LogCaptureFixture) -> None:
+def test_unreadable_label_is_not_quoted(label: str) -> None:
+    view = build_view(_outcome(_found_answer(label)))
+    assert view.pill_text == "SUDAH DIPERIKSA" and "TIDAK DIKETAHUI" not in view.headline
+
+
+def test_found_carries_article_card_fields_from_metadata() -> None:
+    view = build_view(_outcome(_found_answer()))
+    assert view.article_title == "Vaksin HPV Bikin Impoten"
+    assert view.article_url == "https://turnbackhoax.id/articles/36214-x"
+    assert view.article_date == "14 Agustus 2026"
+    assert view.penjelasan.startswith("Penelusuran tim.")
+    assert view.message_excerpt == "vaksin hpv bikin anak cowok impoten katanya"
+
+
+def test_references_come_only_from_metadata_and_never_from_llm_output() -> None:
+    ans = _found_answer(klarifikasi="lihat https://jahat.example/x", alasan="www.jahat.example")
+    view = build_view(_outcome(ans))
+    assert view.references == REFS
+
+
+def test_claim_sources_and_filtered_links_never_reach_the_view() -> None:
+    """Metadata indeks hanya membawa `references`; tautan terblokir yang lolos ke metadata tetap disaring."""
+    blocked = ["https://www.facebook.com/hoaks/posts/1", "https://bit.ly/abc", "https://archive.fo/x"]
+    view = build_view(_outcome(_found_answer(references=[*REFS, *blocked])))
+    assert view.references == REFS
+
+
+@pytest.mark.parametrize("url", ["javascript:alert(1)", "data:text/html,<b>x</b>", "file:///etc/passwd", "//x.org"])
+def test_unsafe_url_schemes_are_never_linked(url: str) -> None:
+    assert not is_safe_url(url)
+    assert display_references([url]) == []
+    assert build_view(_outcome(_found_answer(article_url=url))).article_url == ""
+
+
+def test_display_filter_uses_the_same_policy_as_the_parser(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="presentation"):
-        view = build_view(_found(label))
-    assert view.status_label == FALLBACK_STATUS_LABEL and view.status_color == "gray"
-    assert "tidak terbaca" in view.summary and "“" not in view.summary
-    assert len(caplog.records) == 1
+        assert display_references(["https://tinyurl.com/kode-rahasia", REFS[0]], "1") == [REFS[0]]
+    assert "kode-rahasia" not in caplog.text, "log mencatat alasan (domain) dan id artikel, bukan tautan lengkapnya"
 
 
-@pytest.mark.parametrize("label", ["SALAH", "PENIPUAN", "PARODI", "SATIR", "KOMEDI", "BELUM TERBUKTI", "belum terbukti"])
-def test_known_labels_are_not_logged_as_unknown(label: str, caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="presentation"):
-        build_view(_found(label))
-    assert caplog.records == []
+# -- belum ditemukan dan kegagalan ----------------------------------------------
 
-
-def test_article_without_references_has_empty_reference_list() -> None:
-    assert build_view(_found(references=[])).references == []
-
-
-def test_claim_sources_never_leak_into_view() -> None:
-    """Aturan Wajib #1: hanya `references` yang tampil; tautan hoaks tidak ada di Answer maupun view."""
-    hoax_link = "https://www.facebook.com/penyebar/posts/1"
-    view = build_view(_found())
-    assert hoax_link not in repr(view)
-    assert set(view.references) == set(REFS)
-
-
-# -- belum ditemukan --------------------------------------------------------
 
 def test_not_found_is_neutral_and_llm_reason_only_in_diagnostics() -> None:
-    ans = Answer(claim="vaksin flu bikin mandul", verdict="tidak_ditemukan",
-                 alasan="Berbeda dari artikel vaksin HPV 36214.",
-                 candidates=list(CANDIDATES), calls=[_ok_call()])
-    view = build_view(ans)
-    assert view.kind == "not_found"
-    assert view.status_color == "gray"
-    assert "tidak berarti klaimnya benar" in view.summary
-    assert "36214" not in view.summary and view.clarification == "" and view.references == []
-    assert view.diagnostics.llm_reason == "Berbeda dari artikel vaksin HPV 36214."
+    ans = Answer(claim="k", verdict="tidak_ditemukan", alasan="Unsur inti berbeda.", candidates=list(CANDIDATES),
+                 calls=[_ok_call()])
+    view = build_view(_outcome(ans))
+    assert view.kind == "not_found" and view.pill_text == NOT_FOUND_PILL
+    assert "Unsur inti" not in view.headline and view.diagnostics.llm_reason == "Unsur inti berbeda."
+    assert view.references == [] and view.kesimpulan == ""
 
 
-def test_main_copy_has_no_technical_terms() -> None:
-    views = [build_view(_found(label)) for label in STATUS_STYLES] + [
-        build_view(Answer(claim="x", verdict="tidak_ditemukan"))]
-    texts = [v.summary for v in views] + [body for _, body in FAILURE_MESSAGES.values()]
-    texts += [LONG_CLAIM_WARNING, LONG_CLAIM_CONFIRM]
-    for text in texts:
-        for term in ("retrieval", "chunk", "skor", "embedding", "LLM", "API", "token"):
-            assert term.lower() not in text.lower(), (term, text)
-
-
-# -- klasifikasi galat ------------------------------------------------------
-
-@pytest.mark.parametrize(("error", "expected"), [
-    ("APITimeoutError status=None", FailureKind.TIMEOUT),
-    ("ReadTimeout status=None", FailureKind.TIMEOUT),
-    ("ServerError status=503", FailureKind.UNAVAILABLE),
-    ("ServerError status=500", FailureKind.UNAVAILABLE),
-    ("ClientError status=429 jenis=per_menit", FailureKind.UNAVAILABLE),
-    ("APIConnectionError status=None", FailureKind.UNAVAILABLE),
-    ("ClientError status=403", None),
-    ("status=incomplete teks_kosong=True", None),
-    ("anggaran-lokal-habis", None),
-    ("format baru yang tidak dikenal", None),
+@pytest.mark.parametrize(("error", "kind"), [
+    (CheckError.SESSION_INTERVAL, FailureKind.RATE_LIMITED), (CheckError.SESSION_HOURLY, FailureKind.RATE_LIMITED),
+    (CheckError.GLOBAL_HOURLY, FailureKind.RATE_LIMITED), (CheckError.DAILY_STOP, FailureKind.QUOTA),
+    (CheckError.BUSY, FailureKind.BUSY), (CheckError.NO_INDEX, FailureKind.NO_INDEX),
+    (CheckError.CONFIG, FailureKind.CONFIG), (CheckError.UNEXPECTED, FailureKind.OTHER),
 ])
-def test_classify_call_error(error: str, expected: FailureKind | None) -> None:
-    assert classify_call_error(error) is expected
+def test_service_errors_map_to_plain_language_failures(error: CheckError, kind: FailureKind) -> None:
+    view = build_view(_outcome(None, error=error, retry_after_s=42, error_detail="RuntimeError: rinci"))
+    assert view.kind == "failed" and view.failure_title == FAILURE_MESSAGES[kind][0]
+    assert "RuntimeError" not in view.failure_body and "{wait}" not in view.failure_body
+    assert view.diagnostics.error_detail == "RuntimeError: rinci"
 
 
-def test_quota_flag_wins_over_call_error() -> None:
-    ans = _failed(quota_exhausted=True, error="Kuota habis",
-                  calls=[_failed_call("ClientError status=429 jenis=harian kuota-habis")])
-    assert classify_failure(ans) is FailureKind.QUOTA
-
-
-def test_timeout_and_unavailable_from_last_failed_call() -> None:
-    timeout = _failed(error="x", calls=[_failed_call("APITimeoutError status=None")])
-    down = _failed(error="x", calls=[_failed_call("ServerError status=503")])
-    assert classify_failure(timeout) is FailureKind.TIMEOUT
-    assert classify_failure(down) is FailureKind.UNAVAILABLE
-
-
-def test_parse_failure_when_all_format_attempts_fail_without_call_error() -> None:
-    ans = _failed(error="Keluaran LLM tidak sesuai format terstruktur setelah percobaan ulang.",
-                  parse_failures=1 + MAX_FORMAT_RETRIES,
-                  calls=[_ok_call() for _ in range(1 + MAX_FORMAT_RETRIES)])
-    assert classify_failure(ans) is FailureKind.PARSE
-
-
-def test_changed_error_format_falls_back_to_general_message() -> None:
-    ans = _failed(error="x", calls=[_failed_call("TimeoutBaru: kode 503")])
-    assert classify_failure(ans) is FailureKind.OTHER
-    assert classify_failure(_failed(error="tak dikenal")) is FailureKind.OTHER
-
-
-def test_non_failures_have_no_failure_kind() -> None:
-    assert classify_failure(_found()) is None
-    assert classify_failure(Answer(claim="x", verdict="tidak_ditemukan")) is None
-
-
-def test_provider_error_format_still_matches_classifier() -> None:
-    """Pengunci: bila format CallRecord.error di gemini.py berubah, uji ini mengingatkan."""
-    source = (ROOT / "src" / "llm" / "gemini.py").read_text(encoding="utf-8")
-    assert 'f"{type(e).__name__} status={status}"' in source
-    assert "Timeout" in source and "_RETRYABLE_STATUS = {429, 500, 502, 503, 504}" in source
+def test_rate_limit_message_states_the_wait_in_plain_words() -> None:
+    assert "42 detik" in build_view(_outcome(None, error=CheckError.SESSION_INTERVAL, retry_after_s=42)).failure_body
+    assert "3 menit" in build_view(_outcome(None, error=CheckError.GLOBAL_HOURLY, retry_after_s=150)).failure_body
 
 
 @pytest.mark.parametrize("kind", list(FailureKind))
-def test_every_failure_kind_has_message_with_action(kind: FailureKind) -> None:
+def test_every_failure_message_says_what_to_do_without_technical_terms(kind: FailureKind) -> None:
     title, body = FAILURE_MESSAGES[kind]
-    view = failure_view(kind)
-    assert view.kind == "failed" and view.status_color == "gray"
-    assert (view.status_label, view.summary) == (title, body)
-    assert view.diagnostics.failure_kind == kind.value
-    assert re.search(r"coba|perlu", body), "pesan wajib menyebut apa yang bisa dilakukan"
+    assert title and body
+    words = set(re.findall(r"[\w=]+", (title + body).lower()))
+    assert not words & {"http", "api", "exception", "traceback", "status=", "error", "galat"}
 
 
-def test_failed_answer_view_carries_redacted_error_only_in_diagnostics() -> None:
-    ans = _failed(error="Panggilan gemini gagal ([KUNCI-DISAMARKAN])",
-                  calls=[_failed_call("ServerError status=503")])
-    view = build_view(ans, model="gemini-3.5-flash-lite")
-    assert view.kind == "failed"
-    assert "KUNCI" not in view.summary
-    assert view.diagnostics.error_detail.startswith("Panggilan gemini gagal")
-    assert view.diagnostics.model == "gemini-3.5-flash-lite"
+@pytest.mark.parametrize(("error", "expected"), [
+    ("APITimeoutError status=None", FailureKind.TIMEOUT), ("InternalServerError status=503", FailureKind.UNAVAILABLE),
+    ("APIConnectionError status=None", FailureKind.UNAVAILABLE), ("BadRequest status=400", None), ("format baru", None),
+])
+def test_classify_call_error(error: str, expected: FailureKind | None) -> None:
+    assert classify_call_error(error) == expected
 
 
-# -- diagnostik ---------------------------------------------------------------
-
-def test_diagnostics_aggregate_calls_and_candidates() -> None:
-    ans = _found(calls=[_ok_call(2.0, 1000, 50), _ok_call(1.5, None, 30)],
-                 parse_failures=1, llm_urls_found=["http://x.id"], klarifikasi_fallback=True)
-    d = build_view(ans, model="m").diagnostics
-    assert d.latency_s == pytest.approx(3.5)
-    assert (d.llm_calls, d.attempts, d.input_tokens, d.output_tokens) == (2, 2, 1000, 80)
-    assert [c.article_id for c in d.candidates] == ["36214", "36577", "36053"]
-    assert d.candidates[0].score == pytest.approx(0.6671)
-    assert (d.parse_failures, d.llm_urls_removed, d.clarification_fallback) == (1, 1, True)
+def test_classify_failure_order() -> None:
+    failed = CallRecord("gemini", "m", 1.0, False, 3, error="InternalServerError status=503")
+    assert classify_failure(Answer(claim="k", verdict="gagal", quota_exhausted=True, calls=[failed])) is FailureKind.QUOTA
+    assert classify_failure(Answer(claim="k", verdict="gagal", calls=[failed])) is FailureKind.UNAVAILABLE
+    assert classify_failure(Answer(claim="k", verdict="gagal", parse_failures=1 + MAX_FORMAT_RETRIES)) is FailureKind.PARSE
+    assert classify_failure(_found_answer()) is None
 
 
-def test_tokens_none_when_not_recorded() -> None:
-    d = build_view(_found(calls=[_ok_call(tokens_in=None, tokens_out=None)])).diagnostics
-    assert d.input_tokens is None and d.output_tokens is None
+def test_input_problem_messages() -> None:
+    assert input_problem_message(CheckError.EMPTY, "") == EMPTY_INPUT_MESSAGE
+    msg = input_problem_message(CheckError.TOO_LONG, "x" * 2001)
+    assert msg is not None and "2.001" in msg and "1.500" in msg
+    assert input_problem_message(CheckError.BUSY, "x") is None
 
 
-# -- Markdown ---------------------------------------------------------------
+# -- format ---------------------------------------------------------------------
+
 
 def test_display_title_strips_label_prefix() -> None:
-    assert display_title("[SALAH] Malaysia Laporkan Indonesia ke PBB") == "Malaysia Laporkan Indonesia ke PBB"
-    assert display_title("Tanpa label") == "Tanpa label"
-    assert display_title("[SALAH]") == "[SALAH]"
+    assert display_title("[SALAH] Judul") == "Judul" and display_title("Tanpa label") == "Tanpa label"
 
 
-def test_escape_markdown_neutralizes_latex_links_and_directives() -> None:
-    text = "Harga $5 dan $10 *murah* [klik](http://x) :red[a] :material/home:"
-    escaped = escape_markdown(text)
-    assert not re.search(r"(?<!\\)[$*\[\]():]", escaped)
-    assert escaped.replace("\\", "") == text
+def test_kesimpulan_preview_cuts_at_sentence_or_word() -> None:
+    short = "Satu kalimat."
+    assert kesimpulan_preview(short) == (short, False)
+    long_text = "Kalimat pertama cukup panjang. " * 20
+    preview, cut = kesimpulan_preview(long_text)
+    assert cut and preview.endswith(".") and len(preview) <= settings.KESIMPULAN_PREVIEW_CHARS
 
 
-def test_markdown_link_escapes_text_and_encodes_url() -> None:
-    link = markdown_link("Judul [x]", "https://a.id/p (1)")
-    assert link == r"[Judul \[x\]](https://a.id/p%20%281%29)"
+def test_excerpt_flattens_whitespace_and_cuts_on_word_boundary() -> None:
+    assert excerpt("a  b\n\nc", 50) == "a b c"
+    assert excerpt("satu dua tiga empat", 10) == "satu dua…"
 
 
-# -- "belum ditemukan": artikel mungkin terkait ------------------------------
-
-URLS = {
-    "36214": "https://turnbackhoax.id/articles/36214-salah-vaksin-hpv",
-    "36577": "https://turnbackhoax.id/articles/36577-salah-cacar-air",
-    "36053": "https://turnbackhoax.id/articles/36053-link-bantuan",
-}
-
-
-THRESHOLD = 0.57
-ACTIVE = RelatedThreshold(THRESHOLD, "aktif")
-
-
-def test_related_articles_filtered_by_threshold_sorted_and_without_scores() -> None:
-    cands = [
-        {"article_id": "36577", "title": "[SALAH] Cacar Air", "label": "SALAH", "score": 0.61},
-        {"article_id": "36053", "title": "Link", "label": "PENIPUAN", "score": THRESHOLD - 0.001},
-        {"article_id": "36214", "title": "[SALAH] Vaksin HPV", "label": "SALAH", "score": 0.6671},
-    ]
-    related = related_articles(cands, URLS, THRESHOLD)
-    assert related == [
-        RelatedArticle("Vaksin HPV", URLS["36214"]),
-        RelatedArticle("Cacar Air", URLS["36577"]),
-    ]
-    assert "0.6" not in repr(related)  # skor tidak dibawa ke tampilan
-
-
-def test_threshold_is_inclusive_and_candidates_without_url_are_skipped() -> None:
-    cands = [{"article_id": "1", "title": "A", "label": "SALAH", "score": THRESHOLD},
-             {"article_id": "2", "title": "B", "label": "SALAH", "score": 0.9}]
-    assert related_articles(cands, {"1": "https://turnbackhoax.id/articles/1-a"}, THRESHOLD) == [
-        RelatedArticle("A", "https://turnbackhoax.id/articles/1-a")]
-
-
-CONFIG = {"indeks": {"data": {"ambang": 0.6, "artikel": 10, "chunk": 30, "tanggal": "2026-09-28"}}}
-
-
-def test_threshold_applies_only_to_calibrated_index_size() -> None:
-    assert resolve_related_threshold(CONFIG, "data", 30).value == 0.6
-    grown = resolve_related_threshold(CONFIG, "data", 33)  # basis data diperbesar -> basi
-    assert grown.value is None and "30" in grown.status and "33" in grown.status
-    assert resolve_related_threshold(CONFIG, "archive/v1", 30).value is None  # tanpa entri
-    assert resolve_related_threshold({}, "data", 30).value is None
-
-
-def test_missing_config_file_disables_feature(tmp_path: Path) -> None:
-    assert load_related_threshold_config(tmp_path / "tidak_ada.json") == {}
-
-
-def test_index_key_relative_to_project_root(tmp_path: Path) -> None:
-    assert index_key(tmp_path / "data", root=tmp_path) == "data"
-    assert index_key(tmp_path / "archive" / "v1", root=tmp_path) == "archive/v1"
-
-
-def test_committed_config_matches_documented_calibration() -> None:
-    """Angka kalibrasi tercatat (dasar lengkap di config/related_threshold.json)."""
-    indeks = load_related_threshold_config(RELATED_THRESHOLD_CONFIG)["indeks"]
-    v1 = indeks["archive/v1"]
-    assert (v1["ambang"], v1["artikel"], v1["chunk"]) == (0.57, 150, 450)
-    assert 0.5680 < v1["ambang"] < 0.5739  # negatif mudah v1 tertinggi < ambang < 36729 (set pengembangan)
-    prod = indeks["data"]
-    assert (prod["artikel"], prod["chunk"]) == (1532, 4593)
-    # 922 lalu 1.532 artikel: tak ada pemisah (bumi datar >= 0,6385 di atas 36729 0,5739) -> sengaja dimatikan
-    assert prod["ambang"] is None
-    calibrated = resolve_related_threshold({"indeks": indeks}, "data", 4593)
-    assert calibrated.value is None and "tidak ada ambang yang memisahkan" in calibrated.status
-    assert resolve_related_threshold({"indeks": indeks}, "data", 2766).value is None  # ukuran lama: basi, mati
-    assert resolve_related_threshold({"indeks": indeks}, "archive/v1", 450).value == 0.57
-
-
-def test_disabled_threshold_shows_no_related() -> None:
-    ans = Answer(claim="vaksin flu bikin mandul", verdict="tidak_ditemukan",
-                 candidates=list(CANDIDATES), calls=[_ok_call()])
-    view = build_view(ans, article_urls=URLS)  # bawaan: tidak dikonfigurasi -> mati
-    assert view.related == []
-    assert view.diagnostics.related_threshold is None
-    assert view.diagnostics.related_status == RELATED_DISABLED_NO_CONFIG.status
-
-
-def test_not_found_view_lists_related_but_keeps_neutral_verdict() -> None:
-    ans = Answer(claim="vaksin flu bikin mandul", verdict="tidak_ditemukan",
-                 candidates=list(CANDIDATES), calls=[_ok_call()])
-    view = build_view(ans, article_urls=URLS, related_threshold=ACTIVE)
-    assert view.kind == "not_found" and view.status_color == "gray"
-    assert [a.url for a in view.related] == [URLS["36214"], URLS["36577"], URLS["36053"]]
-    assert view.references == [] and view.clarification == ""
-    assert "tidak sama" in RELATED_NOTE
-
-
-def test_related_only_for_not_found() -> None:
-    assert build_view(_found(), article_urls=URLS, related_threshold=ACTIVE).related == []
-    failed = _failed(error="x", calls=[_failed_call("ServerError status=503")])
-    assert build_view(failed, article_urls=URLS, related_threshold=ACTIVE).related == []
-
-
-def test_not_found_without_urls_shows_no_related() -> None:
-    ans = Answer(claim="x", verdict="tidak_ditemukan", candidates=list(CANDIDATES))
-    assert build_view(ans, related_threshold=ACTIVE).related == []
-
-
-# -- masukan dan setelan -----------------------------------------------------
-
-def test_validate_claim_limits() -> None:
-    # 1.500 = wilayah terukur bekerja (ablasi eksperimen 4: 19/20); 5.000 runtuh ke 2/20.
-    assert MAX_INPUT_CHARS == 1500
-    assert validate_claim("   ") == EMPTY_INPUT_MESSAGE
-    assert validate_claim("a" * MAX_INPUT_CHARS) is None
-    message = validate_claim("a" * (MAX_INPUT_CHARS + 1))
-    assert message is not None
-    assert "1.501" in message and "1.500" in message and "tidak ada bagian yang dipotong" in message
-
-
-def test_validate_claim_counts_after_trimming_whitespace() -> None:
-    assert validate_claim("  " + "a" * MAX_INPUT_CHARS + "  ") is None
-
-
-@pytest.mark.parametrize(("value", "expected"), [
-    (None, False), ("", False), ("0", False), ("false", False), ("tidak", False),
-    ("1", True), ("true", True), ("TRUE", True), (" ya ", True), ("on", True),
-    (True, True), (False, False), (1, True), (0, False),
-])
-def test_parse_flag(value: object, expected: bool) -> None:
-    assert parse_flag(value) is expected
-
-
-def test_query_token_diagnostics_passed_through() -> None:
-    d = build_view(_found(), query_tokens=700, query_token_limit=512, related_threshold=ACTIVE).diagnostics
-    assert (d.query_tokens, d.query_token_limit) == (700, 512)
-    assert d.related_threshold == THRESHOLD
-
-
-# -- peringatan pesan panjang -------------------------------------------------
-
-def test_long_claim_uses_tokens_when_available() -> None:
-    assert LONG_CLAIM_WARN_TOKENS == 220
-    assert not is_long_claim("x" * 5000, LONG_CLAIM_WARN_TOKENS)  # token diutamakan atas karakter
-    assert is_long_claim("pendek", LONG_CLAIM_WARN_TOKENS + 1)
-
-
-def test_long_claim_falls_back_to_characters() -> None:
-    assert LONG_CLAIM_WARN_CHARS == 1000
-    assert not is_long_claim("a" * LONG_CLAIM_WARN_CHARS, None)
-    assert is_long_claim("a" * (LONG_CLAIM_WARN_CHARS + 1), None)
-    assert not is_long_claim("  " + "a" * LONG_CLAIM_WARN_CHARS + "  ", None)
-
-
-def test_warning_threshold_is_below_input_limit() -> None:
-    """Peringatan harus bisa muncul untuk masukan yang masih diizinkan."""
-    assert LONG_CLAIM_WARN_CHARS < MAX_INPUT_CHARS
-    assert "inti klaim" in LONG_CLAIM_WARNING and "{button}" in LONG_CLAIM_CONFIRM
-
-
-def test_evaluation_scope_note_states_measured_scope_as_is() -> None:
-    """Catatan cakupan: 48/50 pada 150 artikel; indeks besar hanya pencarian, dengan tanggal dan ukuran saat diukur."""
-    note = evaluation_scope_note(1532)
-    assert "48 dari 50" in note and "150 artikel" in note
-    assert "saat ini berisi 1.532 artikel" in note
-    assert "pada pengukuran 3 Oktober 2026, saat basis data berisi 1.532 artikel" in note
-    assert "dari 20 butir uji" in note
-    assert "pertama hasil pencarian untuk 18 butir" in note and "tiga teratas untuk 20 butir" in note
-    # angka pencarian tidak boleh terbaca sebagai akurasi jawaban
-    assert "tahap pencarian artikel, bukan jawabannya" in note and "bukan ukuran akurasi jawaban" in note
-    assert "Akurasi jawaban akhir pada basis data ini belum diukur" in note
-    assert "20 dari 20" not in note and "100" not in note and "%" not in note
-    assert "belum tentu berlaku" not in note, "ukuran indeks sama dengan saat diukur: tanpa peringatan"
-
-
-def test_evaluation_scope_note_follows_the_live_article_count() -> None:
-    """Jumlah artikel yang sedang dipakai otomatis; angka pencarian tetap terikat tanggal dan ukuran saat diukur."""
-    grown = evaluation_scope_note(1575)
-    assert "saat ini berisi 1.575 artikel" in grown
-    assert "pada pengukuran 3 Oktober 2026, saat basis data berisi 1.532 artikel" in grown
-    assert "untuk 18 butir" in grown and "untuk 20 butir" in grown, "angka pengukuran tidak dihapus"
-    assert "Basis data sudah berubah sejak pengukuran itu" in grown and "belum tentu berlaku sekarang" in grown
-    unknown = evaluation_scope_note(None)
-    assert "tidak terbaca" in unknown and "berisi 1.532 artikel" in unknown and "belum tentu berlaku" not in unknown
-    archive = evaluation_scope_note(150)  # demo diarahkan ke arsip: tanpa peringatan "sudah berubah"
-    assert "saat ini berisi 150 artikel" in archive and "belum tentu berlaku" not in archive
-    assert RETRIEVAL_MEASUREMENT == {"tanggal": "3 Oktober 2026", "artikel": 1532, "butir": 20,
-                                     "urutan_pertama": 18, "tiga_teratas": 20}
-
-
-def test_count_indexed_articles_reads_the_index_without_opening_the_collection(tmp_path: Path) -> None:
-    from ingest import get_collection
-
-    assert count_indexed_articles(tmp_path / "tidak_ada") is None
-    path = tmp_path / "chroma"
-    coll = get_collection(path)
-    ids = ["1_narasi", "1_kesimpulan", "2_narasi", "3_kesimpulan"]
-    coll.upsert(ids=ids, embeddings=[[1.0, 0.0], [0.0, 1.0], [0.6, 0.8], [0.8, 0.6]], documents=["a"] * 4,
-                metadatas=[{"article_id": i.split("_")[0], "section": i.split("_")[1]} for i in ids])
-    assert count_indexed_articles(path) == 3
-    (tmp_path / "rusak").mkdir()
-    (tmp_path / "rusak" / "chroma.sqlite3").write_text("bukan sqlite", encoding="utf-8")
-    assert count_indexed_articles(tmp_path / "rusak") is None
-
-
-# -- penyaringan ulang rujukan di lapisan tampilan (Aturan Wajib #1) ---------
-
-STALE_REFS = [
-    "https://www.contoh.go.id/rilis", "https://tinyurl.com/contoh1", "https://short-url.org/1abCd",
-    "https://cekfakta.example.org/a", "https://www.facebook.com/share/contoh", "http://contoh.go.id]",
-    "https://archive.ph/contoh",
-]
-
-
-def test_references_are_refiltered_at_display_time(caplog: pytest.LogCaptureFixture) -> None:
-    """Metadata indeks basi (rujukan tersimpan sebelum kebijakan diperketat) tidak boleh sampai ke layar."""
-    with caplog.at_level(logging.WARNING, logger="presentation"):
-        view = build_view(_found("PENIPUAN", references=list(STALE_REFS)))
-    assert view.references == ["https://www.contoh.go.id/rilis", "https://cekfakta.example.org/a"], "urutan dijaga"
-    assert len(caplog.records) == 5 and all("36214" in r.getMessage() for r in caplog.records)
-    text = caplog.text
-    assert "tinyurl.com" in text and "URL tidak sah" in text and "facebook.com" in text
-    assert "contoh1" not in text and "1abCd" not in text, "log memuat alasan, bukan tautannya"
-
-
-def test_display_references_keeps_clean_list_untouched_and_silent(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="presentation"):
-        assert display_references(list(REFS), "1") == REFS
-        assert display_references([], "1") == []
-        assert build_view(_found("SALAH")).references == REFS
-    assert caplog.records == []
-
-
-def test_display_filter_uses_the_same_policy_as_the_parser() -> None:
-    """Satu kebijakan, dua lapisan: yang ditolak parser juga ditolak tampilan."""
-    from scraping.links import blocked_reason
-
-    for url in STALE_REFS:
-        assert (display_references([url]) == []) == (blocked_reason(url) is not None)
-
-
-# -- label BELUM TERBUKTI ---------------------------------------------------------
-
-def test_belum_terbukti_has_its_own_style_and_exact_wording() -> None:
-    view = build_view(_found("BELUM TERBUKTI", title="[BELUM TERBUKTI] Judul Artikel"))
-    assert view.kind == "found" and view.status_label == "Belum terbukti" and view.status_color == "violet"
-    assert view.summary == ("Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, "
-                            "sehingga belum dapat dianggap benar.")
-    assert view.advice == "", "tanpa saran (mis. medis) atau kalimat tambahan"
-    assert view.article_title == "Judul Artikel" and view.article_url and view.references == REFS
-    assert view.clarification == "Faktanya, klaim itu tidak benar.", "klarifikasi tetap dari artikel, tidak ditambah"
-
-
-def test_belum_terbukti_is_visibly_different_from_belum_ditemukan_and_other_statuses() -> None:
-    """'Belum terbukti' = klaim SUDAH diperiksa; 'belum ditemukan' = tidak ada artikelnya. Tidak boleh tertukar."""
-    proven = build_view(_found("BELUM TERBUKTI"))
-    not_found = build_view(Answer(claim="klaim", verdict="tidak_ditemukan", candidates=list(CANDIDATES), calls=[_ok_call()]))
-    assert not_found.kind == "not_found" and proven.kind == "found"
-    for field in ("status_label", "status_color", "status_icon", "summary"):
-        assert getattr(proven, field) != getattr(not_found, field), field
-    assert proven.status_color != "gray" and "sudah diperiksa" in proven.summary
-    assert "belum ditemukan" not in proven.summary.lower() and not_found.article_url == ""
-    style = STATUS_STYLES["BELUM TERBUKTI"]
-    others = [s for k, s in STATUS_STYLES.items() if k != "BELUM TERBUKTI"]
-    assert style.color not in {s.color for s in others} and style.icon not in {s.icon for s in others}
-    assert style.color not in {"green", "blue", "red", "orange", "yellow", "gray"}
-    assert not re.search(r"\b(salah|penipuan|hoaks|dokter|obat|medis)\b", style.summary.lower())
-
-
-# --- peringatan pencocokan pada hasil "ditemukan" (tampilan saja; 2026-10-21) ---------------------------
-
-
-def test_found_view_carries_article_date_from_retrieval_metadata() -> None:
-    view = build_view(_found(), article_dates={"36214": "05/01/2026", "1": "x"})
-    assert view.article_date == "05/01/2026"
-    assert build_view(_found()).article_date == ""
-
-
-def test_match_check_shows_note_with_title_and_date_on_found() -> None:
-    import presentation
-    view = build_view(_found(), article_dates={"36214": "05/01/2026"})
-    lines = presentation.match_check_lines(view)
-    assert lines[0] == presentation.MATCH_CHECK_NOTE
-    assert all(w in lines[0] for w in ("tokoh", "lembaga", "program"))
-    assert lines[1] == "Artikel: Judul Artikel (05/01/2026)"
-    assert presentation.match_check_lines(build_view(_found()))[1] == "Artikel: Judul Artikel (tanggal tidak tercatat)"
-
-
-def test_match_check_is_absent_for_not_found_and_failed() -> None:
-    import presentation
-    not_found = build_view(_found(verdict="tidak_ditemukan", article_id=None, status_label=None))
-    assert not_found.kind == "not_found" and presentation.match_check_lines(not_found) == []
-    failed = build_view(_failed())
-    assert failed.kind == "failed" and presentation.match_check_lines(failed) == []
-
-
-def test_match_check_does_not_change_the_decision_fields() -> None:
-    a = build_view(_found("PENIPUAN"))
-    b = build_view(_found("PENIPUAN"), article_dates={"36214": "05/01/2026"})
-    for f in ("kind", "status_label", "status_color", "summary", "article_title", "article_url", "clarification",
-              "advice", "references"):
-        assert getattr(a, f) == getattr(b, f), f
+def test_dates_in_indonesian() -> None:
+    assert format_metadata_date("09/09/2026") == "9 September 2026"
+    assert format_metadata_date("bukan tanggal") == "bukan tanggal"
+    assert format_date(None) == "(tidak terbaca)"
