@@ -9,7 +9,7 @@ def test_generator_logic() -> None:
     from llm import LLMError
 
     hits = [make_hit("100", "SALAH"), make_hit("200", "PARODI"), make_hit("300", "PENIPUAN", refs=[])]
-    retrieve = lambda claim, k: hits[:k]  # noqa: E731
+    retrieve = lambda claim, k: hits[:k]
 
     # 1. Cocok: status dan rujukan dari METADATA; URL buatan LLM dibuang dan dihitung
     out = llm_json(artikel_terpilih="200", klaim_sama=True, alasan="mirip lihat http://palsu.example/a",

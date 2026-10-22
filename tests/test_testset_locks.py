@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+
 from generator import RESPONSE_SCHEMA, SYSTEM_PROMPT
 
 TESTSET = Path(__file__).resolve().parent.parent / "testset"
@@ -131,10 +132,25 @@ def test_v1_jsonl_unchanged_since_tag() -> None:
     """testset/v1.jsonl tidak boleh berubah setelah tag testset-v1 diberikan -- dibandingkan
     byte-demi-byte dengan isi persis pada tag itu, bukan hanya hash yang tercatat di v1.meta.json
     (yang bisa saja ikut diubah bersamaan)."""
-    tag_check = subprocess.run(["git", "tag", "-l", "testset-v1"], cwd=ROOT, capture_output=True, text=True)
+    tag_check = subprocess.run(["git", "tag", "-l", "testset-v1"], cwd=ROOT, capture_output=True, text=True,
+                               check=False)
     if "testset-v1" not in tag_check.stdout.split():
         pytest.skip("tag testset-v1 belum dibuat")
     tagged = subprocess.run(["git", "show", "testset-v1:testset/v1.jsonl"], cwd=ROOT,
                              capture_output=True, text=True, encoding="utf-8", check=True).stdout
     current = (TESTSET / "v1.jsonl").read_text(encoding="utf-8")
     assert current == tagged, "testset/v1.jsonl berbeda dari isi yang dibekukan pada tag testset-v1"
+
+
+@pytest.mark.parametrize("relpath", ["src/retriever.py", "src/chunker.py", "src/generator.py"])
+def test_locked_files_match_external_eval_freeze(relpath: str) -> None:
+    """Berkas yang dipakai evaluasi eksternal (dibekukan 2026-10-17, `fa7464c`) tidak boleh berubah.
+
+    Nilai yang diharapkan dibaca dari `testset/eksternal_butir.json` (satu sumber, tidak disalin ke sini).
+    retriever.py dan chunker.py sebelumnya hanya tercatat di sana, tanpa uji yang menjaganya.
+    """
+    frozen = json.loads((TESTSET / "eksternal_butir.json").read_text(encoding="utf-8"))["hash_berkas_terkunci"]
+    current = _norm_sha((ROOT / relpath).read_text(encoding="utf-8"))
+    assert current == frozen[relpath], (
+        f"{relpath} berubah sejak pembekuan evaluasi eksternal: angka evaluasi di README tidak lagi sah untuk kode ini"
+    )

@@ -33,7 +33,7 @@ def compare_models(base: dict[str, dict], cand: dict[str, dict], cases: list[tup
         if not same:
             diff_pos += kind == "positif"
             diff_neg += kind == "negatif"
-        lines.append(f"{i:>2} {kind:<8} {str(decision(a)):<24} {str(decision(b)):<24} "
+        lines.append(f"{i:>2} {kind:<8} {decision(a)!s:<24} {decision(b)!s:<24} "
                      f"{'ya' if same else 'TIDAK':<5} {claim[:50]}")
     if missing:
         status = f"BELUM KONKLUSIF ({missing} kueri belum ada hasil pada salah satu model)"

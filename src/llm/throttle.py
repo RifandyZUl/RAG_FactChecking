@@ -4,12 +4,12 @@ Pembatas laju sisi klien: jendela geser 60 dtk untuk RPM dan TPM.
 Tujuan: batas per menit tidak pernah tersentuh, sehingga retry 429 hanya jaring pengaman.
 """
 
+import threading
 import time
 from collections import deque
 from collections.abc import Callable
 
 from llm.limits import ModelLimits
-
 
 WINDOW_S = 60.0
 
@@ -34,6 +34,9 @@ class RateLimiter:
         self.limits = limits
         self._clock, self._sleep = clock, sleep
         self._events: deque[list] = deque()  # [waktu, token]
+        # Satu limiter dibagi semua sesi demo (utas berbeda): periksa-lalu-catat harus atomik.
+        # Menunggu (`sleep`) dilakukan DI LUAR kunci agar utas lain tetap bisa memeriksa.
+        self._lock = threading.Lock()
 
     def _prune(self, now: float) -> None:
         while self._events and self._events[0][0] <= now - WINDOW_S:
@@ -63,17 +66,19 @@ class RateLimiter:
             )
         waited = 0.0
         for _ in range(1000):  # pagar: jangan berputar selamanya bila jam macet
-            now = self._clock()
-            self._prune(now)
-            wait = self._wait_needed(now, est_tokens)
-            if wait <= 0:
-                self._events.append([now, est_tokens])
-                return waited
+            with self._lock:
+                now = self._clock()
+                self._prune(now)
+                wait = self._wait_needed(now, est_tokens)
+                if wait <= 0:
+                    self._events.append([now, est_tokens])
+                    return waited
             self._sleep(wait + MARGIN_S)
             waited += wait + MARGIN_S
         raise RuntimeError("RateLimiter tidak kunjung memberi izin (jam tidak maju?)")
 
     def settle(self, actual_tokens: int | None) -> None:
         """Ganti perkiraan token permintaan terakhir dengan angka nyata dari server."""
-        if actual_tokens is not None and self._events:
-            self._events[-1][1] = actual_tokens
+        with self._lock:
+            if actual_tokens is not None and self._events:
+                self._events[-1][1] = actual_tokens

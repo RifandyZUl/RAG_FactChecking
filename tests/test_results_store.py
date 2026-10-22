@@ -7,7 +7,6 @@ from pathlib import Path
 def test_eval_resume_and_incremental() -> None:
     import json
     import tempfile
-    from pathlib import Path
 
     from evaluation.results_store import append_record, load_done
 

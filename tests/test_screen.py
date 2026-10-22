@@ -13,6 +13,7 @@ pesannya (lihat CLAUDE.md/laporan v1.meta.json 2026-09-22).
 """
 
 from _fakes import read_fixture
+
 from candidates.screen import claim_candidate
 from scraping.parser import parse_article
 

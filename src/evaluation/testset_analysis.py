@@ -380,7 +380,6 @@ def run_analysis(eval_path: Path, v1_path: Path = V1_PATH, meta_path: Path = MET
     fmt = format_violations(eval_by_id)
     urls = urls_outside_metadata(eval_by_id, articles_by_id)
 
-    positif_negsulit_ids = [i for i in non_batas_ids if v1_items[i]["tipe"] in ("positif", "negatif_sulit")]
     result = {
         "n_butir_v1jsonl": len(all_ids), "n_non_batas": len(non_batas_ids), "n_batas": len(batas_ids),
         "A_akurasi_non_batas": accuracy_with_wilson(mode_non_batas),

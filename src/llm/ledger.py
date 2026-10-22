@@ -5,12 +5,22 @@ Dokumentasi Google menyatakan RPD direset tengah malam waktu Pasifik dan batas
 berlaku per proyek (bukan per kunci). Dokumentasi TIDAK menyatakan apakah
 permintaan yang ditolak 429 ikut terhitung; karena itu buku besar lokal menghitung
 setiap permintaan yang dikirim, termasuk yang ditolak (perkiraan konservatif).
+
+Penulisan dilindungi dua kunci: `threading.Lock` per berkas (utas di satu proses, mis. sesi demo
+Streamlit) dan kunci berkas OS (proses berbeda, mis. demo dan skrip evaluasi). Kunci berkas memakai
+`msvcrt.locking` (Windows) atau `fcntl.flock` (Linux); OS melepasnya sendiri bila proses pemegangnya
+mati, jadi tidak ada kunci tertinggal. Kunci berkas TIDAK andal menembus folder bersama antara Windows
+dan container Docker (bind mount WSL2): jangan menjalankan demo di container dan evaluasi di host
+bersamaan.
 """
 
 import json
 import os
 import sys
-from collections.abc import Callable
+import threading
+import time
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -33,6 +43,82 @@ def pacific_tz():
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+LOCK_TIMEOUT_S = 30.0  # menunggu proses lain selesai menulis; satu penulisan hanya beberapa milidetik
+_LOCK_POLL_S = 0.02
+_thread_locks: dict[Path, threading.Lock] = {}
+_thread_locks_guard = threading.Lock()
+
+
+def _thread_lock(path: Path) -> threading.Lock:
+    """Satu `threading.Lock` per berkas buku besar, dibagi semua instans di proses ini."""
+    key = path.resolve()
+    with _thread_locks_guard:
+        return _thread_locks.setdefault(key, threading.Lock())
+
+
+def _try_os_lock(fd: int) -> bool:
+    """Kunci eksklusif tanpa menunggu atas byte pertama berkas kunci; False bila dipegang proses lain."""
+    if os.name == "nt":
+        import msvcrt
+
+        os.lseek(fd, 0, os.SEEK_SET)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        except OSError:
+            return False
+        return True
+    import fcntl
+
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return False
+    return True
+
+
+def _os_unlock(fd: int) -> None:
+    if os.name == "nt":
+        import msvcrt
+
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(fd, fcntl.LOCK_UN)
+
+
+@contextmanager
+def file_lock(path: Path, timeout_s: float = LOCK_TIMEOUT_S) -> Iterator[None]:
+    """
+    Kunci eksklusif antar-utas dan antar-proses atas `path` (berkas `<path>.lock` di sebelahnya).
+
+    Melempar TimeoutError bila tidak didapat dalam `timeout_s`. Berkas `.lock` dibiarkan ada: yang
+    mengunci adalah kunci OS pada berkas itu, bukan keberadaannya, sehingga proses yang mati tidak
+    meninggalkan kunci.
+    """
+    lock_path = path.with_name(path.name + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + timeout_s
+    if not _thread_lock(path).acquire(timeout=timeout_s):
+        raise TimeoutError(f"kunci utas {lock_path} tidak didapat dalam {timeout_s} dtk")
+    try:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
+            while not _try_os_lock(fd):
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(f"{lock_path} dipegang proses lain lebih dari {timeout_s} dtk")
+                time.sleep(_LOCK_POLL_S)
+            try:
+                yield
+            finally:
+                _os_unlock(fd)
+        finally:
+            os.close(fd)
+    finally:
+        _thread_lock(path).release()
 
 
 class DailyLedger:
@@ -95,14 +181,15 @@ class DailyLedger:
         percobaan di dalam penyedia, agar selisih buku besar dengan berkas hasil dapat
         ditelusuri. Hitungan di berkas buku besar tidak berubah bentuknya.
         """
-        data = self._load()
-        days = data.setdefault(self.model, {})
-        key = self.day_key()
-        days[key] = int(days.get(key, 0)) + n
-        for old in sorted(days)[:-3]:  # simpan 3 hari terakhir saja
-            del days[old]
-        self._save(data)
-        self._log_event(key, n, days[key], attempt)
+        with file_lock(self.path):  # baca-ubah-tulis: tanpa kunci, dua penulis bisa saling menimpa
+            data = self._load()
+            days = data.setdefault(self.model, {})
+            key = self.day_key()
+            days[key] = int(days.get(key, 0)) + n
+            for old in sorted(days)[:-3]:  # simpan 3 hari terakhir saja
+                del days[old]
+            self._save(data)
+            self._log_event(key, n, days[key], attempt)
         return days[key]
 
     def _log_event(self, day: str, n: int, total: int, attempt: int | None) -> None:
@@ -119,9 +206,10 @@ class DailyLedger:
         Set hitungan hari ini. Hanya untuk nilai yang dapat ditelusuri (mis. log panggilan
         sendiri); BUKAN dari angka puncak dashboard AI Studio.
         """
-        data = self._load()
-        data.setdefault(self.model, {})[self.day_key()] = int(used)
-        self._save(data)
+        with file_lock(self.path):
+            data = self._load()
+            data.setdefault(self.model, {})[self.day_key()] = int(used)
+            self._save(data)
 
 
 @dataclass(frozen=True)

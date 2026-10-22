@@ -6,7 +6,6 @@ Berubah bila ditemukan kebocoran tautan hoaks pada artikel lain (Aturan Wajib #1
 
 from urllib.parse import urldefrag, urlparse
 
-
 # Penyaringan `references`. Pencocokan domain mencakup subdomain
 # (vt.tiktok.com, web.archive.org). Tambahkan domain baru di sini bila
 # ditemukan kebocoran pada artikel lain.

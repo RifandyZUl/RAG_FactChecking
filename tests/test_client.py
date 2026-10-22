@@ -5,9 +5,9 @@ import tempfile
 from pathlib import Path
 
 import requests
+from _fakes import FakeResponse, FakeSession, read_fixture
 
 import scraping.client as scraping_client
-from _fakes import FakeResponse, FakeSession, read_fixture
 from scraping.client import fetch_html
 from scraping.parser import is_valid_article_html
 

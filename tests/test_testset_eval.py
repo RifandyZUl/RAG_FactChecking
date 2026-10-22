@@ -112,7 +112,7 @@ def test_answer_with_item_retries_retries_then_succeeds(monkeypatch: pytest.Monk
 def test_answer_with_item_retries_exhausted_marks_tak_terjawab(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(te.time, "sleep", lambda _s: None)
     gen, _ = _fake_gen([LLMError("persistent")])
-    ans, percobaan, status = te.answer_with_item_retries(gen, "klaim")
+    _ans, percobaan, status = te.answer_with_item_retries(gen, "klaim")
     assert status == "tak_terjawab"
     assert len(percobaan) == te.MAX_ITEM_RETRIES + 1
     assert all(p["verdict"] == "gagal" for p in percobaan)
@@ -121,7 +121,7 @@ def test_answer_with_item_retries_exhausted_marks_tak_terjawab(monkeypatch: pyte
 def test_answer_with_item_retries_quota_exhausted_stops_immediately(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(te.time, "sleep", lambda _s: (_ for _ in ()).throw(AssertionError("tidak boleh tidur")))
     gen, _ = _fake_gen([LLMQuotaExhaustedError("habis")])
-    ans, percobaan, status = te.answer_with_item_retries(gen, "klaim")
+    _ans, percobaan, status = te.answer_with_item_retries(gen, "klaim")
     assert status == "kuota_habis"
     assert len(percobaan) == 1  # TIDAK diulang
 
@@ -143,13 +143,14 @@ def _write_mini_v1(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     v1_file.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in MINI_CASES) + "\n", encoding="utf-8")
     monkeypatch.setattr(te, "V1_PATH", v1_file)
     monkeypatch.setattr(te, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(te, "LOG_PATH", tmp_path / "llm_calls.log")  # bukan data/ milik proyek (tidak ada di CI)
     monkeypatch.setattr(te, "N_RUNS", 1)  # 1 run x 2 butir = 2 pasangan, cukup untuk uji alur
 
 
 def _patch_pipeline(monkeypatch: pytest.MonkeyPatch, provider: ScriptedProvider) -> None:
     hits = [make_hit("100")]
     monkeypatch.setattr(te, "get_provider", lambda **kw: provider)
-    monkeypatch.setattr(te, "load_articles", lambda: [])
+    monkeypatch.setattr(te, "load_articles", list)
     monkeypatch.setattr(te, "load_model", lambda: object())
     monkeypatch.setattr(te, "get_collection", lambda: object())
     monkeypatch.setattr(te, "retrieve", lambda claim, model, collection, top_k: hits[:top_k])
@@ -252,6 +253,7 @@ def test_circuit_breaker_stops_after_two_consecutive_unanswered(tmp_path, monkey
     v1_file.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in three_cases) + "\n", encoding="utf-8")
     monkeypatch.setattr(te, "V1_PATH", v1_file)
     monkeypatch.setattr(te, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(te, "LOG_PATH", tmp_path / "llm_calls.log")  # bukan data/ milik proyek (tidak ada di CI)
 
     provider = ScriptedProvider([LLMError("persistent")])  # SEMUA percobaan gagal -> tiap butir tak_terjawab
     provider.model = "gemma-test-circuit"
