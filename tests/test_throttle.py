@@ -41,3 +41,31 @@ def test_rate_limiter_sliding_window() -> None:
         raise AssertionError("seharusnya ValueError")
     except ValueError:
         pass
+
+
+def test_concurrent_acquire_never_exceeds_rpm() -> None:
+    """Utas serentak: periksa-lalu-catat atomik, jadi slot RPM tidak terpakai dua kali."""
+    import threading
+
+    from llm.limits import ModelLimits
+    from llm.throttle import RateLimiter
+
+    limiter = RateLimiter(ModelLimits(rpm=5, tpm=1_000_000, rpd=100),
+                          clock=lambda: 0.0, sleep=lambda s: (_ for _ in ()).throw(TimeoutError()))
+    start = threading.Barrier(20)
+    granted: list[int] = []
+
+    def worker() -> None:
+        start.wait()
+        try:
+            limiter.acquire(10)
+            granted.append(1)
+        except TimeoutError:  # akan menunggu: tidak mendapat slot di menit ini
+            pass
+
+    threads = [threading.Thread(target=worker) for _ in range(20)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(granted) == 5 and len(limiter._events) == 5

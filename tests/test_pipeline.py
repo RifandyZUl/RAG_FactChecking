@@ -3,8 +3,8 @@
 import inspect
 import json
 
-import scraping.pipeline as pipeline
 from paths import ARTICLES_PATH
+from scraping import pipeline
 
 
 def test_default_output_path_is_project_root_not_cwd() -> None:

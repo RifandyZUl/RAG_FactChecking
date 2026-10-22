@@ -13,9 +13,9 @@ laporan v1.meta.json 2026-09-22): 8292010 menangkap komentar bantahan warganet a
 hoaks aslinya, dan 8293157 gagal total (hanya menangkap kalimat pembuka kutipan).
 """
 
+from _fakes import read_fixture
 from bs4 import BeautifulSoup
 
-from _fakes import read_fixture
 from candidates.crosssite import extract_claim, split_quote_spans
 
 

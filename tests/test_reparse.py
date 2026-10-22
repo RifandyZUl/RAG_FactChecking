@@ -4,12 +4,12 @@ import json
 import shutil
 
 import pytest
-
 from _fakes import FIXTURE_DIR
+from test_parser import ARTICLE_URLS
+
 from scraping.parser import parse_article
 from scraping.pipeline import write_articles
 from scraping.reparse import reparse
-from test_parser import ARTICLE_URLS
 
 
 def _setup(tmp_path):

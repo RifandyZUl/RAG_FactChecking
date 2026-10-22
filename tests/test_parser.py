@@ -13,9 +13,9 @@ daftar referensi.
 """
 
 import pytest
+from _fakes import FIXTURE_DIR, read_fixture
 from bs4 import BeautifulSoup
 
-from _fakes import FIXTURE_DIR, read_fixture
 from scraping.discovery import is_valid_list_html
 from scraping.links import blocked_reason
 from scraping.parser import (
@@ -25,7 +25,6 @@ from scraping.parser import (
     parse_article,
     parse_title,
 )
-
 
 # id artikel -> URL asli (id dipakai sebagai nama berkas fixture)
 ARTICLE_URLS = {

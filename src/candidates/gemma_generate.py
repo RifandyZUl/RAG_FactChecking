@@ -42,7 +42,6 @@ from pathlib import Path
 from typing import Any
 
 from candidates.screen import pii_flags
-
 from chunker import load_articles
 from generator import SYSTEM_PROMPT
 from llm import LLMConfigError, LLMError, LLMQuotaExhaustedError, get_provider

@@ -9,7 +9,6 @@ berubah tanpa pemberitahuan (lihat CLAUDE.md), jadi periksa ulang secara berkala
 import os
 from dataclasses import dataclass
 
-
 CHARS_PER_TOKEN = 3.0  # perkiraan konservatif teks Indonesia; dikoreksi dengan token nyata
 
 

@@ -1,8 +1,9 @@
 """Uji pengumpulan URL artikel (scraping.discovery).
 """
 
-import scraping.client as scraping_client
 from _fakes import FakeResponse, FakeSession, fake_list_page, read_fixture
+
+import scraping.client as scraping_client
 from scraping.discovery import discover_article_urls
 
 

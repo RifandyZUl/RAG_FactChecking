@@ -25,9 +25,14 @@ import re
 import sys
 
 from chunker import load_articles
-from generator import RESPONSE_SCHEMA, SYSTEM_PROMPT, build_user_prompt, parse_llm_output
-from llm import LLMConfigError, LLMError, LLMQuotaExhaustedError, get_provider
 from evaluation.results_store import append_record
+from generator import (
+    RESPONSE_SCHEMA,
+    SYSTEM_PROMPT,
+    build_user_prompt,
+    parse_llm_output,
+)
+from llm import LLMConfigError, LLMError, LLMQuotaExhaustedError, get_provider
 from llm.ledger import plan_budget
 from paths import PROJECT_ROOT
 from retriever import ArticleHit

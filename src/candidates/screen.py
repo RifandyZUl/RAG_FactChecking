@@ -52,7 +52,7 @@ def pii_flags(text: str) -> list[str]:
     # phishing sering ditulis tanpa http:// dan dulu lolos (kasus Pendamping Lokal Desa, 2026-09-22).
     if re.search(r"https?://|www\.", text) or _URL_NO_SCHEME_RE.search(text):
         flags.append("url_di_teks")
-    if re.search(r"(?:akun|channel|kanal)\s+\w+\s+[“\"][^”\"]{2,40}[”\"]", text, re.I):
+    if re.search(r"(?:akun|channel|kanal)\s+\w+\s+[“\"][^”\"]{2,40}[”\"]", text, re.IGNORECASE):
         flags.append("nama_akun")
     return flags
 

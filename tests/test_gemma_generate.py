@@ -5,8 +5,8 @@ audit kebocoran, penguraian JSON) dan alur generate_for_job() dengan provider pa
 """
 
 import pytest
-
 from _fakes import ScriptedProvider
+
 from candidates.gemma_generate import (
     RAW_WITHHELD,
     assert_no_pii,
@@ -164,8 +164,8 @@ ARTICLES = {
 
 
 def test_generate_for_job_positif_no_real_api_call() -> None:
-    provider = ScriptedProvider(['{"klaim": ["katanya ojol gaboleh beli pertalite lagi", '
-                                  '"ojol dilarang isi pertalite katanya", "bener ga sih ojol gaboleh pertalite"]}'])
+    provider = ScriptedProvider([('{"klaim": ["katanya ojol gaboleh beli pertalite lagi", '
+                                   '"ojol dilarang isi pertalite katanya", "bener ga sih ojol gaboleh pertalite"]}')])
     provider.model = "gemma-4-test"
     rows = generate_for_job(provider, "positif", "36001", ARTICLES, DB_TITLES, GUIDE_TEXT)
     assert len(rows) == 3
@@ -203,8 +203,8 @@ def test_generate_for_job_includes_model_version_metadata() -> None:
 
 
 def test_generate_for_job_negatif_entitas_sama_no_real_api_call() -> None:
-    provider = ScriptedProvider(['{"klaim": ["ojol katanya sekarang dilarang naik motor listrik", '
-                                  '"ojol dilarang parkir di minimarket katanya", "bener ga ojol dilarang ngetem"]}'])
+    provider = ScriptedProvider([('{"klaim": ["ojol katanya sekarang dilarang naik motor listrik", '
+                                   '"ojol dilarang parkir di minimarket katanya", "bener ga ojol dilarang ngetem"]}')])
     provider.model = "gemma-4-test"
     rows = generate_for_job(provider, "negatif_entitas_sama", "36001", ARTICLES, DB_TITLES, GUIDE_TEXT)
     assert len(rows) == 3
