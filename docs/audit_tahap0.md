@@ -8,6 +8,23 @@ Garis dasar saat audit (commit `a704d5b`): `pytest` 530 lolos (65,8 dtk); `ruff 
 
 ---
 
+## Koreksi atas spesifikasi (dicatat atas permintaan pemilik proyek, 2026-10-22)
+
+Tiga hal di spesifikasi awal ternyata keliru setelah dicocokkan dengan kode. Yang berlaku adalah
+koreksinya.
+
+1. **Rujukan diambil dari `references`, bukan `references_filtered`.** `references_filtered` berisi
+   tautan yang dibuang (`scraping/links.py` `filter_references`). Verifikasi data: lihat 8.1.
+2. **Warna status di berkas acuan tidak mengikuti skema status yang ada, dan hijau tidak boleh
+   dipakai.** Skema di `.streamlit/config.toml` tetap berlaku, termasuk kuning zaitun untuk
+   PARODI/SATIRE/SATIR/KOMEDI. Berkas acuan tidak diubah; setiap penyimpangan dicatat di laporan
+   Tahap 1.
+3. **Uji kunci selama ini hanya menjaga `generator.py` dan prompt/skema**
+   (`tests/test_testset_locks.py`), bukan `retriever.py` dan `chunker.py`. Hash keduanya hanya
+   tercatat di dokumen dan `testset/eksternal_butir.json` (lihat 8.2).
+
+---
+
 ## 0. Yang perlu Anda putuskan sebelum Tahap 1
 
 | # | Keputusan | Usulan saya |
@@ -339,7 +356,7 @@ dan siklus rilis resmi `https://peps.python.org/api/release-cycle.json`. Semuany
 | 6 | Kunci API bocor | `llm/secrets.redact` (pola `AIza…`) dipakai di galat provider dan app | kunci hanya dari env (compose `env_file`); log aktivitas tanpa teks galat bebas; uji bahwa `redact` diterapkan pada semua jalur galat layanan (T3) |
 | 7 | Mode penguji aktif dari luar | hanya `DEMO_TESTER_MODE` atau `secrets.toml`; tidak ada query param | `secrets.toml` tidak masuk image; uji bahwa query param tidak berpengaruh (T3) |
 | 8 | XSRF/CORS dimatikan | bawaan `enableXsrfProtection = true`, `enableCORS = true` | tidak diubah; uji konfigurasi yang gagal bila keduanya dimatikan (T2) |
-| 9 | Dependensi usang: `requests` 2.31.0 (2023) punya celah yang diperbaiki di 2.32.x. Saya ingat CVE-2024-35195 dan CVE-2024-47081 tetapi **belum memverifikasinya** | requirements.txt | naik ke 2.34.2 (K7); audit penuh butuh `pip-audit` = dependensi baru, perlu izin (T2) |
+| 9 | Dependensi usang: `requests` 2.31.0. Terverifikasi lewat GitHub Security Advisory (`gh api /advisories?ecosystem=pip&affects=requests@2.31.0`, 2026-10-22): [GHSA-9wx4-h78v-vm56](https://github.com/advisories/GHSA-9wx4-h78v-vm56) (CVE-2024-35195, sedang, diperbaiki 2.32.0), [GHSA-9hjg-9r4m-mvj7](https://github.com/advisories/GHSA-9hjg-9r4m-mvj7) (CVE-2024-47081, sedang, 2.32.4), [GHSA-gc5v-m9x4-r6x2](https://github.com/advisories/GHSA-gc5v-m9x4-r6x2) (CVE-2026-25645, sedang, 2.33.0) | requirements.txt | naik ke 2.34.2, menutup ketiganya (disetujui, T2); audit penuh butuh `pip-audit` = dependensi baru, perlu izin |
 | 10 | Revisi model tidak dipatok: `SentenceTransformer("BAAI/bge-m3")` memuat cabang `main`; bila BAAI mengubahnya, embedding kueri berubah tanpa ketahuan | `ingest.load_model`; cache lokal = commit `5617a9f61b028005a4858fdac845db406aefb181` | patok `revision=` ke commit itu (ingest.py tidak terkunci; bobot sama, jadi angka tidak berubah). Perlu persetujuan karena menyentuh jalur embedding (T2) |
 | 11 | Prompt injection | prompt aturan 8; URL dibuang (`strip_urls`); status dan tautan dari metadata | dengan K5, teks bebas LLM tidak tampil ke umum; uji injeksi dengan provider palsu (keluaran berisi URL/instruksi) tanpa mengubah prompt (T3) |
 | 12 | Privasi isi pesan | demo tidak menulis log berkas; Gemini tier gratis memakai konten untuk perbaikan produk (CLAUDE.md, "Privasi data") | log aktivitas tanpa isi pesan (T3); kalimat privasi di halaman Tentang dan di bawah kotak input ("Tanpa nomor telepon atau data pribadi", dari acuan) (T1) |
@@ -368,3 +385,302 @@ Perkiraan waktu adalah waktu kerja saya, belum termasuk waktu tinjauan Anda.
 
 Waktu sebelum dan sesudah diukur di Tahap 1 dan 3 dengan skrip yang sama
 (`perf_light` + pengukuran model, bila memori memungkinkan).
+
+---
+
+## 8. Lanjutan Tahap 0: verifikasi atas keputusan pemilik proyek (2026-10-22)
+
+### 8.1 `references` tidak memuat `claim_sources` maupun tautan yang dibuang
+
+- **Kode:** `filter_references` (`scraping/links.py:153-185`) memasukkan setiap URL ke tepat satu
+  daftar. URL yang cocok dengan `claim_sources` atau terkena `blocked_reason` masuk
+  `references_filtered`; sisanya masuk `references`. `chunker.py:146` melarang `claim_sources`,
+  `references_filtered`, dan `references_raw` masuk metadata, sehingga yang sampai ke indeks hanya
+  `references`. `presentation.display_references` menyaringnya sekali lagi saat tampil.
+- **CLAUDE.md** (butir (e) dan (f), 2026-10-03) mencatat "0 rujukan tampil berdomain daftar-blokir,
+  0 rujukan tampil yang juga `claim_sources`".
+- **Diperiksa ulang hari ini** (baca-saja, pencocokan string persis):
+
+  | Sumber | refs ∩ `claim_sources` | refs ∩ `references_filtered` | terblokir kebijakan kini | beda dari `articles.json` |
+  | --- | --- | --- | --- | --- |
+  | `articles.json`, 1.532 artikel | 0 | 0 | 0 | - |
+  | metadata indeks, 4.593 chunk | 0 | 0 | 0 | 0 |
+
+- **Pengecualian yang disengaja:** URL "Sumber:" berdomain `*.go.id` atau ada di
+  `TRUSTED_SOURCE_DOMAINS` tidak dimasukkan ke `claim_sources` (keputusan 2026-10-03; 32110, 31532,
+  33497), jadi URL itu boleh tampil sebagai rujukan. Uji Tahap 1 menjaga aturan apa adanya:
+  tidak ada URL dari `claim_sources` atau `references_filtered` yang pernah tampil.
+
+### 8.2 Hash berkas terkunci: COCOK, boleh dikunci
+
+`testset/eksternal_butir.json`, `hash_berkas_terkunci` (dibekukan 2026-10-17, commit `fa7464c`;
+juga dikutip singkat di `docs/rancangan_evaluasi_eksternal.md` bagian 8):
+
+| Berkas | Tercatat saat pembekuan | Saat ini (sha256, CRLF→LF) |
+| --- | --- | --- |
+| `src/retriever.py` | `68321aeda8cc46dadd4faa6eaa506a989077ad5fdc5b0e4675c5d16169065ab8` | sama |
+| `src/chunker.py` | `6d9de5ced2e487a9b972877863109fc552c7de958dbf55b77a069dc01aaef475` | sama |
+| `src/generator.py` (pembanding) | `e5a5ba5a72c0a3c14db37a3aee646ef5b3b7e34e036718947493955cf6df651a` | sama |
+
+`git diff fa7464c HEAD -- src/retriever.py src/chunker.py src/generator.py` kosong. Commit terakhir
+yang menyentuh keduanya: `623f300` (2026-09-21) dan `927649d` (2026-09-25). Uji kunci Tahap 1
+membaca nilai yang diharapkan dari `testset/eksternal_butir.json`, bukan dari salinan baru, sehingga
+tetap ada satu sumber.
+
+### 8.3 Revisi bge-m3: terbukti `5617a9f61b028005a4858fdac845db406aefb181`
+
+1. Cache HF lokal hanya punya **satu** snapshot, `snapshots/5617a9f…`, berkasnya bertanggal
+   2026-09-19/20 (`pytorch_model.bin` 2.271.145.830 byte). `refs/main` berisi hash yang sama dan
+   tidak berubah sejak 2026-09-19 23:37. Indeks 1.532 dibangun 2026-10-03
+   (`data/ingest_batch04-06_2026-10-03.log`), jadi semua pemuatan sejak 19 Sep, termasuk ingest itu,
+   memakai snapshot ini.
+2. Hugging Face Hub (`/api/models/BAAI/bge-m3/revision/main`, 2026-10-22): `main` = `5617a9f…`,
+   commit 2024-07-03. `main` tidak bergerak sejak sebelum proyek dimulai.
+3. `index_check` lengkap 2026-10-03: 8 sampel di-embed ulang, kosinus 1,000000 terhadap vektor
+   tersimpan, termasuk chunk dari kelompok tertua (450 chunk basis) dan terbaru.
+4. Catatan riwayat: 450 chunk basis sempat dibuat dari safetensors PR #130 saat torch 2.5.1, lalu
+   seluruh indeks dibangun ulang (`--rebuild`, 2026-09-21) dengan `.bin` dari `main`. Bobot PR #130
+   terbukti identik bit-per-bit dengan `main` (CLAUDE.md).
+
+Log ingest sendiri tidak mencatat hash revisi; buktinya dari (1)-(3). Pematokan
+`revision="5617a9f61b028005a4858fdac845db406aefb181"` karenanya tidak mengubah bobot.
+
+### 8.4 `showErrorDetails`
+
+`streamlit config show` dari paket terpasang (streamlit 1.64.0) mencantumkan nilai sah `"full"`,
+`"stacktrace"`, `"type"`, `"none"`, plus `True`/`False` yang sudah usang; bawaannya `"full"`. Yang paling
+ketat adalah `"none"`: browser hanya menampilkan pesan galat umum, sedangkan jenis galat, pesan
+lengkap, dan traceback hanya ke konsol.
+
+### 8.5 Playwright (dependensi pengembangan saja)
+
+Versi terbaru 1.64.0 (`requires_python >=3.10`; dependensi `pyee`, `greenlet`). Wheel `win_amd64`
+**38,7 MB**, `manylinux1_x86_64` **48,3 MB** (PyPI). Browser Chromium diunduh terpisah dengan
+`playwright install chromium`; ukurannya baru saya laporkan setelah terpasang, tidak saya tebak.
+Rencananya hanya di `requirements-dev.txt`, tidak masuk image (dijamin daftar-putih
+`.dockerignore`) dan tidak diimpor `src/`.
+
+### 8.6 Logo (`docs/desain_tampilan/logo.jpg`)
+
+| Sifat | Nilai |
+| --- | --- |
+| Format | JPEG, RGB, 445.770 byte |
+| Ukuran | 1024 × 1024 px |
+| Latar transparan | **Tidak.** JPEG tidak punya kanal alfa; latarnya putih (`#FFFFFF`-`#FBF9FA` di tepi) |
+| Di latar `#F6F7F9` | Kotak putih logo **terlihat** sebagai persegi yang sedikit lebih terang. Ilustrasi bunglon (gelap) tetap terbaca di 32 px ke atas; di 16 px tinggal gumpalan; jaring garis biru muda dan teks kecil di dalamnya hilang di bawah ~64 px. Diperiksa dengan pratinjau pengecilan di scratchpad, bukan berkas proyek. |
+
+Usulan:
+- **Struktur:** `assets/brand/logo.jpg` sebagai salinan byte-identik, dengan sha256 dicatat di
+  `assets/brand/README.md`. Turunannya diletakkan berdampingan: `favicon-32.png` (32×32) dan
+  `logo-96.png` (96×96, untuk header 48 px di layar 2×). Keduanya dibuat dengan Pillow (sudah
+  terpasang sebagai dependensi Streamlit, bukan dependensi baru), hanya diskalakan dengan LANCZOS:
+  persegi ke persegi, tanpa potong, tanpa pewarnaan ulang.
+- **Docker:** `!assets/brand/` di daftar-putih `.dockerignore`.
+- **Tampilan:** karena latarnya tidak bisa dibuang tanpa mengubah logo, logo diletakkan di petak putih
+  bersudut membulat dengan garis `#EAECF0`. Dengan begitu kotak putihnya tampak disengaja.
+  Logonya sendiri tidak diubah.
+- **Catatan desain:** logo memuat efek pendar dan gradasi, sedangkan aturan tampilan melarang
+  gradien. Saya anggap aturan itu berlaku untuk elemen antarmuka, bukan aset merek Anda.
+- **Pemindahan dilakukan di awal Tahap 1** (di branch tahap 1), bukan di main, karena commit ini
+  hanya dokumentasi.
+
+---
+
+## 9. Bagian C (menunggu persetujuan)
+
+### 9.1 Matriks versi Python
+
+Dasar: versi terpasang (`pip freeze`, 124 paket) dan PyPI (bagian 4).
+- **Semua paket biner yang terpasang punya wheel Linux x86_64** untuk cp312, cp313, dan cp314
+  (atau abi3), pada versi yang sama dengan sekarang.
+- **Kenaikan `requests` 2.31.0 → 2.34.2** (minor) sudah disetujui untuk semua pilihan.
+- **`openpyxl` 3.1.5** (dev) tidak mencantumkan versi di atas 3.11 di versi mana pun.
+
+| Python | Paket yang harus naik | Mayor? | torch / transformers / sentence-transformers |
+| --- | --- | --- | --- |
+| 3.12 | tidak ada (selain `requests`) | - | tetap 2.14.0 / 5.17.0 / 6.1.0 |
+| 3.13 | tidak ada (selain `requests`) | - | tetap 2.14.0 / 5.17.0 / 6.1.0 (classifier tertinggi 6.1.0 = 3.13) |
+| 3.14 | `sentence-transformers` 6.1.0 → **6.2.0** | tidak (minor) | torch dan transformers tetap; ST naik minor. Persyaratan 6.2.0 sama dengan 6.1.0 kecuali `huggingface-hub <3` (sebelumnya `<2`); yang terpasang 1.32.0, jadi tidak dipaksa naik |
+
+- **Menurut kriteria Anda** (terbaru tanpa kenaikan mayor pada ketiganya), pilihannya **3.14**.
+- **Catatan risiko:** `sentence-transformers` 6.2.0 diunggah **2026-10-21, sehari sebelum
+  pengecekan ini**, dan paket ini ada di jalur embedding.
+- **Usulan saya:** pakai 3.14 bila saat Tahap 2 dimulai versi 6.2.0 sudah berumur ≥ 2 minggu
+  (sejak 2026-11-04) dan lolos pembuktian di bawah. Kalau belum, pakai 3.13: tumpukan embedding
+  tidak berubah sama sekali, dan naik ke 3.14 bisa dilakukan kemudian.
+
+**Rencana pembuktian embedding.** Berlaku juga untuk 3.11 di dalam container, karena Linux, wheel
+Linux, dan pustaka BLAS sudah berbeda dari venv Windows.
+
+1. **Sebelum pindah** (lingkungan sekarang): pada **salinan** indeks produksi, pilih 200 id chunk
+   dengan `random.Random(20261022).sample(sorted(ids), 200)`. Simpan id-nya. Simpan juga top-3
+   (id + skor) dari 64 kueri tetap milik `evaluation.retriever_exactness`, dihitung dengan model di
+   lingkungan sekarang.
+2. **Di lingkungan baru:** embed ulang teks 200 chunk itu dengan `ingest.load_model()` (revisi
+   dipatok, normalisasi sama). Hitung kosinus terhadap vektor tersimpan: minimum, rata-rata,
+   persentil-1.
+3. Jalankan `evaluation.retriever_exactness` (HNSW vs eksak di lingkungan baru) dan hitung ulang
+   top-3 64 kueri tadi. Bandingkan dengan langkah 1: jumlah kueri dengan top-3 berbeda dan
+   maks |Δskor|.
+4. **Ambang, ditetapkan sebelum mengukur:**
+   - **SAMA:** kosinus minimum ≥ 0,99999, rata-rata ≥ 0,999999, `retriever_exactness` kode
+     keluar 0, dan top-3 identik pada 64/64 kueri.
+   - **BEDA KECIL:** kosinus minimum di [0,999; 0,99999), top-3 tetap identik 64/64, dan
+     `retriever_exactness` 0. Dilaporkan; pemilik proyek memutuskan.
+   - **BEDA:** kosinus minimum < 0,999, atau ada top-3 yang berbeda, atau `retriever_exactness`
+     ≠ 0. Berhenti dan laporkan; tidak ada penggabungan.
+   - Dasar ambang: `index_check` pada lingkungan yang sama selalu memberi 1,000000 (6 desimal).
+     Perbedaan antarplatform yang hanya akibat urutan operasi floating point seharusnya tetap di
+     atas 0,99999. Angka di bawah itu menandakan perbedaan model atau tokenizer, bukan derau.
+5. Angka evaluasi di README tetap merujuk lingkungan saat evaluasi (Windows, Python 3.11.4); hasil
+   pembuktian dicatat berdampingan.
+
+Pembuktian ini juga menuntut **pematokan semua dependensi tak langsung** untuk image. Sekarang
+`requirements.txt` hanya mematok dependensi langsung, sehingga image yang dibangun bulan depan bisa
+mendapat numpy, tokenizers, atau huggingface-hub yang berbeda. Usulan: berkas constraints hasil
+`pip freeze` lingkungan yang sudah dibuktikan. Ini bukan dependensi baru.
+
+### 9.2 Pengukuran bge-m3: TIDAK dijalankan
+
+Memori bebas saat dicek: **741 MB**, lalu **854 MB**. Pemakai terbesar (working set per nama
+proses): chrome 2.740 MB, Antigravity IDE 2.724 MB, Memory Compression 2.123 MB, node 1.939 MB,
+svchost 1.213 MB. Di bawah ambang 3 GB, jadi tidak dipaksakan.
+
+Skrip yang akan dipakai: muat model, lalu 20 kueri rekaan 1-3 kalimat yang ditulis baru dan bukan
+dari set evaluasi. Hasilnya waktu muat, median dan p95 embedding per kueri, dan puncak memori proses
+(`PeakWorkingSetSize` via `ctypes`, tanpa dependensi baru). Skrip menolak berjalan sendiri bila
+memori bebas < 3 GB.
+
+### 9.3 Struktur modul final Tahap 1
+
+**Berkas baru**
+
+| Berkas | Tanggung jawab |
+| --- | --- |
+| `src/settings.py` | Semua setelan dari env dan nilai bawaan: batas masukan, ambang peringatan token, batas laju, jalur log, nama env mode penguji, `HF_HUB_OFFLINE`, `DISABLE_SAFETENSORS_CONVERSION`, revisi model. Konstanta milik berkas terkunci (`TOP_K`, `MAX_SEQ_LENGTH`) dirujuk, tidak disalin. |
+| `src/resources.py` | Tanpa Streamlit. Koleksi baca-saja + cek `ef_search`, model, tokenizer, statistik indeks (jumlah artikel, tanggal terakhir dari metadata `date` dd/mm/yyyy yang diurai, bukan dibandingkan sebagai string), dan **pemanasan** (9.4). Setiap sumber daya dimuat sekali per proses dengan kunci. |
+| `src/service.py` | Tanpa Streamlit. `check(text, session) -> CheckOutcome`: validasi, batas laju (T3), **kunci proses yang menserialkan pemeriksaan** (alasan di bawah), panggil `AnswerGenerator(provider, retrieve)`, ambil Kesimpulan/Penjelasan dari koleksi, waktu per tahap, galat bertipe. |
+| `src/evaluation_facts.py` | Angka 36/46, 10/45 (dari `testset/eksternal_hasil_per_butir.json`) dan 48/50 (dari `testset/v1_analysis.json`), dibaca dan dihitung, tidak diketik. |
+| `src/ui/beranda.py`, `src/ui/tentang.py` | Render halaman saja. |
+| `src/ui/components.py` | Potongan render bersama; semua teks dinamis lewat `html.escape`, tautan lewat satu fungsi yang hanya menerima `http`/`https`. |
+| `src/ui/style.css` | Satu-satunya CSS kustom, dimuat sekali per rerun lewat satu `st.html`. |
+| `assets/brand/` | Logo + turunan (8.6). |
+| Uji: `test_service.py`, `test_resources.py`, `test_evaluation_facts.py` (termasuk kesesuaian dengan README), `test_ui_safety.py` (escape, skema tautan, tidak ada `claim_sources`/`references_filtered` yang tampil), uji konkurensi di `test_ledger.py`/`test_throttle.py`, uji kunci retriever/chunker di `test_testset_locks.py`. |
+
+**Berkas yang berubah**
+- `src/app.py`: titik masuk + `st.navigation`, membungkus `resources` dengan `st.cache_resource` dan
+  statistik dengan `st.cache_data`.
+- `src/presentation.py`: buang rantai "mungkin terkait", `count_indexed_articles`, catatan cakupan;
+  tambah tabel judul/saran per label dan Kesimpulan apa adanya.
+- `src/llm/ledger.py`, `src/llm/throttle.py`: `threading.Lock`.
+- `src/ingest.py`: `revision=` di `load_model`.
+- `.streamlit/config.toml`: `showErrorDetails = "none"`, aksen `#1F4E9E`.
+- `ruff.toml`: pengecualian per berkas per aturan untuk `generator.py` ISC004 dan `chunker.py` I001;
+  pengecualian `app.py` I001 dihapus.
+- 27 berkas dengan temuan ruff, `tests/test_testset_eval.py` (folder sementara),
+  `requirements-dev.txt` (Playwright).
+
+**Dihapus**
+- Di jalur demo: `RelatedThreshold`, `RELATED_DISABLED_NO_CONFIG`, `RELATED_THRESHOLD_CONFIG`,
+  `RELATED_HEADING`, `RELATED_NOTE`, `RelatedArticle`, `index_key`, `load_related_threshold_config`,
+  `resolve_related_threshold`, `related_articles`, bidang `ResultView.related` dan
+  `Diagnostics.related_threshold`/`related_status`, `app.load_related_threshold`,
+  `app.render_related`, serta uji-ujinya di `test_presentation.py`. Daftar final dicek ulang dengan
+  `grep` saat dikerjakan.
+- Juga: `app.count_query_tokens`, `READING_CSS`, dan `escape_markdown`/`markdown_link` bila tidak lagi
+  dipakai.
+- **Dipertahankan:** semua skrip/artefak di `src/evaluation/` dan `testset/`, serta
+  `config/related_threshold.json`. Hasil `grep` 2026-10-22: berkas itu hanya dibaca `app.py`,
+  `presentation.py`, dan `test_presentation.py`, tidak oleh skrip evaluasi mana pun. Isinya catatan
+  kalibrasi (ambang `null` + alasannya per ukuran indeks). Setelah kode dihapus, berkas itu tidak
+  dibaca kode lagi, tetapi tetap disimpan sebagai artefak kalibrasi; berkas ini juga diberi
+  keterangan bahwa fiturnya dihapus dari demo.
+
+**Alur pemanggilan**
+
+```
+ui/beranda.py  --(teks, id sesi)-->  service.check()
+   service: validasi -> batas laju -> [kunci proses] ->
+            AnswerGenerator(provider, retrieve_fn).answer(teks)      # generator.py, terkunci
+               retrieve_fn = lambda q, k: retriever.retrieve(q, model, koleksi, top_k=k)  # terkunci
+            -> ambil Kesimpulan + Penjelasan artikel terpilih dari koleksi (metadata/dokumen)
+            -> CheckOutcome(answer, hits, waktu per tahap, jenis galat)
+ui/beranda.py  <--  presentation.build_view(outcome)  ->  ui/components (HTML ber-escape)
+```
+
+**Mengapa pemeriksaan diserialkan per proses.** Generator mengambil catatan panggilannya dengan
+`self.provider.records[n_before:]` (`generator.py`, `AnswerGenerator.answer`), sedangkan provider
+dibagi semua sesi. Tanpa serialisasi, dua pemeriksaan serentak bisa saling mencampur `calls`, dan
+`classify_failure` membaca `ans.calls`, sehingga jenis galat satu pengguna bisa berasal dari
+pengguna lain. Karena generator terkunci, perbaikannya ada di lapisan layanan: satu kunci di sekitar
+`answer()`. Biayanya kecil, karena throttle sudah menahan jeda 4 dtk antar-panggilan. Di bawah kunci
+yang sama, `provider.records` dipangkas setelah tiap pemeriksaan, sehingga kebocoran memori 1.3 butir
+8 tertutup tanpa menyentuh `llm/base.py`.
+
+**Kunci buku besar.** `threading.Lock` di `DailyLedger` menutup balapan antar-utas di satu proses.
+Demo dan skrip evaluasi adalah **proses berbeda** yang berbagi `data/quota_ledger.json`, dan kunci
+utas tidak melindunginya. Usulan tambahan: kunci berkas dengan stdlib (berkas `.lock` lewat
+`os.open(O_CREAT|O_EXCL)` dengan batas waktu). Bila tidak disetujui, aturannya didokumentasikan:
+jangan menjalankan evaluasi dan demo bersamaan.
+
+### 9.4 Pemanasan (warm-up)
+
+Batasan Streamlit: `app.py` dieksekusi ulang di setiap rerun, sedangkan modul lain diimpor sekali per
+proses (`sys.modules`). Tidak ada kait "server sudah mulai".
+
+- `resources.start_warmup()` dipanggil dari `app.py` di setiap rerun, tetapi idempoten: kunci +
+  penanda modul. Pada panggilan pertama ia menyalakan **satu utas daemon** yang memuat koleksi,
+  tokenizer, dan model, serta membuat klien LLM.
+- Fungsi `st.cache_resource` di `app.py` memanggil `resources.get_model()` dan sejenisnya, yang
+  menunggu kunci yang sama. Pengguna yang datang saat pemanasan berjalan tidak memicu pemuatan
+  kedua; ia menunggu yang sedang berjalan. Pengguna setelahnya tidak menunggu sama sekali.
+- **UI:** selama pemanasan, kotak input tetap aktif dan tombol Periksa menampilkan "Menyiapkan
+  sistem…". Statusnya diambil dari `resources.warmup_state()` (belum/berjalan/siap/gagal), tanpa
+  angka teknis.
+- **Docker:** HEALTHCHECK baru "sehat" bila `/_stcore/health` membalas **dan** pemanasan siap
+  (berkas `/tmp/ready` ditulis utas pemanasan). `start_period` diatur sesuai waktu muat terukur.
+  Pemanasan baru dimulai saat halaman pertama kali dibuka, jadi `docker compose up` menyertakan
+  satu permintaan pembuka dari HEALTHCHECK ke halaman utama.
+- Lokal tanpa Docker: pengguna pertama yang membuka halaman memicu pemanasan saat ia masih membaca
+  dan mengetik. Waktu itu tumpang tindih dengan waktu muat, tidak lagi ditambahkan sesudah klik.
+- Risikonya: memanggil `st.cache_resource` dari utas non-skrip memicu peringatan "missing
+  ScriptRunContext". Karena itu utas pemanasan memanggil `resources` langsung, bukan fungsi
+  ber-cache Streamlit.
+
+### 9.5 Batas laju (usulan, Tahap 3)
+
+| Batas | Nilai | Alasan |
+| --- | --- | --- |
+| Cadangan harian | demo berhenti di **400 dari 500** permintaan menurut buku besar | RPD 500 per proyek dibagi dengan evaluasi; 100 cukup untuk uji asap dan pemeriksaan kecil. Satu run evaluasi penuh (91 + 54 butir) tetap butuh hari tersendiri. |
+| Global per jam | **60** pemeriksaan per proses | 400 tersebar minimal ~7 jam, jadi satu lonjakan tidak menghabiskan kuota sehari dalam satu jam. Masih jauh di bawah RPM 15 yang sudah dijaga `RateLimiter`. |
+| Per sesi, jeda | **15 dtk** antar-pemeriksaan | Membaca satu hasil butuh lebih dari 15 dtk; klik ganda atau mengulang terus-menerus tertahan. |
+| Per sesi, per jam | **10** pemeriksaan | Penggunaan wajar perorangan; mencegah satu tab memakai 1/6 jatah global per jam. |
+
+Sesi Streamlit dibuat ulang setiap kali halaman dimuat ulang, jadi batas per sesi bisa dilewati.
+Perlindungan yang sesungguhnya adalah batas global dan cadangan harian. Semua angka ada di
+`settings.py`, dan pesannya ditulis dalam bahasa awam ("Coba lagi dalam N detik").
+
+### 9.6 Status sembilan keputusan
+
+| # | Keputusan | Status |
+| --- | --- | --- |
+| K1 | Rujukan dari `references` | **Diputuskan (A).** Diverifikasi di 8.1 |
+| K2 | Warna status tetap seperti `config.toml`, termasuk kuning zaitun | **Diputuskan (A)** |
+| K3 | Tanpa hijau; kotak 36/46 dan 10/45 netral, kategori sebagai teks | **Diputuskan (A)** |
+| K4 | 1280px: satu kolom tengah | **Diputuskan (A).** Angka diusulkan: lebar isi maksimum **640px**. Itu ~70-80 karakter per baris pada 15px dan cukup untuk dua kolom "Pesan Anda / Yang diperiksa" (masing-masing ~300px) |
+| K5 | Tampilkan Kesimpulan apa adanya; parafrase LLM hanya di panel penguji | **Menunggu konfirmasi.** Sesuai spesifikasi awal Anda, tetapi efek sampingnya belum Anda tanggapi |
+| K6 | Hapus "Mungkin terkait" dari jalur demo | **Diputuskan (A).** Daftar di 9.3 |
+| K7 | Versi Python dan kenaikan dependensi | **Sebagian.** `requests` disetujui (T2); versi Python menunggu (9.1) |
+| K8 | Uji kunci retriever/chunker | **Diputuskan (A).** Hash cocok (8.2) |
+| K9 | Pengukuran bge-m3 | **Menunggu.** Memori bebas < 3 GB (9.2) |
+
+### 9.7 Perkiraan Tahap 1 (diperbarui)
+
+**3-4 sesi kerja** (sebelumnya 2-3), karena bertambah: kunci + uji konkurensi, serialisasi di
+layanan, pemanasan, perbaikan 27 temuan ruff, uji di folder sementara, logo + turunan, pemasangan
+Playwright dan tangkapan layar 8 halaman, serta uji keamanan rujukan.
+
+Risiko tambahan:
+- tata letak Streamlit (CSS pada kelas internal yang bisa berubah antarversi);
+- memori sempit saat menjalankan demo, model, dan Chromium bersamaan;
+- pemilihan 3 contoh klaim butuh 3-6 panggilan Gemini.
