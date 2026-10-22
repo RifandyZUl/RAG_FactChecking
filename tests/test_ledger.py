@@ -1,18 +1,19 @@
 """Uji buku besar kuota harian dan perencanaan anggaran (llm.ledger).
 """
 
+from datetime import UTC
 from pathlib import Path
 
 
 def test_daily_ledger_and_budget() -> None:
     import tempfile
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from llm.ledger import DailyLedger, plan_budget
     from llm.limits import ModelLimits
 
     def at(*a):
-        return lambda: datetime(*a, tzinfo=timezone.utc)
+        return lambda: datetime(*a, tzinfo=UTC)
 
     with tempfile.TemporaryDirectory() as d:
         path = Path(d) / "ledger.json"
@@ -20,12 +21,12 @@ def test_daily_ledger_and_budget() -> None:
         before = DailyLedger("m", path, at(2026, 9, 21, 6, 59))
         after = DailyLedger("m", path, at(2026, 9, 21, 7, 1))
         assert before.day_key() == "2026-09-20" and after.day_key() == "2026-09-21"
-        assert before.next_reset() == datetime(2026, 9, 21, 7, 0, tzinfo=timezone.utc)
+        assert before.next_reset() == datetime(2026, 9, 21, 7, 0, tzinfo=UTC)
         # Musim dingin (PST, UTC-8): tengah malam Pasifik = 08:00 UTC
         assert DailyLedger("m", path, at(2026, 11, 2, 7, 59)).day_key() == "2026-11-01"
         assert DailyLedger("m", path, at(2026, 11, 2, 8, 1)).day_key() == "2026-11-02"
         assert DailyLedger("m", path, at(2026, 11, 2, 7, 59)).next_reset() == \
-            datetime(2026, 11, 2, 8, 0, tzinfo=timezone.utc)
+            datetime(2026, 11, 2, 8, 0, tzinfo=UTC)
 
         assert before.used_today() == 0
         before.add()
@@ -49,12 +50,12 @@ def test_daily_ledger_and_budget() -> None:
 
 def test_ledger_events_record_origin_and_attempt(tmp_path: Path, monkeypatch) -> None:
     import json
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from llm.ledger import DailyLedger
 
     monkeypatch.setenv("RAG_LEDGER_ORIGIN", "uji asal")
-    led = DailyLedger("m", tmp_path / "ledger.json", lambda: datetime(2026, 10, 19, 6, 0, tzinfo=timezone.utc))
+    led = DailyLedger("m", tmp_path / "ledger.json", lambda: datetime(2026, 10, 19, 6, 0, tzinfo=UTC))
     led.add(1, attempt=1)
     led.add(1, attempt=2)
     led.add()
@@ -67,9 +68,9 @@ def test_ledger_events_record_origin_and_attempt(tmp_path: Path, monkeypatch) ->
 
 
 def _fixed_now():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime(2026, 10, 22, 12, 0, tzinfo=timezone.utc)
+    return datetime(2026, 10, 22, 12, 0, tzinfo=UTC)
 
 
 def test_concurrent_threads_never_lose_an_increment(tmp_path: Path) -> None:

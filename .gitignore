@@ -4,6 +4,8 @@ data/articles.json
 data/*.log
 data/*.jsonl
 data/quota_ledger.json
+# Berkas kunci OS buku besar kuota (llm/ledger.file_lock); isinya kosong, yang mengunci adalah OS
+data/*.lock
 data/chroma/
 data/candidates/
 data/candidates_cache/

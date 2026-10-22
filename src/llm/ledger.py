@@ -22,7 +22,7 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from llm.limits import ModelLimits
@@ -42,7 +42,7 @@ def pacific_tz():
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 LOCK_TIMEOUT_S = 30.0  # menunggu proses lain selesai menulis; satu penulisan hanya beberapa milidetik
@@ -147,7 +147,7 @@ class DailyLedger:
         tz = pacific_tz()
         local = (now or self._now()).astimezone(tz)
         nxt = datetime.combine(local.date() + timedelta(days=1), datetime.min.time(), tzinfo=tz)
-        return nxt.astimezone(timezone.utc)
+        return nxt.astimezone(UTC)
 
     def _load(self) -> dict:
         if not self.path.exists():
@@ -195,7 +195,7 @@ class DailyLedger:
     def _log_event(self, day: str, n: int, total: int, attempt: int | None) -> None:
         origin = os.environ.get("RAG_LEDGER_ORIGIN") or " ".join(
             [Path(sys.argv[0]).name if sys.argv and sys.argv[0] else "?", *sys.argv[1:]])
-        event = {"waktu_utc": self._now().astimezone(timezone.utc).isoformat(timespec="seconds"),
+        event = {"waktu_utc": self._now().astimezone(UTC).isoformat(timespec="seconds"),
                  "model": self.model, "hari_pasifik": day, "n": n, "total_hari_ini": total,
                  "percobaan": attempt, "asal": origin, "pid": os.getpid()}
         with self.events_path.open("a", encoding="utf-8") as f:

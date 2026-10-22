@@ -684,3 +684,33 @@ Risiko tambahan:
 - tata letak Streamlit (CSS pada kelas internal yang bisa berubah antarversi);
 - memori sempit saat menjalankan demo, model, dan Chromium bersamaan;
 - pemilihan 3 contoh klaim butuh 3-6 panggilan Gemini.
+
+
+---
+
+## 10. Keputusan pemilik proyek atas bagian C (2026-10-22)
+
+1. **K9:** pengukuran bge-m3 dijalankan setelah aplikasi lain ditutup (memori bebas 3,2-3,4 GB); hasil
+   di `docs/laporan_tahap1.md` bagian 1.
+2. **Python 3.13, tidak bersyarat.** Alasan: tidak menuntut kenaikan paket selain `requests` (torch,
+   transformers, sentence-transformers tetap) dan masih didukung lama (EOL 2029-10). Python 3.14 bisa
+   dipertimbangkan nanti, setelah sentence-transformers 6.2.0 cukup berumur.
+3. **Pembuktian embedding:** ambang 9.1 disetujui, dengan dua tambahan yang ditetapkan sebelum mengukur:
+   hasil di antara 0,999 dan ambang "SAMA" berarti lapor dan tunggu keputusan (tidak lanjut otomatis);
+   pembuktian dijalankan di dalam container Linux yang akan dipakai (hasil Windows hanya pembanding).
+4. **K5:** ya. Pengguna melihat Kesimpulan TurnBackHoax apa adanya; parafrase LLM hanya di panel penguji.
+5. **Struktur modul** 9.3 disetujui; tidak menambah lapisan lain tanpa persetujuan.
+6. **Konkurensi:** kunci layanan disetujui (pesan menunggu giliran + batas waktu tunggu + uji catatan
+   tidak tercampur); kunci berkas antar-proses dengan stdlib disetujui (Windows dan Linux, kunci
+   tertinggal tertangani). Aturan "jangan jalankan demo di container dan evaluasi di host bersamaan" ditulis
+   di README dan CLAUDE.md.
+7. **Pemanasan** disetujui: tanpa pemuatan ganda (dibuktikan uji dan log) dan tanpa panggilan LLM.
+8. **Batas laju** disetujui: 15 dtk, 10/jam per sesi, 60/jam per proses, berhenti di 400 permintaan harian
+   (buku besar yang sama dengan evaluasi). Batas per sesi bisa dilewati dengan memuat ulang halaman;
+   perlindungan sebenarnya ada di batas global.
+9. **Logo:** versi berlatar transparan dari pemilik proyek (`logo2.png`, 500×500) dipakai sebagai berkas
+   asli di `assets/brand/`, tanpa petak putih, dengan turunan 32 dan 96 px.
+10. **Pembagian ulang tahap:** Tahap 1 = tampilan, struktur modul, perbaikan (kunci, `showErrorDetails`,
+    tokenizer, uji tanpa `data/`, ruff), uji kunci, pemanasan, escape, validasi, batas laju. Tahap 2 =
+    Docker, Python 3.13, pembuktian embedding, requests 2.34.2, CI. Tahap 3 = catatan aktivitas,
+    ringkasan, pola galat.

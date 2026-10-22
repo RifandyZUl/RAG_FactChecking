@@ -5,3 +5,6 @@ pytest==9.1.1
 ruff==0.16.9
 # Berkas konfirmasi manusia .xlsx (candidates.gap_workbook): tata letak saja, keputusan diisi manusia
 openpyxl==3.1.5
+# Tangkapan layar bukti tampilan (scripts/screenshots.py). HANYA pengembangan: tidak dipasang di image
+# Docker dan tidak diimpor src/. Disetujui pemilik proyek 2026-10-22. Peramban: `playwright install chromium`.
+playwright==1.64.0

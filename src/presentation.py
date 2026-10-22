@@ -1,266 +1,261 @@
 """
-Penyiapan data tampilan demo: `Answer` generator -> `ResultView` siap render.
+Penyiapan data tampilan demo: hasil layanan (`service.CheckOutcome`) -> `ResultView` siap render.
 
-Modul ini TIDAK mengimpor Streamlit dan TIDAK memanggil API, sehingga bisa diuji
-tanpa antarmuka (`tests/test_presentation.py`). Seluruh salinan antarmuka dan
-pemetaan status -> warna/ikon ada di sini, di satu tempat.
+Modul ini TIDAK mengimpor Streamlit dan TIDAK memanggil API, sehingga bisa diuji tanpa antarmuka
+(`tests/test_presentation.py`). Seluruh salinan antarmuka dan pemetaan status -> warna ada di sini.
 
-Warna di sini adalah NAMA warna tema Streamlit ("red", "orange", ...), bukan kode
-heks. Nilai heksnya ditetapkan sekali di `.streamlit/config.toml`
-(`redColor`, `orangeColor`, `yellowColor`, `grayColor`).
+Warna di sini adalah NAMA warna tema ("red", "orange", ...), bukan kode heks; nilainya ditetapkan sekali
+di `.streamlit/config.toml` dan diteruskan ke CSS oleh `ui/components.py`.
 
-Tidak ada logika retrieval atau penyusunan jawaban: status tetap dari metadata
-artikel, rujukan tetap dari `references` (Aturan Wajib #1 dan #3), dan
-`claim_sources` tidak pernah disentuh.
+Tidak ada logika retrieval atau keputusan: status dari LABEL metadata artikel, Kesimpulan dari indeks apa
+adanya, rujukan dari metadata `references` yang disaring ulang (Aturan Wajib #1 dan #3); `claim_sources`
+dan `references_filtered` tidak pernah sampai ke sini (tidak ada di metadata indeks).
 """
 
-import json
 import logging
 import re
-import sqlite3
 from dataclasses import dataclass, field
+from datetime import date
 from enum import Enum
-from pathlib import Path
+from urllib.parse import urlparse
 
+import settings
 from generator import MAX_FORMAT_RETRIES, Answer
-from paths import PROJECT_ROOT
+from resources import parse_metadata_date
 from scraping.links import blocked_reason
+from service import CheckError, CheckOutcome
 
 logger = logging.getLogger("presentation")
 
 # --------------------------------------------------------------------------
-# Salinan antarmuka (Bahasa Indonesia, tanpa istilah teknis di bagian utama)
+# Salinan antarmuka (dari berkas acuan docs/desain_tampilan/; teks baru ditandai "BARU")
 # --------------------------------------------------------------------------
 
-PAGE_TITLE = "Cek Klaim"
-PAGE_SUBTITLE = (
-    "Tempel pesan yang Anda terima untuk dicocokkan dengan artikel cek fakta "
-    "TurnBackHoax.id."
+APP_NAME = "Cek Pesan Hoaks"
+HOME_TITLE = "Dapat pesan mencurigakan? Cek dulu sebelum dibagikan."
+HOME_SUBTITLE = "Tempel pesannya. Kami carikan apakah klaim yang sama pernah diperiksa oleh TurnBackHoax.id."
+INPUT_LABEL = "Pesan yang Anda terima"
+INPUT_PLACEHOLDER = "Tempel teks pesan WhatsApp, unggahan media sosial, atau judul berita di sini"
+INPUT_PRIVACY_HINT = "Tanpa nomor telepon atau data pribadi"
+SUBMIT_LABEL = "Periksa pesan"
+EXAMPLES_HEADING = "Belum punya pesan? Coba contoh:"
+HOW_IT_WORKS_HEADING = "Cara kerjanya"
+HOW_IT_WORKS_STEPS = ("Tempel pesan", "Dicari di arsip cek fakta", "Baca hasil dan cocokkan sendiri")
+ABOUT_LINK_LABEL = "Tentang sistem ini dan seberapa akurat hasilnya"
+CHECK_ANOTHER_LABEL = "Periksa pesan lain"
+BACK_LABEL = "Kembali"
+
+# Contoh klaim siap klik: USULAN, menunggu persetujuan pemilik proyek (laporan Tahap 1). Diambil dari
+# judul artikel publik di articles.json, bukan artikel sasaran set eksternal/set uji v1, tanpa nomor
+# telepon atau nama orang biasa.
+EXAMPLE_CLAIMS: tuple[str, ...] = (
+    "Link pemutihan pajak motor dan mobil gratis seluruh Indonesia",  # dari 31781 (PENIPUAN)
+    "China kembangkan robot yang bisa mengandung bayi",  # dari 32989 (SALAH)
+    "Tautan pendaftaran bantuan bibit ikan lele",  # dari 36119 dengan objek pembeda diganti -> belum ditemukan
 )
-LIMITATION_NOTE = (
-    "Basis data ini hanya memuat hoaks yang sudah diperiksa TurnBackHoax.id, "
-    "sehingga pesan yang baru beredar mungkin belum ada di dalamnya. "
-    "Hasil “belum ditemukan” tidak berarti klaimnya benar."
-)
-# Cakupan evaluasi (catatan jujur, bukan peringatan): akurasi 48/50 diukur pada archive/v1
-# (150 artikel); indeks produksi yang dipakai demo lebih besar dan baru diukur retrieval-nya
-# (testset/v1_perbandingan_indeks_1532.json, butir positif; 2026-10-03). Angka di sini wajib ikut
-# diperbarui bila pengukuran diulang.
-# Kalimatnya sengaja memisahkan PENCARIAN (artikel yang benar ditemukan) dari AKURASI JAWABAN, agar
-# "20 dari 20" tidak terbaca sebagai akurasi seratus persen (arahan pemilik proyek 2026-10-03).
-# Angka pencarian adalah hasil pengukuran pada indeks TERTENTU, jadi selalu ditulis bersama tanggal
-# dan ukuran indeks saat diukur; jumlah artikel yang SEDANG dipakai dibaca dari indeks saat demo
-# berjalan (`count_indexed_articles`), bukan ditulis tangan. Perbarui RETRIEVAL_MEASUREMENT hanya
-# bila pengukurannya diulang (evaluation.index_comparison).
-BASELINE_ARTICLES = 150  # basis data versi awal (archive/v1), tempat akurasi jawaban diukur
-RETRIEVAL_MEASUREMENT = {"tanggal": "3 Oktober 2026", "artikel": 1532, "butir": 20, "urutan_pertama": 18,
-                         "tiga_teratas": 20}
 
-
-def evaluation_scope_note(article_count: int | None) -> str:
-    """Catatan cakupan evaluasi untuk halaman demo; `article_count` = jumlah artikel di indeks aktif."""
-    m = RETRIEVAL_MEASUREMENT
-    if article_count is None:
-        current = "Jumlah artikel pada basis data yang dipakai demo tidak terbaca saat ini."
-    else:
-        current = f"Basis data yang dipakai demo saat ini berisi {_format_count(article_count)} artikel."
-    stale = ""
-    # 150 = basis data versi awal (arsip): angka pencarian indeks besar memang bukan tentang indeks itu
-    if article_count is not None and article_count not in (m["artikel"], BASELINE_ARTICLES):
-        stale = " Basis data sudah berubah sejak pengukuran itu, jadi angka pencarian tersebut belum tentu berlaku sekarang."
-    return (
-        f"Akurasi jawaban 48 dari 50 diukur pada basis data versi awal ({BASELINE_ARTICLES} artikel). "
-        f"{current} Pada basis data yang lebih besar, yang diukur baru tahap pencarian artikel, bukan "
-        f"jawabannya: pada pengukuran {m['tanggal']}, saat basis data berisi {_format_count(m['artikel'])} "
-        f"artikel, dari {m['butir']} butir uji artikel yang benar muncul di urutan pertama hasil pencarian "
-        f"untuk {m['urutan_pertama']} butir dan di tiga teratas untuk {m['tiga_teratas']} butir.{stale} "
-        "Itu bukan ukuran akurasi jawaban. Akurasi jawaban akhir pada basis data ini belum diukur."
-    )
-
-
-def count_indexed_articles(chroma_dir: Path) -> int | None:
-    """
-    Jumlah artikel berbeda di indeks, dibaca langsung dari berkas sqlite ChromaDB dalam mode
-    BACA-SAJA (koleksi tidak dibuka, jadi berkas indeks tidak ditulis ulang). None bila tidak
-    terbaca (indeks belum ada, atau skema internal ChromaDB berubah): catatan tetap tampil tanpa angka.
-    """
-    db = chroma_dir / "chroma.sqlite3"
-    if not db.is_file():
-        return None
-    try:
-        con = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
-        try:
-            row = con.execute("select count(distinct string_value) from embedding_metadata where key = 'article_id'").fetchone()
-        finally:
-            con.close()
-    except sqlite3.Error as e:
-        logger.warning("jumlah artikel indeks tidak terbaca: %s", e)
-        return None
-    return int(row[0]) if row and row[0] else None
-INPUT_LABEL = "Pesan atau klaim yang ingin dicek"
-INPUT_PLACEHOLDER = "Tempel pesan atau tulis klaimnya di sini"
-SUBMIT_LABEL = "Periksa"
+# Masukan
 EMPTY_INPUT_MESSAGE = "Tulis atau tempel pesan yang ingin dicek terlebih dahulu."
-
-# Batas masukan 1.500 karakter: wilayah yang TERUKUR bekerja pada ablasi retrieval
-# (testset/retrieval_ablation_report.txt, eksperimen 4: Recall@3 19/20 pada ~1.500 karakter,
-# runtuh ke 2/20 pada ~5.000 karakter karena klaim terdorong keluar dari 512 token embedding).
-# Batas 5.000 sebelumnya ditetapkan tanpa pengukuran. Teks yang melebihi batas TIDAK dipotong:
-# pengguna diberi tahu dan tidak ada pemeriksaan yang dijalankan. (Widget sengaja tanpa
-# `max_chars`, karena widget memotong teks tempelan tanpa pemberitahuan.)
-MAX_INPUT_CHARS = 1500
 TOO_LONG_MESSAGE = (
-    "Pesan Anda {length} karakter, melebihi batas {limit} karakter, jadi belum "
-    "diperiksa dan tidak ada bagian yang dipotong. Salin bagian yang memuat klaim "
-    "utamanya saja, lalu periksa lagi."
+    "Pesan Anda {length} karakter, melebihi batas {limit} karakter, jadi belum diperiksa dan tidak ada "
+    "bagian yang dipotong. Salin bagian yang memuat klaim utamanya saja, lalu periksa lagi."
 )
-
-# Peringatan pesan panjang, ditampilkan SEBELUM pemeriksaan. Ambang dalam token model embedding
-# (satuan yang sebenarnya dibatasi, 512 token). 220 token ~ 1.000 karakter: rasio terukur pada
-# teks pesan berantai sintetis eksperimen 4 ~4,5 karakter/token (335 token pada 1.500 karakter).
-# Ambang ini pilihan konservatif pemilik proyek, BUKAN titik runtuh terukur (1.500 karakter
-# masih 19/20). Bila tokenizer tidak tersedia, dipakai ambang karakter.
-LONG_CLAIM_WARN_TOKENS = 220
-LONG_CLAIM_WARN_CHARS = 1000
 LONG_CLAIM_WARNING = (
-    "Pesan Anda cukup panjang. Pesan yang terlalu panjang menurunkan ketepatan pencarian, "
-    "karena bagian di luar klaim ikut terbaca dan klaimnya bisa terlewat. Hasil paling "
-    "tepat bila Anda menyalin bagian inti klaimnya saja."
+    "Pesan Anda cukup panjang. Pesan yang terlalu panjang menurunkan ketepatan pencarian, karena bagian di "
+    "luar klaim ikut terbaca dan klaimnya bisa terlewat. Hasil paling tepat bila Anda menyalin bagian inti "
+    "klaimnya saja."
 )
-LONG_CLAIM_CONFIRM = "Tekan {button} sekali lagi untuk tetap memeriksa pesan ini apa adanya."
+LONG_CLAIM_CONFIRM = "Tekan “{button}” sekali lagi untuk tetap memeriksa pesan ini apa adanya."
 
-# Indikator proses: satu baris per langkah, agar pemuatan model pertama (~67 detik
-# terukur) tidak tampak seperti aplikasi berhenti.
-PROGRESS_RUNNING = "Memeriksa pesan…"
-PROGRESS_DONE = "Pemeriksaan selesai"
-PROGRESS_FAILED = "Pemeriksaan tidak selesai"
-STEP_OPEN_INDEX = "Membuka basis data artikel cek fakta…"
-STEP_LOAD_MODEL = (
-    "Menyiapkan model bahasa… Pada pemeriksaan pertama sejak aplikasi dinyalakan, "
-    "langkah ini bisa memakan sekitar satu menit."
-)
-STEP_SEARCH = "Mencari artikel cek fakta yang mirip…"
-STEP_COMPARE = "Membandingkan pesan Anda dengan artikel yang ditemukan…"
+# Proses (BARU: berkas acuan tidak memuat keadaan ini)
+PROGRESS_CHECKING = "Memeriksa pesan Anda… Biasanya selesai dalam 10–20 detik."
+PROGRESS_PREPARING = "Menyiapkan sistem untuk pemeriksaan pertama… Ini bisa memakan sekitar satu menit."
+PROGRESS_QUEUED = "Ada pemeriksaan lain yang sedang berjalan. Pesan Anda menunggu giliran…"
+WARMUP_NOTE = "Sistem sedang disiapkan. Pemeriksaan pertama bisa sedikit lebih lama."
 
-ARTICLE_LINK_PREFIX = "Artikel cek fakta:"
-# Peringatan untuk setiap hasil "ditemukan" (tampilan saja; keputusan generator tidak berubah). Dasar: evaluasi
-# eksternal 2026-10-20 (docs/rancangan_evaluasi_eksternal.md 11.3) -- kecocokan palsu 10/45, umumnya artikel
-# berpola sama dengan tokoh/lembaga/program berbeda.
+# Hasil ditemukan
+SOURCE_SUFFIX = "menurut TurnBackHoax.id"
+SHOW_ALL_LABEL = "Tampilkan semua"
+SHOW_LESS_LABEL = "Tampilkan lebih sedikit"
 MATCH_CHECK_HEADING = "Pastikan klaimnya benar-benar sama"
-MATCH_CHECK_NOTE = (
-    "Sistem bisa keliru mencocokkan pesan dengan artikel yang mirip. Periksa sendiri apakah tokoh, "
-    "lembaga, dan program di artikel ini sama dengan yang disebut di pesan Anda."
+MATCH_CHECK_INTRO = "Hasil ini berlaku untuk pesan Anda hanya jika isinya sama. Bandingkan dulu:"
+MATCH_CHECK_YOURS = "PESAN ANDA"
+MATCH_CHECK_CHECKED = "YANG DIPERIKSA"
+MATCH_CHECK_QUESTIONS = (
+    "Lembaga atau tokoh yang disebut sama?",
+    "Nama program, tawaran, atau nominalnya sama?",
+    "Tautan atau nomor kontaknya mirip?",
 )
-MATCH_CHECK_ARTICLE = "Artikel: {title} ({date})"
-MATCH_CHECK_ARTICLE_NO_DATE = "Artikel: {title} (tanggal tidak tercatat)"
-CLARIFICATION_HEADING = "Faktanya"
-REFERENCES_HEADING = "Rujukan"
-ADVICE_HEADING = "Saran umum"
+MATCH_CHECK_CLOSING = "Jika salah satu berbeda, bisa jadi ini pesan lain dengan pola serupa. Anggap belum terverifikasi."
+ARTICLE_HEADING = "ARTIKEL CEK FAKTA"
+ARTICLE_SOURCE = "TurnBackHoax.id"
+READ_ARTICLE_LABEL = "Baca artikel lengkap"
+EXPLANATION_LABEL = "Penjelasan lengkap"
+REFERENCES_LABEL = "Rujukan resmi ({n})"
+PROVENANCE_NOTE = (
+    "Label, kesimpulan, dan tautan diambil langsung dari artikel cek fakta, bukan dikarang AI. "
+    "AI hanya membantu mencocokkan pesan Anda dengan artikel."
+)
+PROVENANCE_LINK_LABEL = "Seberapa akurat?"
+
+# Hasil belum ditemukan
+NOT_FOUND_PILL = "BELUM DITEMUKAN"
+NOT_FOUND_TITLE = "Pesan ini belum ada di arsip cek fakta kami."
+NOT_FOUND_CALLOUT = "Ini bukan berarti pesannya benar."
+NOT_FOUND_BODY = (
+    "Bisa jadi pesannya baru beredar dan belum sempat diperiksa, atau diperiksa situs lain. Arsip kami hanya "
+    "berisi artikel TurnBackHoax.id dan tidak mencakup semua hoaks."
+)
+NEXT_STEPS_HEADING = "Yang bisa Anda lakukan sekarang"
+NEXT_STEPS = (
+    "Jangan klik tautannya dan jangan kirim data pribadi, kode OTP, atau uang.",
+    "Cek langsung ke situs atau akun resmi lembaga yang disebut dalam pesan.",
+    "Cari kata kuncinya di situs cek fakta:",
+)
+FACT_CHECK_SITES = (("TurnBackHoax.id", settings.TURNBACKHOAX_URL),
+                    ("Cek Fakta Liputan6", settings.LIPUTAN6_CEK_FAKTA_URL))
+SCAM_SIGNS_HEADING = "Tanda umum pesan penipuan"
+SCAM_SIGNS = (
+    "Meminta data pribadi atau kode OTP",
+    "Tautan bukan dari situs resmi lembaga",
+    "Mendesak: “kuota terbatas”, “hari ini saja”",
+    "Hadiah atau bantuan yang terlalu mudah",
+)
+
+# Tentang
+ABOUT_TITLE = "Tentang sistem ini"
+ABOUT_DOES_HEADING = "YANG DILAKUKAN"
+ABOUT_DOES = "Mencari artikel cek fakta yang pernah memeriksa klaim yang sama dengan pesan Anda."
+ABOUT_DOES_NOT_HEADING = "YANG TIDAK DILAKUKAN"
+ABOUT_DOES_NOT = "Menilai sendiri benar-salahnya klaim yang belum pernah diperiksa."
+ABOUT_STEPS = (
+    "Pesan Anda dibandingkan dengan {articles} artikel TurnBackHoax.id untuk mencari tiga yang paling mirip.",
+    "Model AI membaca ketiganya dan memutuskan apakah ada yang memeriksa klaim yang sama.",
+    "Label, kesimpulan, dan tautan ditampilkan apa adanya dari artikel. AI tidak menulis putusan atau tautan sendiri.",
+)
+RELIABILITY_HEADING = "Seberapa bisa diandalkan?"
+RELIABILITY_INTRO = "Diuji dengan {total} klaim hoaks nyata dari Cek Fakta Liputan6. Batas lulus ditetapkan sebelum pengujian."
+RELIABILITY_FOUND = "klaim yang ada di arsip ditemukan dengan benar ({pct}). {category}."
+RELIABILITY_FALSE = (
+    "klaim yang tidak ada di arsip keliru dicocokkan dengan artikel lain ({pct}), terutama penipuan berpola "
+    "sama. {category}."
+)
+RELIABILITY_ADVICE = "Karena itu, selalu cocokkan sendiri lembaga, program, dan tautan di hasil dengan pesan Anda."
+RELIABILITY_FOOTNOTE = (
+    "Angka berlaku untuk arsip {articles} artikel. Rincian, interval kepercayaan, dan keterbatasan ada di "
+    "README proyek."
+)
+LIMITS_HEADING = "Batasan yang perlu Anda tahu"
+LIMITS = (
+    "Hanya mencari di artikel TurnBackHoax.id, jadi tidak semua hoaks tercakup.",
+    "Hoaks yang baru beredar beberapa hari mungkin belum ada di arsip.",
+    "Hanya membaca teks. Gambar, video, dan suara tidak bisa diperiksa.",
+    "Belum diuji pada berita yang benar. Untuk pengumuman resmi, tetap cek ke sumber resminya.",
+    # BARU (privasi; CLAUDE.md "Privasi data"): konten tier gratis dipakai Google untuk perbaikan produk.
+    ("Pesan yang Anda periksa dikirim ke layanan AI Google (Gemini, tier gratis), yang dapat memakainya "
+     "untuk meningkatkan produknya. Jangan menempel data pribadi."),
+)
+DATA_SOURCE_HEADING = "Sumber data"
+DATA_SOURCE_BODY = (
+    "Artikel cek fakta TurnBackHoax.id (Mafindo), diperbarui berkala. Data terakhir: {date}. Ini proyek "
+    "portofolio pribadi, bukan layanan resmi Mafindo."
+)
+SOURCE_CODE_LABEL = "Kode dan laporan evaluasi di GitHub"
+FOOTER_ARCHIVE = "Arsip: {articles} artikel TurnBackHoax.id · diperbarui {date}"
+UNKNOWN_VALUE = "(tidak terbaca)"
+
 DIAGNOSTICS_LABEL = "Detail untuk penguji"
 
-# Mode penguji: panel diagnostik hanya tampil bila diaktifkan. Bawaan MATI.
-# Diatur lewat variabel lingkungan (diutamakan) atau `.streamlit/secrets.toml`.
-TESTER_MODE_ENV = "DEMO_TESTER_MODE"
-TESTER_MODE_SECRET = "demo_tester_mode"
-_TRUE_VALUES = {"1", "true", "ya", "yes", "on"}
+_MONTHS = ("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
+           "Oktober", "November", "Desember")
 
-# "Belum ditemukan": artikel bertopik dekat ditampilkan sebagai rujukan baca, TANPA
-# mengubah vonis (Aturan Wajib #4). Hanya kandidat dengan skor >= ambang.
-#
-# AMBANG INI BERGANTUNG PADA UKURAN BASIS DATA. Makin banyak artikel, makin besar peluang
-# klaim yang tak terkait tetap menemukan artikel yang agak mirip, sehingga skor kandidat
-# teratas naik (terukur: 6 negatif mudah yang benar-benar tak terkait, maks 0,5351 pada
-# 150 artikel -> 0,5666 pada 922). Karena itu ambang TIDAK berupa konstanta, melainkan
-# dibaca per indeks dari `config/related_threshold.json`, lengkap dengan jumlah chunk
-# indeks tempat ia dikalibrasi. Bila indeks tidak punya entri, atau jumlah chunk-nya
-# berbeda dari saat kalibrasi (basis data sudah diperbesar), atau ambangnya `null` (kalibrasi
-# tidak menemukan ambang yang memisahkan), fitur ini DIMATIKAN:
-# lebih baik tidak menampilkan apa pun daripada artikel yang tidak relevan. Dasar tiap
-# angka dicatat di berkas konfigurasi itu.
-#
-# Indeks `data` 1.532 artikel (2026-10-03): TETAP DIMATIKAN, alasan yang sama (skor kandidat teratas
-# tidak bisa turun saat indeks diperbesar; lihat berkas konfigurasi). Riwayat 922 artikel
-# (2026-09-28): DIMATIKAN karena pada set pengembangan tidak ada
-# ambang yang memisahkan -- kueri tak terkait "NASA ngaku bumi datar" (0,6385) berskor LEBIH
-# TINGGI daripada kandidat yang layak tampil (0,5739-0,63), dan ambang 0,64 yang
-# menyingkirkannya hanya bermargin 0,0015. Bukan karena artikel bertopik jauh lolos pada set
-# uji v1: enam negatif mudah yang benar-benar tak terkait tetap di bawah 0,57 (maks 0,5666).
-RELATED_THRESHOLD_CONFIG = PROJECT_ROOT / "config" / "related_threshold.json"
-RELATED_HEADING = "Mungkin terkait, tapi klaimnya berbeda"
-RELATED_NOTE = (
-    "Artikel berikut membahas topik yang mirip, tetapi klaim yang diperiksa di "
-    "dalamnya tidak sama dengan pesan Anda. Hasil pemeriksaannya tidak berlaku "
-    "untuk pesan Anda."
-)
 
-# Saran statis untuk SEMUA kasus penipuan: kalimatnya selalu sama, tidak merujuk
-# isi klaim tertentu, dan dirender terpisah dari klarifikasi (bukan hasil cek fakta).
-SCAM_ADVICE = (
-    "Jangan klik tautan, jangan mengisi formulir, dan jangan mengirim data pribadi, "
-    "kode OTP, atau uang kepada pengirim pesan. Saran ini berlaku umum untuk semua "
-    "pesan penipuan dan bukan bagian dari hasil pemeriksaan fakta."
-)
+def format_count(value: int) -> str:
+    """Bilangan bulat dengan pemisah ribuan titik (gaya Indonesia)."""
+    return f"{value:,}".replace(",", ".")
 
-# Keterbacaan klarifikasi (hanya penyajian; teksnya dari generator yang terkunci):
-# kolom ~60-65 karakter pada ukuran huruf isi dan jarak baris lebih lega.
-READING_WIDTH_PX = 560
-CLARIFICATION_LINE_HEIGHT = 1.75
+
+def format_date(value: date | None) -> str:
+    """Tanggal gaya Indonesia ("12 Maret 2026")."""
+    return UNKNOWN_VALUE if value is None else f"{value.day} {_MONTHS[value.month - 1]} {value.year}"
+
+
+def format_metadata_date(value: str) -> str:
+    """Tanggal metadata artikel (dd/mm/yyyy) -> "12 Maret 2026"; teks asli bila formatnya lain."""
+    parsed = parse_metadata_date(value)
+    return value.strip() if parsed is None else format_date(parsed)
+
+
+def format_percent(rate: float) -> str:
+    return f"{round(rate * 100)}%"
+
+
+def format_wait(seconds: int) -> str:
+    if seconds < 60:
+        return f"{seconds} detik"
+    return f"{-(-seconds // 60)} menit"
+
+
+# --------------------------------------------------------------------------
+# Status per label: judul satu kalimat + saran tetap (ditulis manual, bukan oleh LLM)
+# --------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class StatusStyle:
-    """Tampilan satu status: label, nama warna tema, ikon Material, kalimat ringkas."""
+    """Tampilan satu status: nama warna tema, judul satu kalimat, dan satu kalimat saran tetap."""
 
-    label: str
     color: str
-    icon: str
-    summary: str
+    headline: str
+    advice: str
 
 
-# Intensitas menurun: PENIPUAN (merugikan langsung) > SALAH > PARODI. BELUM TERBUKTI di luar skala itu.
+# Intensitas warna menurun: PENIPUAN (merugikan langsung) > SALAH > PARODI. BELUM TERBUKTI di luar skala itu.
 STATUS_STYLES: dict[str, StatusStyle] = {
     "PENIPUAN": StatusStyle(
-        label="Penipuan",
         color="red",
-        icon=":material/gpp_bad:",
-        summary="Pesan ini termasuk modus penipuan yang sudah diperiksa TurnBackHoax.id.",
+        headline="Pesan serupa pernah diperiksa dan dinyatakan penipuan.",
+        advice="Jangan klik tautannya, jangan isi formulirnya, dan jangan teruskan pesannya.",
     ),
     "SALAH": StatusStyle(
-        label="Salah",
         color="orange",
-        icon=":material/report:",
-        summary="Klaim ini sudah diperiksa TurnBackHoax.id dan dinyatakan salah.",
+        headline="Klaim serupa pernah diperiksa dan dinyatakan salah.",
+        advice="Jangan teruskan pesan ini sebagai kabar yang benar.",
     ),
     "PARODI": StatusStyle(
-        label="Parodi",
         color="yellow",
-        icon=":material/theater_comedy:",
-        summary=(
-            "Konten ini sudah diperiksa TurnBackHoax.id dan merupakan konten humor "
-            "(parodi, satire, atau komedi), bukan berita sungguhan."
-        ),
+        headline="Konten serupa pernah diperiksa: ini konten humor, bukan berita sungguhan.",
+        advice="Jangan teruskan sebagai berita sungguhan.",
     ),
-    # Label sumber "[BELUM TERBUKTI]" (pertama muncul pada mode maju 2026-10-03: 36976, 36941). BUKAN
-    # jenis "salah": klaimnya belum didukung bukti. Gaya, judul, dan kalimat ditetapkan pemilik proyek
-    # 2026-10-03; sengaja tanpa saran (mis. medis) dan tanpa kalimat lain. Ungu berada di luar skala
-    # bahaya dan berbeda dari abu-abu "belum ditemukan" (klaim itu SUDAH diperiksa).
+    # Kalimat saran = kalimat persis yang ditetapkan pemilik proyek 2026-10-03 (tanpa saran medis atau
+    # kalimat lain); ungu berada di luar skala bahaya dan berbeda dari abu-abu "belum ditemukan".
     "BELUM TERBUKTI": StatusStyle(
-        label="Belum terbukti",
         color="violet",
-        icon=":material/help:",
-        summary=(
+        headline="Klaim serupa pernah diperiksa dan belum terbukti.",
+        advice=(
             "Klaim ini sudah diperiksa TurnBackHoax.id dan belum ada bukti yang mendukungnya, "
             "sehingga belum dapat dianggap benar."
         ),
     ),
 }
 
-# Alias TAMPILAN saja (label tersimpan di data tidak diubah): SATIRE dan SATIR (muncul pertama kali
-# di kelompok 4 perluasan, 2026-09-28: 31118 dan 30924) diperlakukan sebagai satu kategori dengan
-# PARODI -- satire bukan upaya menipu, dan PARODI adalah status paling lunak. Keputusan pemilik
-# proyek 2026-09-28. KOMEDI (kelompok 5, 30793) digabung ke kategori yang sama, keputusan pemilik
-# proyek 2026-10-02. Ringkasan PARODI menyebut ketiganya ("parodi, satire, atau komedi").
+# Alias TAMPILAN saja (label tersimpan tidak diubah): SATIRE, SATIR (2026-09-28), KOMEDI (2026-10-02)
+# = satu kategori dengan PARODI. Pil tetap menampilkan label aslinya.
 STATUS_ALIASES: dict[str, str] = {"SATIRE": "PARODI", "SATIR": "PARODI", "KOMEDI": "PARODI"}
+
+# Label di luar yang dikenal: NETRAL (keputusan 2026-10-02). Artinya tidak ditafsirkan; label asli
+# dikutip apa adanya, dan setiap kemunculan dicatat ke log agar ditinjau manusia (Aturan Wajib #7).
+FALLBACK_STATUS_COLOR = "gray"
+FALLBACK_HEADLINE = "Klaim serupa pernah diperiksa TurnBackHoax.id dengan label “{label}”."
+FALLBACK_ADVICE = "Aplikasi ini belum mengenali label tersebut. Baca artikelnya untuk mengetahui hasil pemeriksaannya."
+# Label kosong atau penanda parser "TIDAK DIKETAHUI" bukan label dari TurnBackHoax: tidak dikutip.
+UNREADABLE_LABELS = frozenset({"", "TIDAK DIKETAHUI"})
+UNREADABLE_PILL = "SUDAH DIPERIKSA"
+UNREADABLE_HEADLINE = "Klaim serupa pernah diperiksa TurnBackHoax.id, tetapi labelnya tidak terbaca."
+UNREADABLE_ADVICE = "Baca artikelnya untuk mengetahui hasil pemeriksaannya."
+
+NOT_FOUND_COLOR = "gray"  # pil "belum ditemukan" memakai gaya netral berkas acuan (lihat style.css)
+FAILURE_COLOR = "gray"
 
 
 def status_style_key(label: str) -> str:
@@ -269,134 +264,98 @@ def status_style_key(label: str) -> str:
     return STATUS_ALIASES.get(key, key)
 
 
-# Label di luar tiga yang dikenal (dan aliasnya): tampilan NETRAL (keputusan pemilik proyek
-# 2026-10-02). Arti label asing tidak kita ketahui, jadi tidak boleh ditampilkan dengan warna
-# maupun kalimat SALAH; yang dinyatakan hanya bahwa klaimnya sudah diperiksa, dengan label asli
-# dari metadata apa adanya. Setiap kemunculan dicatat ke log (`build_view`) agar label baru
-# ditinjau manusia (Aturan Wajib #7), bukan ditebak.
-FALLBACK_STATUS_LABEL = "Sudah diperiksa"
-FALLBACK_STATUS_COLOR = "gray"
-FALLBACK_STATUS_ICON = ":material/label:"
-FALLBACK_STATUS_SUMMARY = (
-    "Klaim ini sudah diperiksa TurnBackHoax.id dan diberi label “{label}”. Aplikasi ini belum "
-    "mengenali label tersebut, jadi artinya tidak ditafsirkan di sini. Baca artikelnya untuk "
-    "mengetahui hasil pemeriksaannya."
-)
-# Label kosong atau penanda parser "TIDAK DIKETAHUI" (`scraping.parser.parse_title`: judul sumber
-# tanpa label terbaca) bukan label dari TurnBackHoax, jadi tidak dikutip sebagai label.
-UNREADABLE_LABELS = frozenset({"", "TIDAK DIKETAHUI"})
-FALLBACK_STATUS_SUMMARY_NO_LABEL = (
-    "Klaim ini sudah diperiksa TurnBackHoax.id, tetapi label hasil pemeriksaannya tidak terbaca. "
-    "Baca artikelnya untuk mengetahui hasil pemeriksaannya."
-)
+def status_for_label(label: str, article_id: str = "") -> tuple[str, StatusStyle]:
+    """(teks pil, gaya) untuk label metadata; label tak dikenal -> netral dan dicatat ke log."""
+    clean = label.strip()
+    style = STATUS_STYLES.get(status_style_key(clean))
+    if style is not None:
+        return clean.upper(), style
+    logger.warning("label status tidak dikenal %r pada artikel %s: ditampilkan netral, perlu ditinjau",
+                   clean, article_id)
+    if clean.upper() in UNREADABLE_LABELS:
+        return UNREADABLE_PILL, StatusStyle(FALLBACK_STATUS_COLOR, UNREADABLE_HEADLINE, UNREADABLE_ADVICE)
+    return clean.upper(), StatusStyle(FALLBACK_STATUS_COLOR, FALLBACK_HEADLINE.format(label=clean), FALLBACK_ADVICE)
 
 
-def fallback_status_style(label: str) -> StatusStyle:
-    """Tampilan netral untuk label yang tidak dikenal; label asli dikutip apa adanya."""
-    if label.upper() in UNREADABLE_LABELS:
-        summary = FALLBACK_STATUS_SUMMARY_NO_LABEL
-    else:
-        summary = FALLBACK_STATUS_SUMMARY.format(label=label)
-    return StatusStyle(
-        label=FALLBACK_STATUS_LABEL,
-        color=FALLBACK_STATUS_COLOR,
-        icon=FALLBACK_STATUS_ICON,
-        summary=summary,
-    )
-
-
-# Netral: bukan kegagalan dan bukan pernyataan bahwa klaimnya benar.
-NOT_FOUND_STYLE = StatusStyle(
-    label="Belum ditemukan",
-    color="gray",
-    icon=":material/search_off:",
-    summary=(
-        "Klaim ini belum ditemukan di antara artikel cek fakta TurnBackHoax.id. "
-        "Ini tidak berarti klaimnya benar; hanya belum ada artikel yang memeriksa "
-        "klaim yang sama."
-    ),
-)
-
-FAILURE_COLOR = "gray"
-FAILURE_ICON = ":material/info:"
+# --------------------------------------------------------------------------
+# Kegagalan: jenis yang dibedakan untuk pengguna (bahasa awam, tanpa jejak teknis)
+# --------------------------------------------------------------------------
 
 
 class FailureKind(Enum):
-    """Jenis kegagalan yang dibedakan untuk pengguna."""
-
     QUOTA = "kuota_habis"
     TIMEOUT = "timeout"
     UNAVAILABLE = "layanan_tidak_tersedia"
     PARSE = "format_tidak_dikenali"
     CONFIG = "konfigurasi"
     NO_INDEX = "basis_data_tidak_ada"
+    RATE_LIMITED = "batas_laju"
+    BUSY = "antrean_penuh"
     OTHER = "lainnya"
 
 
-# Setiap pesan: apa yang terjadi + apa yang bisa dilakukan pengguna.
+# Setiap pesan: apa yang terjadi + apa yang bisa dilakukan pengguna. "{wait}" diisi waktu tunggu.
 FAILURE_MESSAGES: dict[FailureKind, tuple[str, str]] = {
     FailureKind.QUOTA: (
         "Batas pemakaian harian tercapai",
-        (
-            "Layanan pemeriksa sudah mencapai batas pemakaian untuk hari ini, jadi pesan "
-            "Anda belum diperiksa. Batas ini dipulihkan sekali sehari; silakan coba lagi "
-            "beberapa jam lagi."
-        ),
+        ("Layanan pemeriksa sudah mencapai batas pemakaian untuk hari ini, jadi pesan Anda belum diperiksa. "
+         "Batas ini dipulihkan sekali sehari; silakan coba lagi beberapa jam lagi."),
+    ),
+    FailureKind.RATE_LIMITED: (
+        "Tunggu sebentar sebelum memeriksa lagi",
+        ("Pemeriksaan dibatasi agar layanan bisa dipakai banyak orang. Pesan Anda belum diperiksa. Silakan "
+         "coba lagi dalam {wait}."),
+    ),
+    FailureKind.BUSY: (
+        "Sedang banyak yang memeriksa",
+        ("Pesan Anda sudah menunggu cukup lama tetapi belum mendapat giliran, jadi belum diperiksa. Silakan "
+         "coba lagi dalam satu atau dua menit."),
     ),
     FailureKind.TIMEOUT: (
         "Pemeriksaan memakan waktu terlalu lama",
-        (
-            "Layanan pemeriksa tidak menjawab dalam batas waktu, jadi pesan Anda belum "
-            "diperiksa. Silakan coba lagi dalam beberapa menit."
-        ),
+        ("Layanan pemeriksa tidak menjawab dalam batas waktu, jadi pesan Anda belum diperiksa. Silakan coba "
+         "lagi dalam beberapa menit."),
     ),
     FailureKind.UNAVAILABLE: (
         "Layanan pemeriksa sedang tidak tersedia",
-        (
-            "Layanan sedang sibuk atau tidak dapat dihubungi, jadi pesan Anda belum "
-            "diperiksa. Periksa koneksi internet Anda, lalu coba lagi dalam beberapa menit."
-        ),
+        ("Layanan sedang sibuk atau tidak dapat dihubungi, jadi pesan Anda belum diperiksa. Periksa koneksi "
+         "internet Anda, lalu coba lagi dalam beberapa menit."),
     ),
     FailureKind.PARSE: (
         "Hasil pemeriksaan tidak dapat dibaca",
-        (
-            "Sistem menerima jawaban dalam bentuk yang tidak dikenali, sehingga hasilnya "
-            "tidak ditampilkan agar tidak menyesatkan. Silakan coba sekali lagi; bila "
-            "terulang, coba tulis klaimnya dengan kalimat lain."
-        ),
+        ("Sistem menerima jawaban dalam bentuk yang tidak dikenali, sehingga hasilnya tidak ditampilkan agar "
+         "tidak menyesatkan. Silakan coba sekali lagi; bila terulang, coba tulis klaimnya dengan kalimat lain."),
     ),
     FailureKind.CONFIG: (
         "Aplikasi belum siap dipakai",
-        (
-            "Kunci akses layanan pemeriksa belum diatur. Pengelola aplikasi perlu mengisi "
-            "berkas .env sesuai contoh di .env.example, lalu memuat ulang halaman ini."
-        ),
+        ("Kunci akses layanan pemeriksa belum diatur. Pengelola aplikasi perlu mengisi berkas .env sesuai "
+         "contoh di .env.example, lalu memuat ulang halaman ini."),
     ),
     FailureKind.NO_INDEX: (
         "Basis data artikel belum tersedia",
-        (
-            "Basis data artikel cek fakta belum disiapkan di komputer ini. Pengelola "
-            "aplikasi perlu membangunnya lebih dulu (lihat bagian “Membangun basis "
-            "pengetahuan” di README), lalu memuat ulang halaman ini."
-        ),
+        ("Basis data artikel cek fakta belum disiapkan di komputer ini. Pengelola aplikasi perlu "
+         "membangunnya lebih dulu (lihat README), lalu memuat ulang halaman ini."),
     ),
     FailureKind.OTHER: (
         "Terjadi kesalahan",
-        (
-            "Pemeriksaan tidak dapat diselesaikan karena kesalahan yang tidak terduga. "
-            "Silakan coba lagi beberapa saat lagi; bila terus terjadi, beri tahu "
-            "pengelola aplikasi."
-        ),
+        ("Pemeriksaan tidak dapat diselesaikan karena kesalahan yang tidak terduga. Silakan coba lagi "
+         "beberapa saat lagi; bila terus terjadi, beri tahu pengelola aplikasi."),
     ),
 }
 
-# --------------------------------------------------------------------------
-# Klasifikasi galat
-# --------------------------------------------------------------------------
+_SERVICE_FAILURES: dict[CheckError, FailureKind] = {
+    CheckError.SESSION_INTERVAL: FailureKind.RATE_LIMITED,
+    CheckError.SESSION_HOURLY: FailureKind.RATE_LIMITED,
+    CheckError.GLOBAL_HOURLY: FailureKind.RATE_LIMITED,
+    CheckError.DAILY_STOP: FailureKind.QUOTA,
+    CheckError.BUSY: FailureKind.BUSY,
+    CheckError.NO_INDEX: FailureKind.NO_INDEX,
+    CheckError.CONFIG: FailureKind.CONFIG,
+    CheckError.UNEXPECTED: FailureKind.OTHER,
+}
 
-# Format `CallRecord.error` dari GeminiProvider: "<NamaGalat> status=<kode>[ ...]"
-# (src/llm/gemini.py). Bila formatnya berubah, galat jatuh ke FailureKind.OTHER:
-# pesan umum, bukan pesan yang keliru.
+# Format `CallRecord.error` dari GeminiProvider: "<NamaGalat> status=<kode>[ ...]" (src/llm/gemini.py).
+# Bila formatnya berubah, galat jatuh ke FailureKind.OTHER: pesan umum, bukan pesan yang keliru.
 _CALL_ERROR_PATTERN = re.compile(r"^(?P<name>\w+) status=(?P<status>\S+)")
 _UNAVAILABLE_STATUS = {"429", "500", "502", "503", "504"}
 _CONNECTION_NAMES = ("Connect", "Network", "RemoteProtocol", "ReadError")
@@ -417,11 +376,8 @@ def classify_call_error(error: str) -> FailureKind | None:
 
 def classify_failure(ans: Answer) -> FailureKind | None:
     """
-    Tentukan jenis kegagalan sebuah jawaban; None bila jawabannya bukan kegagalan.
-
-    Urutan: kuota (flag eksplisit dari generator) -> galat panggilan terakhir yang
-    gagal (timeout/layanan) -> galat parsing (semua percobaan format gagal tanpa
-    galat panggilan) -> lainnya.
+    Jenis kegagalan jawaban generator; None bila bukan kegagalan. Urutan: kuota (flag eksplisit) ->
+    galat panggilan terakhir yang gagal -> galat parsing (semua percobaan format gagal) -> lainnya.
     """
     if ans.verdict != "gagal":
         return None
@@ -435,6 +391,15 @@ def classify_failure(ans: Answer) -> FailureKind | None:
     return FailureKind.OTHER
 
 
+def input_problem_message(error: CheckError, text: str) -> str | None:
+    """Pesan sebaris untuk masukan yang tidak bisa diperiksa (ditampilkan di beranda); None bila bukan."""
+    if error is CheckError.EMPTY:
+        return EMPTY_INPUT_MESSAGE
+    if error is CheckError.TOO_LONG:
+        return TOO_LONG_MESSAGE.format(length=format_count(len(text)), limit=format_count(settings.MAX_INPUT_CHARS))
+    return None
+
+
 # --------------------------------------------------------------------------
 # Model tampilan
 # --------------------------------------------------------------------------
@@ -442,8 +407,6 @@ def classify_failure(ans: Answer) -> FailureKind | None:
 
 @dataclass
 class CandidateRow:
-    """Satu kandidat artikel hasil pencarian (untuk panel diagnostik)."""
-
     article_id: str
     title: str
     label: str
@@ -452,36 +415,24 @@ class CandidateRow:
 
 @dataclass
 class Diagnostics:
-    """Informasi untuk penguji; ditampilkan di panel tertutup, boleh berisi istilah teknis."""
+    """Untuk penguji saja (panel tersembunyi); boleh berisi istilah teknis."""
 
     model: str = ""
-    latency_s: float = 0.0
+    timings: dict[str, float] = field(default_factory=dict)
     llm_calls: int = 0
     attempts: int = 0
     input_tokens: int | None = None
     output_tokens: int | None = None
     candidates: list[CandidateRow] = field(default_factory=list)
     llm_reason: str = ""
-    error_detail: str = ""  # sudah disamarkan oleh penyedia atau oleh pemanggil
+    llm_paraphrase: str = ""  # parafrase Kesimpulan oleh LLM: TIDAK ditampilkan ke pengguna umum
+    error_detail: str = ""  # sudah disamarkan
     failure_kind: str = ""
     parse_failures: int = 0
     invalid_id: bool = False
     llm_urls_removed: int = 0
-    clarification_fallback: bool = False
-    # Panjang klaim dalam token model embedding; bagian di atas batas tidak ikut dicari
-    # (retriever memotong ke MAX_SEQ_LENGTH), walau LLM tetap membaca klaim utuh.
     query_tokens: int | None = None
     query_token_limit: int | None = None
-    related_threshold: float | None = None  # None = fitur "mungkin terkait" mati
-    related_status: str = ""  # alasan ambang dipakai/dimatikan (untuk penguji)
-
-
-@dataclass
-class RelatedArticle:
-    """Artikel bertopik dekat untuk hasil "belum ditemukan" (judul + tautan saja)."""
-
-    title: str
-    url: str
 
 
 @dataclass
@@ -489,42 +440,47 @@ class ResultView:
     """Semua yang dibutuhkan fungsi render; tidak ada panggilan API di baliknya."""
 
     kind: str  # "found" | "not_found" | "failed"
-    status_label: str
-    status_color: str
-    status_icon: str
-    summary: str
+    status_color: str = ""
+    pill_text: str = ""
+    headline: str = ""
+    kesimpulan: str = ""  # Kesimpulan TurnBackHoax APA ADANYA (dari indeks)
+    advice: str = ""
+    message_excerpt: str = ""
     article_title: str = ""
     article_url: str = ""
-    article_date: str = ""  # tanggal terbit artikel dari hasil retrieval (metadata), hanya "found"
-    clarification: str = ""
-    advice: str = ""  # saran umum statis; hanya untuk PENIPUAN
+    article_date: str = ""
+    penjelasan: str = ""
     references: list[str] = field(default_factory=list)
-    related: list[RelatedArticle] = field(default_factory=list)  # hanya "not_found"
+    failure_title: str = ""
+    failure_body: str = ""
     diagnostics: Diagnostics = field(default_factory=Diagnostics)
+
+
+def is_safe_url(url: str) -> bool:
+    """Hanya http/https dengan host: skema lain (javascript:, data:, file:) tidak pernah ditautkan."""
+    try:
+        parsed = urlparse(url.strip())
+    except ValueError:
+        return False
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
 
 
 def display_references(references: list[str], article_id: str = "") -> list[str]:
     """
-    Saring ULANG rujukan tepat sebelum ditampilkan (Aturan Wajib #1, lapisan kedua).
+    Saring ULANG rujukan metadata tepat sebelum ditampilkan (Aturan Wajib #1, lapisan kedua).
 
-    `references` berasal dari metadata indeks, yang disaring saat artikel di-parse. Metadata itu
-    bisa BASI: ingest inkremental hanya membandingkan teks chunk, jadi perubahan kebijakan
-    penyaringan (mis. domain baru di daftar blokir) tidak sampai ke indeks tanpa pembaruan metadata
-    atau `--rebuild`. Karena itu kebijakan terkini (`scraping.links.blocked_reason`: media sosial,
-    arsip, hosting gambar, pemendek URL, URL tidak sah) diterapkan lagi di sini. Rujukan yang
-    terbuang dicatat ke log (penanda indeks basi), tidak ditampilkan, dan tidak pernah diganti.
-    Lapisan ini TIDAK mengenal `claim_sources` (sengaja tidak dibawa ke metadata), jadi sumber hoaks
-    di luar daftar domain hanya tersaring di parser.
+    Metadata indeks bisa BASI (ingest inkremental hanya membandingkan teks chunk), jadi kebijakan terkini
+    `scraping.links.blocked_reason` diterapkan lagi, dan hanya URL http/https yang lolos. Yang terbuang
+    dicatat ke log (alasan + id artikel, bukan tautannya), tidak ditampilkan, dan tidak diganti.
     """
     kept: list[str] = []
     for url in references:
-        reason = blocked_reason(url)
+        reason = blocked_reason(url) or (None if is_safe_url(url) else "skema URL tidak diizinkan")
         if reason is None:
             kept.append(url)
         else:
-            logger.warning(
-                "rujukan dari metadata indeks disaring saat tampil (artikel %s): %s -- metadata indeks "
-                "tidak sesuai kebijakan penyaringan terkini", article_id or "?", reason)
+            logger.warning("rujukan dari metadata indeks disaring saat tampil (artikel %s): %s",
+                           article_id or "?", reason)
     return kept
 
 
@@ -532,264 +488,112 @@ _TITLE_LABEL_PREFIX = re.compile(r"^\s*\[[^\]]*\]\s*")
 
 
 def display_title(title: str) -> str:
-    """Buang label dalam kurung siku di awal judul ("[SALAH] ..."): status sudah tampil."""
+    """Buang label dalam kurung siku di awal judul ("[SALAH] ..."): status sudah tampil di pil."""
     return _TITLE_LABEL_PREFIX.sub("", title).strip() or title.strip()
 
 
-def match_check_lines(view: ResultView) -> list[str]:
-    """
-    Peringatan pencocokan untuk hasil "ditemukan": catatan + judul dan tanggal artikel. Kosong untuk hasil lain.
-    Hanya teks tampilan; tidak membaca atau mengubah keputusan generator.
-    """
-    if view.kind != "found":
-        return []
-    title = view.article_title or "(tanpa judul)"
-    article = (MATCH_CHECK_ARTICLE.format(title=title, date=view.article_date) if view.article_date
-               else MATCH_CHECK_ARTICLE_NO_DATE.format(title=title))
-    return [MATCH_CHECK_NOTE, article]
+def excerpt(text: str, limit: int) -> str:
+    """Potongan awal teks pada batas kata, dengan elipsis bila dipotong; spasi dirapikan."""
+    flat = " ".join(text.split())
+    if len(flat) <= limit:
+        return flat
+    cut = flat[:limit].rsplit(" ", 1)[0] or flat[:limit]
+    return cut.rstrip(",.;:") + "…"
+
+
+def kesimpulan_preview(text: str, limit: int = settings.KESIMPULAN_PREVIEW_CHARS) -> tuple[str, bool]:
+    """(pratinjau, dipotong?): dipotong pada akhir kalimat terakhir yang muat, atau batas kata."""
+    clean = text.strip()
+    if len(clean) <= limit:
+        return clean, False
+    head = clean[:limit]
+    sentence_end = max(head.rfind(". "), head.rfind("? "), head.rfind("! "))
+    if sentence_end >= limit // 2:
+        return head[: sentence_end + 1], True
+    return excerpt(clean, limit), True
 
 
 def _sum_tokens(values: list[int | None]) -> int | None:
-    """Jumlahkan token yang tercatat; None bila tidak satu pun tercatat."""
     known = [v for v in values if v is not None]
     return sum(known) if known else None
 
 
-def build_diagnostics(ans: Answer, model: str, failure: FailureKind | None) -> Diagnostics:
-    """Susun data panel diagnostik dari jawaban generator."""
-    return Diagnostics(
-        model=model,
-        latency_s=sum(c.latency_s for c in ans.calls),
-        llm_calls=len(ans.calls),
-        attempts=sum(c.attempts for c in ans.calls),
-        input_tokens=_sum_tokens([c.input_tokens for c in ans.calls]),
-        output_tokens=_sum_tokens([c.output_tokens for c in ans.calls]),
-        candidates=[
-            CandidateRow(
-                article_id=str(c["article_id"]),
-                title=str(c["title"]),
-                label=str(c["label"]),
-                score=float(c["score"]),
-            )
-            for c in ans.candidates
-        ],
-        llm_reason=ans.alasan,
-        error_detail=ans.error,
-        failure_kind=failure.value if failure else "",
-        parse_failures=ans.parse_failures,
-        invalid_id=ans.invalid_id,
-        llm_urls_removed=len(ans.llm_urls_found),
-        clarification_fallback=ans.klarifikasi_fallback,
-    )
+def build_diagnostics(outcome: CheckOutcome, failure: FailureKind | None) -> Diagnostics:
+    """Data panel penguji dari hasil layanan."""
+    from chunker import MAX_SEQ_LENGTH
+
+    diag = Diagnostics(model=outcome.model, timings=dict(outcome.timings), error_detail=outcome.error_detail,
+                       failure_kind=failure.value if failure else "", query_tokens=outcome.query_tokens,
+                       query_token_limit=MAX_SEQ_LENGTH)
+    ans = outcome.answer
+    if ans is None:
+        return diag
+    diag.llm_calls = len(ans.calls)
+    diag.attempts = sum(c.attempts for c in ans.calls)
+    diag.input_tokens = _sum_tokens([c.input_tokens for c in ans.calls])
+    diag.output_tokens = _sum_tokens([c.output_tokens for c in ans.calls])
+    diag.candidates = [CandidateRow(str(c["article_id"]), str(c["title"]), str(c["label"]), float(c["score"]))
+                       for c in ans.candidates]
+    diag.llm_reason = ans.alasan
+    diag.llm_paraphrase = ans.klarifikasi
+    diag.error_detail = diag.error_detail or ans.error
+    diag.parse_failures = ans.parse_failures
+    diag.invalid_id = ans.invalid_id
+    diag.llm_urls_removed = len(ans.llm_urls_found)
+    return diag
 
 
-def failure_view(kind: FailureKind, diagnostics: Diagnostics | None = None) -> ResultView:
-    """Tampilan kegagalan; juga dipakai untuk galat sebelum generator dipanggil."""
+def failure_view(kind: FailureKind, diagnostics: Diagnostics | None = None, wait_s: int | None = None) -> ResultView:
+    """Tampilan kegagalan dalam bahasa awam; detail teknis hanya di panel penguji."""
     title, body = FAILURE_MESSAGES[kind]
     diag = diagnostics or Diagnostics()
     diag.failure_kind = kind.value
-    return ResultView(
-        kind="failed",
-        status_label=title,
-        status_color=FAILURE_COLOR,
-        status_icon=FAILURE_ICON,
-        summary=body,
-        diagnostics=diag,
-    )
+    return ResultView(kind="failed", status_color=FAILURE_COLOR, failure_title=title,
+                      failure_body=body.format(wait=format_wait(wait_s or 60)), diagnostics=diag)
 
 
-@dataclass(frozen=True)
-class RelatedThreshold:
-    """Ambang "mungkin terkait" untuk indeks aktif; `value` None berarti fiturnya mati."""
-
-    value: float | None
-    status: str
-
-
-RELATED_DISABLED_NO_CONFIG = RelatedThreshold(None, "mati: ambang tidak dikonfigurasi")
-
-
-def index_key(index_dir: Path, root: Path = PROJECT_ROOT) -> str:
-    """Kunci indeks di berkas konfigurasi: jalur relatif ke root proyek ("data", "archive/v1")."""
-    resolved = index_dir.resolve()
-    if resolved.is_relative_to(root.resolve()):
-        return resolved.relative_to(root.resolve()).as_posix()
-    return resolved.as_posix()
-
-
-def load_related_threshold_config(path: Path = RELATED_THRESHOLD_CONFIG) -> dict:
+def build_view(outcome: CheckOutcome) -> ResultView:
     """
-    Baca konfigurasi ambang per indeks. Berkas tidak ada -> {} (fitur mati untuk semua indeks).
+    Ubah hasil layanan menjadi `ResultView`. Fungsi murni: tanpa UI dan tanpa API.
 
-    Berkas rusak (JSON tidak sah) sengaja TIDAK ditelan: galatnya dilempar ke pemanggil.
+    Galat masukan (kosong/terlalu panjang) BUKAN urusan fungsi ini: tampilan menampilkannya sebaris di
+    beranda lewat `input_problem_message`.
     """
-    if not path.is_file():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    if outcome.error is not None:
+        kind = _SERVICE_FAILURES[outcome.error]
+        return failure_view(kind, build_diagnostics(outcome, kind), outcome.retry_after_s)
+    ans = outcome.answer
+    if ans is None:  # tidak seharusnya terjadi: layanan selalu mengisi error atau answer
+        logger.error("hasil layanan tanpa jawaban dan tanpa galat")
+        return failure_view(FailureKind.OTHER)
 
-
-def resolve_related_threshold(config: dict, key: str, chunk_count: int) -> RelatedThreshold:
-    """
-    Ambang untuk indeks `key` yang kini berisi `chunk_count` chunk.
-
-    Ambang hanya berlaku pada indeks berukuran SAMA dengan saat dikalibrasi; bila berbeda,
-    fitur dimatikan sampai ambang dikalibrasi ulang (lihat komentar RELATED_THRESHOLD_CONFIG).
-    """
-    entry = config.get("indeks", {}).get(key)
-    if entry is None:
-        return RelatedThreshold(None, f"mati: tidak ada entri untuk indeks '{key}'")
-    calibrated = int(entry["chunk"])
-    if calibrated != chunk_count:
-        return RelatedThreshold(
-            None,
-            f"mati: dikalibrasi pada {calibrated} chunk, indeks kini {chunk_count} chunk "
-            "(kalibrasi ulang)",
-        )
-    if entry["ambang"] is None:  # dimatikan dengan sengaja setelah kalibrasi (tak ada pemisah)
-        return RelatedThreshold(None, f"mati: tidak ada ambang yang memisahkan ({entry['tanggal']})")
-    value = float(entry["ambang"])
-    return RelatedThreshold(value, f"aktif: dikalibrasi pada {calibrated} chunk ({entry['tanggal']})")
-
-
-def related_articles(
-    candidates: list[dict], article_urls: dict[str, str], threshold: float
-) -> list[RelatedArticle]:
-    """
-    Kandidat retrieval dengan skor >= ambang, urut skor, sebagai judul + tautan artikel.
-
-    Tautan hanya URL artikel TurnBackHoax dari metadata hasil retrieval (`article_urls`);
-    kandidat tanpa URL dilewati, tidak ditebak. Skor tidak ikut ditampilkan.
-    """
-    ranked = sorted(candidates, key=lambda c: float(c["score"]), reverse=True)
-    return [
-        RelatedArticle(title=display_title(str(c["title"])), url=article_urls[str(c["article_id"])])
-        for c in ranked
-        if float(c["score"]) >= threshold and article_urls.get(str(c["article_id"]))
-    ]
-
-
-def build_view(
-    ans: Answer,
-    model: str = "",
-    article_urls: dict[str, str] | None = None,
-    query_tokens: int | None = None,
-    query_token_limit: int | None = None,
-    related_threshold: RelatedThreshold = RELATED_DISABLED_NO_CONFIG,
-    article_dates: dict[str, str] | None = None,
-) -> ResultView:
-    """
-    Ubah `Answer` generator menjadi `ResultView`. Fungsi murni: tanpa UI dan tanpa API.
-
-    `article_urls` (article_id -> URL artikel, dari hasil retrieval) hanya dipakai untuk
-    daftar "mungkin terkait" pada hasil "belum ditemukan"; vonisnya tidak berubah. Daftar itu
-    kosong bila `related_threshold.value` None (ambang tak dikonfigurasi atau sudah basi).
-    """
     failure = classify_failure(ans)
-    diag = build_diagnostics(ans, model, failure)
-    diag.query_tokens = query_tokens
-    diag.query_token_limit = query_token_limit
-    diag.related_threshold = related_threshold.value
-    diag.related_status = related_threshold.status
-
+    diag = build_diagnostics(outcome, failure)
     if failure is not None:
         return failure_view(failure, diag)
 
-    if ans.verdict == "ditemukan":
-        label = (ans.status_label or "").strip()
-        style = STATUS_STYLES.get(status_style_key(label))
-        if style is None:
-            logger.warning(
-                "label status tidak dikenal %r pada artikel %s: ditampilkan netral, perlu ditinjau",
-                label, ans.article_id,
-            )
-            style = fallback_status_style(label)
-        return ResultView(
-            kind="found",
-            status_label=style.label,
-            status_color=style.color,
-            status_icon=style.icon,
-            summary=style.summary,
-            article_title=display_title(ans.title),
-            article_url=ans.article_url,
-            article_date=(article_dates or {}).get(str(ans.article_id or ""), ""),
-            clarification=ans.klarifikasi,
-            advice=SCAM_ADVICE if label.upper() == "PENIPUAN" else "",
-            # dari metadata, bukan dari LLM; disaring ulang dengan kebijakan terkini
-            references=display_references(list(ans.references), str(ans.article_id or "")),
-            diagnostics=diag,
-        )
+    if ans.verdict != "ditemukan":
+        return ResultView(kind="not_found", status_color=NOT_FOUND_COLOR, pill_text=NOT_FOUND_PILL,
+                          headline=NOT_FOUND_TITLE, diagnostics=diag)
 
-    # "tidak_ditemukan": alasan LLM hanya di panel diagnostik, bukan di bagian utama.
+    article_id = str(ans.article_id or "")
+    hit = next((h for h in outcome.hits if h.article_id == article_id), None)
+    if hit is None:
+        logger.error("artikel terpilih %s tidak ada di hasil pencarian", article_id)
+    pill, style = status_for_label(ans.status_label or "", article_id)
     return ResultView(
-        kind="not_found",
-        status_label=NOT_FOUND_STYLE.label,
-        status_color=NOT_FOUND_STYLE.color,
-        status_icon=NOT_FOUND_STYLE.icon,
-        summary=NOT_FOUND_STYLE.summary,
-        related=(
-            related_articles(ans.candidates, article_urls or {}, related_threshold.value)
-            if related_threshold.value is not None
-            else []
-        ),
+        kind="found",
+        status_color=style.color,
+        pill_text=pill,
+        headline=style.headline,
+        kesimpulan=(hit.kesimpulan if hit else "").strip(),  # apa adanya; parafrase LLM hanya di diagnostik
+        advice=style.advice,
+        message_excerpt=excerpt(outcome.message, settings.MESSAGE_EXCERPT_CHARS),
+        article_title=display_title(ans.title),
+        article_url=ans.article_url if is_safe_url(ans.article_url) else "",
+        article_date=format_metadata_date(hit.date) if hit and hit.date else "",
+        penjelasan=outcome.penjelasan.strip(),
+        # dari metadata, bukan dari LLM; disaring ulang dengan kebijakan terkini
+        references=display_references(list(ans.references), article_id),
         diagnostics=diag,
     )
-
-
-# --------------------------------------------------------------------------
-# Masukan dan setelan
-# --------------------------------------------------------------------------
-
-
-def _format_count(value: int) -> str:
-    """Bilangan bulat dengan pemisah ribuan titik (gaya Indonesia)."""
-    return f"{value:,}".replace(",", ".")
-
-
-def validate_claim(text: str, limit: int = MAX_INPUT_CHARS) -> str | None:
-    """Pesan untuk pengguna bila masukan tidak bisa diperiksa; None bila layak diperiksa."""
-    stripped = text.strip()
-    if not stripped:
-        return EMPTY_INPUT_MESSAGE
-    if len(stripped) > limit:
-        return TOO_LONG_MESSAGE.format(length=_format_count(len(stripped)), limit=_format_count(limit))
-    return None
-
-
-def is_long_claim(text: str, token_count: int | None) -> bool:
-    """
-    Apakah masukan cukup panjang untuk diberi peringatan (sebelum pemeriksaan).
-
-    Memakai hitungan token model embedding bila tersedia; bila tidak (None), ambang karakter.
-    """
-    if token_count is not None:
-        return token_count > LONG_CLAIM_WARN_TOKENS
-    return len(text.strip()) > LONG_CLAIM_WARN_CHARS
-
-
-def parse_flag(value: object) -> bool:
-    """Tafsirkan nilai setelan sebagai boolean; hanya nilai "hidup" yang eksplisit yang benar."""
-    if isinstance(value, bool):
-        return value
-    if value is None:
-        return False
-    return str(value).strip().lower() in _TRUE_VALUES
-
-
-# --------------------------------------------------------------------------
-# Pengamanan teks untuk Markdown
-# --------------------------------------------------------------------------
-
-# Tanda baca yang bermakna di Markdown Streamlit, termasuk "$" (LaTeX) dan ":"
-# (direktif warna/ikon seperti ":red[...]" atau ":material/...:").
-_MARKDOWN_SPECIAL = re.compile(r"([\\`*_{}\[\]()#+\-.!|$~<>:])")
-
-
-def escape_markdown(text: str) -> str:
-    """Loloskan karakter Markdown agar teks dari data/LLM tampil apa adanya."""
-    return _MARKDOWN_SPECIAL.sub(r"\\\1", text)
-
-
-def markdown_link(text: str, url: str) -> str:
-    """Tautan Markdown aman: teks diloloskan, tanda kurung dan spasi di URL dikodekan."""
-    safe_url = url.replace(" ", "%20").replace("(", "%28").replace(")", "%29")
-    return f"[{escape_markdown(text)}]({safe_url})"

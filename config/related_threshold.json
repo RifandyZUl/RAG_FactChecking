@@ -1,4 +1,5 @@
 {
+  "_status_2026-10-22": "ARTEFAK KALIBRASI SAJA: fitur \"Mungkin terkait\" dihapus dari kode demo pada Tahap 1 (keputusan pemilik proyek; docs/audit_tahap0.md 9.3). Tidak ada kode yang membaca berkas ini lagi; isinya disimpan sebagai catatan kalibrasi.",
   "_catatan": "Ambang skor daftar \"Mungkin terkait\" di demo (src/presentation.py), per indeks. Kunci = jalur indeks relatif ke root proyek (paths.INDEX_DIR). Ambang BERGANTUNG PADA UKURAN BASIS DATA: hanya berlaku bila jumlah chunk indeks sama dengan `chunk`; bila berbeda, demo mematikan fitur ini sampai dikalibrasi ulang. `ambang: null` = sudah dikalibrasi tetapi sengaja dimatikan (tidak ada ambang yang memisahkan). Aturan kalibrasi: sedikit di atas skor kandidat teratas tertinggi pada butir negatif mudah set uji v1 yang BENAR-BENAR tak terkait pada indeks itu (butir yang artikel asalnya atau klaim yang sama kini ada di basis data dikeluarkan dari acuan). Lapisan tampilan saja; retrieval dan vonis tidak berubah.",
   "indeks": {
     "archive/v1": {
