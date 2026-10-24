@@ -242,8 +242,8 @@ terbukti:** pemeriksaan jalan susulan jatuh saat jaringan masih "Identifying", s
 
 - **(a) Log riwayat Task Scheduler diaktifkan** (perintah admin `wevtutil sl
   Microsoft-Windows-TaskScheduler/Operational /e:true`, dijalankan pemilik proyek sendiri). Diperiksa
-  2026-10-24 dengan `wevtutil gl`: **masih `enabled: false`** -- perintah perlu dijalankan ulang di
-  PowerShell administrator.
+  2026-10-24 dengan `wevtutil gl`: semula **masih `enabled: false`**; setelah pemilik proyek menjalankannya
+  ulang di PowerShell administrator, diperiksa lagi 2026-10-24 malam: **`enabled: true`**.
 - **(c) `RunOnlyIfNetworkAvailable` dihapus** (True -> False), lewat
   `$t = Get-ScheduledTask -TaskName "RAG_FactChecking - pembaruan berkala"; $t.Settings.RunOnlyIfNetworkAvailable = $false; Set-ScheduledTask -InputObject $t`.
   XML tugas sebelum dan sesudah dibandingkan: satu-satunya perbedaan adalah baris
