@@ -546,8 +546,9 @@ $tgl = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'SE Asi
 if (Test-Path "data\backups\pre_antrean_$tgl") { throw "cadangan pre_antrean_$tgl sudah ada; jangan ditimpa" }
 Copy-Item -Recurse data\chroma "data\backups\pre_antrean_$tgl\chroma"
 
-# 2. Gabungkan antrean di akhir articles.json (menolak bila kualitas antrean menahan penggabungan)
-.\.venv\Scripts\python.exe scripts\gabung_antrean.py --tulis
+# 2. Gabungkan antrean di akhir articles.json, cadangan articles.json ke folder $tgl yang SAMA dengan langkah 1
+#    (menolak bila kualitas antrean menahan penggabungan atau cadangan indeks belum ada di folder itu)
+.\.venv\Scripts\python.exe scripts\gabung_antrean.py --tulis --folder-cadangan "data\backups\pre_antrean_$tgl"
 
 # 3. Parse ulang seluruh articles.json dari cache HTML (tanpa jaringan; parser yang berlaku sekarang)
 .\.venv\Scripts\python.exe -m scraping.reparse
