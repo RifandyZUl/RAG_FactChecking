@@ -83,3 +83,32 @@ jobs:
           # (mis. uji kunci yang melewati diri saat tag tidak terambil).
           sys.exit(1 if k else 0)
           EOF
+
+  # Membuktikan Dockerfile masih bisa dibangun. Image hanya dibangun: container TIDAK dijalankan, model tidak
+  # diunduh (Dockerfile tidak memuat model; cache model dipasang sebagai volume saat dijalankan), tanpa
+  # rahasia, dan image tidak didorong ke registri mana pun.
+  docker-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: docker build
+        run: |
+          start=$(date +%s)
+          DOCKER_BUILDKIT=1 docker build --progress=plain -t rag-factchecking:ci .
+          dur=$(( $(date +%s) - start ))
+          size=$(docker image inspect rag-factchecking:ci --format '{{.Size}}')
+          line="docker build: ${dur} dtk; ukuran image $(( size / 1024 / 1024 )) MiB"
+          echo "$line"
+          echo "### $line" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Periksa konfigurasi image (tanpa menjalankan container)
+        run: |
+          user=$(docker image inspect rag-factchecking:ci --format '{{.Config.User}}')
+          health=$(docker image inspect rag-factchecking:ci --format '{{if .Config.Healthcheck}}ada{{else}}TIDAK ADA{{end}}')
+          echo "pengguna: $user | HEALTHCHECK: $health"
+          test "$user" = app && test "$health" = ada
