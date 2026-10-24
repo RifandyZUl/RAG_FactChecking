@@ -9,6 +9,9 @@ sudah dipakai aplikasi lain.
 
 ## Keputusan
 
+- **Peran**: venv Windows adalah cara utama untuk pengembangan, evaluasi, dan demo harian. Docker adalah cara
+  resmi untuk lingkungan yang dapat direproduksi, pembuktian kesetaraan lingkungan, dan dasar deployment di
+  masa depan. CI membangun image di setiap push (job `docker-build`, tanpa menjalankan container).
 - **Python 3.13 di container dan CI** (keputusan pemilik proyek 2026-10-22). Python 3.14 menunggu
   `sentence-transformers` 6.2.0 cukup berumur.
 - **Venv lokal tetap Python 3.11**, karena itulah lingkungan tempat evaluasi dijalankan. Keduanya menjalankan
@@ -51,5 +54,7 @@ sudah dipakai aplikasi lain.
 - Salinan indeks container bisa basi; README mencantumkan langkah menyalin ulang setelah ingest di host.
 - Ingest dan evaluasi untuk indeks produksi tetap dijalankan di venv host.
 - Image berukuran 2,93 GB di disk (venv 2,17 GB); build tanpa cache sekitar 5,5 menit.
+- Kebutuhan memori: WSL2 minimal `memory=6GB`, dan sekitar 4-5 GB RAM bebas di Windows sebelum build atau
+  menjalankan container (laptop 16 GB). Langkah memperbarui salinan indeks ada di README, "Docker".
 - Build dan jalan container butuh memori yang cukup di Windows. Pada percobaan pertama build dihentikan
   karena RAM bebas Windows turun di bawah 0,7 GB.
