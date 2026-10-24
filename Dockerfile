@@ -32,18 +32,23 @@ COPY .streamlit/config.toml ./.streamlit/config.toml
 COPY assets/brand ./assets/brand
 COPY testset/eksternal_hasil_per_butir.json testset/eksternal_butir.json ./testset/
 # Setara `pip install -e .` (berkas .pth yang menunjuk ke src/), tanpa mengunduh setuptools saat build.
+# Titik pasang volume (docker-compose.yml) dibuat di image agar sistem berkas container bisa baca-saja.
 RUN echo /app/src > "$(/opt/venv/bin/python -c 'import sysconfig; print(sysconfig.get_path("purelib"))')/rag_factchecking.pth" \
- && mkdir -p /app/data && chown app:app /app/data
+ && mkdir -p /app/data/chroma /app/data/kuota /app/data/hasil /app/logs \
+ && chown -R app:app /app/data /app/logs
 
 # HF_HUB_OFFLINE=1: model dan tokenizer hanya dari cache yang dipasang (juga disetel hf_env.prepare_hf_env);
 # revisi bge-m3 dipatok di ingest.MODEL_REVISION. RAG_READY_FILE: ditulis webapp.serve setelah pemanasan.
+# RAG_LEDGER_DIR: buku besar kuota di subfolder tersendiri (volume). RAG_LOG_DIR: log server (volume).
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     HF_HOME=/home/app/.cache/huggingface \
     HF_HUB_OFFLINE=1 \
     DISABLE_SAFETENSORS_CONVERSION=1 \
-    RAG_READY_FILE=/tmp/rag_pemanasan_siap
+    RAG_READY_FILE=/tmp/rag_pemanasan_siap \
+    RAG_LEDGER_DIR=/app/data/kuota \
+    RAG_LOG_DIR=/app/logs
 
 USER app
 EXPOSE 8501

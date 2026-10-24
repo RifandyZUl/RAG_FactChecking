@@ -15,7 +15,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_HTML_DIR = DATA_DIR / "raw_html"
 ARTICLES_PATH = DATA_DIR / "articles.json"  # jalur TULIS scraping/reparse (selalu indeks utama)
-LEDGER_PATH = DATA_DIR / "quota_ledger.json"
+# Buku besar kuota. RAG_LEDGER_DIR memindahkannya ke folder lain (container: subfolder tersendiri yang
+# dipasang sebagai volume, karena buku besar diganti lewat os.replace dan bind mount satu berkas tidak bisa
+# menerimanya). Bawaan tetap data/.
+LEDGER_DIR_ENV = "RAG_LEDGER_DIR"
+LEDGER_PATH = Path(os.environ.get(LEDGER_DIR_ENV, "").strip() or DATA_DIR) / "quota_ledger.json"
 
 ARCHIVE_DIR = PROJECT_ROOT / "archive"
 V1_ARCHIVE_DIR = ARCHIVE_DIR / "v1"
