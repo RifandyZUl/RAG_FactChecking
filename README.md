@@ -539,8 +539,11 @@ menjalankannya bersamaan dengan demo atau evaluasi, dan hindari jam jalan terjad
 docker compose stop demo
 .\.venv\Scripts\python.exe scripts\gabung_antrean.py
 
-# 1. Cadangan indeks (articles.json dicadangkan otomatis oleh langkah 2)
-$tgl = Get-Date -Format yyyy-MM-dd
+# 1. Cadangan indeks (articles.json dicadangkan otomatis oleh langkah 2). Tanggal WIB, sama dengan nama
+#    folder yang dipakai gabung_antrean.py. Menolak bila cadangan sudah ada: Copy-Item ke folder yang
+#    sudah ada akan menaruh salinan baru DI DALAMNYA (chroma\chroma).
+$tgl = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'SE Asia Standard Time').ToString('yyyy-MM-dd')
+if (Test-Path "data\backups\pre_antrean_$tgl") { throw "cadangan pre_antrean_$tgl sudah ada; jangan ditimpa" }
 Copy-Item -Recurse data\chroma "data\backups\pre_antrean_$tgl\chroma"
 
 # 2. Gabungkan antrean di akhir articles.json (menolak bila kualitas antrean menahan penggabungan)
@@ -558,9 +561,13 @@ Copy-Item -Recurse data\chroma "data\backups\pre_antrean_$tgl\chroma"
 .\.venv\Scripts\python.exe -m evaluation.index_check            # kode 0 = indeks segar
 .\.venv\Scripts\python.exe -m evaluation.retriever_exactness   # kode 0 = HNSW = eksak
 
-# 6. Perbarui salinan indeks container (lihat "Docker")
+# 6. Perbarui salinan indeks container (lihat "Docker"); container harus berhenti lebih dulu
 Remove-Item -Recurse -Force data\container\chroma
+if (Test-Path data\container\chroma) { throw "salinan lama belum terhapus; hentikan container lalu ulangi" }
 Copy-Item -Recurse data\chroma data\container\chroma
+#    periksa: harus mencetak "salinan = produksi: True"
+$h = { param($d) Get-ChildItem $d -Recurse -File | Sort-Object FullName | ForEach-Object { $_.FullName.Substring((Resolve-Path $d).Path.Length) + '|' + (Get-FileHash $_.FullName).Hash } }
+"salinan = produksi: " + (-not (Compare-Object (& $h data\chroma) (& $h data\container\chroma)))
 ```
 
 Setelah `reparse`, artikel lama harus tetap identik (yang berubah hanya bila parser berubah sejak artikel
