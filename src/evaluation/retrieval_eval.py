@@ -14,6 +14,7 @@ from collections import Counter
 
 from chunker import load_articles
 from evaluation.devset import DEV_QUERIES
+from hf_env import prepare_hf_env
 from ingest import get_collection, load_model
 from retriever import retrieve
 
@@ -78,6 +79,7 @@ def run_negative(model, collection, positive_scores: list[float]) -> float:
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     collection = get_collection()
     if collection.count() == 0:
         print("Koleksi kosong; jalankan python src/ingest.py dulu.")

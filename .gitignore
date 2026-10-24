@@ -32,6 +32,9 @@ archive/*
 archive/v1/*
 # Kecuali daftar artikel (metadata saja, tanpa isi seksi; aman dipublikasikan):
 !archive/v1/article_ids.json
+# README arsip dan artefak fitur yang dihapus dari kode (Tahap 1b)
+!archive/README.md
+!archive/fitur_mati/
 
 # Hasil perluasan basis data (teks artikel pihak ketiga, termasuk kontak penipu)
 data/expansion/
@@ -41,3 +44,6 @@ data/backups/
 
 # Penanda pembaruan berkala (ditulis/dihapus otomatis oleh scraping.scheduled)
 PERHATIAN_PEMBARUAN.txt
+
+# Berkas acuan desain mockup (milik pemilik proyek; tidak di-commit, tidak dirujuk dokumen permanen)
+docs/desain_tampilan/

@@ -26,6 +26,8 @@ import sys
 from collections.abc import Sequence
 from typing import Any
 
+from hf_env import prepare_hf_env
+
 METADATA_KEYS = ("article_id", "url", "title", "label", "category", "date", "section", "references",
                  "n_tokens", "truncated")
 
@@ -115,6 +117,7 @@ def compare_fingerprints(actual: dict[str, Any], expected: dict[str, Any]) -> li
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--embed-sample", type=int, default=8,
                     help="jumlah chunk yang di-embed ulang untuk dibandingkan dengan vektor tersimpan (0 = lewati)")

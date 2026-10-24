@@ -16,25 +16,12 @@ Pemakaian:
 
 import argparse
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
 
-os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
-# Repo BAAI/bge-m3 di main hanya punya .bin. Setiap kali memuat .bin,
-# transformers menjalankan Thread non-daemon yang mengunduh varian safetensors
-# dari PR konversi (2,3 GB) di latar belakang, sehingga proses tidak berhenti
-# sampai unduhan selesai (use_safetensors=False tidak mencegahnya). Variabel
-# ini mematikan konversi otomatis itu (transformers/modeling_utils.py).
-os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
-# Ingest, pembaruan metadata, dan semua skrip yang mengimpor modul ini membaca model DAN tokenizer dari
-# cache lokal saja. Wajib: tokenizer `chunker.make_token_counter` (berkas terkunci) tidak memakai revisi
-# yang dipatok, jadi tanpa ini ia bisa mengambil `main` terbaru dari Hub. Unduhan pertama di mesin baru:
-# jalankan sekali dengan HF_HUB_OFFLINE=0 (README, "Menjalankan demo"). Harus di-set sebelum
-# huggingface_hub/transformers diimpor.
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-
+# Variabel lingkungan Hugging Face (offline, tanpa konversi safetensors) TIDAK disetel saat modul ini
+# diimpor: titik masuk memanggil `hf_env.prepare_hf_env()` lebih dulu (lihat hf_env.py).
 import chromadb
 from chromadb.config import Settings
 
@@ -46,6 +33,7 @@ from chunker import (
     make_token_counter,
     truncation_report,
 )
+from hf_env import prepare_hf_env
 from paths import INDEX_CHROMA_DIR, is_archive_path
 
 MODEL_NAME = "BAAI/bge-m3"
@@ -271,6 +259,7 @@ def ingest(chunks: list[Chunk], collection: Any, force: bool = False) -> None:
 
 
 def main() -> None:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--force", action="store_true", help="embed ulang semua chunk")
     parser.add_argument("--rebuild", action="store_true",

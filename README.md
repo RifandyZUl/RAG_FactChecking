@@ -36,6 +36,7 @@ Rincian: [Hasil Evaluasi](#hasil-evaluasi).
 - [Rencana Versi 2](#rencana-versi-2)
 - [Cara Menjalankan](#cara-menjalankan)
 - [Struktur Repositori](#struktur-repositori)
+- [Lisensi](#lisensi)
 - [Rujukan](#rujukan)
 
 ---
@@ -155,7 +156,7 @@ medium). Semua proporsi disertai interval Wilson 95%.
 
 Angka produksi berlaku untuk indeks 1.532 artikel / 4.593 chunk yang dibekukan selama evaluasi, dengan
 sidik jari tercatat (embedding `9851a6dc`, teks dan metadata `6283f0f6`;
-[`docs/rancangan_evaluasi_eksternal.md`](docs/rancangan_evaluasi_eksternal.md) bagian 5). Indeks demo bisa
+[`docs/rancangan/rancangan_evaluasi_eksternal.md`](docs/rancangan/rancangan_evaluasi_eksternal.md) bagian 5). Indeks demo bisa
 bertambah setelah pembaruan berkala, jadi angka ini tidak otomatis berlaku untuk indeks yang lebih besar.
 
 Angka di tabel ini adalah angka resmi. Pemeriksaan label sesudahnya (adjudikasi dan verifikasi, di bawah)
@@ -236,7 +237,7 @@ dikeluarkan dengan aturan yang ditetapkan sebelum hasil dilihat). Kueri adalah k
 seperti yang akan ditempel pengguna. **Positif** = id artikel TurnBackHoax yang memuat klaim yang sama,
 **negatif** = tidak ada yang cocok di daftar 5-8 kandidat yang diperiksa. Teks pesan dan artikel Liputan6 tidak diterbitkan di repositori ini; yang
 di-commit hanya id, label, dan keputusan per butir. Rancangan lengkap, ambang, dan hasil:
-[`docs/rancangan_evaluasi_eksternal.md`](docs/rancangan_evaluasi_eksternal.md).
+[`docs/rancangan/rancangan_evaluasi_eksternal.md`](docs/rancangan/rancangan_evaluasi_eksternal.md).
 
 **Asal-usul label.** Semua label diputuskan pemilik proyek. Butir 1-5 putaran pertama dibahas bersama
 asisten AI sebagai contoh cara mengisi. Sesudah putaran pertama, asisten AI memeriksa berkas terisi dan
@@ -346,7 +347,7 @@ tanggal artikel di dekatnya. Sejak tampilan baru (branch `tahap-1-tampilan`), ko
 pesan pengguna berdampingan dengan judul artikel, dan hasil "ditemukan" menampilkan **Kesimpulan
 TurnBackHoax apa adanya**, bukan parafrase LLM (parafrase hanya di panel penguji). Keduanya perubahan
 tampilan saja; **angka di atas mengukur keputusan generator dan tidak terpengaruh olehnya** (generator,
-prompt, retriever, dan chunker tidak disentuh; hash-nya dijaga `tests/test_testset_locks.py`).
+prompt, retriever, dan chunker tidak disentuh; hash-nya dijaga `tests/core/test_testset_locks.py`).
 
 ---
 
@@ -378,7 +379,7 @@ Klaim yang baru viral akan dijawab "belum ditemukan" walaupun sebenarnya hoaks.
 Jawaban itu sah, bukan kegagalan sistem.
 
 **"Sudah diperiksa" sering berarti "pola ini pernah dinyatakan palsu".** Pada
-pengukuran celah terhadap Liputan6 Cek Fakta (`docs/rancangan_v2.md` bagian 11.8),
+pengukuran celah terhadap Liputan6 Cek Fakta (`docs/rancangan/rancangan_v2.md` bagian 11.8),
 21 dari 25 pasangan cocok di putaran kedua adalah PENIPUAN, dan 14 dari 25 terpaut
 lebih dari 30 hari dari artikel Liputan6-nya (semuanya PENIPUAN): tautan penipuan
 berulang dengan lembaga dan jenis tawaran yang sama, tetapi dari gelombang lain.
@@ -391,7 +392,7 @@ ditampilkan.
 tautan saja (5 dari 99 kutipan pesan pada sampel Liputan6). Sistem tidak membuka
 tautan dan hanya meng-embed teks URL-nya, jadi pesan seperti itu hampir pasti
 dijawab "belum ditemukan"; evaluasi eksternal mengeluarkannya
-(`docs/rancangan_evaluasi_eksternal.md` bagian 2.2). Pencocokan URL/domain
+(`docs/rancangan/rancangan_evaluasi_eksternal.md` bagian 2.2). Pencocokan URL/domain
 deterministik ke sumber hoaks yang tercatat di artikel, tanpa LLM, dicatat sebagai
 fitur masa depan dan belum dibangun.
 
@@ -440,7 +441,7 @@ basis data. Prompt generator tidak mengenal aturan lintas gelombang yang dipakai
 pada indeks produksi mencampur efek data dengan efek sistem, dan label negatif set uji v1 tidak otomatis
 berlaku saat basis data membesar. Dua berkas label tercatat tidak bersih (satu berkas tertimpa koreksi
 salah ketik; satu berkas adjudikasi ditolak lalu diperbaiki formatnya oleh anotator sendiri, hanya enam
-sel yang berubah); keduanya tercatat di `docs/rancangan_evaluasi_eksternal.md` bagian 7.2 dan 7.8.
+sel yang berubah); keduanya tercatat di `docs/rancangan/rancangan_evaluasi_eksternal.md` bagian 7.2 dan 7.8.
 
 **Tier gratis.** Batas kuota penyedia dapat berubah tanpa pemberitahuan.
 Lapisan penyedia dibuat agnostik agar model dapat ditukar tanpa mengubah
@@ -450,7 +451,7 @@ pipeline.
 
 ## Rencana Versi 2
 
-Rancangannya ada di [`docs/rancangan_v2.md`](docs/rancangan_v2.md); belum ada kode. Rencana awal
+Rancangannya ada di [`docs/rancangan/rancangan_v2.md`](docs/rancangan/rancangan_v2.md); belum ada kode. Rencana awal
 (Corrective RAG lengkap: penulis ulang kueri, grader relevansi, penilaian kredibilitas sumber)
 **dipersempit** setelah tiap komponen diperiksa terhadap buktinya. Sebuah komponen masuk hanya bila
 masalahnya terukur.
@@ -509,8 +510,9 @@ $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m evaluation.index_check   # verifikasi indeks segar
 ```
 
-Ingest dan semua skrip yang mengimpor `ingest` berjalan dengan **`HF_HUB_OFFLINE=1`** (di-set di awal
-`src/ingest.py`): model dan tokenizer hanya dibaca dari cache lokal. Ini wajib karena tokenizer di
+Ingest, `--update-metadata`, `index_check`, skrip evaluasi dan pelabelan yang memuat model, serta demo
+berjalan dengan **`HF_HUB_OFFLINE=1`**, disetel `hf_env.prepare_hf_env()` di awal setiap titik masuk (bukan
+saat modul diimpor): model dan tokenizer hanya dibaca dari cache lokal. Ini wajib karena tokenizer di
 `chunker.py` (berkas terkunci) tidak memakai revisi yang dipatok, sehingga tanpa mode offline ia bisa
 mengambil versi terbaru dari Hugging Face Hub. Di mesin baru, unduh model sekali dengan
 `HF_HUB_OFFLINE=0` (lihat "Menjalankan demo").
@@ -608,20 +610,21 @@ Jalur jaringan belum diuji.
 ### Menjalankan demo
 
 Antarmuka Streamlit dua halaman (beranda + "Tentang sistem ini") di atas pipeline yang sama dengan yang
-dievaluasi. Lapisannya: `src/ui/` (tampilan) -> `src/service.py` (validasi, batas laju, serialisasi) ->
+dievaluasi. Lapisannya: `src/webapp/ui/` (tampilan) -> `src/webapp/service.py` (validasi, batas laju, serialisasi) ->
 `generator.py` + `retriever.py` (terkunci). Butuh indeks di `data/chroma/` (lihat "Membangun basis
 pengetahuan") dan `GEMINI_API_KEY` di `.env`.
 
 ```powershell
-.\.venv\Scripts\python.exe -m streamlit run srcpp.py   # dari root repositori
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m streamlit run src\webapp\app.py   # dari root repositori
 ```
 
-Di Command Prompt (cmd), perintahnya sama tanpa `.\` di depan. Browser terbuka ke
+`PYTHONPATH=src` wajib: titik masuk ada di `src/webapp/`, sedangkan modul inti (`generator`, `retriever`) di akar `src/`. Di Command Prompt (cmd): `set PYTHONPATH=src` lalu perintah yang sama tanpa `.\` di depan. Browser terbuka ke
 `http://localhost:8501`; hentikan dengan Ctrl+C. Pemantau berkas Streamlit dimatikan
 (`.streamlit/config.toml`), jadi **jalankan ulang server setelah mengubah kode**.
 
-**Model dibaca dari cache lokal tanpa cek ke Hugging Face Hub** (`HF_HUB_OFFLINE=1` di `src/settings.py`;
-revisi bge-m3 dipatok di `ingest.MODEL_REVISION`). Di mesin baru, unduh sekali dengan Hub menyala:
+**Model dibaca dari cache lokal tanpa cek ke Hugging Face Hub** (`HF_HUB_OFFLINE=1`, disetel
+`hf_env.prepare_hf_env()` di awal setiap titik masuk; revisi bge-m3 dipatok di `ingest.MODEL_REVISION`). Di mesin baru, unduh sekali dengan Hub menyala:
 
 ```powershell
 $env:HF_HUB_OFFLINE = "0"; $env:PYTHONPATH = "src"
@@ -641,7 +644,7 @@ lapisan layanan, termasuk pembuangan karakter kontrol. Sejak ~220 token demo men
 **sebelum** pemeriksaan; kalau teks panjang ditempel lalu tombol langsung ditekan, klik pertama hanya
 menampilkan peringatan.
 
-**Batas laju** (`src/settings.py`): jeda 15 detik dan 10 pemeriksaan per jam per sesi, 60 per jam per
+**Batas laju** (`src/webapp/settings.py`): jeda 15 detik dan 10 pemeriksaan per jam per sesi, 60 per jam per
 proses, dan demo berhenti di **400 permintaan per hari** menurut buku besar kuota yang sama dengan skrip
 evaluasi (panggilan evaluasi ikut terhitung). Batas per sesi bisa dilewati dengan memuat ulang halaman
 (sesi Streamlit baru); perlindungan sebenarnya ada di batas per proses dan batas harian. Pemeriksaan
@@ -685,36 +688,38 @@ atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = tr
 
 ## Struktur Repositori
 
+Setiap folder utama punya README singkat. Ringkasnya:
+
 ```
-src/
-  scraping/     pengambilan & parsing artikel, penyaringan tautan
-  llm/          abstraksi penyedia, pembatas laju, buku besar kuota
-  evaluation/   runner evaluasi, analisis metrik, pemeriksaan indeks
-  candidates/   pengumpulan & penyaringan kandidat set uji
-  chunker.py    pemotongan per seksi  [terkunci: hash = pembekuan evaluasi eksternal]
-  ingest.py     embedding & vector store (revisi bge-m3 dipatok)
-  retriever.py  pencarian + agregasi per artikel  [terkunci: hash = pembekuan evaluasi eksternal]
-  generator.py  penyusunan jawaban  [terkunci sejak tag testset-v1]
-  settings.py   setelan demo terpusat (batas masukan, batas laju, tautan, mode penguji)
-  resources.py  indeks, model, tokenizer, penyedia LLM: dimuat sekali + pemanasan
-  service.py    validasi, batas laju, serialisasi, lalu generator + retriever apa adanya
-  evaluation_facts.py  angka halaman "Tentang", dihitung dari testset/eksternal_hasil_per_butir.json
-  presentation.py  hasil layanan -> data tampilan + seluruh teks antarmuka (tanpa Streamlit)
-  ui/           halaman Streamlit (beranda, tentang), komponen ber-escape, style.css
-  app.py        titik masuk demo (st.navigation)
-  paths.py      jalur proyek terpusat (root, data/, cache, articles.json)
-assets/brand/   logo (asli 500x500, turunan 32 dan 96 px)
-testset/
-  v1.jsonl                   set uji beku (54 butir)
-  v1.meta.json               pra-registrasi, penyimpangan, catatan analisis
-  ANNOTATION_GUIDE.md        pedoman anotasi v1.0 (terkunci)
-  GUIDE_LOCK.json            hash pedoman terkunci
-  targets_v1.json            20 artikel target positif terpilih
-  v1_analysis.json           hasil evaluasi (data terstruktur)
-  v1_analysis_report.txt     hasil evaluasi (laporan terbaca)
-  v1_temuan_untuk_v2.md      kelemahan terukur → komponen Versi 2
-tests/
+src/              alur inti RAG di akar (src/README.md)
+  chunker.py      pemotongan per seksi              [terkunci: hash = pembekuan evaluasi eksternal]
+  ingest.py       embedding & vector store (revisi bge-m3 dipatok)
+  retriever.py    pencarian + agregasi per artikel  [terkunci: hash = pembekuan evaluasi eksternal]
+  generator.py    penyusunan jawaban + prompt       [terkunci sejak tag testset-v1]
+  paths.py        jalur proyek terpusat
+  hf_env.py       prepare_hf_env(): Hugging Face offline, dipanggil di awal setiap titik masuk
+  llm/            abstraksi penyedia, pembatas laju, buku besar kuota (kunci antar-utas dan antar-proses)
+  scraping/       pengambilan & parsing artikel, perluasan, pembaruan berkala
+  evaluation/     evaluasi dan diagnostik (src/evaluation/README.md)
+  labeling/       candidates/ (kandidat set uji), gap/ (pengukuran celah), sessions/ (sesi buta, adjudikasi, audit)
+  webapp/         demo Streamlit: app.py, settings, resources, service, presentation, evaluation_facts, ui/
+tests/            uji otomatis offline, dikelompokkan seperti src/ (tests/README.md) -- BUKAN testset/
+testset/          data set uji beku, bukti pra-registrasi, hasil analisis (testset/README.md)
+docs/             rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/ (docs/README.md)
+scripts/          pembaruan berkala (Task Scheduler), tangkapan layar, penyamaran fixture
+assets/brand/     logo (asli 500x500, turunan 32 dan 96 px)
+archive/          v1/ (arsip indeks Versi 1, lokal), fitur_mati/ (artefak fitur yang dihapus)
+manifests/        daftar artikel perluasan (metadata saja)
+data/             lokal, tidak di-commit (data/README.md)
 ```
+
+---
+
+## Lisensi
+
+Kode di repositori ini berlisensi **MIT** (lihat [`LICENSE`](LICENSE)), hak cipta 2026 Zul Tiandra Rifandy.
+**Lisensi itu hanya berlaku untuk kode.** Data artikel TurnBackHoax.id (Mafindo) tidak disertakan di
+repositori ini dan tunduk pada ketentuan Mafindo; begitu pula keluaran model dan layanan pihak ketiga.
 
 ---
 
@@ -743,7 +748,7 @@ Repositori ini tidak mendistribusikan ulang isi artikel. Yang disimpan hanya:
   beredar (dibersihkan dari data pribadi dan tautan) atau klaim tulisan model dan
   manusia, beserta URL asal-usulnya.
 - **Fixture uji** (`tests/fixtures/`): struktur HTML halaman asli dengan isi yang
-  **disamarkan** (`tests/anonymize_fixtures.py`). Teks diganti kata semu, tautan
+  **disamarkan** (`scripts/anonymize_fixtures.py`). Teks diganti kata semu, tautan
   sumber hoaks diganti jalur fiktif, dan nomor serta surel diganti nilai fiktif.
 
 Teks lengkap artikel dan indeks vektor hanya ada di mesin lokal (`data/`,

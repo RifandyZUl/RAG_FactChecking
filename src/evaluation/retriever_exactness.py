@@ -31,6 +31,7 @@ from typing import Any
 
 import numpy as np
 
+from hf_env import prepare_hf_env
 from retriever import CHUNK_FETCH, aggregate_by_article
 
 TOP_ARTICLES = 3
@@ -141,6 +142,7 @@ def run(collection: Any, names: list[str], vectors: np.ndarray, repeats: int = 3
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--chroma-dir", type=Path, default=None, help="folder ChromaDB (bawaan: indeks aktif)")
     ap.add_argument("--out-json", type=Path, default=None)

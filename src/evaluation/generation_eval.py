@@ -32,6 +32,7 @@ from generator import (
     find_urls,
     render,
 )
+from hf_env import prepare_hf_env
 from ingest import get_collection, load_model
 from llm import LLMConfigError, get_provider
 from llm.ledger import plan_budget
@@ -63,6 +64,7 @@ def unsupported_tokens(ans: Answer, context: str) -> list[str]:
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     ap.add_argument("--model", help="ID model (bawaan: LLM_MODEL / bawaan penyedia)")
     ap.add_argument("--force", action="store_true", help="abaikan hasil lama dan mulai ulang")

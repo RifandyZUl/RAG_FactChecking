@@ -36,6 +36,7 @@ from pathlib import Path
 from typing import Any
 
 from evaluation.metrics import wilson_interval
+from hf_env import prepare_hf_env
 from paths import DATA_DIR, PROJECT_ROOT
 
 V1_PATH = PROJECT_ROOT / "testset" / "v1.jsonl"
@@ -640,6 +641,7 @@ def build_report(res: dict[str, Any]) -> str:
 
 def main() -> int:
     """Jalankan keempat eksperimen dan tulis JSON + laporan. Tanpa panggilan API."""
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out-json", type=Path, default=OUT_JSON)
     parser.add_argument("--out-report", type=Path, default=OUT_REPORT)
