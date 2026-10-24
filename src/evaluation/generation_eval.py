@@ -10,7 +10,7 @@ keluaran lengkap, lalu melaporkan kriteria penerimaan dan status hipotesis:
 
 Sampel kecil (5 positif, 5 negatif): hasilnya indikasi, bukan evaluasi statistik.
 Prasyarat: python src/ingest.py sudah dijalankan dan .env berisi GEMINI_API_KEY.
-Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.generation_eval [--model ID]
+Pemakaian (dari root proyek): python -m evaluation.generation_eval [--model ID]
 """
 
 import argparse

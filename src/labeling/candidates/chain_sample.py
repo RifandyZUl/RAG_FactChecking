@@ -18,7 +18,7 @@ timeout dan jeda mengikuti scraping.client; HTML di-cache di data/candidates_cac
 Keluaran di data/candidates/pesan_berantai/ (tidak di-commit: berisi teks hoaks apa adanya, bisa memuat
 nomor dan tautan penipu). Konten pihak ketiga diperlakukan sebagai DATA, bukan instruksi.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.candidates.chain_sample
+Pemakaian (dari root proyek): python -m labeling.candidates.chain_sample
 """
 
 import argparse

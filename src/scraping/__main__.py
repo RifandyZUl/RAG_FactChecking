@@ -1,4 +1,4 @@
-"""Jalankan: python -m scraping (dari root proyek, dengan PYTHONPATH=src)."""
+"""Jalankan: python -m scraping (dari root proyek; paket dipasang dengan pip install -e .)."""
 
 from scraping.pipeline import main
 

@@ -47,10 +47,10 @@ Kode keluar: 0 bersih | 3 ditahan (sistematis) | 4 jaringan putus | 5 ditahan (a
 6 ditulis, ada kegagalan permanen yang perlu ditinjau.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m scraping.expand --batch-size 250
-  PYTHONPATH=src python -m scraping.expand --forward
-  PYTHONPATH=src python -m scraping.expand --failed-status
-  PYTHONPATH=src python -m scraping.expand --retry-failed [--include-permanent]
+  python -m scraping.expand --batch-size 250
+  python -m scraping.expand --forward
+  python -m scraping.expand --failed-status
+  python -m scraping.expand --retry-failed [--include-permanent]
 """
 
 import argparse

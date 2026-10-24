@@ -13,9 +13,9 @@ apa pun dari evaluasi eksternal yang tersegel (data/external_eval_*, testset/eks
 ragu, dan catatan tidak pernah diisi, diusulkan, atau dikoreksi kode (Aturan Wajib #5).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.sessions.blind_workbook --make    # menolak menimpa; menulis kunci terpisah
-  PYTHONPATH=src python -m labeling.sessions.blind_workbook --read    # setelah pemilik proyek selesai; baru di sini kunci dibuka
-  PYTHONPATH=src python -m labeling.sessions.blind_workbook --read --berkas <..._terisi_v2.xlsx>   # koreksi = berkas baru
+  python -m labeling.sessions.blind_workbook --make    # menolak menimpa; menulis kunci terpisah
+  python -m labeling.sessions.blind_workbook --read    # setelah pemilik proyek selesai; baru di sini kunci dibuka
+  python -m labeling.sessions.blind_workbook --read --berkas <..._terisi_v2.xlsx>   # koreksi = berkas baru
 Setiap --read menyalin berkas terisi + hash-nya ke arsip_baca/ sebelum validasi apa pun.
 """
 

@@ -1,9 +1,0 @@
-# Konfigurasi ruff proyek. Aturan bawaan ruff (versi dikunci di requirements-dev.txt)
-# dipakai apa adanya; di sini hanya pengecualian yang disengaja.
-target-version = "py311"  # tomllib dan sintaks 3.11 adalah pustaka standar
-
-[lint.per-file-ignores]
-# Berkas TERKUNCI (hash-nya bukti evaluasi; tests/test_testset_locks.py): temuan lama ini tidak
-# diperbaiki dengan menyunting berkasnya, karena itu mengubah hash. Pengecualian per berkas, per aturan.
-"src/generator.py" = ["ISC004"]
-"src/chunker.py" = ["I001"]

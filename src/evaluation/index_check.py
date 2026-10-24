@@ -14,7 +14,7 @@ untuk arsip Versi 1 di testset/v1.meta.json.
 Indeks yang diperiksa mengikuti RAG_INDEX_DIR (bawaan data/; lihat paths.py), mis.:
   $env:RAG_INDEX_DIR = "archive/v1"; python -m evaluation.index_check --expect-v1-archive
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.index_check [--embed-sample N]
+Pemakaian (dari root proyek): python -m evaluation.index_check [--embed-sample N]
     [--fingerprint] [--expect-v1-archive]
 Kode keluar: 0 = segar (dan sidik jari cocok bila diminta), 1 = basi atau sidik jari beda.
 """

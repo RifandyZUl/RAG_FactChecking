@@ -9,8 +9,8 @@ ditampilkan; nomor butir v1 hanya ada di kunci. testset/v1.jsonl tidak diubah. K
 sendiri, tanpa bantuan AI (Aturan Wajib #5).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.sessions.v1_verification --make   # menolak menimpa
-  PYTHONPATH=src python -m labeling.sessions.v1_verification --read [--berkas <..._terisi_v2.xlsx>]
+  python -m labeling.sessions.v1_verification --make   # menolak menimpa
+  python -m labeling.sessions.v1_verification --read [--berkas <..._terisi_v2.xlsx>]
 """
 
 import argparse

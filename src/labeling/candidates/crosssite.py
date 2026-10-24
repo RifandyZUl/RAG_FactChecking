@@ -22,7 +22,7 @@ Skrip ini hanya mengumpulkan dari tiga endpoint statis yang terbukti berbeda kon
 Ini menghasilkan puluhan kandidat, bukan ratusan; menambah cakupan perlu endpoint AJAX yang
 belum diselidiki (di luar cakupan permintaan ini).
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.candidates.crosssite
+Pemakaian (dari root proyek): python -m labeling.candidates.crosssite
 """
 
 import argparse

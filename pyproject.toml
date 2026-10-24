@@ -1,0 +1,55 @@
+# Pengemasan proyek (Tahap 2). Tujuannya hanya satu: `pip install -e .` memasang src/ ke venv sehingga
+# semua perintah (python -m ..., demo, uji, skrip pembaruan berkala) berjalan tanpa PYTHONPATH=src.
+#
+# VERSI DEPENDENSI TIDAK DITULIS DI SINI. Satu-satunya sumber versi adalah requirements.txt (dibaca
+# setuptools lewat `dynamic`); dependensi pengembangan tetap di requirements-dev.txt. Urutan pasang:
+#   pip install -r requirements-dev.txt
+#   pip install -e . --no-build-isolation      # memakai setuptools di venv, tanpa mengunduh apa pun
+[build-system]
+requires = ["setuptools>=77"]  # 77: bidang license berformat SPDX
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-factchecking"
+version = "1.0.0"
+description = "RAG verifikasi klaim berbahasa Indonesia berbasis artikel cek fakta TurnBackHoax.id"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Zul Tiandra Rifandy" }]
+# Venv lokal (tempat evaluasi dijalankan) = 3.11; container dan CI = 3.13. Kode harus jalan di keduanya.
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+# Modul alur inti di akar src/ (bukan paket); nama impornya tetap `chunker`, `ingest`, dst.
+py-modules = ["chunker", "generator", "hf_env", "ingest", "paths", "retriever"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"webapp.ui" = ["style.css"]
+
+# --- pytest (dipindah dari pytest.ini; isi sama) ---
+[tool.pytest.ini_options]
+# Hanya tests/ yang dikumpulkan: skrip evaluasi LIVE di src/evaluation/ tidak boleh terkumpul.
+testpaths = ["tests"]
+# src: agar uji tetap jalan walau paket belum dipasang; tests: modul bantu bersama (_fakes.py) di akar
+# tests/, dipakai uji di subfolder.
+pythonpath = ["src", "tests"]
+
+# --- ruff (dipindah dari ruff.toml; isi sama). Versi ruff dikunci di requirements-dev.txt ---
+[tool.ruff]
+# Aturan bawaan ruff dipakai apa adanya; di sini hanya pengecualian yang disengaja.
+target-version = "py311"  # tomllib dan sintaks 3.11 adalah pustaka standar
+
+[tool.ruff.lint.per-file-ignores]
+# Berkas TERKUNCI (hash-nya bukti evaluasi; tests/core/test_testset_locks.py): temuan lama ini tidak
+# diperbaiki dengan menyunting berkasnya, karena itu mengubah hash. Pengecualian per berkas, per aturan.
+"src/generator.py" = ["ISC004"]
+"src/chunker.py" = ["I001"]

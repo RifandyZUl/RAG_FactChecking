@@ -11,8 +11,8 @@ templat KOSONG disimpan saat dibuat, dan saat membaca diperiksa bahwa berkas ter
 lain (Excel) serta bahwa sel selain KEPUTUSAN/catatan tidak berubah dari templat.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.gap.gap_workbook --make          # CSV -> .xlsx (menolak menimpa)
-  PYTHONPATH=src python -m labeling.gap.gap_workbook --read          # setelah pemilik proyek selesai mengisi
+  python -m labeling.gap.gap_workbook --make          # CSV -> .xlsx (menolak menimpa)
+  python -m labeling.gap.gap_workbook --read          # setelah pemilik proyek selesai mengisi
 """
 
 import argparse

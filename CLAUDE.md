@@ -1020,7 +1020,6 @@ datanya berbeda, selisih hasil tidak lagi murni karena arsitektur. Sidik jari is
 di `testset/v1.meta.json` (`arsip_indeks_v1_2026-09-25`) dan **wajib dicocokkan lebih dulu**:
 
 ```powershell
-$env:PYTHONPATH = "src"
 $env:RAG_INDEX_DIR = "archive/v1"          # arahkan SEMUA pembacaan indeks ke arsip
 .\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive   # wajib kode keluar 0
 .\.venv\Scripts\python.exe -m evaluation.testset_eval       # atau skrip evaluasi lain, tanpa ubah kode
@@ -1093,23 +1092,29 @@ pernah menimbulkan konflik `protobuf`.
 
 ```powershell
 python -m venv .venv                          # sekali saja
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest, ruff
+.\.venv\Scripts\python.exe -m pip install -e . --no-build-isolation  # pasang src/ ke venv (sejak Tahap 2)
 .\.venv\Scripts\python.exe -m pytest                # uji offline di tests/ (tanpa jaringan/API)
 .\.venv\Scripts\Activate.ps1                        # atau aktifkan dulu
 ```
 
-Paket di `src/` (mis. `scraping`) dijalankan dari **root proyek** dengan
-`PYTHONPATH=src`, sehingga jalur relatif tetap berbasis root:
+**Sejak Tahap 2 (2026-10-24) `PYTHONPATH=src` TIDAK diperlukan lagi:** `pyproject.toml` + `pip install -e .`
+memasang `src/` ke venv (berkas `.pth` yang menunjuk ke `src/`, jadi kode tetap dibaca dari repositori).
+Versi dependensi HANYA di `requirements.txt` (dibaca `pyproject.toml` lewat `dynamic`); setelah
+mengubahnya, jalankan ulang `pip install -r requirements-dev.txt` DAN `pip install -e . --no-build-isolation`
+(metadata paket editable tidak memperbarui dirinya sendiri; `pip check` akan melaporkan selisihnya).
+Konfigurasi ruff dan pytest kini di `pyproject.toml` (`pytest.ini` dan `ruff.toml` dihapus; isinya sama).
+`PYTHONPATH=src` di dokumen lama tetap berfungsi, hanya tidak perlu. Perintah dijalankan dari **root
+proyek**, karena jalur data relatif terhadap root:
 
 ```powershell
-$env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m scraping     # menggantikan `python src\scraper.py`
 .\.venv\Scripts\python.exe -m evaluation.generation_eval --check-budget   # skrip evaluasi LIVE
 ```
 
 Skrip evaluasi (`evaluation.generation_eval`, `retrieval_eval`, `gemma_json_check`,
 `probe_quota`) sengaja **tidak** berawalan `test_`: pytest hanya mengumpulkan
-`tests/` (lihat `pytest.ini`) dan tidak pernah memanggil LLM. Uji `tests/`
+`tests/` (lihat `[tool.pytest.ini_options]` di `pyproject.toml`) dan tidak pernah memanggil LLM. Uji `tests/`
 memakai objek palsu dan aman dijalankan kapan saja.
 
 `requirements.txt` mengunci versi (`torch==2.14.0`, build CPU dari PyPI).
@@ -1174,7 +1179,7 @@ RAG_FactChecking/
 │   │   ├── gemini.py, gemini_errors.py      # GeminiProvider; penafsiran galat HTTP Gemini
 │   │   └── limits.py, throttle.py, ledger.py # angka kuota; jendela geser RPM/TPM; buku besar + anggaran
 │   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur  [TERKUNCI]
-│   ├── webapp/           # Demo: app.py (titik masuk; PYTHONPATH=src streamlit run src\webapp\app.py), settings,
+│   ├── webapp/           # Demo: app.py (titik masuk; streamlit run src\webapp\app.py), settings,
 │   │                     #   resources (sekali muat + pemanasan), service (validasi, batas laju, serialisasi),
 │   │                     #   presentation (tanpa Streamlit), evaluation_facts, ui/ (+ style.css)
 │   ├── labeling/         # Pelabelan set uji: candidates/, gap/, sessions/ (dulu src/candidates/)
@@ -1187,7 +1192,7 @@ RAG_FactChecking/
 │       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
 ├── tests/                # Uji offline (pytest): core/ scraping/ llm/ evaluation/ labeling/ webapp/ (BUKAN testset/)
 │   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat scripts/anonymize_fixtures.py
-│   └── _fakes.py         #   objek palsu bersama (bukan uji; pytest.ini: pythonpath = src tests)
+│   └── _fakes.py         #   objek palsu bersama (bukan uji; pyproject.toml: pythonpath = src tests)
 ├── testset/              # Data set uji beku, bukti pra-registrasi, hasil analisis -- TIDAK dipindah (README.md)
 ├── docs/                 # rancangan/, audit/, riwayat/ (pemetaan_jalur.md), tampilan/ (README.md); adr/ ditunda
 ├── scripts/              # pembaruan_berkala.* (Task Scheduler), screenshots.py, anonymize_fixtures.py
@@ -1201,8 +1206,9 @@ RAG_FactChecking/
 │   └── chroma/           # Basis vektor ChromaDB (tidak di-commit)
 ├── .streamlit/config.toml  # Tema demo (satu-satunya tempat kode warna); secrets.toml di-gitignore
 ├── requirements.txt, requirements-dev.txt   # dependensi (+ streamlit); + pytest, ruff
-├── pytest.ini            # testpaths = tests, pythonpath = src tests
-├── ruff.toml             # target py311; pengecualian per berkas/aturan hanya untuk dua berkas terkunci
+├── pyproject.toml        # pengemasan (pip install -e .; dependensi dibaca dari requirements.txt) + konfigurasi
+│                         #   pytest (testpaths = tests, pythonpath = src tests) dan ruff (py311; pengecualian
+│                         #   per berkas/aturan hanya untuk dua berkas terkunci)
 ├── .gitattributes        # LF untuk teks; CRLF untuk *.cmd dan testset/** (hash byte bukti); biner untuk gambar
 ├── LICENSE               # MIT (kode saja; data TurnBackHoax tunduk pada ketentuan Mafindo)
 └── CLAUDE.md
@@ -1238,7 +1244,7 @@ RAG_FactChecking/
 ## Cara Kerja yang Diharapkan
 
 - **Tidak ada teks artikel, tautan sumber hoaks, atau kontak di berkas ter-commit.** Fixture HTML
-  baru WAJIB disamarkan dulu (`PYTHONPATH=src python scripts/anonymize_fixtures.py <asli> <keluaran>`),
+  baru WAJIB disamarkan dulu (`python scripts/anonymize_fixtures.py <asli> <keluaran>`),
   dan literal uji diambil dari hasil tersamar. `articles.json` dan HTML mentah tetap lokal.
 
 Proyek ini bertujuan pembelajaran, sehingga cara mengerjakannya penting,
@@ -1884,8 +1890,10 @@ IDE akan menampilkan garis merah pada siapa pun yang membukanya.
   2026-09-25) di luar berkas demo: 14 I001 (mis. `src/llm/limits.py`), 3 ISC004, dan 12 lain-lain.
   Berkas demo (`src/webapp/app.py`, `src/webapp/presentation.py`, `tests/webapp/test_presentation.py`) bersih; I001
   di `src/webapp/app.py` dikecualikan secara sengaja di `ruff.toml` (urutan impor `ingest` lebih dulu).
-- **Konfigurasi alat statis** (saran, belum dikerjakan): satu `pyproject.toml` untuk pyright/ruff agar
-  IDE dan CI konsisten, termasuk jalur `src` dan `tests`.
+  **Diperbarui 2026-10-24: SELESAI** -- `ruff check src tests scripts` bersih sejak Tahap 1; pengecualian
+  yang tersisa hanya untuk dua berkas terkunci, dan konfigurasinya kini di `pyproject.toml`.
+- **Konfigurasi alat statis:** ruff dan pytest sudah di `pyproject.toml` (Tahap 2); pyright belum
+  dikonfigurasi dan butir 22 galat tipe di atas belum diperiksa ulang.
 
 ---
 

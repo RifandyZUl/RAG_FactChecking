@@ -17,7 +17,7 @@ Aturan (ditetapkan sebelum data dilihat):
 
 Keluaran lokal (tidak di-commit; memuat teks hoaks apa adanya): data/candidates/celah_liputan6/.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.gap.gap_review
+Pemakaian (dari root proyek): python -m labeling.gap.gap_review
 """
 
 import csv

@@ -1,7 +1,9 @@
 """
 Demo Streamlit "Cek Pesan Hoaks": titik masuk. Jalankan dari root proyek (PowerShell):
 
-    $env:PYTHONPATH = "src"; .\\.venv\\Scripts\\python.exe -m streamlit run src\\webapp\app.py
+    .\\.venv\\Scripts\\python.exe -m streamlit run src\\webapp\\app.py
+
+(paket proyek dipasang ke venv dengan `pip install -e .`, jadi PYTHONPATH tidak perlu disetel).
 
 Lapisan: `webapp/ui/` (render) -> `webapp/service.py` (validasi, batas laju, serialisasi) -> `generator.py`
 + `retriever.py` (TERKUNCI, persis seperti yang dievaluasi). `prepare_hf_env()` dipanggil pertama, sebelum

@@ -18,7 +18,7 @@ per proses), jadi ukur dalam proses baru. Arsip JANGAN dibuka langsung: salin by
 beri jalur salinannya lewat --chroma-dir.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.retriever_exactness [--chroma-dir DIR] [--out-json X.json]
+  python -m evaluation.retriever_exactness [--chroma-dir DIR] [--out-json X.json]
 """
 
 import argparse

@@ -9,9 +9,9 @@ menurut tanggal, tanpa skor. Bedanya dari berkas pertama (aturan 11.6): Narasi T
 ada sel `ragu`, masukan hanya di sel blok, dan lembar Rekap berisi rumus saja serta diproteksi.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.gap.gap_blocks --make    # menolak menimpa; menulis kunci skor terpisah
-  PYTHONPATH=src python -m labeling.gap.gap_blocks --read    # setelah pemilik proyek selesai; TIDAK membuka kunci
-  PYTHONPATH=src python -m labeling.gap.gap_blocks --kunci   # baru setelah --read tersimpan; tidak mengubah label
+  python -m labeling.gap.gap_blocks --make    # menolak menimpa; menulis kunci skor terpisah
+  python -m labeling.gap.gap_blocks --read    # setelah pemilik proyek selesai; TIDAK membuka kunci
+  python -m labeling.gap.gap_blocks --kunci   # baru setelah --read tersimpan; tidak mengubah label
 """
 
 import argparse

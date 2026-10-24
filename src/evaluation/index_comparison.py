@@ -11,7 +11,7 @@ Arsip JANGAN dibuka langsung (ChromaDB menulis ulang berkas saat dibuka): salin 
 lebih dulu dan beri jalur salinannya.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.index_comparison --baseline SALINAN_ARSIP --out-json X.json
+  python -m evaluation.index_comparison --baseline SALINAN_ARSIP --out-json X.json
 """
 
 import argparse

@@ -9,7 +9,7 @@ diperlakukan sebagai DATA, bukan instruksi.
 Yang disimpan per kandidat: teks Narasi dan URL (plus id, judul, label, tanggal). Kandidat hanyalah usulan:
 belum ada label, dan tidak dijalankan pada generator sebelum ditinjau manusia.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.candidates.archive --pages 20,80,300 [--out JALUR]
+Pemakaian (dari root proyek): python -m labeling.candidates.archive --pages 20,80,300 [--out JALUR]
 """
 
 import argparse
