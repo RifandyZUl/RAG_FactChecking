@@ -1,0 +1,85 @@
+# CI (Tahap 2): ruff + seluruh uji (termasuk uji kunci dan uji hash beku) di Ubuntu, Python 3.13.
+# Tanpa Gemini, tanpa mengunduh bge-m3, tanpa data yang tidak dipublikasikan, tanpa rahasia: seluruh uji di
+# tests/ memakai objek palsu dan fixture tersamar (diperiksa 2026-10-24 di klon bersih tanpa data/, .env,
+# dan cache Hugging Face: 571/571 lolos). Venv lokal pemilik proyek tetap Python 3.11 (tempat evaluasi).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Model dan tokenizer tidak boleh diunduh: uji yang tanpa sengaja memuat bge-m3 harus GAGAL, bukan mengunduh.
+  HF_HUB_OFFLINE: "1"
+  HF_HOME: ${{ github.workspace }}/.hf_kosong
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  uji:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (riwayat penuh + tag; uji kunci membandingkan dengan tag testset-v1)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Python 3.13
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Pasang dependensi (torch build CPU; versi tetap dari requirements.txt)
+        run: |
+          python -m pip install "torch==$(sed -n 's/^torch==//p' requirements.txt)" --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
+          python -m pip check
+          python --version
+          python -c "import torch; print('torch', torch.__version__)"
+
+      - name: Prasyarat uji kunci (tag dan akhir baris berkas beku)
+        run: |
+          git rev-parse -q --verify refs/tags/testset-v1 >/dev/null || { echo "tag testset-v1 tidak ada: uji kunci v1.jsonl akan dilewati"; exit 1; }
+          git ls-files --eol testset/v1.jsonl testset/eksternal_butir.json scripts/pembaruan_berkala.cmd
+
+      - name: Ruff
+        run: ruff check src tests scripts
+
+      - name: Uji kunci (berkas terkunci, pedoman, set uji, hash byte beku)
+        run: python -m pytest -q -rs tests/core/test_testset_locks.py tests/core/test_frozen_bytes.py
+
+      - name: Seluruh uji
+        run: python -m pytest -q -rs --junitxml=pytest-junit.xml
+
+      - name: Ringkasan (gagal bila ada uji yang dilewati)
+        if: always()
+        run: |
+          python - <<'EOF'
+          import os, sys, xml.etree.ElementTree as ET
+          if not os.path.exists("pytest-junit.xml"):
+              sys.exit("pytest-junit.xml tidak ada")
+          s = ET.parse("pytest-junit.xml").getroot()
+          s = s if s.tag == "testsuite" else s.find("testsuite")
+          n, f, e, k = (int(s.get(a, 0)) for a in ("tests", "failures", "errors", "skipped"))
+          line = f"Uji: {n} total, {n - f - e - k} lolos, {f} gagal, {e} galat, {k} dilewati"
+          print(line)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+              out.write(f"### {line}\n")
+          # Tidak ada uji yang butuh data, model, atau API, jadi tidak ada yang BOLEH dilewati diam-diam
+          # (mis. uji kunci yang melewati diri saat tag tidak terambil).
+          sys.exit(1 if k else 0)
+          EOF
