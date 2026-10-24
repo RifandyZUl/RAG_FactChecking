@@ -668,11 +668,10 @@ $env:DEMO_TESTER_MODE = "1"          # variabel lingkungan (diutamakan), sesi Po
 atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = true`. Nilai
 `1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain atau tidak diatur berarti mati.
 
-> **Jangan menjalankan demo di container Docker dan skrip evaluasi di host secara bersamaan.** Buku besar kuota
-> (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS (Windows dan Linux), jadi demo
-> dan skrip evaluasi di mesin yang sama aman. Tetapi kunci berkas **tidak andal menembus folder bersama
-> antara Windows dan container Docker** (bind mount WSL2): demo di container dan evaluasi di host yang
-> berjalan bersamaan bisa saling menimpa hitungan.
+> **Jangan menjalankan demo di container Docker dan skrip di host secara bersamaan.** Di host, buku besar kuota
+> (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS, jadi demo dan skrip evaluasi di
+> host aman berjalan bersamaan. Container memakai buku besarnya sendiri (lihat "Docker"), sehingga
+> hitungan kuota container dan host tidak saling terlihat.
 
 > **Kuota bersama dengan evaluasi.** Demo dan evaluasi berbagi kuota harian
 > yang sama: 500 permintaan per hari untuk `gemini-3.5-flash-lite`, tercatat di
@@ -701,41 +700,78 @@ juga gagal bila ada uji yang dilewati, supaya uji kunci tidak bisa melemah diam-
 
 ### Docker
 
-> **Status (2026-10-24): berkas Docker sudah ditulis, tetapi image BELUM dibangun di mesin pengembangan**
-> karena memori bebas tidak cukup untuk Docker Desktop. Bagian ini diperbarui setelah image dibangun dan
-> pembuktian embedding di container selesai.
-
 `docker compose up --build` menjalankan demo di http://127.0.0.1:8501 (hanya dapat diakses dari mesin ini).
-Image hanya berisi kode, konfigurasi tampilan, logo, dan dua berkas angka publik untuk halaman "Tentang".
-Semua yang lain dipasang sebagai volume dan tidak pernah masuk image (`.dockerignore` berupa daftar-putih):
+Image hanya berisi kode, konfigurasi tampilan, logo, dan dua berkas angka publik untuk halaman "Tentang"
+(`.dockerignore` berupa daftar-putih). **Container tidak pernah menulis ke `data/` produksi**: semua
+keadaannya ada di `data/container/` (di-gitignore).
 
-| Di host | Di container | Mode |
-| --- | --- | --- |
-| `./data` (indeks ChromaDB, buku besar kuota, `articles.json`, log) | `/app/data` | baca-tulis |
-| `./.env` | `/app/.env` | baca-saja; wajib ada |
-| cache Hugging Face host (`HF_CACHE_DIR`, bawaan `%USERPROFILE%\.cache\huggingface`) | `/home/app/.cache/huggingface` | baca-saja |
+| Di host | Di container | Mode | Untuk |
+| --- | --- | --- | --- |
+| `data/container/chroma/` | `/app/data/chroma` | baca-tulis | SALINAN indeks khusus container |
+| `data/container/kuota/` | `/app/data/kuota` | baca-tulis | buku besar kuota container (`RAG_LEDGER_DIR`) |
+| `data/container/logs/` | `/app/logs` | baca-tulis | log server (`RAG_LOG_DIR`) |
+| `.env` | `/app/.env` | baca-saja | kunci API; wajib ada |
+| cache Hugging Face host (`HF_CACHE_DIR`, bawaan `%USERPROFILE%\.cache\huggingface`) | `/home/app/.cache/huggingface` | baca-saja | bge-m3, revisi dipatok |
+| `data/container/hasil/` (hanya `tools`) | `/app/data/hasil` | baca-tulis | keluaran alat |
+| `testset/` (hanya `tools`) | `/app/testset` | baca-saja | kueri tetap, set uji |
+
+**Mengapa salinan indeks, bukan pemasangan hanya-baca:** ChromaDB 1.5.9 tidak bisa membuka indeks yang
+dipasang hanya-baca (diuji 2026-10-24: `attempt to write a readonly database` saat klien dibuat), dan menulis
+SQLite lewat folder bersama Windows/WSL2 berisiko merusaknya. Salinan dibuat sekali, dan **dibuat ulang
+setiap kali indeks produksi berubah** (setelah ingest di host):
+
+```powershell
+docker compose stop demo
+Remove-Item -Recurse -Force data\container\chroma
+Copy-Item -Recurse data\chroma data\container\chroma
+New-Item -ItemType Directory -Force data\container\kuota, data\container\logs, data\container\hasil
+docker compose up -d demo
+```
 
 - **Image:** Python 3.13 slim (dipatok ke digest), torch build CPU, versi dari `requirements.txt`,
   multi-stage, berjalan sebagai pengguna non-root `app`, sistem berkas container baca-saja.
-- **Model:** `HF_HUB_OFFLINE=1`, revisi bge-m3 dipatok. Model dibaca dari cache host, jadi bytenya sama
-  dengan yang dipakai venv lokal dan tidak ada unduhan.
 - **Kesehatan:** container dijalankan lewat `python -m webapp.serve`, yang memulai pemanasan saat server
-  menyala. Status `healthy` baru muncul setelah pemanasan selesai tanpa galat. Bila indeks tidak ada atau
-  `GEMINI_API_KEY` kosong, container tetap tidak sehat.
-- **Memori:** `mem_limit: 4g`. Model sekitar 2,2 GB ditambah torch dan Streamlit.
+  menyala, di proses yang sama dengan Streamlit (setiap baris log memuat PID). Status `healthy` baru muncul
+  setelah pemanasan selesai tanpa galat. Bila indeks tidak ada atau `GEMINI_API_KEY` kosong, container
+  tetap tidak sehat.
+- **Memori:** `mem_limit: 5g`.
 
-Ingest dan evaluasi berjalan lewat layanan `tools`, yang tidak ikut `up`. Layanan ini juga memasang
-`testset/` dan `archive/`:
+**Terukur 2026-10-24** (laptop 16 GB, WSL2 `memory=6GB`):
+
+| Ukuran | Nilai |
+| --- | --- |
+| Image | 2,93 GB di disk (lapisan venv 2,17 GB), 626 MB terkompresi |
+| Build | ~5,5 menit tanpa cache (`pip install` 194 dtk), 39 dtk dengan cache |
+| Sampai `healthy` | 26 dtk |
+| Muat model / tokenizer / indeks | 3,3 / 10,0 / 1,5 dtk, masing-masing sekali, satu proses (pid 1) |
+| Puncak memori container | 3,39 GB (`memory.peak`); 1,29 GiB setelah pemanasan dan satu pemeriksaan |
+| Pemeriksaan dari peramban Windows | berhasil, 1 panggilan Gemini |
+
+Waktu muat model di container (3,3 dtk) lebih cepat daripada di venv (15,2 dtk), jadi cache host yang
+dipasang baca-saja dipertahankan.
+
+**Kesetaraan embedding** (`python -m evaluation.embedding_proof`; 200 chunk acak benih 20261022 di-embed ulang
+dan dibandingkan dengan vektor tersimpan, ditambah top-3 untuk 64 kueri tetap; ambang ditetapkan sebelum
+mengukur; masing-masing pada salinan indeks yang belum pernah dibuka):
+
+| Lingkungan | Kosinus min / rata-rata | Top-3 HNSW = eksak | Top-3 sama antar-lingkungan | Putusan |
+| --- | --- | --- | --- | --- |
+| venv Windows, Python 3.11.4 | 0,9999999999985 / 0,9999999999997 | 64/64 | (pembanding) | SAMA |
+| container Linux, Python 3.13.16 | 0,9999999999987 / 0,9999999999996 | 64/64 | 64/64 | SAMA |
+
+Bukti: `docs/evaluasi/tahap2_bukti_embedding_{windows,container}.json`.
+
+Alat di container berjalan lewat layanan `tools` (tidak ikut `up`), juga hanya pada salinan indeks container.
+**Ingest dan evaluasi untuk indeks produksi tetap dijalankan di venv host**, tempat angka evaluasi diukur:
 
 ```powershell
-docker compose stop demo                                  # jangan buka indeks dari dua proses sekaligus
-docker compose run --rm tools python src/ingest.py
-docker compose run --rm tools python -m evaluation.index_check
-docker compose run --rm tools python -m evaluation.retriever_exactness
+docker compose run --rm tools python -m evaluation.retriever_exactness --out-json /app/data/hasil/exactness.json
 ```
 
-> **Jangan menjalankan demo di container dan evaluasi di host secara bersamaan.** Alasannya ada di
-> "Menjalankan demo" (buku besar kuota lewat bind mount).
+> **Jangan menjalankan demo di container dan skrip (evaluasi, ingest, atau demo) di host secara bersamaan.**
+> Kuota Gemini dihitung per proyek Google, sedangkan container mencatat ke buku besarnya sendiri
+> (`data/container/kuota/`). Keduanya tidak saling melihat hitungan, jadi batas harian demo (400) dan
+> pemeriksaan anggaran evaluasi bisa meleset tanpa ketahuan.
 
 ---
 
