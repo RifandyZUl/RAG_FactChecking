@@ -484,8 +484,13 @@ tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
 
 ### Prasyarat
 
-- Python 3.11
+- Python 3.11 untuk venv lokal (Windows), tempat evaluasi dijalankan
 - Kunci API Gemini (tier gratis) pada berkas `.env`
+
+**Dua versi Python, sengaja.** Venv lokal tetap **Python 3.11**, karena semua angka evaluasi di README ini
+diukur di lingkungan itu. Container Docker dan CI memakai **Python 3.13**. Keduanya menjalankan seluruh uji
+otomatis (571 uji, termasuk uji kunci), dan kesetaraan embedding antara keduanya dibuktikan terpisah (lihat
+"Docker").
 
 ```powershell
 python -m venv .venv
@@ -678,12 +683,59 @@ atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = tr
 ### Menjalankan uji
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m pytest                      # semua (571), offline, tanpa API
+.\.venv\Scripts\python.exe -m ruff check src tests scripts
 ```
 
-> Semua perintah di atas dijalankan dan diverifikasi langsung di PowerShell
-> (2026-09-23) dari root repositori ini. Sesuaikan bila struktur repositori
-> berubah.
+Tidak ada uji yang butuh data lokal, model, atau API: semuanya memakai objek palsu dan fixture HTML yang
+disamarkan, sehingga berjalan sama di venv lokal dan di CI.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`) berjalan di setiap push dan pull request: Ubuntu 24.04,
+Python 3.13, torch build CPU. Urutannya ruff, uji kunci, lalu seluruh uji. CI tidak memanggil Gemini, tidak
+mengunduh bge-m3 (`HF_HUB_OFFLINE=1` dengan cache kosong, jadi uji yang tanpa sengaja memuat model akan
+gagal, bukan mengunduh), tidak memakai rahasia, dan hanya melihat berkas yang di-commit. Checkout memuat
+seluruh riwayat dan tag, karena satu uji kunci membandingkan `testset/v1.jsonl` dengan tag `testset-v1`. CI
+juga gagal bila ada uji yang dilewati, supaya uji kunci tidak bisa melemah diam-diam.
+
+### Docker
+
+> **Status (2026-10-24): berkas Docker sudah ditulis, tetapi image BELUM dibangun di mesin pengembangan**
+> karena memori bebas tidak cukup untuk Docker Desktop. Bagian ini diperbarui setelah image dibangun dan
+> pembuktian embedding di container selesai.
+
+`docker compose up --build` menjalankan demo di http://127.0.0.1:8501 (hanya dapat diakses dari mesin ini).
+Image hanya berisi kode, konfigurasi tampilan, logo, dan dua berkas angka publik untuk halaman "Tentang".
+Semua yang lain dipasang sebagai volume dan tidak pernah masuk image (`.dockerignore` berupa daftar-putih):
+
+| Di host | Di container | Mode |
+| --- | --- | --- |
+| `./data` (indeks ChromaDB, buku besar kuota, `articles.json`, log) | `/app/data` | baca-tulis |
+| `./.env` | `/app/.env` | baca-saja; wajib ada |
+| cache Hugging Face host (`HF_CACHE_DIR`, bawaan `%USERPROFILE%\.cache\huggingface`) | `/home/app/.cache/huggingface` | baca-saja |
+
+- **Image:** Python 3.13 slim (dipatok ke digest), torch build CPU, versi dari `requirements.txt`,
+  multi-stage, berjalan sebagai pengguna non-root `app`, sistem berkas container baca-saja.
+- **Model:** `HF_HUB_OFFLINE=1`, revisi bge-m3 dipatok. Model dibaca dari cache host, jadi bytenya sama
+  dengan yang dipakai venv lokal dan tidak ada unduhan.
+- **Kesehatan:** container dijalankan lewat `python -m webapp.serve`, yang memulai pemanasan saat server
+  menyala. Status `healthy` baru muncul setelah pemanasan selesai tanpa galat. Bila indeks tidak ada atau
+  `GEMINI_API_KEY` kosong, container tetap tidak sehat.
+- **Memori:** `mem_limit: 4g`. Model sekitar 2,2 GB ditambah torch dan Streamlit.
+
+Ingest dan evaluasi berjalan lewat layanan `tools`, yang tidak ikut `up`. Layanan ini juga memasang
+`testset/` dan `archive/`:
+
+```powershell
+docker compose stop demo                                  # jangan buka indeks dari dua proses sekaligus
+docker compose run --rm tools python src/ingest.py
+docker compose run --rm tools python -m evaluation.index_check
+docker compose run --rm tools python -m evaluation.retriever_exactness
+```
+
+> **Jangan menjalankan demo di container dan evaluasi di host secara bersamaan.** Alasannya ada di
+> "Menjalankan demo" (buku besar kuota lewat bind mount).
 
 ---
 
@@ -706,12 +758,15 @@ src/              alur inti RAG di akar (src/README.md)
   webapp/         demo Streamlit: app.py, settings, resources, service, presentation, evaluation_facts, ui/
 tests/            uji otomatis offline, dikelompokkan seperti src/ (tests/README.md) -- BUKAN testset/
 testset/          data set uji beku, bukti pra-registrasi, hasil analisis (testset/README.md)
-docs/             rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/ (docs/README.md)
+docs/             rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/, evaluasi/ (docs/README.md)
 scripts/          pembaruan berkala (Task Scheduler), tangkapan layar, penyamaran fixture
 assets/brand/     logo (asli 500x500, turunan 32 dan 96 px)
 archive/          v1/ (arsip indeks Versi 1, lokal), fitur_mati/ (artefak fitur yang dihapus)
 manifests/        daftar artikel perluasan (metadata saja)
 data/             lokal, tidak di-commit (data/README.md)
+.github/workflows/ CI (ruff + seluruh uji, Ubuntu, Python 3.13)
+pyproject.toml    pengemasan (pip install -e .) + konfigurasi pytest dan ruff
+Dockerfile, docker-compose.yml, .dockerignore   demo di container (Python 3.13)
 ```
 
 ---

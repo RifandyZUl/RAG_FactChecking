@@ -12,8 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]
 HF_KEYS = ("HF_HUB_OFFLINE", "DISABLE_SAFETENSORS_CONVERSION", "HF_HUB_DISABLE_SYMLINKS_WARNING")
 ENTRY_POINTS = ["src/ingest.py"] + [f"src/evaluation/{m}.py" for m in (
     "index_check", "retriever_exactness", "retrieval_ablation", "index_comparison", "testset_eval", "external_eval",
-    "external_analysis", "generation_eval", "repeat_eval", "retrieval_eval")] + [
-    "src/labeling/candidates/screen.py", "src/labeling/candidates/chain_sample.py", "src/labeling/gap/gap_review.py"]
+    "external_analysis", "generation_eval", "repeat_eval", "retrieval_eval", "embedding_proof")] + [
+    "src/labeling/candidates/screen.py", "src/labeling/candidates/chain_sample.py", "src/labeling/gap/gap_review.py",
+    "src/webapp/serve.py"]
 IMPORTED_MODULES = ["paths", "hf_env", "chunker", "ingest", "retriever", "generator", "webapp.settings",
                     "webapp.resources", "webapp.service", "webapp.presentation", "webapp.evaluation_facts",
                     "scraping.scheduled"] + [p.removeprefix("src/").removesuffix(".py").replace("/", ".") for p in ENTRY_POINTS]

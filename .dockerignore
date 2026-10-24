@@ -1,0 +1,13 @@
+# DAFTAR-PUTIH: semua dikecualikan, lalu hanya yang dibutuhkan image yang diizinkan. Dengan begitu .env,
+# data/ (indeks, articles.json, buku besar kuota, log), archive/, docs/ (termasuk docs/desain_tampilan/),
+# .streamlit/secrets.toml, dan cache model tidak mungkin ikut masuk konteks build.
+*
+!requirements.txt
+!LICENSE
+!src/
+!.streamlit/config.toml
+!assets/brand/
+!testset/eksternal_hasil_per_butir.json
+!testset/eksternal_butir.json
+**/__pycache__
+**/*.py[cod]
