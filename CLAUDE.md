@@ -12,21 +12,27 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-24, Tahap 2)*
 
-> **TAHAP 2 (branch `tahap-2-docker`, BELUM digabung; SEBAGIAN: Docker belum dibangun):**
+> **TAHAP 2 (branch `tahap-2-docker`, BELUM digabung; menunggu persetujuan pemilik proyek):**
 > (b) `pyproject.toml` + `pip install -e . --no-build-isolation`: **`PYTHONPATH=src` tidak diperlukan lagi**;
-> versi dependensi HANYA di `requirements.txt`; konfigurasi pytest/ruff pindah ke `pyproject.toml`
-> (`pytest.ini`, `ruff.toml` dihapus). Peluncur pembaruan berkala tidak lagi menyetel PYTHONPATH (jalan kering
-> dengan kunci dipegang: kode 9, `data/expansion/` tidak berubah). (c) requests 2.34.2 (CVE-2024-35195,
-> CVE-2024-47081, CVE-2026-25645). (f) **CI** `.github/workflows/ci.yml` (Ubuntu 24.04, Python 3.13, torch CPU,
-> tanpa model/API/rahasia; gagal bila ada uji dilewati): run pertama 571/571, 0 dilewati. (d) `Dockerfile`,
-> `docker-compose.yml`, `.dockerignore` (daftar-putih) DITULIS, **image BELUM dibangun**: memori bebas host
-> 1,2-2,5 GB. Demo container dijalankan lewat `python -m webapp.serve` (pemanasan saat server menyala; penanda
-> `RAG_READY_FILE` untuk HEALTHCHECK). (e) `python -m evaluation.embedding_proof`: **venv Windows = SAMA**
-> (kosinus min 0,9999999999985 pada 200 chunk benih 20261022; HNSW = eksak 64/64;
-> `docs/evaluasi/tahap2_bukti_embedding_windows.json`); bagian container BELUM. Salinan indeks untuk
-> pembuktian: `data/backups/salinan_bukti_tahap2_2026-10-24/{windows,container}/chroma` (salinan
-> `container` BELUM dibuka -- jangan dibuka di host). **Python: venv lokal tetap 3.11 (lingkungan evaluasi);
-> container dan CI 3.13; keduanya menjalankan seluruh uji.** ADR (h) menunggu Docker selesai.
+> versi dependensi HANYA di `requirements.txt`; konfigurasi pytest/ruff di `pyproject.toml`. Peluncur pembaruan
+> berkala tidak lagi menyetel PYTHONPATH. (c) requests 2.34.2 (CVE-2024-35195, CVE-2024-47081, CVE-2026-25645).
+> (f) **CI** `.github/workflows/ci.yml` (Ubuntu 24.04, Python 3.13, torch CPU, tanpa model/API/rahasia; gagal
+> bila ada uji dilewati). (d) **Docker DIBANGUN DAN DIJALANKAN 2026-10-24:** image 2,93 GB (venv 2,17 GB),
+> build dingin ~5,5 mnt; `healthy` 26 dtk; model dimuat 3,3 dtk, sekali, satu proses (pid 1, `webapp.serve`);
+> puncak memori 3,39 GB (`memory.peak`), `mem_limit: 5g`; pemeriksaan dari peramban Windows berhasil (1
+> panggilan Gemini). **Container TIDAK menulis `data/` produksi:** semua keadaannya di `data/container/`
+> (salinan indeks `chroma/`, buku besar `kuota/` lewat `RAG_LEDGER_DIR`, `logs/` lewat `RAG_LOG_DIR`, `hasil/`).
+> ChromaDB 1.5.9 tidak bisa membuka indeks yang dipasang hanya-baca (diuji: `attempt to write a readonly
+> database`), jadi dipakai SALINAN; **salin ulang `data/chroma` -> `data/container/chroma` setiap kali indeks
+> produksi berubah** (README, "Docker"). Buku besar container TERPISAH dari host -> jangan jalankan demo
+> container dan skrip host bersamaan. Ingest/evaluasi indeks produksi tetap di venv host.
+> (e) **Pembuktian embedding: SAMA di kedua lingkungan** (venv Windows 3.11: kosinus min 0,9999999999985;
+> container 3.13: 0,9999999999987; HNSW = eksak 64/64 masing-masing; top-3 antar-lingkungan identik 64/64;
+> `docs/evaluasi/tahap2_bukti_embedding_{windows,container}.json`). **Python: venv lokal tetap 3.11
+> (lingkungan evaluasi); container dan CI 3.13; keduanya menjalankan seluruh uji.** Tag `annotation-guide-v1.0`
+> di-push ke origin 2026-10-24. **Pembaruan terjadwal 22-24 Okt tidak berjalan** (jalan susulan setelah bangun
+> dari hibernasi tidak terpicu; log riwayat Task Scheduler tidak aktif); usulan perbaikan MENUNGGU persetujuan,
+> setelan tugas belum diubah. ADR di `docs/adr/`.
 
 *(2026-10-24)*
 
@@ -1141,10 +1147,11 @@ torch harus >= 2.6 agar `transformers` 5.x mau memuat
 
 ### Demo, container, dan evaluasi
 
-**Jangan menjalankan demo di container Docker dan skrip evaluasi di host secara bersamaan.** Buku besar
-kuota (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS, yang andal untuk proses di
-mesin yang sama, tetapi kunci berkas **tidak andal menembus folder bersama antara Windows dan container**
-(bind mount WSL2): kedua sisi bisa saling menimpa hitungan kuota.
+**Jangan menjalankan demo di container Docker dan skrip (evaluasi, ingest, demo) di host secara bersamaan.**
+Sejak Tahap 2 container memakai buku besar kuota SENDIRI (`data/container/kuota/`), karena buku besar diganti
+lewat `os.replace` dan SQLite/berkas kunci tidak andal lewat folder bersama Windows/WSL2. Akibatnya hitungan
+kuota container dan host tidak saling terlihat, padahal kuota Gemini berlaku per proyek Google. Container juga
+tidak pernah membuka indeks produksi: ia memakai salinan `data/container/chroma/` (README, "Docker").
 
 ### Catatan PowerShell
 
@@ -1214,7 +1221,7 @@ RAG_FactChecking/
 │   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat scripts/anonymize_fixtures.py
 │   └── _fakes.py         #   objek palsu bersama (bukan uji; pyproject.toml: pythonpath = src tests)
 ├── testset/              # Data set uji beku, bukti pra-registrasi, hasil analisis -- TIDAK dipindah (README.md)
-├── docs/                 # rancangan/, audit/, riwayat/ (pemetaan_jalur.md), tampilan/ (README.md); adr/ ditunda
+├── docs/                 # rancangan/, audit/, riwayat/ (pemetaan_jalur.md), tampilan/, evaluasi/, adr/ (README.md)
 ├── scripts/              # pembaruan_berkala.* (Task Scheduler), screenshots.py, anonymize_fixtures.py
 ├── assets/brand/         # logo + turunan
 ├── archive/v1/           # Arsip indeks Versi 1 (chroma/ + articles.json di-gitignore; Aturan Wajib #6)
