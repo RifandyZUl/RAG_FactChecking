@@ -32,3 +32,15 @@ def test_tracked_markdown_files_exist() -> None:
 
 def test_no_broken_relative_links_in_documents() -> None:
     assert _broken_links() == []
+
+
+def test_documents_contain_no_control_characters() -> None:
+    """Jalur Windows yang ditulis lewat string Python biasa pernah berubah menjadi karakter kontrol
+    (`src\\a` -> BEL, `data\\b` -> backspace) dan merusak perintah di README. Tab dan baris baru boleh."""
+    found = []
+    for doc in _tracked_markdown():
+        for n, line in enumerate(doc.read_text(encoding="utf-8").splitlines(), 1):
+            bad = sorted({hex(ord(c)) for c in line if ord(c) < 32 and c != "\t"})
+            if bad:
+                found.append(f"{doc.relative_to(ROOT).as_posix()}:{n} {bad}")
+    assert found == []
