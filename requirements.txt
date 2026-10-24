@@ -1,4 +1,8 @@
-requests==2.31.0
+# 2.34.2 (dari 2.31.0, Tahap 2): menutup tiga advisory yang mengenai 2.31.0 --
+#   CVE-2024-35195 https://github.com/psf/requests/security/advisories/GHSA-9wx4-h78v-vm56 (diperbaiki 2.32.0)
+#   CVE-2024-47081 https://github.com/psf/requests/security/advisories/GHSA-9hjg-9r4m-mvj7 (diperbaiki 2.32.4)
+#   CVE-2026-25645 https://github.com/psf/requests/security/advisories/GHSA-gc5v-m9x4-r6x2 (diperbaiki 2.33.0)
+requests==2.34.2
 beautifulsoup4==4.12.2
 # torch >= 2.6 diperlukan agar transformers 5.x mau memuat pytorch_model.bin
 # (CVE-2025-32434). Di Windows, torch dari PyPI adalah build CPU (~120 MB).
