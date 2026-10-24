@@ -700,6 +700,17 @@ juga gagal bila ada uji yang dilewati, supaya uji kunci tidak bisa melemah diam-
 
 ### Docker
 
+**Peran Docker.** Venv Windows (Python 3.11) adalah **cara utama** untuk pengembangan, evaluasi, dan demo
+harian; semua angka evaluasi diukur di sana. Docker (Python 3.13) adalah **cara resmi untuk lingkungan yang
+dapat direproduksi**: menjalankan demo di mesin lain tanpa menyiapkan venv, membuktikan kesetaraan lingkungan
+(pembuktian embedding di bawah), dan menjadi dasar deployment di masa depan. CI membangun image di setiap push
+(job `docker-build`, tanpa menjalankan container) untuk membuktikan Dockerfile masih bisa dibangun.
+
+**Kebutuhan memori (terukur 2026-10-24):** container memuncak di 3,39 GB, jadi `mem_limit` 5 GB dan WSL2
+minimal `memory=6GB` (`%USERPROFILE%\.wslconfig`, berlaku setelah `wsl --shutdown`). Di laptop 16 GB, sediakan
+**sekitar 4-5 GB RAM bebas di Windows** sebelum build atau `docker compose up`: build pertama turun dari 4,8 GB
+ke di bawah 0,6 GB RAM bebas Windows dan dihentikan. Tutup peramban, aplikasi obrolan, dan IDE lebih dulu.
+
 `docker compose up --build` menjalankan demo di http://127.0.0.1:8501 (hanya dapat diakses dari mesin ini).
 Image hanya berisi kode, konfigurasi tampilan, logo, dan dua berkas angka publik untuk halaman "Tentang"
 (`.dockerignore` berupa daftar-putih). **Container tidak pernah menulis ke `data/` produksi**: semua
