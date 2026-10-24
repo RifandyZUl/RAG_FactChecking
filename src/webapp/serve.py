@@ -11,6 +11,9 @@ HEALTHCHECK container baru sehat setelah berkas itu ada. Pemanasan yang gagal (m
 `GEMINI_API_KEY` kosong) tidak pernah menulis penanda, sehingga container tetap tidak sehat. Pemanasan
 tidak memanggil LLM.
 
+Setiap baris log memuat PID, dan bila `RAG_LOG_DIR` disetel log server juga ditulis ke berkas di folder
+itu. Itu bukti bahwa pemanasan dan sesi halaman memakai proses (dan pemuat sekali-muat) yang sama.
+
 Di Windows, demo tetap dijalankan dengan `streamlit run src\\webapp\\app.py` (README).
 """
 
@@ -22,6 +25,8 @@ from pathlib import Path
 from hf_env import prepare_hf_env
 
 READY_FILE_ENV = "RAG_READY_FILE"
+LOG_DIR_ENV = "RAG_LOG_DIR"  # bila disetel, log server juga ditulis ke <folder>/demo_server.log
+LOG_FILE_NAME = "demo_server.log"
 APP_PATH = Path(__file__).resolve().parent / "app.py"
 
 
@@ -48,9 +53,18 @@ def main() -> int:
 
     from webapp import resources
 
-    # Sama dengan app.py, agar baris "memuat <nama>" dari pemanasan awal ikut tercatat.
-    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # Seperti app.py, ditambah PID: baris "memuat <nama>" dari pemanasan dan dari sesi halaman harus
+    # ber-PID sama (satu proses, model dimuat sekali). basicConfig di app.py tidak berbuat apa-apa lagi
+    # karena logger akar sudah punya handler.
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    log_dir = os.environ.get(LOG_DIR_ENV, "").strip()
+    if log_dir:
+        Path(log_dir).mkdir(parents=True, exist_ok=True)
+        handlers.append(logging.FileHandler(Path(log_dir) / LOG_FILE_NAME, encoding="utf-8"))
+    logging.basicConfig(level=logging.WARNING, handlers=handlers,
+                        format="%(asctime)s pid=%(process)d %(levelname)s %(name)s: %(message)s")
     logging.getLogger("resources").setLevel(logging.INFO)
+    logging.getLogger("serve").warning("server Streamlit dan pemanasan berjalan di proses pid=%d", os.getpid())
 
     ready_path = os.environ.get(READY_FILE_ENV, "").strip()
     if ready_path:

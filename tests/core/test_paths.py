@@ -1,5 +1,8 @@
 """Uji pemilihan indeks (RAG_INDEX_DIR) dan penjaga tulis ke arsip."""
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -52,6 +55,23 @@ def test_archive_detection_and_write_guard() -> None:
         refuse_archive_write(inside, allow_archive=False)
     refuse_archive_write(inside, allow_archive=True)
     refuse_archive_write(paths.DATA_DIR / "chroma", allow_archive=False)
+
+
+def _ledger_path_with(env_value: str | None) -> str:
+    """LEDGER_PATH dihitung saat modul diimpor, jadi diperiksa di proses baru."""
+    env = {k: v for k, v in os.environ.items() if k != paths.LEDGER_DIR_ENV}
+    if env_value is not None:
+        env[paths.LEDGER_DIR_ENV] = env_value
+    env["PYTHONPATH"] = str(paths.PROJECT_ROOT / "src")
+    out = subprocess.run([sys.executable, "-c", "import paths; print(paths.LEDGER_PATH)"], env=env,
+                         capture_output=True, text=True, check=True)
+    return out.stdout.strip()
+
+
+def test_ledger_defaults_to_data_dir_and_can_move_to_its_own_folder(tmp_path: Path) -> None:
+    assert Path(_ledger_path_with(None)) == paths.DATA_DIR / "quota_ledger.json"
+    assert Path(_ledger_path_with("  ")) == paths.DATA_DIR / "quota_ledger.json"
+    assert Path(_ledger_path_with(str(tmp_path / "kuota"))) == tmp_path / "kuota" / "quota_ledger.json"
 
 
 def test_reset_collection_refuses_archive_path() -> None:

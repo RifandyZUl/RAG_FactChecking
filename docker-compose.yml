@@ -1,21 +1,16 @@
 # Demo di container (Tahap 2): `docker compose up --build`, lalu buka http://127.0.0.1:8501.
-# Alat (ingest, evaluasi): `docker compose run --rm tools python -m ...` (lihat README, "Docker").
+# Alat di container (pemeriksaan pada SALINAN indeks container, pembuktian embedding):
+#   docker compose run --rm tools python -m ...      (lihat README, "Docker")
 #
-# JANGAN menjalankan demo di container dan evaluasi di host BERSAMAAN: buku besar kuota
-# (data/quota_ledger.json) dikunci dengan kunci berkas OS, yang tidak andal menembus bind mount
-# Windows/WSL2 (CLAUDE.md, "Demo, container, dan evaluasi"). Hentikan `demo` sebelum ingest: dua proses yang
-# membuka indeks bersamaan berisiko merusak sqlite.
+# Container TIDAK PERNAH menulis ke data/ produksi. Semua keadaan container ada di data/container/
+# (di-gitignore): salinan indeks khusus container, buku besar kuota container, log, dan hasil alat.
+# Alasannya: SQLite (ChromaDB) rawan rusak bila ditulis lewat folder bersama Windows <-> WSL2, dan ChromaDB
+# menulis ulang berkas indeks setiap kali koleksi dibuka (CLAUDE.md, "Temuan ChromaDB").
+#
+# JANGAN menjalankan demo di container dan skrip (evaluasi/ingest/demo) di host BERSAMAAN. Kuota Gemini
+# berlaku per proyek Google, sedangkan container mencatat ke buku besarnya sendiri (data/container/kuota/):
+# keduanya tidak saling melihat hitungan, jadi batas harian bisa terlampaui tanpa ketahuan.
 name: rag-factchecking
-
-x-hf-cache: &hf-cache
-  # Cache Hugging Face mesin host, BACA-SAJA: byte model sama persis dengan yang dipakai venv lokal (revisi
-  # bge-m3 dipatok), tanpa unduhan 2,2 GB. Ganti lokasinya dengan HF_CACHE_DIR bila berbeda.
-  type: bind
-  source: ${HF_CACHE_DIR:-${USERPROFILE:-${HOME}}/.cache/huggingface}
-  target: /home/app/.cache/huggingface
-  read_only: true
-  bind:
-    create_host_path: false
 
 x-env-file: &env-file
   # .env dipasang sebagai berkas baca-saja (dibaca llm/secrets.py), bukan env_file: kunci API tidak muncul
@@ -27,6 +22,41 @@ x-env-file: &env-file
   bind:
     create_host_path: false
 
+x-hf-cache: &hf-cache
+  # Cache Hugging Face mesin host, BACA-SAJA: byte model sama persis dengan yang dipakai venv lokal (revisi
+  # bge-m3 dipatok), tanpa unduhan 2,2 GB. Ganti lokasinya dengan HF_CACHE_DIR bila berbeda.
+  type: bind
+  source: ${HF_CACHE_DIR:-${USERPROFILE:-${HOME}}/.cache/huggingface}
+  target: /home/app/.cache/huggingface
+  read_only: true
+  bind:
+    create_host_path: false
+
+x-index-copy: &index-copy
+  # SALINAN indeks khusus container (dibuat dari data/chroma dengan langkah di README; disalin ulang setelah
+  # ingest di host). Baca-tulis karena ChromaDB menulis ulang berkasnya saat koleksi dibuka.
+  type: bind
+  source: ./data/container/chroma
+  target: /app/data/chroma
+  bind:
+    create_host_path: false
+
+x-ledger: &ledger
+  # Buku besar kuota container (subfolder tersendiri, baca-tulis; RAG_LEDGER_DIR di image).
+  type: bind
+  source: ./data/container/kuota
+  target: /app/data/kuota
+  bind:
+    create_host_path: false
+
+x-logs: &logs
+  # Log server (RAG_LOG_DIR di image), baca-tulis.
+  type: bind
+  source: ./data/container/logs
+  target: /app/logs
+  bind:
+    create_host_path: false
+
 services:
   demo:
     build: .
@@ -34,35 +64,40 @@ services:
     ports:
       - "127.0.0.1:8501:8501"  # hanya mesin ini
     volumes:
-      # data/: indeks ChromaDB (baca-tulis: ChromaDB menulis ulang berkasnya saat koleksi dibuka) dan buku
-      # besar kuota bersama evaluasi. articles.json ikut terlihat tetapi tidak dibaca demo.
-      - type: bind
-        source: ./data
-        target: /app/data
-        bind:
-          create_host_path: false
+      - *index-copy
+      - *ledger
+      - *logs
       - *env-file
       - *hf-cache
     read_only: true
     tmpfs:
       - /tmp
-    mem_limit: 4g
+    # Terukur: model ~2,2 GB + torch + Streamlit; demo 4-4,5 GB. Batas 4 GB berisiko OOM saat model dimuat.
+    mem_limit: 5g
     restart: "no"
 
   tools:
     profiles: ["tools"]  # tidak ikut `docker compose up`
     image: rag-factchecking:tahap2
     volumes:
-      - type: bind
-        source: ./data
-        target: /app/data
-        bind:
-          create_host_path: false
-      # testset/ dan archive/: masukan dan keluaran skrip evaluasi (mis. retriever_exactness, index_check
-      # --expect-v1-archive). Menimpa dua berkas testset/ bawaan image dengan isi repositori yang sama.
-      - ./testset:/app/testset
-      - ./archive:/app/archive
+      - *index-copy
+      - *ledger
+      - *logs
       - *env-file
       - *hf-cache
-    mem_limit: 4g
-    command: ["python", "-m", "evaluation.index_check", "--help"]
+      # Hasil alat (mis. --out-json) ke data/container/hasil/, BUKAN ke testset/ (bukti beku di sana).
+      - type: bind
+        source: ./data/container/hasil
+        target: /app/data/hasil
+        bind:
+          create_host_path: false
+      # testset/ hanya dibaca (kueri tetap retriever_exactness, set uji v1).
+      - type: bind
+        source: ./testset
+        target: /app/testset
+        read_only: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 5g
+    command: ["python", "-m", "evaluation.embedding_proof", "--help"]
