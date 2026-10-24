@@ -528,6 +528,44 @@ saat modul diimpor): model dan tokenizer hanya dibaca dari cache lokal. Ini waji
 mengambil versi terbaru dari Hugging Face Hub. Di mesin baru, unduh model sekali dengan
 `HF_HUB_OFFLINE=0` (lihat "Menjalankan demo").
 
+### Ingest antrean (pembaruan berkala)
+
+Pembaruan berkala hanya mengambil artikel baru ke **antrean** (`data/expansion/forward_*.json`); penggabungan
+ke `articles.json` dan ingest selalu dijalankan **manual oleh pemilik proyek**, di venv Windows. Jangan
+menjalankannya bersamaan dengan demo atau evaluasi, dan hindari jam jalan terjadwal (13.00).
+
+```powershell
+# 0. Hentikan demo (lokal dan container) lalu laporan antrean, tanpa menulis apa pun
+docker compose stop demo
+.\.venv\Scripts\python.exe scripts\gabung_antrean.py
+
+# 1. Cadangan indeks (articles.json dicadangkan otomatis oleh langkah 2)
+$tgl = Get-Date -Format yyyy-MM-dd
+Copy-Item -Recurse data\chroma "data\backups\pre_antrean_$tgl\chroma"
+
+# 2. Gabungkan antrean di akhir articles.json (menolak bila kualitas antrean menahan penggabungan)
+.\.venv\Scripts\python.exe scripts\gabung_antrean.py --tulis
+
+# 3. Parse ulang seluruh articles.json dari cache HTML (tanpa jaringan; parser yang berlaku sekarang)
+.\.venv\Scripts\python.exe -m scraping.reparse
+#    periksa: artikel lama harus identik dan berurutan sama (harus mencetak "True")
+.\.venv\Scripts\python.exe -c "import json; a=json.load(open('data/backups/pre_antrean_$tgl/articles.json',encoding='utf-8')); b=json.load(open('data/articles.json',encoding='utf-8')); print(len(a), len(b), a==b[:len(a)])"
+
+# 4. Ingest INKREMENTAL (bukan --rebuild); HF_HUB_OFFLINE=1 disetel prepare_hf_env() di awal ingest
+.\.venv\Scripts\python.exe src\ingest.py
+
+# 5. Pemeriksaan wajib setelah indeks bertambah
+.\.venv\Scripts\python.exe -m evaluation.index_check            # kode 0 = indeks segar
+.\.venv\Scripts\python.exe -m evaluation.retriever_exactness   # kode 0 = HNSW = eksak
+
+# 6. Perbarui salinan indeks container (lihat "Docker")
+Remove-Item -Recurse -Force data\container\chroma
+Copy-Item -Recurse data\chroma data\container\chroma
+```
+
+Setelah `reparse`, artikel lama harus tetap identik (yang berubah hanya bila parser berubah sejak artikel
+itu diambil). `ingest.py` mencetak jumlah chunk terpotong 512 token per seksi di awal: catat angkanya.
+
 ### Menjalankan evaluasi
 
 ```powershell
