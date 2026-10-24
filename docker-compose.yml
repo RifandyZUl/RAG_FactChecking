@@ -1,0 +1,68 @@
+# Demo di container (Tahap 2): `docker compose up --build`, lalu buka http://127.0.0.1:8501.
+# Alat (ingest, evaluasi): `docker compose run --rm tools python -m ...` (lihat README, "Docker").
+#
+# JANGAN menjalankan demo di container dan evaluasi di host BERSAMAAN: buku besar kuota
+# (data/quota_ledger.json) dikunci dengan kunci berkas OS, yang tidak andal menembus bind mount
+# Windows/WSL2 (CLAUDE.md, "Demo, container, dan evaluasi"). Hentikan `demo` sebelum ingest: dua proses yang
+# membuka indeks bersamaan berisiko merusak sqlite.
+name: rag-factchecking
+
+x-hf-cache: &hf-cache
+  # Cache Hugging Face mesin host, BACA-SAJA: byte model sama persis dengan yang dipakai venv lokal (revisi
+  # bge-m3 dipatok), tanpa unduhan 2,2 GB. Ganti lokasinya dengan HF_CACHE_DIR bila berbeda.
+  type: bind
+  source: ${HF_CACHE_DIR:-${USERPROFILE:-${HOME}}/.cache/huggingface}
+  target: /home/app/.cache/huggingface
+  read_only: true
+  bind:
+    create_host_path: false
+
+x-env-file: &env-file
+  # .env dipasang sebagai berkas baca-saja (dibaca llm/secrets.py), bukan env_file: kunci API tidak muncul
+  # di `docker inspect`. Wajib ada; Docker tidak boleh membuat folder kosong bernama .env.
+  type: bind
+  source: ./.env
+  target: /app/.env
+  read_only: true
+  bind:
+    create_host_path: false
+
+services:
+  demo:
+    build: .
+    image: rag-factchecking:tahap2
+    ports:
+      - "127.0.0.1:8501:8501"  # hanya mesin ini
+    volumes:
+      # data/: indeks ChromaDB (baca-tulis: ChromaDB menulis ulang berkasnya saat koleksi dibuka) dan buku
+      # besar kuota bersama evaluasi. articles.json ikut terlihat tetapi tidak dibaca demo.
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind:
+          create_host_path: false
+      - *env-file
+      - *hf-cache
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 4g
+    restart: "no"
+
+  tools:
+    profiles: ["tools"]  # tidak ikut `docker compose up`
+    image: rag-factchecking:tahap2
+    volumes:
+      - type: bind
+        source: ./data
+        target: /app/data
+        bind:
+          create_host_path: false
+      # testset/ dan archive/: masukan dan keluaran skrip evaluasi (mis. retriever_exactness, index_check
+      # --expect-v1-archive). Menimpa dua berkas testset/ bawaan image dengan isi repositori yang sama.
+      - ./testset:/app/testset
+      - ./archive:/app/archive
+      - *env-file
+      - *hf-cache
+    mem_limit: 4g
+    command: ["python", "-m", "evaluation.index_check", "--help"]

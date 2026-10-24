@@ -10,6 +10,24 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-24, Tahap 2)*
+
+> **TAHAP 2 (branch `tahap-2-docker`, BELUM digabung; SEBAGIAN: Docker belum dibangun):**
+> (b) `pyproject.toml` + `pip install -e . --no-build-isolation`: **`PYTHONPATH=src` tidak diperlukan lagi**;
+> versi dependensi HANYA di `requirements.txt`; konfigurasi pytest/ruff pindah ke `pyproject.toml`
+> (`pytest.ini`, `ruff.toml` dihapus). Peluncur pembaruan berkala tidak lagi menyetel PYTHONPATH (jalan kering
+> dengan kunci dipegang: kode 9, `data/expansion/` tidak berubah). (c) requests 2.34.2 (CVE-2024-35195,
+> CVE-2024-47081, CVE-2026-25645). (f) **CI** `.github/workflows/ci.yml` (Ubuntu 24.04, Python 3.13, torch CPU,
+> tanpa model/API/rahasia; gagal bila ada uji dilewati): run pertama 571/571, 0 dilewati. (d) `Dockerfile`,
+> `docker-compose.yml`, `.dockerignore` (daftar-putih) DITULIS, **image BELUM dibangun**: memori bebas host
+> 1,2-2,5 GB. Demo container dijalankan lewat `python -m webapp.serve` (pemanasan saat server menyala; penanda
+> `RAG_READY_FILE` untuk HEALTHCHECK). (e) `python -m evaluation.embedding_proof`: **venv Windows = SAMA**
+> (kosinus min 0,9999999999985 pada 200 chunk benih 20261022; HNSW = eksak 64/64;
+> `docs/evaluasi/tahap2_bukti_embedding_windows.json`); bagian container BELUM. Salinan indeks untuk
+> pembuktian: `data/backups/salinan_bukti_tahap2_2026-10-24/{windows,container}/chroma` (salinan
+> `container` BELUM dibuka -- jangan dibuka di host). **Python: venv lokal tetap 3.11 (lingkungan evaluasi);
+> container dan CI 3.13; keduanya menjalankan seluruh uji.** ADR (h) menunggu Docker selesai.
+
 *(2026-10-24)*
 
 > **TAHAP 1b (branch `tahap-1b-struktur`, DIGABUNG ke main 2026-10-24 atas persetujuan pemilik proyek):** perapian struktur dengan `git mv`, tanpa
@@ -1079,7 +1097,7 @@ SATIRE/SATIR/KOMEDI ditampilkan sebagai PARODI lewat `STATUS_ALIASES`).
 
 - **Sistem operasi:** Windows
 - **Shell:** PowerShell
-- **Python:** 3.11.4 (64-bit)
+- **Python:** 3.11.4 (64-bit) untuk venv lokal (lingkungan evaluasi); container Docker dan CI memakai 3.13
 - **IDE:** Antigravity (turunan VS Code)
 
 ### Virtual environment (wajib)
@@ -1181,7 +1199,8 @@ RAG_FactChecking/
 │   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur  [TERKUNCI]
 │   ├── webapp/           # Demo: app.py (titik masuk; streamlit run src\webapp\app.py), settings,
 │   │                     #   resources (sekali muat + pemanasan), service (validasi, batas laju, serialisasi),
-│   │                     #   presentation (tanpa Streamlit), evaluation_facts, ui/ (+ style.css)
+│   │                     #   presentation (tanpa Streamlit), evaluation_facts, ui/ (+ style.css),
+│   │                     #   serve.py (peluncur container: pemanasan saat server menyala + penanda siap)
 │   ├── labeling/         # Pelabelan set uji: candidates/, gap/, sessions/ (dulu src/candidates/)
 │   └── evaluation/       # Evaluasi & diagnostik LIVE (bukan uji otomatis); README.md mengelompokkan per fungsi
 │       ├── generation_eval.py  #   evaluasi generasi (--check-budget, --compare)
@@ -1189,6 +1208,7 @@ RAG_FactChecking/
 │       ├── gemma_json_check.py #   uji format JSON Gemma 4
 │       ├── probe_quota.py      #   probe tunggal ke server (1 permintaan)
 │       ├── retriever_exactness.py  # retriever (HNSW) vs pencarian eksak; wajib tiap indeks bertambah
+│       ├── embedding_proof.py      # kesetaraan embedding/top-3 antar-lingkungan (venv vs container)
 │       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
 ├── tests/                # Uji offline (pytest): core/ scraping/ llm/ evaluation/ labeling/ webapp/ (BUKAN testset/)
 │   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat scripts/anonymize_fixtures.py
@@ -1211,6 +1231,8 @@ RAG_FactChecking/
 │                         #   per berkas/aturan hanya untuk dua berkas terkunci)
 ├── .gitattributes        # LF untuk teks; CRLF untuk *.cmd dan testset/** (hash byte bukti); biner untuk gambar
 ├── LICENSE               # MIT (kode saja; data TurnBackHoax tunduk pada ketentuan Mafindo)
+├── Dockerfile, docker-compose.yml, .dockerignore  # demo di container (Python 3.13); data/.env/cache model = volume
+├── .github/workflows/ci.yml  # CI: ruff + seluruh uji (Ubuntu, Python 3.13), tanpa model/API/rahasia
 └── CLAUDE.md
 ```
 
