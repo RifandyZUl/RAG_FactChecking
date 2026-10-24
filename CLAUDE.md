@@ -12,7 +12,7 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-24)*
 
-> **TAHAP 1b (branch `tahap-1b-struktur`, BELUM digabung):** perapian struktur dengan `git mv`, tanpa
+> **TAHAP 1b (branch `tahap-1b-struktur`, DIGABUNG ke main 2026-10-24 atas persetujuan pemilik proyek):** perapian struktur dengan `git mv`, tanpa
 > mengubah logika. Kode demo di `src/webapp/` (jalankan dengan `PYTHONPATH=src`), `src/candidates/` ->
 > `src/labeling/{candidates,gap,sessions}/`, uji dikelompokkan di `tests/<kelompok>/`, dokumen di
 > `docs/{rancangan,audit,riwayat}/`. **`testset/` tidak dipindah sama sekali** (README.md menjelaskan tiap
@@ -23,6 +23,9 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (eksternal_butir.json) dan `ecef6636...` (v1.jsonl) dihitung dari byte CRLF; isi git LF `667a67a0...` /
 > `d948addc...` (uji `tests/core/test_frozen_bytes.py`). Lisensi MIT. **Pekerjaan tertunda: ADR (setelah
 > Tahap 2).**
+> **Skrip pembaruan berkala setelah pemindahan BARU diuji dengan `--help`** (`.pyw` dan `.cmd`, kode keluar 0;
+> `data/expansion/` tidak berubah). Itu hanya membuktikan impor dan jalurnya; **bukti sebenarnya adalah jalan
+> terjadwal berikutnya (13.00)** -- periksa `data/expansion/pembaruan_status.json` dan log sesudahnya.
 
 *(2026-10-23)*
 
