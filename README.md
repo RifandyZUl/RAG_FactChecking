@@ -574,6 +574,29 @@ $h = { param($d) Get-ChildItem $d -Recurse -File | Sort-Object FullName | ForEac
 Setelah `reparse`, artikel lama harus tetap identik (yang berubah hanya bila parser berubah sejak artikel
 itu diambil). `ingest.py` mencetak jumlah chunk terpotong 512 token per seksi di awal: catat angkanya.
 
+**Pemulihan.** Cadangan dari langkah 1 dan 2 ada di `data\backups\pre_antrean_$tgl\` (`chroma\` dan
+`articles.json`); jangan dihapus sampai hasil ingest diverifikasi. Bila jendela PowerShell sempat tertutup,
+cari foldernya lalu isi ulang `$tgl` dengan tanggal pada nama folder itu:
+
+```powershell
+Get-ChildItem data\backups -Directory -Filter "pre_antrean_*" | Select-Object -ExpandProperty Name
+$tgl = '2026-10-25'   # contoh: sesuaikan dengan nama folder di atas
+
+# A. Gagal SEBELUM langkah 4 (indeks belum tersentuh): pulihkan articles.json saja
+Copy-Item -Force "data\backups\pre_antrean_$tgl\articles.json" data\articles.json
+
+# B. Gagal SAAT atau SETELAH langkah 4: pulihkan indeks DAN articles.json (hentikan demo/evaluasi dulu)
+Remove-Item -Recurse -Force data\chroma
+if (Test-Path data\chroma) { throw "indeks rusak belum terhapus; tutup proses yang membukanya lalu ulangi" }
+Copy-Item -Recurse "data\backups\pre_antrean_$tgl\chroma" data\chroma
+Copy-Item -Force "data\backups\pre_antrean_$tgl\articles.json" data\articles.json
+.\.venv\Scripts\python.exe -m evaluation.index_check --embed-sample 0   # harus INDEKS SEGAR, kode 0
+```
+
+Setelah pemulihan, antrean kembali belum digabung, jadi langkah 0-6 bisa diulang. Jangan memakai
+`ingest.py --rebuild` sebagai jalan pintas. Bila ingest hanya terhenti di tengah (mis. memori habis) tanpa
+galat SQLite/ChromaDB, cukup jalankan ulang langkah 4: chunk tersimpan bertahap.
+
 ### Menjalankan evaluasi
 
 ```powershell
