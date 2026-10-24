@@ -31,8 +31,14 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > `docs/evaluasi/tahap2_bukti_embedding_{windows,container}.json`). **Python: venv lokal tetap 3.11
 > (lingkungan evaluasi); container dan CI 3.13; keduanya menjalankan seluruh uji.** Tag `annotation-guide-v1.0`
 > di-push ke origin 2026-10-24. **Pembaruan terjadwal 22-24 Okt tidak berjalan** (jalan susulan setelah bangun
-> dari hibernasi tidak terpicu; log riwayat Task Scheduler tidak aktif); usulan perbaikan MENUNGGU persetujuan,
-> setelan tugas belum diubah. ADR di `docs/adr/`.
+> dari hibernasi tidak terpicu; dugaan: syarat jaringan gagal saat jaringan masih "Identifying"). **Diubah
+> 2026-10-24 atas persetujuan pemilik proyek: `RunOnlyIfNetworkAvailable` True -> False** (satu-satunya
+> perbedaan XML sebelum/sesudah; pembungkus sudah melaporkan jaringan putus dengan kode 4 + penanda, jadi
+> kegagalan kini terlihat). Log riwayat Task Scheduler: diminta diaktifkan, tetapi `wevtutil gl` 2026-10-24
+> masih `enabled: false` (perlu dijalankan ulang sebagai admin). Pemicu saat bangun DITUNDA (bisa menjalankan
+> scraping beberapa kali sehari). **Bukti keberhasilan = jalan terjadwal 2026-10-25 13.00** (cek
+> `Get-ScheduledTaskInfo` dan `data/expansion/pembaruan_status.json`). Rincian:
+> `docs/rancangan/rancangan_pembaruan_berkala.md`, bagian terakhir. ADR di `docs/adr/`.
 
 *(2026-10-24)*
 
@@ -91,7 +97,7 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > persetujuan pemilik proyek): tugas "RAG_FactChecking - pembaruan berkala", setiap hari 13.00**,
 > `pythonw.exe` + `scripts/pembaruan_berkala.pyw` (tanpa jendela), boleh mulai dan terus berjalan
 > saat memakai baterai, `StartWhenAvailable` (jadwal terlewat dijalankan sekali saat menyala), hanya
-> bila jaringan tersedia, satu instans, batas 1 jam, hanya saat pengguna login (Interactive). Dipicu
+> bila jaringan tersedia (syarat ini DIHAPUS 2026-10-24, lihat status Tahap 2), satu instans, batas 1 jam, hanya saat pengguna login (Interactive). Dipicu
 > sekali lewat Task Scheduler pukul 20.35: kode keluar 0, `pembaruan_status.json` dan log tertulis --
 > TETAPI jalan itu melewati mode maju (sudah berjalan hari itu), jadi **pengambilan dari jaringan di
 > bawah Task Scheduler baru pertama kali teruji pada jalan terjadwal 2026-10-04 13.00; periksa

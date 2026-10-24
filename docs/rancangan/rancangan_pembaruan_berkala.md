@@ -221,3 +221,40 @@ ada permintaan jaringan yang dilakukan dari dalam Task Scheduler. Pengambilan ar
 Scheduler baru teruji pada jalan terjadwal pertama, 2026-10-04 pukul 13.00.
 
 Menghapus tugas: `Unregister-ScheduledTask -TaskName "RAG_FactChecking - pembaruan berkala"`.
+
+## Perubahan 2026-10-24: syarat jaringan dihapus (disetujui pemilik proyek)
+
+**Masalah.** Jalan terjadwal 22, 23, dan 24 Oktober tidak terjadi (`NumberOfMissedRuns` 3; jalan terakhir
+21 Oktober 20.10, hasil 0). Log riwayat Task Scheduler saat itu tidak aktif, jadi bukti diambil dari log
+System dan NetworkProfile:
+
+| Bangun dari hibernasi | Jalan susulan (`StartWhenAvailable`) | Jaringan setelah bangun |
+| --- | --- | --- |
+| 21 Okt 20.04 | berjalan 20.10, hasil 0 | tersambung langsung (5 dtk) |
+| 22 Okt 22.01 (menyala sampai 01.06) | tidak ada | fase "Identifying..." 12 dtk, lalu tersambung |
+| 24 Okt 14.23 (menyala terus) | tidak ada | fase "Identifying..." 14 dtk, lalu tersambung |
+
+Tidak ada reboot sejak 20 Oktober, jadi sesi login tetap hidup. **Penyebab yang paling mungkin, BELUM
+terbukti:** pemeriksaan jalan susulan jatuh saat jaringan masih "Identifying", syarat
+`RunOnlyIfNetworkAvailable` gagal, dan Task Scheduler membuang jalan itu tanpa jejak.
+
+**Keputusan pemilik proyek (2026-10-24):**
+
+- **(a) Log riwayat Task Scheduler diaktifkan** (perintah admin `wevtutil sl
+  Microsoft-Windows-TaskScheduler/Operational /e:true`, dijalankan pemilik proyek sendiri). Diperiksa
+  2026-10-24 dengan `wevtutil gl`: **masih `enabled: false`** -- perintah perlu dijalankan ulang di
+  PowerShell administrator.
+- **(c) `RunOnlyIfNetworkAvailable` dihapus** (True -> False), lewat
+  `$t = Get-ScheduledTask -TaskName "RAG_FactChecking - pembaruan berkala"; $t.Settings.RunOnlyIfNetworkAvailable = $false; Set-ScheduledTask -InputObject $t`.
+  XML tugas sebelum dan sesudah dibandingkan: satu-satunya perbedaan adalah baris
+  `<RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>` (nilai False adalah bawaan dan tidak ditulis).
+  Setelan lain tidak berubah: harian 13.00, `StartWhenAvailable` True, baterai diizinkan, `IgnoreNew`,
+  batas 1 jam, Interactive/Limited. Alasan: pembungkus sudah menangani jaringan putus sendiri (kode keluar 4,
+  `PERHATIAN_PEMBARUAN.txt`, notifikasi), jadi tanpa syarat ini kegagalan jaringan menjadi TERLIHAT,
+  bukan jalan yang hilang diam-diam.
+- **(b) Pemicu saat laptop bangun: DITUNDA**, karena bisa membuat scraping berjalan beberapa kali sehari.
+
+**Bukti keberhasilan belum ada:** yang membuktikan adalah jalan terjadwal berikutnya, **25 Oktober 2026
+pukul 13.00** (atau jalan susulannya bila laptop sedang tidur). Periksa `Get-ScheduledTaskInfo`
+(`LastRunTime`, `LastTaskResult`), `data/expansion/pembaruan_status.json`, dan log riwayat Task Scheduler
+bila (a) sudah aktif.
