@@ -34,11 +34,28 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > dari hibernasi tidak terpicu; dugaan: syarat jaringan gagal saat jaringan masih "Identifying"). **Diubah
 > 2026-10-24 atas persetujuan pemilik proyek: `RunOnlyIfNetworkAvailable` True -> False** (satu-satunya
 > perbedaan XML sebelum/sesudah; pembungkus sudah melaporkan jaringan putus dengan kode 4 + penanda, jadi
-> kegagalan kini terlihat). Log riwayat Task Scheduler: diminta diaktifkan, tetapi `wevtutil gl` 2026-10-24
-> masih `enabled: false` (perlu dijalankan ulang sebagai admin). Pemicu saat bangun DITUNDA (bisa menjalankan
+> kegagalan kini terlihat). Log riwayat Task Scheduler (`Microsoft-Windows-TaskScheduler/Operational`):
+> **AKTIF** sejak 2026-10-24 malam (`wevtutil gl` -> `enabled: true`; dijalankan pemilik proyek sebagai admin),
+> jadi jalan berikutnya tercatat di Event Viewer. Pemicu saat bangun DITUNDA (bisa menjalankan
 > scraping beberapa kali sehari). **Bukti keberhasilan = jalan terjadwal 2026-10-25 13.00** (cek
 > `Get-ScheduledTaskInfo` dan `data/expansion/pembaruan_status.json`). Rincian:
 > `docs/rancangan/rancangan_pembaruan_berkala.md`, bagian terakhir. ADR di `docs/adr/`.
+>
+> **RENCANA INGEST ANTREAN (dicatat 2026-10-24 malam, atas keputusan pemilik proyek): DIJALANKAN PEMILIK PROYEK
+> SENDIRI pada 2026-10-25, SETELAH jalan terjadwal 13.00 selesai** (`Get-ScheduledTaskInfo`: `LastRunTime` hari
+> itu, `LastTaskResult` 0, status bukan `Running`). Malam 2026-10-24 tidak ada langkah ingest yang dijalankan.
+> Antrean saat dicatat: 74 artikel (27 Sep-21 Okt 2026; SALAH 51, PENIPUAN 21, BELUM TERBUKTI 2; kualitas
+> bersih) -> perkiraan 1.606 artikel / 4.815 chunk (222 chunk baru); jalan 13.00 bisa menambah antrean, jadi
+> angka yang berlaku adalah laporan langkah 0. Perintah: README "Ingest antrean" langkah 0-6 dan
+> "Pemulihan" (`scripts/gabung_antrean.py --tulis --folder-cadangan "data\backups\pre_antrean_$tgl"`), sesi
+> direkam pemilik proyek dengan `Start-Transcript`. **Claude Code TIDAK menjalankan langkah apa pun.** Setelah
+> log diterima, di branch baru: verifikasi mandiri (jumlah artikel di `articles.json` dan indeks, `index_check`,
+> `retriever_exactness`, sidik jari salinan `data/container/chroma` = produksi), pembaruan
+> `manifests/expansion_article_ids.json`, uji ulang tiga contoh beranda (sekali masing-masing lewat layanan
+> sungguhan; contoh 1-2 tetap ditemukan dengan artikel yang sama, contoh 3 tetap belum ditemukan -- bila
+> berubah, laporkan dan usulkan pengganti, jangan langsung diganti), pencatatan sidik jari indeks baru sebagai
+> indeks demo (angka evaluasi di README dan halaman Tentang TETAP untuk indeks 1.532 artikel), dan tangkapan
+> layar ulang halaman Tentang (390 dan 1280 px).
 
 *(2026-10-24)*
 
