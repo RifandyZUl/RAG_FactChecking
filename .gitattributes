@@ -1,0 +1,23 @@
+# Akhir baris (Tahap 1b, keputusan pemilik proyek 2026-10-24). Isi di repositori selalu LF.
+# Salinan kerja: LF untuk semua berkas teks, apa pun setelan core.autocrlf, agar skrip dan konfigurasi
+# berjalan di container Linux dan CI.
+* text=auto eol=lf
+
+# Skrip Windows butuh CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Data beku testset/: salinan kerja CRLF, sama seperti saat hash bukti dicatat. sha256 byte
+# eksternal_butir.json (87e2ad83...) dan v1.jsonl (ecef6636...) dihitung dari salinan kerja CRLF di Windows;
+# aturan ini membuatnya bisa direproduksi juga di Linux. Lihat testset/README.md.
+testset/** text eol=crlf
+# Pengecualian: pedoman anotasi tersimpan LF di salinan kerja sejak dikunci (hash-nya ternormalisasi).
+testset/ANNOTATION_GUIDE.md text eol=lf
+
+# Biner: tidak pernah dikonversi.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.xlsx binary
+*.sqlite3 binary
+*.bin binary
