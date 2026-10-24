@@ -29,6 +29,15 @@ sudah dipakai aplikasi lain.
   - `.env` sebagai berkas baca-saja (bukan `env_file`, supaya kunci tidak terlihat di `docker inspect`);
   - cache Hugging Face host, baca-saja.
 - **`mem_limit: 5g`**. Puncak terukur 3,39 GB (`memory.peak`).
+- **Berhenti dengan bersih: `stop_grace_period: 30s` dan `init: true`** (2026-10-24). Container yang dihentikan
+  dulu keluar dengan kode 137 (SIGKILL). Diagnosis awal (Python sebagai PID 1 mengabaikan SIGTERM) ternyata
+  keliru. Penyebab yang terukur lewat `docker events`: daemon Docker di mesin pengembangan memberi
+  `StopTimeout` **1 detik** ke setiap container (juga pada `docker run` polos), sehingga SIGKILL datang sekitar
+  1 detik setelah SIGTERM. Streamlit polos sempat berhenti dalam 0,8 detik, sedangkan Streamlit dengan model
+  termuat butuh 1,5-2,5 detik. Dengan `stop_grace_period: 30s`, `docker compose stop` selesai dalam 2,5 detik
+  dengan kode keluar 0, hanya SIGTERM yang dikirim, buku besar kuota tidak berubah, dan kuncinya bisa langsung
+  diambil proses baru. Tanpa `init` hasilnya sama (2,2 detik, kode 0). `init: true` dipertahankan sebagai
+  praktik baku (tini meneruskan sinyal dan membereskan proses anak), bukan sebagai perbaikan kode 137.
 - **Kesehatan**: `python -m webapp.serve` memulai pemanasan di proses yang sama dengan Streamlit. HEALTHCHECK
   baru sehat setelah pemanasan berhasil. Terukur: sehat dalam 26 detik; model dimuat sekali (3,3 detik, pid 1).
 

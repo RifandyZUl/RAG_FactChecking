@@ -72,7 +72,15 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    # Terukur: model ~2,2 GB + torch + Streamlit; demo 4-4,5 GB. Batas 4 GB berisiko OOM saat model dimuat.
+    # init: tini sebagai PID 1 (meneruskan sinyal, membereskan proses anak yatim). Praktik baku, BUKAN penyebab
+    # kode 137 yang dulu teramati: Streamlit memasang penanganan SIGTERM sendiri, dan tanpa init container juga
+    # berhenti bersih (terukur 2026-10-24). Penyebabnya batas waktu berhenti di bawah ini.
+    init: true
+    # Daemon Docker di mesin pengembangan memberi StopTimeout 1 dtk ke setiap container (terukur 2026-10-24,
+    # juga pada `docker run` polos). Streamlit dengan model termuat butuh lebih dari itu untuk berhenti, lalu
+    # dibunuh SIGKILL (kode 137). Batas ini disetel eksplisit agar tidak bergantung pada setelan daemon.
+    stop_grace_period: 30s
+    # Terukur: puncak 3,39 GB (memory.peak, 2026-10-24); 5 GB memberi ruang saat model dimuat.
     mem_limit: 5g
     restart: "no"
 
@@ -99,5 +107,6 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    init: true
     mem_limit: 5g
     command: ["python", "-m", "evaluation.embedding_proof", "--help"]
