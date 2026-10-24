@@ -8,6 +8,6 @@ Evaluasi dan alat diagnostik LIVE (memanggil LLM sungguhan) serta pustaka penduk
   gemma_json_check  uji format JSON Gemma 4 (CLI)
   probe_quota       probe tunggal ke server (CLI)
 
-Semua CLI dijalankan dari root proyek: PYTHONPATH=src python -m evaluation.<modul>
+Semua CLI dijalankan dari root proyek: python -m evaluation.<modul> (paket dipasang dengan pip install -e .)
 Nama modul sengaja TIDAK berawalan `test_` agar pytest tidak mengumpulkannya.
 """

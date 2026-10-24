@@ -20,7 +20,7 @@ aturan GENERIK (tidak ada tabel nilai asli di berkas ini):
 Judul, label, tanggal, kategori, navigasi situs, dan tautan rujukan media tidak diubah.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python scripts/anonymize_fixtures.py <dir_asli> <dir_keluaran>
+  python scripts/anonymize_fixtures.py <dir_asli> <dir_keluaran>
 """
 
 import hashlib

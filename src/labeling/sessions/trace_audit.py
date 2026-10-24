@@ -17,7 +17,7 @@ proyek. Karena itu ringkasan yang dicetak hanya memuat jumlah dan nomor butir; s
 berkas keluaran lokal, yang TIDAK boleh dibuka pemilik proyek sebelum tinjauan buta selesai.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.sessions.trace_audit
+  python -m labeling.sessions.trace_audit
 """
 
 import csv

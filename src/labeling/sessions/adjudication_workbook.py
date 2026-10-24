@@ -12,9 +12,9 @@ Hasil adjudikasi dicatat terpisah dan TIDAK mengubah label final maupun metrik u
 catatan diisi pemilik proyek sendiri, tanpa bantuan AI (Aturan Wajib #5).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.sessions.adjudication_workbook --make   # menolak menimpa
-  PYTHONPATH=src python -m labeling.sessions.adjudication_workbook --read [--berkas <..._terisi_v2.xlsx>]
-  PYTHONPATH=src python -m labeling.sessions.adjudication_workbook --sensitivitas   # 7.8, dari hasil --read
+  python -m labeling.sessions.adjudication_workbook --make   # menolak menimpa
+  python -m labeling.sessions.adjudication_workbook --read [--berkas <..._terisi_v2.xlsx>]
+  python -m labeling.sessions.adjudication_workbook --sensitivitas   # 7.8, dari hasil --read
 """
 
 import argparse

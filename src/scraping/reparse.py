@@ -6,7 +6,7 @@ ada, HTML dari cache, hasil ditulis dengan penulis yang sama seperti `scraping.p
 (sehingga byte-nya sebanding). Gagal keras bila ada cache yang hilang atau tidak sah; tidak
 pernah menulis hasil parsial.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m scraping.reparse [--out JALUR]
+Pemakaian (dari root proyek): python -m scraping.reparse [--out JALUR]
 Setelah articles.json berubah, indeks vektor WAJIB dibangun ulang (lihat CLAUDE.md).
 """
 

@@ -11,9 +11,9 @@ final tercatat di kode (commit yang sama dengan catatan di rancangan 7.5) -- den
 segel dibuka. Hasil per butir berisi teks pesan tidak pernah dicetak.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.external_analysis --keandalan
-  PYTHONPATH=src python -m evaluation.external_analysis --label-final
-  PYTHONPATH=src python -m evaluation.external_analysis --metrik
+  python -m evaluation.external_analysis --keandalan
+  python -m evaluation.external_analysis --label-final
+  python -m evaluation.external_analysis --metrik
 """
 
 import argparse

@@ -490,9 +490,16 @@ tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1                                  # Windows PowerShell
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest, ruff
+.\.venv\Scripts\python.exe -m pip install -e . --no-build-isolation  # pasang src/ ke venv (pyproject.toml)
 copy .env.example .env          # lalu isi GEMINI_API_KEY
 ```
+
+`pip install -e .` memasang paket proyek dalam mode *editable*: venv menunjuk langsung ke `src/`, jadi
+perubahan kode langsung berlaku dan **semua perintah berjalan tanpa `PYTHONPATH=src`**. Versi dependensi
+hanya ada di `requirements.txt` (dibaca `pyproject.toml`, tidak ditulis ulang di sana); setelah
+mengubahnya, jalankan ulang kedua perintah `pip install` di atas. `--no-build-isolation` memakai
+setuptools yang sudah ada di venv (>= 77) alih-alih mengunduhnya.
 
 > **Jangan pakai `pip install` atau `python` tanpa jalur eksplisit ke `.venv`.**
 > `Activate.ps1` mengubah `python`/`pip` di sesi PowerShell yang sama, tapi bila
@@ -504,7 +511,6 @@ copy .env.example .env          # lalu isi GEMINI_API_KEY
 ### Membangun basis pengetahuan
 
 ```powershell
-$env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m scraping              # ambil artikel → data/articles.json
 .\.venv\Scripts\python.exe src\ingest.py --rebuild  # chunking + embedding → data/chroma/
 .\.venv\Scripts\python.exe -m evaluation.index_check   # verifikasi indeks segar
@@ -520,7 +526,6 @@ mengambil versi terbaru dari Hugging Face Hub. Di mesin baru, unduh model sekali
 ### Menjalankan evaluasi
 
 ```powershell
-$env:PYTHONPATH = "src"                             # wajib diatur ulang bila sesi baru
 .\.venv\Scripts\python.exe -m evaluation.testset_eval      # 3 run pada set uji beku
 .\.venv\Scripts\python.exe -m evaluation.testset_analysis  # hitung metrik (tanpa panggilan API)
 
@@ -546,7 +551,6 @@ dan ChromaDB menulis ulang berkasnya setiap kali dibuka. Sidik jari **isinya**
 Memakai arsip, tanpa mengubah kode:
 
 ```powershell
-$env:PYTHONPATH = "src"
 $env:RAG_INDEX_DIR = "archive/v1"
 .\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive   # wajib lolos (kode 0)
 .\.venv\Scripts\python.exe -m evaluation.testset_eval                      # atau skrip lain
@@ -564,7 +568,6 @@ teks hoaks apa adanya, termasuk nomor dan tautan penipuan.
    menulis berkas bila ada artikel yang tidak dapat dipulihkan:
 
    ```powershell
-   $env:PYTHONPATH = "src"
    .\.venv\Scripts\python.exe -m scraping.restore archive\v1\article_ids.json --out archive\v1\articles.json
    ```
 
@@ -572,7 +575,6 @@ teks hoaks apa adanya, termasuk nomor dan tautan penipuan.
    `--allow-archive`:
 
    ```powershell
-   $env:PYTHONPATH = "src"
    .\.venv\Scripts\python.exe src\ingest.py --rebuild --articles archive\v1\articles.json --chroma-dir archive\v1\chroma --allow-archive
    ```
 
@@ -615,11 +617,10 @@ dievaluasi. Lapisannya: `src/webapp/ui/` (tampilan) -> `src/webapp/service.py` (
 pengetahuan") dan `GEMINI_API_KEY` di `.env`.
 
 ```powershell
-$env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m streamlit run src\webapp\app.py   # dari root repositori
 ```
 
-`PYTHONPATH=src` wajib: titik masuk ada di `src/webapp/`, sedangkan modul inti (`generator`, `retriever`) di akar `src/`. Di Command Prompt (cmd): `set PYTHONPATH=src` lalu perintah yang sama tanpa `.\` di depan. Browser terbuka ke
+Di Command Prompt (cmd): perintah yang sama tanpa `.\` di depan. Browser terbuka ke
 `http://localhost:8501`; hentikan dengan Ctrl+C. Pemantau berkas Streamlit dimatikan
 (`.streamlit/config.toml`), jadi **jalankan ulang server setelah mengubah kode**.
 
@@ -627,7 +628,7 @@ $env:PYTHONPATH = "src"
 `hf_env.prepare_hf_env()` di awal setiap titik masuk; revisi bge-m3 dipatok di `ingest.MODEL_REVISION`). Di mesin baru, unduh sekali dengan Hub menyala:
 
 ```powershell
-$env:HF_HUB_OFFLINE = "0"; $env:PYTHONPATH = "src"
+$env:HF_HUB_OFFLINE = "0"
 .\.venv\Scripts\python.exe -c "import ingest; ingest.load_model()"
 Remove-Item Env:HF_HUB_OFFLINE
 ```

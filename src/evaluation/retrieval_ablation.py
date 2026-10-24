@@ -19,7 +19,7 @@ maksimum dibandingkan dengan `retriever.retrieve` (HNSW, 30 chunk) dan dengan to
 di hasil evaluasi v1.
 
 Pemakaian (dari root proyek; memuat bge-m3 di CPU, tanpa jaringan API):
-  PYTHONPATH=src python -m evaluation.retrieval_ablation
+  python -m evaluation.retrieval_ablation
 """
 
 import argparse

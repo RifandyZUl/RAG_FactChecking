@@ -12,7 +12,7 @@ Gagal keras (kode keluar 1, berkas TIDAK ditulis) bila ada artikel yang tidak da
 arsip asli.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m scraping.restore archive/v1/article_ids.json --out archive/v1/articles.json
+  python -m scraping.restore archive/v1/article_ids.json --out archive/v1/articles.json
 """
 
 import argparse

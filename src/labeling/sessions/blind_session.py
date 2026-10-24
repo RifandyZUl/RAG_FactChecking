@@ -7,7 +7,7 @@ ulang dicampur 7 butir audit, tanpa penanda) dibuat terpisah, 20 Oktober 2026 (s
 penyimpangan 2026-10-19, docs/rancangan_evaluasi_eksternal.md 7.2).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.sessions.blind_session --select    # menolak menimpa pilihan yang sudah ada
+  python -m labeling.sessions.blind_session --select    # menolak menimpa pilihan yang sudah ada
 """
 
 import argparse

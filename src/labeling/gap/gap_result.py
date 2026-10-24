@@ -11,8 +11,8 @@ Kode ini hanya MEMVALIDASI dan MENGHITUNG. Keputusan tidak pernah diisi, diusulk
             menilai pencarian otomatis; tidak boleh dipakai untuk mengubah label.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.gap.gap_result --hasil
-  PYTHONPATH=src python -m labeling.gap.gap_result --kunci
+  python -m labeling.gap.gap_result --hasil
+  python -m labeling.gap.gap_result --kunci
 """
 
 import argparse

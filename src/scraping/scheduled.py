@@ -20,7 +20,7 @@ lagi) | 6 ada yang perlu ditinjau | 7 batas mode maju tidak ditemukan | 8 galat 
 lain sedang berlangsung.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m scraping.scheduled [--no-notify] [--reset]
+  python -m scraping.scheduled [--no-notify] [--reset]
 """
 
 import argparse

@@ -25,11 +25,11 @@ jejak audit -- KEDUANYA ditegakkan lewat kode, bukan hanya konvensi: `reviewable
 tests/test_gemma_generate.py untuk uji yang menegakkan keduanya).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m labeling.candidates.gemma_generate --check-budget
-  PYTHONPATH=src python -m labeling.candidates.gemma_generate --slot positif --target 36120 36111
-  PYTHONPATH=src python -m labeling.candidates.gemma_generate --slot negatif_angka_waktu --target 36xxx
-  PYTHONPATH=src python -m labeling.candidates.gemma_generate --slot negatif_entitas_sama --target 36xxx
-  PYTHONPATH=src python -m labeling.candidates.gemma_generate --slot negatif_mudah --n-negatif-mudah 5
+  python -m labeling.candidates.gemma_generate --check-budget
+  python -m labeling.candidates.gemma_generate --slot positif --target 36120 36111
+  python -m labeling.candidates.gemma_generate --slot negatif_angka_waktu --target 36xxx
+  python -m labeling.candidates.gemma_generate --slot negatif_entitas_sama --target 36xxx
+  python -m labeling.candidates.gemma_generate --slot negatif_mudah --n-negatif-mudah 5
 """
 
 import argparse

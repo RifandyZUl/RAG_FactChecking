@@ -15,7 +15,7 @@ setelah ekstraksi longgar, dan bentuk (kunci + tipe) sesuai. Kegagalan pemanggil
 
 Bukan evaluasi juri RAGAS itu sendiri: RAGAS belum terpasang, dan prompt di sini
 adalah perkiraan bentuk langkahnya. Sampel: 3 prompt x 2 mode, indikasi saja.
-Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.gemma_json_check [--model gemma-4-31b-it]
+Pemakaian (dari root proyek): python -m evaluation.gemma_json_check [--model gemma-4-31b-it]
 """
 
 import argparse

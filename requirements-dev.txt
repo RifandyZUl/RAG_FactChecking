@@ -1,7 +1,7 @@
 # Dependensi pengembangan (uji offline). Pasang: pip install -r requirements-dev.txt
 -r requirements.txt
 pytest==9.1.1
-# Linter; versi dikunci karena aturan bawaan ruff berubah antarversi (konfigurasi: ruff.toml)
+# Linter; versi dikunci karena aturan bawaan ruff berubah antarversi (konfigurasi: [tool.ruff] di pyproject.toml)
 ruff==0.16.9
 # Berkas konfirmasi manusia .xlsx (candidates.gap_workbook): tata letak saja, keputusan diisi manusia
 openpyxl==3.1.5

@@ -15,10 +15,10 @@ ef_search 2000, hash generator/retriever/chunker sama, dan model/thinking sama d
 berbeda -> tidak dimulai (kode keluar 5).
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.external_eval --freeze                  # sekali; menolak menimpa
-  PYTHONPATH=src python -m evaluation.external_eval --set liputan6 --run 1 [--check-budget]
-  PYTHONPATH=src python -m evaluation.external_eval --set v1 --run 1
-  PYTHONPATH=src python -m evaluation.external_eval --status                  # status teknis saja
+  python -m evaluation.external_eval --freeze                  # sekali; menolak menimpa
+  python -m evaluation.external_eval --set liputan6 --run 1 [--check-budget]
+  python -m evaluation.external_eval --set v1 --run 1
+  python -m evaluation.external_eval --status                  # status teknis saja
 """
 
 import argparse

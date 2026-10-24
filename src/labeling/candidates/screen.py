@@ -8,7 +8,7 @@ kelas: `kemungkinan_sama` (klaimnya mungkin sama dengan artikel basis data -> pi
 embedding menilai kemiripan topik, bukan kesamaan klaim (lihat CLAUDE.md), sehingga setiap kelas harus
 ditinjau manusia. Tidak ada LLM generatif yang dipanggil.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.candidates.screen [--in JALUR] [--out JALUR]
+Pemakaian (dari root proyek): python -m labeling.candidates.screen [--in JALUR] [--out JALUR]
 """
 
 import argparse

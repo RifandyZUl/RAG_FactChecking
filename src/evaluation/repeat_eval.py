@@ -6,7 +6,7 @@ Murni diagnostik: tidak mengubah prompt, setelan, atau logika generator, dan has
 dipakai untuk menyetel apa pun (10 kueri ini sudah terlalu sering dipakai). Hasil per panggilan ditulis
 ke data/generation_repeat_<model>.jsonl (satu baris per kueri per run), dapat dilanjutkan.
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m evaluation.repeat_eval [--model ID] [--runs 5]
+Pemakaian (dari root proyek): python -m evaluation.repeat_eval [--model ID] [--runs 5]
 """
 
 import argparse

@@ -19,8 +19,8 @@ jejak audit. Kuota harian habis menghentikan SELURUH proses (bukan menandai satu
 sama seperti evaluation.generation_eval/repeat_eval.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.testset_eval --check-budget
-  PYTHONPATH=src python -m evaluation.testset_eval [--model ID] [--force]
+  python -m evaluation.testset_eval --check-budget
+  python -m evaluation.testset_eval [--model ID] [--force]
 """
 
 import argparse

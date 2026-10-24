@@ -12,7 +12,7 @@ tanpa biaya karena hanya membaca berkas lokal:
                                           BUKAN panggilan API
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.testset_analysis [--eval-file PATH] [--out PATH]
+  python -m evaluation.testset_analysis [--eval-file PATH] [--out PATH]
 """
 
 import argparse

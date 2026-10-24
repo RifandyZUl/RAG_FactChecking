@@ -3,7 +3,8 @@ Peluncur pembaruan berkala TANPA JENDELA (scraping saja; ingest tetap manual).
 
 Dijalankan Task Scheduler dengan pythonw.exe dari venv proyek, sehingga tidak ada jendela konsol
 yang muncul atau merebut fokus. Tidak bergantung pada direktori kerja maupun variabel lingkungan
-pemanggil: root proyek diturunkan dari letak berkas ini. Kode keluar = kode keluar
+pemanggil: root proyek diturunkan dari letak berkas ini, dan paket proyek dipasang ke venv
+(`pip install -e .`; bila belum, impor gagal -> kode 8 + penanda). Kode keluar = kode keluar
 scraping.scheduled (lihat src/scraping/scheduled.py). Keluaran masuk ke log per jalan di
 data/expansion/logs/.
 
@@ -18,7 +19,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
-sys.path.insert(0, str(ROOT / "src"))
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 try:

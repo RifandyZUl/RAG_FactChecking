@@ -14,7 +14,7 @@
 | `labeling/` | `src/labeling/` |
 | `webapp/` | `src/webapp/` (layanan, sumber daya, tampilan, tema, halaman lewat `streamlit.testing`) |
 
-Di akar: `conftest.py`, `_fakes.py` (objek palsu bersama; `pytest.ini` menaruh `tests/` di `pythonpath`),
+Di akar: `conftest.py`, `_fakes.py` (objek palsu bersama; `pyproject.toml` menaruh `tests/` di `pythonpath`),
 `fixtures/` (HTML nyata yang **disamarkan** lewat `scripts/anonymize_fixtures.py`).
 
 ```powershell

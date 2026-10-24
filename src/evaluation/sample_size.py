@@ -10,7 +10,7 @@ rancangan agar dapat ditelusuri dan dihitung ulang:
   (c) batas atas Wilson bila tidak ada kejadian (0 dari n), dan batas bawah bila semua benar.
 
 Pemakaian (dari root proyek):
-  PYTHONPATH=src python -m evaluation.sample_size [--out-json testset/v2_ukuran_sampel.json]
+  python -m evaluation.sample_size [--out-json testset/v2_ukuran_sampel.json]
 """
 
 import argparse

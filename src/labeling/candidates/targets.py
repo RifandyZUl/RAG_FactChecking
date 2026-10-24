@@ -7,7 +7,7 @@ di-oversample (kedua artikel PARODI dipilih); minimal 2 target dari artikel deng
 artikel "wajib" (mis. yang sudah punya cakupan pada situs cek fakta lain) dimasukkan lebih dulu ke selnya,
 sisanya diacak dengan benih. Hasil: testset/targets_v1.json (hanya id; TIDAK memuat judul).
 
-Pemakaian (dari root proyek): PYTHONPATH=src python -m labeling.candidates.targets
+Pemakaian (dari root proyek): python -m labeling.candidates.targets
 """
 
 import json

@@ -23,4 +23,4 @@ Subpaket:
 | `labeling/` | pembuatan kandidat set uji (`candidates/`), pengukuran celah (`gap/`), sesi pelabelan dan audit (`sessions/`) |
 | `webapp/` | demo Streamlit: `app.py` (titik masuk), `settings`, `resources`, `service`, `presentation`, `evaluation_facts`, `ui/` |
 
-Semua perintah dijalankan dari root proyek dengan `PYTHONPATH=src`.
+Semua perintah dijalankan dari root proyek. Paket dipasang ke venv dengan `pip install -e .` (lihat README utama), jadi `PYTHONPATH=src` tidak diperlukan.
