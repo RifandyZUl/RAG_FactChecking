@@ -24,6 +24,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from hf_env import prepare_hf_env
 from paths import DATA_DIR, PROJECT_ROOT
 
 FROZEN_PATH = PROJECT_ROOT / "testset" / "eksternal_butir.json"
@@ -106,7 +107,7 @@ def load_frozen() -> dict[str, dict[str, Any]]:
 def load_session() -> list[dict[str, Any]]:
     res = json.loads(SESSION_RESULT_PATH.read_text(encoding="utf-8"))
     if res["perlu_ditanyakan"] or len(res["keputusan"]) != 37:
-        raise SystemExit("hasil sesi buta belum lengkap: jalankan candidates.blind_workbook --read lebih dulu")
+        raise SystemExit("hasil sesi buta belum lengkap: jalankan labeling.sessions.blind_workbook --read lebih dulu")
     return res["keputusan"]
 
 
@@ -280,7 +281,7 @@ def flip(labels: dict[str, dict[str, Any]], codes: dict[str, Any]) -> dict[str, 
 def sensitivities(final: dict[str, Any], main: dict[str, dict[str, Any]], retest_changes: list[dict[str, Any]],
                   kappa_band_name: str) -> dict[str, dict[str, dict[str, Any]]]:
     """Set label sensitivitas (6.2, 3, 7.4, 7.5). Butir yang sudah sama dengan arah balik tidak berubah."""
-    from candidates.gap_result import DOUBTFUL_ACCEPTED, DOUBTFUL_REJECTED
+    from labeling.gap.gap_result import DOUBTFUL_ACCEPTED, DOUBTFUL_REJECTED
     ragu = [k for k, v in main.items() if v["ragu"]]
     variants = {
         "label_awal_butir_audit": label_view(final, "label_awal"),
@@ -419,9 +420,9 @@ def cmd_reliability() -> int:
 def cmd_final_labels() -> int:
     if FINAL_LABELS_PATH.exists():
         raise SystemExit(f"{FINAL_LABELS_PATH.name} sudah ada: label final tidak ditimpa")
-    from candidates.blind_workbook import article_lookup
-    from candidates.gap_blocks import day_gap
-    from candidates.gap_review import load_valid_sample
+    from labeling.gap.gap_blocks import day_gap
+    from labeling.gap.gap_review import load_valid_sample
+    from labeling.sessions.blind_workbook import article_lookup
     cases, session = load_frozen(), load_session()
     _, _, valid = load_valid_sample()
     by_id = article_lookup()
@@ -457,8 +458,12 @@ def locked_final_labels() -> dict[str, Any]:
 
 def candidate_lists() -> dict[str, list[str]]:
     """Daftar kandidat yang dulu ditampilkan ke pemilik proyek per butir (dibangun ulang dan diverifikasi seperti sesi buta)."""
-    from candidates.blind_workbook import article_lookup, round1_items, round2_items
-    from candidates.gap_review import load_valid_sample
+    from labeling.gap.gap_review import load_valid_sample
+    from labeling.sessions.blind_workbook import (
+        article_lookup,
+        round1_items,
+        round2_items,
+    )
     _, _, valid = load_valid_sample()
     by_id = article_lookup()
     src = {1: round1_items(valid, by_id), 2: round2_items(valid, by_id)}
@@ -560,6 +565,7 @@ def cmd_retrieval_baselines() -> int:
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--keandalan", action="store_true")

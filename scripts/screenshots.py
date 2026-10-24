@@ -1,7 +1,7 @@
 """
 Tangkapan layar bukti tampilan demo (alat PENGEMBANGAN; butuh `playwright` dari requirements-dev.txt).
 
-Demo harus sudah berjalan (`streamlit run src/app.py --server.port 8599`). Untuk keadaan hasil, satu
+Demo harus sudah berjalan (`streamlit run src/webapp/app.py --server.port 8599`). Untuk keadaan hasil, satu
 pemeriksaan sungguhan dijalankan per klaim (memakai kuota Gemini), lalu halaman yang SAMA difoto pada
 lebar 390px dan 1280px tanpa memeriksa ulang.
 

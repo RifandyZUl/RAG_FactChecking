@@ -27,6 +27,7 @@ from evaluation.retrieval_ablation import (
     load_items,
     rank_articles,
 )
+from hf_env import prepare_hf_env
 from paths import DATA_DIR, PROJECT_ROOT
 
 # Positif terendah set PENGEMBANGAN pada indeks 150 artikel (CLAUDE.md, "Skor kemiripan berdaya pisah rendah").
@@ -88,6 +89,7 @@ def compare(items: list[dict[str, Any]], vectors: Any, matrices: dict[str, Chunk
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--baseline", type=Path, required=True, help="direktori indeks dasar (salinan arsip v1)")
     ap.add_argument("--compare", type=Path, default=DATA_DIR, help="direktori indeks pembanding (bawaan data/)")

@@ -10,13 +10,27 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-24)*
+
+> **TAHAP 1b (branch `tahap-1b-struktur`, BELUM digabung):** perapian struktur dengan `git mv`, tanpa
+> mengubah logika. Kode demo di `src/webapp/` (jalankan dengan `PYTHONPATH=src`), `src/candidates/` ->
+> `src/labeling/{candidates,gap,sessions}/`, uji dikelompokkan di `tests/<kelompok>/`, dokumen di
+> `docs/{rancangan,audit,riwayat}/`. **`testset/` tidak dipindah sama sekali** (README.md menjelaskan tiap
+> berkas). Jalur lama -> baru: `docs/riwayat/pemetaan_jalur.md`; dokumen riwayat TIDAK ditulis ulang.
+> **Aturan baru:** variabel Hugging Face disetel `hf_env.prepare_hf_env()` di awal setiap titik masuk, BUKAN
+> saat modul diimpor (uji `tests/core/test_hf_env.py`); titik masuk baru yang memuat model/tokenizer WAJIB
+> memanggilnya. `.gitattributes`: salinan kerja `testset/**` CRLF karena hash bukti `87e2ad83...`
+> (eksternal_butir.json) dan `ecef6636...` (v1.jsonl) dihitung dari byte CRLF; isi git LF `667a67a0...` /
+> `d948addc...` (uji `tests/core/test_frozen_bytes.py`). Lisensi MIT. **Pekerjaan tertunda: ADR (setelah
+> Tahap 2).**
+
 *(2026-10-23)*
 
 > **DEMO PORTOFOLIO, TAHAP 1 (branch `tahap-1-tampilan`, BELUM digabung ke main; menunggu persetujuan
 > pemilik proyek):** tampilan baru dari `docs/desain_tampilan/` (beranda, hasil, "Tentang"), struktur
 > `settings.py` / `resources.py` / `service.py` / `evaluation_facts.py` / `ui/`, kunci antar-utas dan
 > antar-proses buku besar kuota, serialisasi pemeriksaan per proses, pemanasan, batas laju, escape semua
-> teks dinamis. Laporan: `docs/laporan_tahap1.md`; audit dan keputusan: `docs/audit_tahap0.md`.
+> teks dinamis. Laporan: `docs/audit/laporan_tahap1.md`; audit dan keputusan: `docs/audit/audit_tahap0.md`.
 > **Aturan baru:** (1) `retriever.py` dan `chunker.py` kini dikunci uji (hash = `testset/eksternal_butir.json`,
 > pembekuan 2026-10-17), bersama `generator.py`; (2) **jangan menjalankan demo di container Docker dan
 > evaluasi di host bersamaan**: kunci berkas buku besar tidak andal menembus bind mount Windows/WSL2;
@@ -24,8 +38,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (4) Python untuk Tahap 2 = **3.13** (keputusan pemilik proyek 2026-10-22; 3.14 setelah
 > sentence-transformers 6.2.0 cukup berumur); (5) pemantau berkas Streamlit dimatikan
 > (`fileWatcherType = "none"`): ia mengimpor semua submodul `transformers` dan menahan halaman;
-> (6) **ingest dan pembaruan indeks SELALU dengan `HF_HUB_OFFLINE=1`** (di-set di awal `src/ingest.py`,
-> berlaku untuk semua skrip yang mengimpor `ingest`): tokenizer `chunker.make_token_counter` (terkunci) tidak
+> (6) **ingest dan pembaruan indeks SELALU dengan `HF_HUB_OFFLINE=1`** (sejak Tahap 1b disetel
+> `hf_env.prepare_hf_env()` di awal setiap titik masuk; sebelumnya efek samping `import ingest`): tokenizer `chunker.make_token_counter` (terkunci) tidak
 > dipatok revisinya, jadi tanpa mode offline ia bisa mengambil `main` terbaru dari Hub; unduhan pertama di
 > mesin baru dengan `HF_HUB_OFFLINE=0`; (7) batas tunggu antrean demo 150 dtk (LLM bisa ~97 dtk saat Gemini
 > membalas 503).
@@ -45,7 +59,7 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > pengembangan SUDAH dijalankan (butir (l) di bawah; jalan pertama ablasi sempat dihentikan karena
 > memori rendah). **v1-046 diputuskan pemilik proyek: TETAP NEGATIF**
 > (bertetangga topik dengan 30652, bukan klaim sama; `v1.meta.json`). **Tahap berikutnya = pembaruan
-> berkala (`docs/rancangan_pembaruan_berkala.md`; ingest tetap manual): pembungkus SCRAPING sudah
+> berkala (`docs/rancangan/rancangan_pembaruan_berkala.md`; ingest tetap manual): pembungkus SCRAPING sudah
 > dibangun dan diuji manual (butir (o)) dan **TERDAFTAR di Task Scheduler sejak 2026-10-03 (atas
 > persetujuan pemilik proyek): tugas "RAG_FactChecking - pembaruan berkala", setiap hari 13.00**,
 > `pythonw.exe` + `scripts/pembaruan_berkala.pyw` (tanpa jendela), boleh mulai dan terus berjalan
@@ -79,7 +93,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
 
 - **Perluasan basis data (sejak 2026-09-26): scraping HTML**, keputusan pemilik proyek -- API key
   Yudistira belum diberikan; tetap scraping sampai key ada. Alat: `src/scraping/expand.py`
-  (`PYTHONPATH=src python -m scraping.expand --batch-size 250`; uji offline `tests/test_expand.py`).
+  (`PYTHONPATH=src python -m scraping.expand --batch-size 250`; uji offline `tests/scraping/test_expand.py`).
   Mode mundur: kelompok artikel LEBIH TUA dari artikel tertua yang dimiliki, dicari lewat URL
   jangkar (halaman daftar bergeser dan id tidak monoton). Keluaran di `data/expansion/`
   (`batch_NN.json`, `batch_NN_report.json`, `state.json`; **di-gitignore** karena berisi teks
@@ -253,7 +267,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     kandidat top-3 > 0,5739: 16 -> 23 -> 24 dari 30 (bertambah v1-046, 0,6308 ke 30652, topik pelatih
     timnas, klaim berbeda). Artikel asal butir negatif yang kini ada di indeks: v1-021, v1-022,
     v1-029, v1-043, v1-049 (+ v1-050 lewat artikel lain).
-    (k) **"Mungkin terkait" pada indeks 1.532: TETAP DIMATIKAN** (`config/related_threshold.json`,
+    (k) **"Mungkin terkait" pada indeks 1.532: TETAP DIMATIKAN** (`archive/fitur_mati/related_threshold.json`,
     entri `data` kini 1.532 artikel / 4.593 chunk, `ambang: null`). Skor kandidat teratas tidak bisa
     turun saat indeks diperbesar (chunk lama dan embedding-nya tetap), jadi kueri tak terkait "bumi
     datar" tetap >= 0,6385, di atas kandidat layak tampil (0,5739-0,63); selain itu v1-046 kini
@@ -314,7 +328,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     setiap kali indeks bertambah. Catatan: `ef_search` baru berlaku pada proses yang membuka indeks
     SETELAH diubah (segmen di-cache per proses); demo yang sedang berjalan perlu dijalankan ulang.
     (n) **Dua celah prasyarat pembaruan berkala DITUTUP (2026-10-03; `expand.py`, uji di
-    `tests/test_expand.py`, tiga mutasi kontrol menggagalkan uji yang sesuai):**
+    `tests/scraping/test_expand.py`, tiga mutasi kontrol menggagalkan uji yang sesuai):**
     *(1) Jalan dengan kegagalan tidak memajukan batas "sudah dimiliki".* Dulu jalan yang selesai
     dengan kegagalan tetap menulis hasil dan memajukan `state.json` (mundur) atau titik henti (maju),
     sehingga artikel gagal tak pernah terjangkau lagi. Sekarang (`hold_decision`): kegagalan sistematis
@@ -347,7 +361,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     indeks lewat sqlite baca-saja (`count_indexed_articles`); bila berbeda, catatan menyebut angka
     itu belum tentu berlaku. **Bila pengukuran diulang, perbarui `RETRIEVAL_MEASUREMENT`.**
     *Pembungkus* `python -m scraping.scheduled` (peluncur `scripts/pembaruan_berkala.cmd`; uji
-    `tests/test_scheduled.py`): kunci satu-instans, coba ulang kegagalan terbuka, mode maju,
+    `tests/scraping/test_scheduled.py`): kunci satu-instans, coba ulang kegagalan terbuka, mode maju,
     kualitas SELURUH antrean belum digabung (label di luar `REVIEWED_LABELS`, duplikat, tumpang tindih
     menahan penggabungan), status `data/expansion/pembaruan_status.json` + `pembaruan_riwayat.jsonl` +
     `logs/`, penanda `PERHATIAN_PEMBARUAN.txt` (di-gitignore; dihapus pada jalan bersih) dan notifikasi
@@ -368,7 +382,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     latar halaman 7,5:1), ikon `help`, kalimat persis: "Klaim ini sudah diperiksa TurnBackHoax.id dan
     belum ada bukti yang mendukungnya, sehingga belum dapat dianggap benar." -- TANPA saran medis atau
     kalimat lain. Alasan ungu: merah/jingga/kuning = skala bahaya, abu-abu = "belum ditemukan", hijau
-    terkesan "benar", biru = aksen. `tests/test_theme.py` (baru) memastikan setiap warna status punya
+    terkesan "benar", biru = aksen. `tests/webapp/test_theme.py` (baru) memastikan setiap warna status punya
     slot tema dan lolos kontras AA (4,5:1) pada latar halaman, latar sekunder, dan latar sendiri; uji
     presentasi memastikan tampilannya berbeda dari "belum ditemukan". Label ini masuk
     `scheduled.REVIEWED_LABELS`; pemeriksaan antrean dijalankan ulang tanpa scraping -> kode 0, penanda
@@ -509,7 +523,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     dijalankan ulang; yang sudah berhasil terbaca dari cache); yang ditulis hanya
     `<jalan>_terputus_<waktu UTC>_report.json` dan entri `failed_ids.json`. Jalur lama tidak berubah:
     ambang 5% tetap diperiksa di akhir dan pada jalur itu `state.json` TETAP maju (celah lama untuk
-    kegagalan non-jaringan, belum diperbaiki). Uji: `tests/test_expand.py` (putus total berbentuk
+    kegagalan non-jaringan, belum diperbaiki). Uji: `tests/scraping/test_expand.py` (putus total berbentuk
     kelompok 5, artikel rusak beruntun pada jaringan normal, putus-nyambung, cache, `main`, mode
     maju); dua mutasi kontrol menggagalkan uji yang sesuai.
     **`failed_ids.json` adalah catatan KEJADIAN, bukan status:** entri tidak dihapus saat artikelnya
@@ -609,15 +623,15 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
     hari), jadi 1.000 artikel ~9-10 bulan ke belakang, bukan ~13 bulan seperti perkiraan awal.
     Laju bisa berbeda di periode lain.
 
-- **Demo lokal (2026-09-25):** `src/app.py` (Streamlit, adapter tipis; tidak ada logika
-  retrieval/generasi sendiri) + `src/presentation.py` (data tampilan, tanpa Streamlit, diuji
-  offline di `tests/test_presentation.py`) + `.streamlit/config.toml` (satu-satunya tempat kode
-  warna). Jalankan: `.\.venv\Scripts\python.exe -m streamlit run src\app.py`. Panel diagnostik
+- **Demo lokal (2026-09-25):** `src/webapp/app.py` (Streamlit, adapter tipis; tidak ada logika
+  retrieval/generasi sendiri) + `src/webapp/presentation.py` (data tampilan, tanpa Streamlit, diuji
+  offline di `tests/webapp/test_presentation.py`) + `.streamlit/config.toml` (satu-satunya tempat kode
+  warna). Jalankan: `.\.venv\Scripts\python.exe -m streamlit run src\webapp\app.py`. Panel diagnostik
   hanya di mode penguji (`DEMO_TESTER_MODE=1` atau `demo_tester_mode = true` di
   `.streamlit/secrets.toml`, di-gitignore; bawaan mati). Hasil "belum ditemukan" menampilkan
   artikel "mungkin terkait" (skor >= 0,57; dasar ambang di komentar `RELATED_SCORE_THRESHOLD`)
   TANPA mengubah vonis. Demo berbagi kuota harian (RPD 500) dengan evaluasi.
-  **Sejak 2026-09-28 ambang dibaca per indeks dari `config/related_threshold.json`** (dengan jumlah
+  **Sejak 2026-09-28 ambang dibaca per indeks dari `archive/fitur_mati/related_threshold.json`** (dengan jumlah
   chunk saat kalibrasi; ukuran berbeda -> fitur mati sampai dikalibrasi ulang). Indeks `data` (922):
   **DIMATIKAN** -- pada set pengembangan tak ada ambang pemisah (kueri tak terkait "bumi datar"
   0,6385 di atas kandidat layak 0,5739-0,63; ambang 0,64 bermargin 0,0015), BUKAN karena topik jauh
@@ -648,7 +662,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
   apa pun.** Rincian: `v1.meta.json` (`jalur_data_resmi_yudistira_2026-09-26`).
 - **Penutupan tahap 2 (2026-09-26): pemeriksaan data terpublikasi.** Rincian di `v1.meta.json`
   (`pemeriksaan_data_terpublikasi_2026-09-26`). (1) `tests/fixtures/` DISAMARKAN lewat
-  `tests/anonymize_fixtures.py` (teks isi -> kata semu sepanjang aslinya, tautan sumber hoaks ->
+  `scripts/anonymize_fixtures.py` (teks isi -> kata semu sepanjang aslinya, tautan sumber hoaks ->
   jalur fiktif di domain sama, nomor/surel -> fiktif); jumlah assert sama (90) dan 14 mutasi kontrol
   negatif memberi himpunan uji gagal identik dengan fixture asli. (2) Nomor di catatan PII Gemma
   diganti `0800-0000-0000` -- ternyata BUKAN karangan model, melainkan nomor penipu dari Narasi
@@ -672,7 +686,7 @@ pemilik proyek); lalu (3) Versi 2 -- BELUM DIMULAI.**
   hash byte.
 
 - Set uji v1 beku (tag `testset-v1`, sidik jari generator dikunci di
-  `v1.meta.json.sidik_jari_generator_v1`, ditegakkan `tests/test_testset_locks.py`), dievaluasi
+  `v1.meta.json.sidik_jari_generator_v1`, ditegakkan `tests/core/test_testset_locks.py`), dievaluasi
   3 run x 54 butir, dianalisis (`src/evaluation/testset_eval.py` + `testset_analysis.py`, hasil
   di `testset/v1_analysis.json`/`.txt`). **Angka utama dan status H1/H3 ada di "Status
   Pengembangan" di atas** -- jangan diulang manual di sini, itu satu-satunya sumber ringkas.
@@ -730,7 +744,7 @@ Proyek dibangun bertahap dalam dua versi:
     top-3 -- kegagalan itu murni penilaian LLM, bukan retrieval.
   - Temuan lengkap untuk rancangan Versi 2 (kegagalan retrieval vs generator,
     dipetakan ke komponen target): `testset/v1_temuan_untuk_v2.md`.
-- **Versi 2 — RANCANGAN DISUSUN 2026-10-03, BELUM ADA KODE: `docs/rancangan_v2.md`.** Dua belas
+- **Versi 2 — RANCANGAN DISUSUN 2026-10-03, BELUM ADA KODE: `docs/rancangan/rancangan_v2.md`.** Dua belas
   pertanyaan sudah dijawab pemilik proyek (bagian 0 dokumen itu): **cakupan dipersempit menjadi
   penanganan pesan panjang + pengukuran kebersihan rujukan**; grader, "Mungkin terkait"/verdict
   ketiga, gaya klarifikasi, penghapusan Penjelasan, juri LLM, dan LangGraph TIDAK masuk; pipeline
@@ -757,11 +771,11 @@ Proyek dibangun bertahap dalam dua versi:
   judul), bukan dari pesannya; **kecocokan dikonfirmasi pemilik proyek sendiri, dengan pilihan "tidak
   ada yang cocok"**. Pengelompokan otomatis terbukti tidak dapat dipercaya ke dua arah, jadi keseratus
   butir perlu dikonfirmasi. **Keputusan pemilik proyek 2026-10-04: 50 butir acak berbenih
-  (20261004); AMBANG ditetapkan sebelum data dilihat dan dicatat di `docs/rancangan_v2.md` bagian
+  (20261004); AMBANG ditetapkan sebelum data dilihat dan dicatat di `docs/rancangan/rancangan_v2.md` bagian
   11.2 (commit `f9ecd0f`): "kalau lebih dari separuh klaim Liputan6 yang sah tidak ada di basis data
   TurnBackHoax, tahap berikutnya layak dikerjakan".** Berkas konfirmasi SUDAH disiapkan:
   `data/candidates/celah_liputan6/konfirmasi_50.csv` (50 butir, 326 baris kandidat; lokal, tidak
-  di-commit; alat `python -m candidates.gap_review`, yang menolak menimpa berkas yang sudah ada).
+  di-commit; alat `python -m labeling.gap.gap_review`, yang menolak menimpa berkas yang sudah ada).
   **KEPUTUSAN di berkas itu diisi pemilik proyek SENDIRI dengan pedoman v1.0, tanpa bantuan AI --
   jangan mengisi, mengusulkan, atau "memeriksa" keputusannya, dan jangan membuka
   `kunci_kandidat.json` untuknya.** Satu artikel dikeluarkan (Klarifikasi Polri). Label Liputan6:
@@ -771,16 +785,16 @@ Proyek dibangun bertahap dalam dua versi:
   **Dikonfirmasi pemilik proyek 2026-10-04 (bagian 11.2, commit `a1459a2`, sebelum berkas dibuka):**
   ambang "lebih dari separuh"; hasil JELAS bila interval Wilson 95% seluruhnya di atas atau di bawah
   50%, AMBIGU bila melintasi 50%; bila ambigu, perluas ke 100 butir.
-  **Yang diisi pemilik proyek adalah `konfirmasi_50.xlsx`** (dibuat `python -m candidates.gap_workbook
+  **Yang diisi pemilik proyek adalah `konfirmasi_50.xlsx`** (dibuat `python -m labeling.gap.gap_workbook
   --make` dari CSV yang sama, tanpa mengambil ulang sampel; `openpyxl==3.1.5` di
-  `requirements-dev.txt`; uji `tests/test_gap_workbook.py`). Berkas ini ber-creator kode (lihat
+  `requirements-dev.txt`; uji `tests/labeling/test_gap_workbook.py`). Berkas ini ber-creator kode (lihat
   Aturan Wajib #5): templat keluar dengan KEPUTUSAN kosong, buktinya `sidik_jari_templat_xlsx.json`.
-  **Setelah pemilik proyek menyatakan selesai: `python -m candidates.gap_workbook --read`** -- ia
+  **Setelah pemilik proyek menyatakan selesai: `python -m labeling.gap.gap_workbook --read`** -- ia
   menolak menghitung bila sel selain KEPUTUSAN/catatan berubah dari templat atau ada butir yang
   kosong/tidak terbaca (dilaporkan untuk ditanyakan, TIDAK ditebak), dan baru saat itu membuka
   `kunci_kandidat.json` untuk tabel silang label. `--read` TIDAK jadi dipakai (lihat hasil di bawah).
-  **HASIL 50 BUTIR (2026-10-08; `docs/rancangan_v2.md` bagian 11.5; alat `python -m
-  candidates.gap_result --hasil` lalu `--kunci`, uji `tests/test_gap_result.py`): TIDAK ADA 29/50 =
+  **HASIL 50 BUTIR (2026-10-08; `docs/rancangan/rancangan_v2.md` bagian 11.5; alat `python -m
+  labeling.gap.gap_result --hasil` lalu `--kunci`, uji `tests/labeling/test_gap_result.py`): TIDAK ADA 29/50 =
   58,0%, Wilson95 [44,2%; 70,6%] -> AMBIGU menurut 11.2 -> sampel diperluas ke 100 butir; 50 butir
   ini belum mendukung dan belum menolak arah itu.** BUKAN PUTUSAN HOAKS 0. Sensitivitas
   (EKSPLORATIF): batas atas 37/50 (jelas di atas 50%), batas bawah 22/50 (ambigu) -> **kategori
@@ -796,7 +810,7 @@ Proyek dibangun bertahap dalam dua versi:
   pembanding = kutipan pesan Liputan6 vs Narasi TurnBackHoax; kolom `ragu` YA/kosong), **aturan
   berhenti: total 99 butir (sisa terverifikasi 49, bukan 50); bila Wilson95 pada 99 butir masih
   mencakup 50% -> berhenti, ambang TIDAK terpenuhi, tidak ada perluasan ketiga.** Hasil utama = 99
-  gabungan; sekunder = 49 baru; 50 lama tidak dilabel ulang. **HASIL 99 BUTIR (2026-10-13/17; `docs/rancangan_v2.md` 11.8-11.10; `python -m candidates.gap_blocks
+  gabungan; sekunder = 49 baru; 50 lama tidak dilabel ulang. **HASIL 99 BUTIR (2026-10-13/17; `docs/rancangan/rancangan_v2.md` 11.8-11.10; `python -m labeling.gap.gap_blocks
   --read` lalu `--kunci`): TIDAK ADA 53/99 = 53,5%, Wilson95 [43,8%; 63,0%] -> AMBIGU -> menurut aturan
   berhenti 11.6 AMBANG TIDAK TERPENUHI, sampling selesai, TIDAK ada perluasan ketiga; sumber cek fakta
   kedua / langkah korektif ke situs cek fakta tidak diprioritaskan.** Butir baru saja 24/49 (49,0%);
@@ -812,19 +826,19 @@ Proyek dibangun bertahap dalam dua versi:
   kategori 0,60-0,79 (dua arah); audit 4/7 TIDAK ADA -> cocok (P1-10, P1-20, P1-29, P1-38) -> 46 positif / 45 negatif.
   Alat: `python -m evaluation.external_analysis --keandalan|--label-final|--metrik|--retrieval-pembanding`.
   ADJUDIKASI BUTA SIAP, BELUM DIISI: `data/candidates/adjudikasi_eksternal/adjudikasi_buta.xlsx` (20 butir; hash di
-  rancangan 7.8; `python -m candidates.adjudication_workbook --read` setelah pemilik proyek selesai). Jangan membuka
+  rancangan 7.8; `python -m labeling.sessions.adjudication_workbook --read` setelah pemilik proyek selesai). Jangan membuka
   atau menyebut isi `kunci_adjudikasi.json`; hasil adjudikasi tidak mengubah metrik utama. Berkas terisi tidak pernah
   ditimpa (koreksi = `_v2`, `_v3`); `--read` mengarsipkan ke `arsip_baca/` sebelum validasi. SET 99 BUTIR INI KINI
   SEKALI PAKAI: jangan ubah sistem lalu mengevaluasi ulang di set yang sama. Ingest antrean oleh pemilik proyek
   setelah adjudikasi.** **2026-10-21:** (1) aturan pemakaian adjudikasi dikunci di 7.8 sebelum diisi (hanya
   sensitivitas, batas yang menguntungkan sistem); dasar ambang kappa = 7.4 (30 butir), dikoreksi di 7.7.
   (2) VERIFIKASI 3 NEGATIF testset-v1 SIAP, BELUM DIISI: `data/candidates/verifikasi_v1/verifikasi_v1_negatif.xlsx`
-  (`python -m candidates.v1_verification --read`; hash dan aturan SAMA -> dikeluarkan sebagai perubahan status
+  (`python -m labeling.sessions.v1_verification --read`; hash dan aturan SAMA -> dikeluarkan sebagai perubahan status
   label, sensitivitas saja, di rancangan 11.8; `v1.jsonl` tidak diubah; jangan membuka `kunci_verifikasi_v1.json`).
   (3) **Demo: peringatan pencocokan pada setiap hasil "ditemukan"** (`presentation.match_check_lines`, judul +
   tanggal artikel dari hasil retrieval; `build_view(article_dates=...)`). **Perubahan TAMPILAN saja: generator,
   prompt, retriever, dan keputusan tidak disentuh (uji kunci lolos), jadi angka evaluasi -- yang mengukur keputusan
-  generator -- tidak terpengaruh.** (4) Draf bagian Evaluasi README: `docs/draf_readme_evaluasi.md` (belum
+  generator -- tidak terpengaruh.** (4) Draf bagian Evaluasi README: `docs/riwayat/draf_readme_evaluasi.md` (belum
   menggantikan README; angka adjudikasi dan verifikasi menyusul). Jangan menjalankan `--read` adjudikasi/verifikasi
   sebelum diminta pemilik proyek.
   **2026-10-21 malam: KEDUANYA SUDAH DIBACA (atas permintaan pemilik proyek).** Verifikasi: 3/3 SAMA -> kemunduran
@@ -833,7 +847,7 @@ Proyek dibangun bertahap dalam dua versi:
   (`b25f1ff6...`) lolos, hanya 6 sel KEPUTUSAN berbeda (7.8). Kecocokan palsu 7/10 dan penolakan palsu 3/9 menurut
   adjudikasi kesalahan label; disesuaikan (`--sensitivitas`, batas yang menguntungkan sistem): positif memadai,
   kecocokan palsu terburuk TIDAK KONKLUSIF (5/43; lulus 3/41 hanya bila 2 butir ragu ikut adjudikasi); P2-17 tidak
-  sah. Metrik utama tidak berubah (11.9). Draf README lengkap + usulan penggantian di `docs/draf_readme_evaluasi.md`;
+  sah. Metrik utama tidak berubah (11.9). Draf README lengkap + usulan penggantian di `docs/riwayat/draf_readme_evaluasi.md`;
   README BELUM diubah (menunggu pemilik proyek). Langkah berikutnya milik pemilik proyek: ingest antrean.
   **README DIGANTI 2026-10-21 (keputusan pemilik proyek):** `## Hasil Evaluasi` baru (baseline Versi 1 sebagai
   subbagian), baris status, kolom bukti grader di Rencana Versi 2, dua butir Keterbatasan baru, perintah evaluasi
@@ -848,7 +862,7 @@ Proyek dibangun bertahap dalam dua versi:
   tidak tersimpan dan tidak dilihat) lalu **DISELESAIKAN 2026-10-19 malam oleh pemilik proyek di luar Claude
   Code: KETIGA RUN LENGKAP untuk kedua set, 0 butir hilang**; buku besar 19 Okt 147 = 93 + 54, selisih 1 =
   permintaan butir ke-3 yang terputus (+1 percobaan ulang koneksi tercatat di hasil). Rincian: rancangan
-  bagian 8. **Berkas sesi buta DIBUAT 2026-10-20 (`python -m candidates.blind_workbook --make`):
+  bagian 8. **Berkas sesi buta DIBUAT 2026-10-20 (`python -m labeling.sessions.blind_workbook --make`):
   `data/candidates/sesi_buta_eksternal/sesi_buta_37.xlsx`, 37 butir / 243 baris kandidat; pilihan = blob `fa7464c`
   (`a0bfd101...`); kandidat = yang dulu tampil (P1 dicocokkan per sel dengan `konfirmasi_50.csv`, P2 lewat sidik jari
   templat 49); urutan butir/kandidat `SystemRandom`. Kunci `kunci_sesi_buta.json` -- JANGAN dibuka dan jangan
@@ -858,11 +872,11 @@ Proyek dibangun bertahap dalam dua versi:
   `cde7ce7`, sebelum run 2. Setiap run didahului `retriever_exactness` dan uji kunci. **Selama segel: jangan membaca keputusan per
   butir dari `data/external_eval_*.jsonl` dan jangan melaporkan metrik apa pun -- hanya status teknis --
   sampai sesi buta (berkas dibuat 20 Oktober 2026 -- PENYIMPANGAN dari 27 Okt, diputuskan 2026-10-19 saat hasil tersegel, rancangan 7.2; pilihan di `testset/eksternal_sesi_buta_pilihan.json`)
-  selesai. Jangan ingest antrean sebelum evaluasi dan adjudikasi selesai.** Riwayat rancangan: `docs/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
+  selesai. Jangan ingest antrean sebelum evaluasi dan adjudikasi selesai.** Riwayat rancangan: `docs/rancangan/rancangan_evaluasi_eksternal.md`: 91 butir (8 dikeluarkan aturan
   kutipan K1/K2), indeks 1.532 dibekukan (sidik jari di bagian 5; antrean di-ingest pemilik proyek SETELAH
   evaluasi), ambang kecocokan palsu usulan lulus <= 4/49 / gugur >= 10/49, testset-v1 sebagai uji
   kemunduran (48 butir), kuota 435 panggilan dalam 3 hari. Audit jejak identik SUDAH dijalankan
-  (`python -m candidates.trace_audit`, parameter di-commit `e7504fc`): 20/99 terdeteksi; 7 butir TIDAK ADA
+  (`python -m labeling.sessions.trace_audit`, parameter di-commit `e7504fc`): 20/99 terdeteksi; 7 butir TIDAK ADA
   untuk ditinjau buta (P1-10, P1-20, P1-29, P1-30, P1-38, P1-45, P2-2). **Jangan menyebut sinyal per butir
   kepada pemilik proyek dan jangan menyuruhnya membuka `audit_jejak_identik.json` sebelum tinjauan buta.**
   Uji ulang buta: berkas 20 Oktober 2026 (penyimpangan dari 27 Oktober; rancangan 7.2).
@@ -1019,7 +1033,7 @@ Versi 2 pada KEMAMPUAN BARU (butir pesan panjang) wajib memakai snapshot beku ya
 dan parameter retrieval yang sama. Snapshot itu BELUM dibuat: urutannya antrean digabung dan
 di-ingest (ingest dimulai pemilik proyek) -> snapshot dibekukan (daftar id + sidik jari isi) -> set
 uji v2 dibangun dan diverifikasi terhadapnya. Hasil pada snapshot tidak boleh dibandingkan dengan
-angka pada `archive/v1`, dan sebaliknya. Rincian: `docs/rancangan_v2.md` bagian 5.1.
+angka pada `archive/v1`, dan sebaliknya. Rincian: `docs/rancangan/rancangan_v2.md` bagian 5.1.
 
 `RAG_INDEX_DIR` hanya mengubah jalur BACA (`paths.INDEX_DIR`); scraping tetap menulis ke `data/`,
 dan `ingest` menolak menulis ke `archive/` kecuali `--allow-archive`. Nilai yang tidak berisi
@@ -1148,36 +1162,46 @@ RAG_FactChecking/
 │   │   ├── expand.py     #   perluasan basis data per kelompok -> data/expansion/ (python -m scraping.expand)
 │   │   ├── source.py     #   sumber artikel yang bisa diganti (bawaan HTML; ARTICLE_SOURCE)
 │   │   └── scheduled.py  #   pembungkus pembaruan berkala: scraping saja, penanda + notifikasi
-│   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)
-│   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten)
-│   ├── retriever.py      # Retrieval, diagregasi per article_id
+│   ├── chunker.py        # Chunking per seksi + metadata (Aturan Wajib #2)  [TERKUNCI]
+│   ├── ingest.py         # Embedding bge-m3 -> ChromaDB (idempoten; revisi model dipatok)
+│   ├── retriever.py      # Retrieval, diagregasi per article_id  [TERKUNCI]
+│   ├── hf_env.py         # prepare_hf_env(): HF offline; dipanggil di awal SETIAP titik masuk, bukan saat impor
 │   ├── llm/              # Abstraksi penyedia LLM (Gemini), retry, throttling, kuota
 │   │   ├── errors.py, base.py, secrets.py   # galat; LLMProvider + CallRecord; .env + samarkan kunci
 │   │   ├── gemini.py, gemini_errors.py      # GeminiProvider; penafsiran galat HTTP Gemini
 │   │   └── limits.py, throttle.py, ledger.py # angka kuota; jendela geser RPM/TPM; buku besar + anggaran
-│   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur
-│   ├── presentation.py   # Data tampilan demo (tanpa Streamlit): status, salinan teks, galat
-│   ├── app.py            # Demo Streamlit (streamlit run src\app.py); adapter tipis
-│   └── evaluation/       # Evaluasi & diagnostik LIVE (bukan uji otomatis)
+│   ├── generator.py      # Klaim -> retrieval -> LLM -> jawaban terstruktur  [TERKUNCI]
+│   ├── webapp/           # Demo: app.py (titik masuk; PYTHONPATH=src streamlit run src\webapp\app.py), settings,
+│   │                     #   resources (sekali muat + pemanasan), service (validasi, batas laju, serialisasi),
+│   │                     #   presentation (tanpa Streamlit), evaluation_facts, ui/ (+ style.css)
+│   ├── labeling/         # Pelabelan set uji: candidates/, gap/, sessions/ (dulu src/candidates/)
+│   └── evaluation/       # Evaluasi & diagnostik LIVE (bukan uji otomatis); README.md mengelompokkan per fungsi
 │       ├── generation_eval.py  #   evaluasi generasi (--check-budget, --compare)
 │       ├── retrieval_eval.py   #   verifikasi retrieval pada kueri sehari-hari
 │       ├── gemma_json_check.py #   uji format JSON Gemma 4
 │       ├── probe_quota.py      #   probe tunggal ke server (1 permintaan)
 │       ├── retriever_exactness.py  # retriever (HNSW) vs pencarian eksak; wajib tiap indeks bertambah
 │       └── results_store.py, comparison.py  # simpan/lanjutkan hasil; perbandingan model
-├── tests/                # Uji offline (pytest), satu berkas per modul
-│   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat anonymize_fixtures.py
-│   └── _fakes.py         #   objek palsu bersama (bukan uji)
+├── tests/                # Uji offline (pytest): core/ scraping/ llm/ evaluation/ labeling/ webapp/ (BUKAN testset/)
+│   ├── fixtures/         #   HTML nyata yang DISAMARKAN (di-commit); dibuat lewat scripts/anonymize_fixtures.py
+│   └── _fakes.py         #   objek palsu bersama (bukan uji; pytest.ini: pythonpath = src tests)
+├── testset/              # Data set uji beku, bukti pra-registrasi, hasil analisis -- TIDAK dipindah (README.md)
+├── docs/                 # rancangan/, audit/, riwayat/ (pemetaan_jalur.md), tampilan/ (README.md); adr/ ditunda
+├── scripts/              # pembaruan_berkala.* (Task Scheduler), screenshots.py, anonymize_fixtures.py
+├── assets/brand/         # logo + turunan
 ├── archive/v1/           # Arsip indeks Versi 1 (chroma/ + articles.json di-gitignore; Aturan Wajib #6)
-│   └── article_ids.json  #   daftar 150 artikel (metadata saja) -- SATU-SATUNYA berkas arsip yang di-commit
+│   └── article_ids.json  #   daftar 150 artikel (metadata saja)
+├── archive/fitur_mati/   # related_threshold.json (kalibrasi "Mungkin terkait", fitur dihapus dari demo)
 ├── data/
 │   ├── raw_html/         # Cache HTML mentah (tidak di-commit)
 │   ├── articles.json     # Hasil scraping terstruktur (tidak di-commit)
 │   └── chroma/           # Basis vektor ChromaDB (tidak di-commit)
 ├── .streamlit/config.toml  # Tema demo (satu-satunya tempat kode warna); secrets.toml di-gitignore
 ├── requirements.txt, requirements-dev.txt   # dependensi (+ streamlit); + pytest, ruff
-├── pytest.ini            # testpaths = tests, pythonpath = src
-├── ruff.toml             # hanya pengecualian disengaja (I001 di src/app.py)
+├── pytest.ini            # testpaths = tests, pythonpath = src tests
+├── ruff.toml             # target py311; pengecualian per berkas/aturan hanya untuk dua berkas terkunci
+├── .gitattributes        # LF untuk teks; CRLF untuk *.cmd dan testset/** (hash byte bukti); biner untuk gambar
+├── LICENSE               # MIT (kode saja; data TurnBackHoax tunduk pada ketentuan Mafindo)
 └── CLAUDE.md
 ```
 
@@ -1190,7 +1214,7 @@ RAG_FactChecking/
 - Sertakan *type hint* pada tanda tangan fungsi
 - Tangani galat secara eksplisit; jangan menelan *exception* diam-diam
 - Setiap perubahan pada logika parsing wajib diikuti menjalankan `pytest`
-  (khususnya `tests/test_parser.py`, `test_links.py`, `test_client.py`)
+  (khususnya `tests/scraping/test_parser.py`, `test_links.py`, `test_client.py`)
 - **Setiap perubahan logika parsing atau chunking mewajibkan pembangunan ulang
   indeks vektor**, berurutan: `python -m scraping.reparse` (offline, dari cache)
   -> `python src/ingest.py --rebuild` (hapus koleksi lama, embed semua chunk
@@ -1211,7 +1235,7 @@ RAG_FactChecking/
 ## Cara Kerja yang Diharapkan
 
 - **Tidak ada teks artikel, tautan sumber hoaks, atau kontak di berkas ter-commit.** Fixture HTML
-  baru WAJIB disamarkan dulu (`PYTHONPATH=src python tests/anonymize_fixtures.py <asli> <keluaran>`),
+  baru WAJIB disamarkan dulu (`PYTHONPATH=src python scripts/anonymize_fixtures.py <asli> <keluaran>`),
   dan literal uji diambil dari hasil tersamar. `articles.json` dan HTML mentah tetap lokal.
 
 Proyek ini bertujuan pembelajaran, sehingga cara mengerjakannya penting,
@@ -1229,7 +1253,7 @@ bukan hanya hasil akhirnya.
   `extract_claim_sources` sudah tervalidasi — jangan diubah tanpa alasan
   kuat. (Pengecualian yang disetujui 2026-09-21: `extract_sections`
   diperbaiki karena menduplikasi teks; lihat "Masalah terbuka" dan
-  `tests/test_parser.py`, yang kini gagal bila rasio panjang hasil parse
+  `tests/scraping/test_parser.py`, yang kini gagal bila rasio panjang hasil parse
   terhadap teks HTML asli melebihi 1,1.)
 - **Jelaskan keputusan desain.** Bila ada beberapa pendekatan, sebutkan
   pilihan yang diambil beserta alasan dan konsekuensinya.
@@ -1692,7 +1716,7 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
   `annotation-guide-v1.0`), sebelum satu butir pun dibuat. Definisi "klaim sama": klaim inti artikel (KIA = judul;
   123 dari 150 artikel mengutipnya di Kesimpulan) dengan unsur inti (subjek, tindakan, objek pembeda), uji dua arah
   dan uji Kesimpulan, serta aturan kasus khusus (lebih umum, lebih spesifik, sebagian, sinonim, pertanyaan, ambigu).
-  `tests/test_testset_locks.py` gagal bila pedoman atau prompt/skema berubah diam-diam. **Aturan: pedoman tidak
+  `tests/core/test_testset_locks.py` gagal bila pedoman atau prompt/skema berubah diam-diam. **Aturan: pedoman tidak
   boleh direvisi selama pembuatan set uji v1**; kasus tak tercakup dicatat di `testset/kasus_terbuka.md` dan
   diputuskan dengan aturan terdekat.
 - **Pra-registrasi** `testset/v1.meta.json` (ditulis sebelum data): metrik utama = **keputusan modus dari 3 run**;
@@ -1710,7 +1734,7 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
   Definisi resmi "klaim sama" kini tertulis di dalam sistem: bahan pembanding utama adalah KIA (Judul) dan unsur
   inti, Narasi hanya rujukan pendukung; uji dua arah, uji Kesimpulan, dan aturan kasus khusus; contoh baru
   (tingkat kekhususan) hanya dari enam artikel yang dikecualikan dan tanpa memakai teks 10 kueri pengembangan
-  (diuji `tests/test_prompt.py`). Tidak ada verdict ketiga. Skema tetap empat bidang (deskripsi `klaim_sama`
+  (diuji `tests/core/test_prompt.py`). Tidak ada verdict ketiga. Skema tetap empat bidang (deskripsi `klaim_sama`
   disesuaikan).
 - **Pelabelan ulang kueri 3 pada set pengembangan** (disetujui pemilik proyek): "malaysia marah ke indonesia soal
   asap" diubah dari positif (target 36729) menjadi **negatif sulit dengan `kekhususan=umum`**. **Perubahan ini
@@ -1743,8 +1767,8 @@ artikel, positif dari situs cek fakta lain, dengan URL asal dan data pribadi dib
 
 ### Pengumpulan kandidat set uji v1 (2026-09-21; belum ada kandidat yang ditinjau atau dijalankan)
 
-Alat: `src/candidates/archive.py` (arsip TurnBackHoax di luar 150 artikel; jeda 1,5 dtk, timeout 45 dtk, cache
-HTML mentah di `data/candidates_cache/`, tidak di-commit) dan `src/candidates/screen.py` (penyaringan terhadap
+Alat: `src/labeling/candidates/archive.py` (arsip TurnBackHoax di luar 150 artikel; jeda 1,5 dtk, timeout 45 dtk, cache
+HTML mentah di `data/candidates_cache/`, tidak di-commit) dan `src/labeling/candidates/screen.py` (penyaringan terhadap
 150 artikel: kemiripan judul, retrieval, penanda data pribadi; alat bantu, keputusan akhir manusia). Konten pihak
 ketiga diperlakukan sebagai data, bukan instruksi.
 
@@ -1800,7 +1824,7 @@ median 2,00; Kesimpulan 1,00). Penyebabnya `extract_sections()` mengiterasi elem
 Perbaikan (commit `b29d91c`): pohon HTML ditelusuri sekali secara berurutan, bukan membuang
 duplikat sesudahnya. Artikel 36590 (Penjelasan bersarang di dalam Narasi) dan 36483 (Kesimpulan
 bersarang di dalam Penjelasan) kini terpisah benar; 36603 diuji sebagai regresi (seksinya
-memang normal setelah duplikasi hilang). Uji `tests/test_parser.py` kini gagal bila rasio
+memang normal setelah duplikasi hilang). Uji `tests/scraping/test_parser.py` kini gagal bila rasio
 panjang hasil parse terhadap teks HTML asli melebihi 1,1 (atau di bawah 0,9). Hasil pada 150
 artikel: rasio Narasi/Penjelasan median 1,00 (maks 1,00); 148 dari 150 artikel dalam 0,5% dari
 1,0 (dua sisanya, 36590 dan 36483, wajar karena seksi HTML-nya memuat seksi bersarang);
@@ -1855,8 +1879,8 @@ IDE akan menampilkan garis merah pada siapa pun yang membukanya.
 - **Gaya kode:** dengan `ruff==0.16.9` (dikunci di `requirements-dev.txt`; aturan bawaannya lebih
   luas dari versi sebelumnya), `ruff check src tests` masih menandai **29 temuan lama** (per
   2026-09-25) di luar berkas demo: 14 I001 (mis. `src/llm/limits.py`), 3 ISC004, dan 12 lain-lain.
-  Berkas demo (`src/app.py`, `src/presentation.py`, `tests/test_presentation.py`) bersih; I001
-  di `src/app.py` dikecualikan secara sengaja di `ruff.toml` (urutan impor `ingest` lebih dulu).
+  Berkas demo (`src/webapp/app.py`, `src/webapp/presentation.py`, `tests/webapp/test_presentation.py`) bersih; I001
+  di `src/webapp/app.py` dikecualikan secara sengaja di `ruff.toml` (urutan impor `ingest` lebih dulu).
 - **Konfigurasi alat statis** (saran, belum dikerjakan): satu `pyproject.toml` untuk pyright/ruff agar
   IDE dan CI konsisten, termasuk jalur `src` dan `tests`.
 

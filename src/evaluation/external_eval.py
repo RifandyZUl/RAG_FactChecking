@@ -31,6 +31,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from hf_env import prepare_hf_env
 from paths import DATA_DIR, PROJECT_ROOT
 
 FROZEN_PATH = PROJECT_ROOT / "testset" / "eksternal_butir.json"
@@ -49,7 +50,7 @@ def norm_sha(text: str) -> str:
 
 def exclusion_reason(message: str) -> str | None:
     """K1: kurang dari MIN_WORDS kata setelah tautan dibuang; K2: kalimat pengantar redaksi (diakhiri titik dua)."""
-    from candidates.trace_audit import words
+    from labeling.sessions.trace_audit import words
 
     if len(words(message)) < MIN_WORDS:
         return "K1"
@@ -60,9 +61,9 @@ def exclusion_reason(message: str) -> str | None:
 
 def build_liputan6_cases() -> list[dict[str, Any]]:
     """99 butir dengan label AWAL pemilik proyek, alasan dikeluarkan (bila ada), dan strata selisih terbit."""
-    from candidates.gap_blocks import day_gap
-    from candidates.gap_review import OUT_DIR
-    from candidates.trace_audit import load_items
+    from labeling.gap.gap_blocks import day_gap
+    from labeling.gap.gap_review import OUT_DIR
+    from labeling.sessions.trace_audit import load_items
 
     r1 = json.loads((OUT_DIR / "hasil_konfirmasi.json").read_text(encoding="utf-8"))
     r2 = json.loads((OUT_DIR / "hasil_konfirmasi_49.json").read_text(encoding="utf-8"))
@@ -273,6 +274,7 @@ def status() -> int:
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--freeze", action="store_true", help="bekukan daftar butir, sidik jari indeks, dan hash berkas")

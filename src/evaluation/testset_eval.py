@@ -35,6 +35,7 @@ from typing import Any
 from chunker import load_articles
 from evaluation.results_store import append_record
 from generator import MAX_FORMAT_RETRIES, AnswerGenerator
+from hf_env import prepare_hf_env
 from ingest import get_collection, load_model
 from llm import LLMConfigError, get_provider
 from llm.ledger import plan_budget
@@ -135,6 +136,7 @@ def answer_with_item_retries(gen: AnswerGenerator, claim: str) -> tuple[Any, lis
 
 
 def main() -> int:
+    prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--model", help="ID model (bawaan: LLM_MODEL / bawaan penyedia)")
     ap.add_argument("--force", action="store_true", help="abaikan hasil lama dan mulai ulang")
