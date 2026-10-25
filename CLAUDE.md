@@ -10,7 +10,7 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-10-25, pasca-ingest; branch `pasca-ingest-2026-10-25`, BELUM digabung; menunggu persetujuan pemilik proyek)*
+*(2026-10-25, pasca-ingest; branch `pasca-ingest-2026-10-25`, DIGABUNG ke main 2026-10-25 atas persetujuan pemilik proyek)*
 
 > **INGEST ANTREAN SELESAI 2026-10-25 (dijalankan pemilik proyek, ~13.53-14.06 WIB, setelah pembaruan manual
 > 13.49 berkode 0; jalan terjadwal 13.00 berkode 4 = `ConnectionError` pada halaman daftar 1, jaringan lokal,
@@ -26,7 +26,11 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > Tentang dan kaki beranda dibaca dinamis dari indeks (kini 1.611).
 > Verifikasi mandiri: `articles.json` 1.611 (unik), 1.532 pertama identik dan berurutan dengan cadangan;
 > `index_check` SEGAR (8 sampel kosinus 1,000000, SEMUANYA artikel lama karena sampel diambil per langkah dari
-> awal daftar; tambahan 6 chunk artikel baru di-embed ulang terpisah: kosinus 1,000000); `retriever_exactness`
+> awal daftar; tambahan 6 chunk artikel baru di-embed ulang terpisah: kosinus 1,000000). **Diperbaiki
+> 2026-10-25 (persetujuan pemilik proyek):** `index_check.select_embed_sample` = sampel berselang + `TAIL_SAMPLE`
+> (4) chunk terakhir articles.json, jadi artikel yang baru digabung selalu ikut (uji
+> `test_embed_sample_always_covers_last_article`, kontrol mutasi `TAIL_SAMPLE = 0` menggagalkannya); jalan ulang
+> pada produksi: SEGAR, 12 sampel kosinus 1,000000 termasuk 37272 (artikel terakhir, 3 seksi). `retriever_exactness`
 > 0/64 meleset (`testset/retriever_exactness_1611.json`); chunk terpotong 512 token Narasi 4 / Penjelasan 11 /
 > Kesimpulan 0 dari 4.830; salinan `data/container/chroma` = produksi (byte dan isi). Cadangan
 > `data/backups/pre_antrean_2026-10-25/` (54 MB) lengkap: sidik jari isinya SAMA PERSIS dengan `indeks_beku`
@@ -41,7 +45,23 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > hanya mencatat JENIS galat (`ConnectionError`), bukan pesan aslinya (mis. galat DNS vs koneksi ditolak), jadi
 > penyebab kegagalan 25 Okt tidak dapat dibuktikan -> catat pesan galat asli (`client.fetch_html`, disamarkan
 > bila perlu); (2) jeda percobaan ulang halaman daftar pertama lebih panjang (kini 2/4/8 dtk, total ~28 dtk;
-> gangguan jaringan setelah bangun dari standby bisa lebih lama). Juga tertunda: ADR (Tahap 1b).
+> gangguan jaringan setelah bangun dari standby bisa lebih lama). (ADR sudah ada: `docs/adr/0001`-`0007`.)
+> **CADANGAN -- JANGAN DIHAPUS (keputusan pemilik proyek 2026-10-25):** `data/backups/pre_antrean_2026-10-25/`
+> adalah **SATU-SATUNYA salinan persis indeks evaluasi 1.532 artikel** (dasar semua angka evaluasi eksternal);
+> TIDAK BOLEH DIHAPUS dan TIDAK dipindah ke `archive/` (ter-commit; indeks tidak boleh masuk git). Sidik jari isi
+> (= `testset/eksternal_butir.json` `indeks_beku`, 7 kunci, diverifikasi 2026-10-25 pada salinan): `jumlah_artikel`
+> 1532, `jumlah_chunk` 4593, `sha256_daftar_artikel` `1a1a4f198c22b98b12b60f83717e5e1a88147cafcc7d80acb8c6147d4c789d5b`,
+> `sha256_teks_metadata` `6283f0f6c8db894360116a7487ccf93dd15ded7d9fac33e5d6970c3a05530330`,
+> `sha256_embedding_float32` `9851a6dcba0c84c1216e7067f27484aa25b3cc81f3c4a3bb4ae0eeca0b79de94`,
+> `sha256_articles_json_isi` `cc7f1989ad1bf6c6ae7a055b8985ac1800722eb12415e8c2090aee346c77fb28`, `ef_search` 2000.
+> Jangan membuka cadangan ini langsung (ChromaDB menulis ulang berkas saat dibuka): salin dulu, buka salinannya.
+> Salinan ke penyimpanan eksternal dibuat pemilik proyek sendiri. **Cadangan lain juga JANGAN dihapus;**
+> usulan Claude Code (DIPUTUSKAN pemilik proyek setelah proyek selesai, belum disetujui): `pre_ef_search_2026-10-03`
+> (54 MB, indeks 1.532 dengan `ef_search` 100) boleh dihapus setelah sidik jari isinya dicocokkan (belum diperiksa)
+> dan salinan eksternal `pre_antrean_2026-10-25` ada; `pre_batch04-06_2026-10-03` (35 MB, indeks 922) boleh
+> dihapus bila pengukuran indeks 922 tidak perlu direproduksi (hasilnya ter-commit di `testset/*_922.json`);
+> `salinan_bukti_tahap2_2026-10-24` (98 MB) boleh dihapus (Tahap 2 di main, bukti JSON ter-commit); untuk ingest
+> berikutnya simpan dua `pre_antrean_*` terakhir (KECUALI `pre_antrean_2026-10-25`, yang permanen).
 > **Sisa sebelum proyek ditunjukkan (urutan pemilik proyek):** README akhir (cek menyeluruh + tangkapan layar di
 > atas) -> penulisan ulang riwayat git untuk menghapus atribusi Claude (langkah TERAKHIR) -> bahan lamaran.
 

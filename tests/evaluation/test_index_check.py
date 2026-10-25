@@ -55,6 +55,38 @@ def test_compare_index_detects_stale_references_when_text_is_identical() -> None
     assert compare_index(new, *_stored(new)) == []
 
 
+def _articles_chunks(n_articles: int) -> list[dict]:
+    """Chunk berurutan seperti build_chunks: tiga seksi per artikel, artikel terakhir = yang baru digabung."""
+    return [_chunk(f"{1000 + a}_{s}", s) for a in range(n_articles) for s in ("narasi", "penjelasan", "kesimpulan")]
+
+
+def test_embed_sample_always_covers_last_article() -> None:
+    """Bentuk ingest 2026-10-25 (1.611 artikel, 4.830 chunk, 8 sampel): cara lama tidak menyentuh artikel terakhir."""
+    from evaluation.index_check import TAIL_SAMPLE, select_embed_sample
+
+    chunks = _articles_chunks(1611)
+    last_article = chunks[-1]["metadata"]["article_id"]
+    old_way = chunks[::len(chunks) // 8][:8]
+    assert last_article not in {c["metadata"]["article_id"] for c in old_way}, "kontrol: cacat lama terulang"
+
+    sample = select_embed_sample(chunks, 8)
+    assert [c["id"] for c in sample if c["metadata"]["article_id"] == last_article] == \
+        [f"{last_article}_narasi", f"{last_article}_penjelasan", f"{last_article}_kesimpulan"]
+    assert sample[-TAIL_SAMPLE:] == chunks[-TAIL_SAMPLE:]
+    assert all(c in sample for c in old_way), "sampel berselang yang lama tetap ikut"
+    assert len(sample) == 8 + TAIL_SAMPLE
+
+
+def test_embed_sample_small_index_and_zero() -> None:
+    from evaluation.index_check import select_embed_sample
+
+    chunks = _articles_chunks(2)  # 6 chunk: sampel berselang dan ekor tumpang tindih
+    sample = select_embed_sample(chunks, 8)
+    assert sample == chunks, "tanpa duplikat, urutan daftar dipertahankan"
+    assert select_embed_sample(chunks, 0) == []
+    assert select_embed_sample([], 8) == []
+
+
 def test_reset_collection_removes_stale_content(tmp_path) -> None:
     """--rebuild: koleksi lama beserta seluruh isinya (termasuk id usang) hilang; koleksi baru kosong."""
     from ingest import get_collection, reset_collection

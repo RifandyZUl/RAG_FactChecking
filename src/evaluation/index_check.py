@@ -4,7 +4,8 @@ Verifikasi kesegaran indeks vektor terhadap articles.json (tanpa LLM, tanpa jari
 Indeks basi tidak menimbulkan galat: retriever tetap mengembalikan hasil, hanya dari teks/embedding
 lama. Pemeriksaan: (1) himpunan id chunk sama, (2) teks tiap chunk di indeks identik dengan teks hasil
 chunking articles.json saat ini (yang juga yang dibaca retriever untuk Narasi/Kesimpulan), (3) metadata
-sama, dan (4) opsional: sampel chunk di-embed ulang dan dibandingkan dengan vektor tersimpan.
+sama, dan (4) opsional: sampel chunk di-embed ulang dan dibandingkan dengan vektor tersimpan (sampel
+berselang + chunk terakhir, agar artikel yang baru digabung di akhir articles.json selalu ikut).
 
 Sidik jari isi (`--fingerprint`): hash atas ISI indeks (id, teks, metadata, dan byte embedding
 float32), bukan atas berkas -- ChromaDB menulis ulang berkasnya setiap kali koleksi dibuka, jadi
@@ -52,6 +53,24 @@ def compare_index(chunks: list[dict], stored_ids: list[str], stored_docs: list[s
             if meta.get(key) != want["metadata"].get(key):
                 problems.append(f"{cid}: metadata '{key}' beda ({meta.get(key)!r} vs {want['metadata'].get(key)!r})")
     return problems
+
+
+TAIL_SAMPLE = 4  # chunk terakhir yang selalu ikut di-embed ulang (artikel yang baru di-ingest ada di akhir)
+
+
+def select_embed_sample(chunks: list[dict], n: int, tail: int = TAIL_SAMPLE) -> list[dict]:
+    """
+    Sampel chunk untuk di-embed ulang: `n` chunk berselang dari seluruh daftar DITAMBAH `tail` chunk terakhir,
+    tanpa duplikat, urutan daftar dipertahankan (n = 0: tidak ada sampel).
+
+    Sampel berselang saja (chunks[::langkah][:n]) tidak pernah mencapai ekor daftar, padahal antrean digabung
+    di akhir articles.json: pada ingest 2026-10-25 kedelapan sampel jatuh pada artikel lama.
+    """
+    if n <= 0 or not chunks:
+        return []
+    step = max(1, len(chunks) // n)
+    picked = set(range(0, len(chunks), step)[:n]) | set(range(max(0, len(chunks) - tail), len(chunks)))
+    return [chunks[i] for i in sorted(picked)]
 
 
 def search_config_problems(actual: int | None, expected: int) -> list[str]:
@@ -120,7 +139,8 @@ def main() -> int:
     prepare_hf_env()  # sebelum transformers dimuat (hf_env.py)
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--embed-sample", type=int, default=8,
-                    help="jumlah chunk yang di-embed ulang untuk dibandingkan dengan vektor tersimpan (0 = lewati)")
+                    help="jumlah chunk berselang yang di-embed ulang untuk dibandingkan dengan vektor tersimpan, "
+                         f"ditambah {TAIL_SAMPLE} chunk terakhir articles.json (0 = lewati)")
     ap.add_argument("--fingerprint", action="store_true", help="cetak sidik jari isi indeks (JSON)")
     ap.add_argument("--expect-v1-archive", action="store_true",
                     help="bandingkan sidik jari dengan arsip Versi 1 yang tercatat di testset/v1.meta.json")
@@ -168,8 +188,7 @@ def main() -> int:
     if args.embed_sample > 0 and not problems:
         import numpy as np
 
-        step = max(1, len(chunks) // args.embed_sample)
-        sample = chunks[::step][:args.embed_sample]
+        sample = select_embed_sample(chunks, args.embed_sample)
         model = load_model()
         fresh = model.encode([c["text"] for c in sample], normalize_embeddings=True)
         stored = coll.get(ids=[c["id"] for c in sample], include=["embeddings"])
