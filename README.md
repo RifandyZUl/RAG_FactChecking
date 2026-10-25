@@ -706,11 +706,19 @@ isi hoaks apa adanya: pemeriksaan 2026-09-26 menemukan **12 dari 150 artikel**
 platform sosial), termasuk domain yang tampak phishing. Klasifikasi domain itu
 heuristik. Menerbitkan `articles.json` berarti ikut menyebarkan kontak dan tautan
 penipuan tersebut. **Catatan:** riwayat git sebelum 2026-09-26 masih
-memuat fixture versi asli. Riwayat sengaja tidak ditulis ulang agar hash commit
-dan tag `testset-v1` tetap sah; alasannya tercatat di `testset/v1.meta.json`
-(`pemeriksaan_data_terpublikasi_2026-09-26`). Keputusan ini ditegaskan lagi pada
-25 Oktober 2026: hash commit dan tag dipakai sebagai bukti bahwa set uji, pedoman,
-dan ambang dikunci sebelum hasil dilihat, jadi riwayat tidak diubah untuk alasan apa pun.
+memuat fixture versi asli; isi commit lama tidak diubah (lihat paragraf berikut).
+
+**Riwayat git ditulis ulang pada 25 Oktober 2026**, hanya untuk dua hal: menghapus
+baris atribusi asisten AI (`Co-Authored-By: Claude …`) dari pesan commit, dan
+membetulkan email author yang salah ketik. Isi dan tanggal setiap commit terbukti
+identik dengan riwayat asli (hash tree dan tanggal author sama pada 177 dari 177
+commit; kedua tag menunjuk isi yang sama). Hash commit yang dikutip dokumen beku,
+misalnya di `testset/` dan `docs/rancangan/`, merujuk riwayat asli; pemetaannya ke
+hash baru ada di [`docs/riwayat/pemetaan_hash.md`](docs/riwayat/pemetaan_hash.md).
+Riwayat asli beserta catatan push dan CI-nya tersimpan di repo arsip yang private.
+Penulisan ulang ini tidak mengubah pernyataan pemakaian asisten AI di proyek ini:
+asal-usul label dan bantuan AI tetap tercatat di
+[Set evaluasi eksternal](#set-evaluasi-eksternal) dan `testset/v1.meta.json`.
 
 **Catatan sejarah Versi 1.** Pada basis data Versi 1 (150 artikel, saat scraping awal), 16 artikel tidak
 punya rujukan yang boleh ditampilkan. Angka ini dihitung dengan aturan penyaringan Versi 1. Aturan itu sudah

@@ -10,6 +10,8 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
+
 *(2026-10-25, README akhir; branch `readme-akhir`, DIGABUNG ke main 2026-10-25 atas persetujuan pemilik proyek, merge commit `--no-ff` dengan email benar)*
 
 > **README = dokumentasi proyek portofolio pribadi** (koreksi pemilik proyek 2026-10-25: bukan khusus untuk
@@ -96,18 +98,21 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (4) pemicu Task Scheduler saat laptop bangun dari tidur (DITUNDA; bisa menjalankan scraping beberapa kali
 > sehari); (5) Tahap 3: catatan aktivitas tanpa isi pesan (ADR 0006, sudah diputuskan, belum dibangun);
 > (6) Versi 2 (belum dimulai; cakupan menunggu keputusan pemilik proyek; `archive/v2_snapshot/` belum dibuat).
-> **RIWAYAT GIT TIDAK DITULIS ULANG (keputusan pemilik proyek 2026-10-25; rencana menghapus atribusi Claude
-> DIBATALKAN):** hash commit dan tag `testset-v1` adalah bukti pra-registrasi (mis. pedoman `2500013` dan tag
-> `annotation-guide-v1.0`, ambang `f9ecd0f`/`a1459a2`/`c347e20`, label final `bf82657`; CI membandingkan
-> `testset/v1.jsonl` dengan tag `testset-v1`), dan itu lebih penting daripada menghapus atribusi. Jangan
-> mengusulkan `filter-repo`/`rebase` atas riwayat yang sudah di-push. Keadaan riwayat 2026-10-25 (171 commit,
-> semua ref): Claude TIDAK pernah menjadi author/committer; muncul hanya lewat trailer `Co-Authored-By` pada 170
-> commit (Opus 5.5: 117, Sonnet 5: 53).
-> **Email author (diperbaiki 2026-10-25 atas izin pemilik proyek):** semua commit SAMPAI DAN TERMASUK `d53c719`
-> (2026-10-25 15:04 WIB; 172 commit di semua ref) memakai `rzultiandra@gmail.comm` (salah ketik `.comm`), jadi
-> TIDAK terhubung ke akun GitHub pemilik proyek. Ini **sengaja dibiarkan**: mengubahnya berarti menulis ulang
-> riwayat dan mengubah hash pra-registrasi. Sejak 2026-10-25 `user.email` = `rzultiandra@gmail.com` di config
-> repo (`--local`) DAN global (sebelumnya: repo tidak disetel, global `.comm`); commit baru memakai email benar.
+> **RIWAYAT GIT DITULIS ULANG 2026-10-25 (keputusan pemilik proyek; menggantikan keputusan sebelumnya pada hari
+> yang sama untuk TIDAK menulis ulang).** Tujuan: daftar kontributor repo hanya pemilik proyek. Dikerjakan dengan
+> `git filter-repo` 2.47.0 di clone terpisah, hanya: (1) menghapus 175 baris `Co-Authored-By: Claude …` dari pesan
+> commit (0 `Claude-Session`, 0 "Generated with Claude Code"; dua judul yang menyebut "Claude Code" dibiarkan);
+> (2) menyeragamkan author, committer, dan pembuat tag menjadi `RifandyZul <rzultiandra@gmail.com>` (sebelumnya 172
+> commit + kedua tag `.comm`, dan commit `4fdadd4` editor web GitHub yang tanda tangan GitHub-nya hilang).
+> Diverifikasi: 177 = 177 commit; tree + tanggal author sama 177/177; kedua tag beranotasi tetap, tree dan pesan
+> sama; identitas hanya `RifandyZul <rzultiandra@gmail.com>`; 0 `Co-Authored-By`; seluruh uji, uji kunci, dan ruff
+> lolos di clone baru. **SEMUA HASH COMMIT DI BERKAS INI DAN DI DOKUMEN BEKU/SEJARAH (`testset/`, `docs/rancangan/`,
+> `docs/adr/`, `docs/audit/`) ADALAH HASH RIWAYAT ASLI**; pemetaan lama -> baru (177 commit, 38 yang dirujuk
+> ditandai) di `docs/riwayat/pemetaan_hash.md`. Jangan mengganti hash lama di dokumen-dokumen itu. Riwayat asli:
+> repo arsip private `RAG_FactChecking-lama` (catatan push dan CI asli) dan
+> `data/backups/riwayat_asli_2026-10-25.bundle` (SHA-256 `db83fad3...`, 176 commit + 2 tag). Uji yang membaca git
+> memakai NAMA tag `testset-v1`, jadi tag wajib ikut di-push. Jangan menulis ulang riwayat lagi tanpa persetujuan.
+> Sejak 2026-10-25 `user.email` = `rzultiandra@gmail.com` di config repo (`--local`) DAN global.
 
 *(2026-10-24, Tahap 2)*
 

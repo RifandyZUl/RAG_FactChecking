@@ -7,7 +7,7 @@
 | `rancangan/` | rancangan Versi 2, evaluasi eksternal, dan pembaruan berkala |
 | `audit/` | audit Tahap 0, laporan Tahap 1 |
 | `tampilan/` | tangkapan layar bukti tampilan demo (390 dan 1280 px) |
-| `riwayat/` | dokumen lama dan `pemetaan_jalur.md` (jalur lama -> baru setelah Tahap 1b) |
+| `riwayat/` | dokumen lama, `pemetaan_jalur.md` (jalur lama -> baru setelah Tahap 1b), dan [`pemetaan_hash.md`](riwayat/pemetaan_hash.md) (hash commit riwayat asli -> riwayat yang ditulis ulang 2026-10-25) |
 | `evaluasi/` | catatan evaluasi baru: bukti embedding Tahap 2 (`tahap2_bukti_embedding_*.json`, keluaran `evaluation.embedding_proof`). Temuan Versi 1 tetap di `testset/v1_temuan_untuk_v2.md` (dirujuk `v1.meta.json`) |
 | `adr/` | catatan keputusan arsitektur (0001-0007; format konteks, keputusan, alternatif yang ditolak, konsekuensi) |
 
