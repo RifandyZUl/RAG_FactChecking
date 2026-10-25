@@ -397,14 +397,15 @@ deterministik ke sumber hoaks yang tercatat di artikel, tanpa LLM, dicatat sebag
 fitur masa depan dan belum dibangun.
 
 **Rentang waktu.** Basis data baseline Versi 1 (150 artikel) berasal dari
-Agustus–September 2026. Basis data demo, yang juga dipakai evaluasi eksternal, memuat 1.532 artikel dari
-30 September 2025 sampai 27 September 2026; hoaks di luar rentang itu tidak tercakup, dan artikel
-yang sudah diambil tidak disegarkan bila diperbarui di sumbernya.
+Agustus–September 2026. Evaluasi eksternal memakai basis data 1.532 artikel dari 30 September 2025
+sampai 27 September 2026. Basis data demo bertambah lewat pembaruan berkala: sejak ingest 25 Oktober
+2026 ia memuat 1.611 artikel dari 30 September 2025 sampai 25 Oktober 2026. Hoaks di luar rentang itu
+tidak tercakup, dan artikel yang sudah diambil tidak disegarkan bila diperbarui di sumbernya.
 
-**Rujukan tidak selalu tersedia.** Pada basis data demo, 205 dari 1.532 artikel
-tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (16 dari 150 pada
-basis data baseline Versi 1, dengan aturan saat itu); jawaban untuk artikel tersebut
-disusun tanpa bagian rujukan.
+**Rujukan tidak selalu tersedia.** Pada basis data evaluasi, 205 dari 1.532 artikel
+tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (pada basis data demo 25 Oktober
+2026: 210 dari 1.611; pada basis data baseline Versi 1: 16 dari 150, dengan aturan saat itu); jawaban
+untuk artikel tersebut disusun tanpa bagian rujukan.
 
 **Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
 hosting gambar, dan pemendek URL disaring, termasuk akun resmi instansi dan tautan
@@ -596,6 +597,32 @@ Copy-Item -Force "data\backups\pre_antrean_$tgl\articles.json" data\articles.jso
 Setelah pemulihan, antrean kembali belum digabung, jadi langkah 0-6 bisa diulang. Jangan memakai
 `ingest.py --rebuild` sebagai jalan pintas. Bila ingest hanya terhenti di tengah (mis. memori habis) tanpa
 galat SQLite/ChromaDB, cukup jalankan ulang langkah 4: chunk tersimpan bertahap.
+
+**Merekam keluaran.** Di Windows PowerShell 5.1, `Start-Transcript` **tidak merekam keluaran program
+native** (`python.exe`, `docker`) yang diketik langsung di prompt: rekaman ingest 2026-10-25 hanya memuat
+baris perintah dan keluaran cmdlet PowerShell (mis. `salinan = produksi: True`), tanpa satu baris pun dari
+Python. Dalam skrip `.ps1` atau `powershell -Command` keluaran itu ikut terekam (diuji 2026-10-25), jadi
+gejalanya khusus perintah yang diketik interaktif. Untuk lain kali, alirkan setiap perintah Python lewat
+`Tee-Object` (keluaran tetap tampil di layar):
+
+```powershell
+$env:PYTHONIOENCODING = "utf-8"   # tanpa ini Python yang keluarannya dialirkan memakai cp1252 dan gagal pada karakter seperti "→"
+$env:PYTHONUNBUFFERED = "1"       # keluaran tampil saat itu juga, bukan saat program selesai
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8   # PowerShell membaca keluaran Python sebagai UTF-8
+function Rekam { process { "$_" } }   # baris stderr (ErrorRecord di 5.1) menjadi teks biasa
+$log = "data\ingest_antrean_" + [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'SE Asia Standard Time').ToString('yyyy-MM-dd') + ".log"
+
+# pola untuk SETIAP perintah Python di langkah 0-6:
+.\.venv\Scripts\python.exe src\ingest.py 2>&1 | Rekam | Tee-Object -FilePath $log -Append
+"kode keluar: $LASTEXITCODE" | Tee-Object -FilePath $log -Append
+```
+
+Diuji 2026-10-25 di folder sementara (PowerShell 5.1.26100, jendela konsol sungguhan): stdout dan stderr
+terekam, karakter non-ASCII utuh, `$LASTEXITCODE` tetap kode keluar Python (3 pada program uji), dan
+perintah `python -c "..."` langkah 3 berjalan tanpa perubahan kutip. Catatan: berkasnya UTF-16 (bawaan
+`Tee-Object` di 5.1; terbaca Notepad dan `Get-Content`), dan urutan baris stderr terhadap stdout bisa
+bergeser karena keduanya pipa terpisah. Jangan memakai pola ini bila `$ErrorActionPreference = 'Stop'`:
+baris stderr akan menghentikan perintah.
 
 ### Menjalankan evaluasi
 

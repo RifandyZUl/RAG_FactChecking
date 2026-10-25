@@ -10,6 +10,41 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-25, pasca-ingest; branch `pasca-ingest-2026-10-25`, BELUM digabung; menunggu persetujuan pemilik proyek)*
+
+> **INGEST ANTREAN SELESAI 2026-10-25 (dijalankan pemilik proyek, ~13.53-14.06 WIB, setelah pembaruan manual
+> 13.49 berkode 0; jalan terjadwal 13.00 berkode 4 = `ConnectionError` pada halaman daftar 1, jaringan lokal,
+> situs normal saat dicek). INDEKS DEMO SAAT INI = 1.611 ARTIKEL / 4.830 CHUNK, 30 Sep 2025 s.d. 25 Okt 2026**
+> (antrean 79: SALAH 54, PENIPUAN 23, BELUM TERBUKTI 2; inkremental, 237 chunk baru). **Sidik jari isi
+> (`index_check.content_fingerprint`, diverifikasi Claude Code pada salinan):** `jumlah_artikel` 1611,
+> `jumlah_chunk` 4830, `sha256_daftar_artikel` `25fd72524f7661a16f38512bb5817a8ec1b1e2867427f5f8ef4331a16623413c`,
+> `sha256_teks_metadata` `816de13afe2c6cd2e91756439841d33a50af86a2e9d95f98032926cf4042964d`,
+> `sha256_embedding_float32` `5e495c73ffea877e266a9218fb1b288a081218fe917efa76ec6a5d58bb80d794`,
+> `sha256_articles_json_isi` `8fff5451d9cac8a352a84d6f38fb5764ae0d9bed61370dcb2cea029260edd4ed`, `ef_search` 2000.
+> **Angka evaluasi TETAP untuk indeks 1.532 artikel** (sidik jari `9851a6dc...`/`6283f0f6...`,
+> `testset/eksternal_butir.json` `indeks_beku`); README dan halaman Tentang menyatakannya; jumlah artikel di
+> Tentang dan kaki beranda dibaca dinamis dari indeks (kini 1.611).
+> Verifikasi mandiri: `articles.json` 1.611 (unik), 1.532 pertama identik dan berurutan dengan cadangan;
+> `index_check` SEGAR (8 sampel kosinus 1,000000, SEMUANYA artikel lama karena sampel diambil per langkah dari
+> awal daftar; tambahan 6 chunk artikel baru di-embed ulang terpisah: kosinus 1,000000); `retriever_exactness`
+> 0/64 meleset (`testset/retriever_exactness_1611.json`); chunk terpotong 512 token Narasi 4 / Penjelasan 11 /
+> Kesimpulan 0 dari 4.830; salinan `data/container/chroma` = produksi (byte dan isi). Cadangan
+> `data/backups/pre_antrean_2026-10-25/` (54 MB) lengkap: sidik jari isinya SAMA PERSIS dengan `indeks_beku`
+> evaluasi eksternal (7 kunci), `articles.json` 1.532, integritas sqlite ok (diperiksa pada salinan; byte cadangan
+> tidak berubah). Manifest `manifests/expansion_article_ids.json` 1.382 -> 1.461 (pemeriksaan PII judul: 0
+> temuan). Tiga contoh beranda lewat `service.check_message`, sekali masing-masing: 31781, 35133, belum
+> ditemukan -- TIDAK berubah; **3 panggilan Gemini** (buku besar 2026-10-25 hari Pasifik: 0 -> 3). Tangkapan
+> layar beranda dan Tentang (390/1280) diambil ulang. **`Start-Transcript` di PS 5.1 tidak merekam keluaran
+> program native yang diketik interaktif** (rekaman 25 Okt kosong dari keluaran Python) -> README "Merekam
+> keluaran" (`| Tee-Object`, diuji).
+> **PEKERJAAN TERTUNDA (dicatat 2026-10-25, JANGAN dikerjakan tanpa diminta):** (1) log pembaruan berkala
+> hanya mencatat JENIS galat (`ConnectionError`), bukan pesan aslinya (mis. galat DNS vs koneksi ditolak), jadi
+> penyebab kegagalan 25 Okt tidak dapat dibuktikan -> catat pesan galat asli (`client.fetch_html`, disamarkan
+> bila perlu); (2) jeda percobaan ulang halaman daftar pertama lebih panjang (kini 2/4/8 dtk, total ~28 dtk;
+> gangguan jaringan setelah bangun dari standby bisa lebih lama). Juga tertunda: ADR (Tahap 1b).
+> **Sisa sebelum proyek ditunjukkan (urutan pemilik proyek):** README akhir (cek menyeluruh + tangkapan layar di
+> atas) -> penulisan ulang riwayat git untuk menghapus atribusi Claude (langkah TERAKHIR) -> bahan lamaran.
+
 *(2026-10-24, Tahap 2)*
 
 > **TAHAP 2 (branch `tahap-2-docker`, BELUM digabung; menunggu persetujuan pemilik proyek):**

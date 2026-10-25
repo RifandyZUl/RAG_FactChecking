@@ -1,0 +1,28 @@
+{
+  "jumlah_chunk": 4830,
+  "parameter_hnsw": {
+    "space": "cosine",
+    "ef_construction": 100,
+    "ef_search": 2000,
+    "max_neighbors": 16,
+    "resize_factor": 1.2,
+    "sync_threshold": 1000
+  },
+  "ringkasan": {
+    "kueri": 64,
+    "n_results": 30,
+    "kueri_dengan_chunk_terlewat": [],
+    "chunk_terlewat": 0,
+    "chunk_diperiksa": 1920,
+    "top3_artikel_berbeda": []
+  },
+  "latensi_kueri_ms": {
+    "median": 9.8,
+    "p95": 12.73,
+    "maks": 12.88,
+    "ulangan": 3,
+    "catatan": "hanya collection.query (tanpa embedding kueri dan tanpa LLM)"
+  },
+  "rincian_berbeda": {},
+  "indeks": "C:\\FolderD\\RAG_FactChecking\\data\\chroma"
+}

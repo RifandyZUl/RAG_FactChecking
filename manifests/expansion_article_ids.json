@@ -1,10 +1,10 @@
 {
-  "keterangan": "Daftar artikel hasil perluasan basis data (data/expansion/: mode maju + kelompok mundur) yang sudah digabung ke data/articles.json (mode maju 2026-09-27 + kelompok 1-6; 1.532 total - 150 Versi 1). HANYA metadata (id, url, tanggal, label, kelompok); isi seksi dan tautan di dalam artikel TIDAK disertakan. Label mengikuti Aturan Wajib #7. Cadangan bila cache data/raw_html/ hilang; pemulihan: PYTHONPATH=src python -m scraping.restore manifests/expansion_article_ids.json --out X.json (dari cache bila ada, selain itu dari situs; basis 150 artikel ada di archive/v1/article_ids.json).",
+  "keterangan": "Daftar artikel hasil perluasan basis data (data/expansion/: mode maju + kelompok mundur) yang sudah digabung ke data/articles.json (mode maju 2026-09-27 + kelompok 1-6 + antrean pembaruan berkala yang digabung 2026-10-25; 1.611 total - 150 Versi 1). HANYA metadata (id, url, tanggal, label, kelompok); isi seksi dan tautan di dalam artikel TIDAK disertakan. Label mengikuti Aturan Wajib #7. Cadangan bila cache data/raw_html/ hilang; pemulihan: PYTHONPATH=src python -m scraping.restore manifests/expansion_article_ids.json --out X.json (dari cache bila ada, selain itu dari situs; basis 150 artikel ada di archive/v1/article_ids.json).",
   "sumber": "TurnBackHoax.id / MAFINDO",
   "dibuat": "2026-09-27",
-  "diperbarui": "2026-10-03 (kelompok 4-6 ditambahkan; 772 -> 1382)",
-  "jumlah": 1382,
-  "sha256_daftar_id": "3c161672ced9ebf2c9c1e7d4e2311210e399037a9497baa2db77f384a9e7f6df",
+  "diperbarui": "2026-10-25 (antrean pembaruan berkala forward_2026-10-03 s.d. forward_2026-10-25 ditambahkan; 1382 -> 1461)",
+  "jumlah": 1461,
+  "sha256_daftar_id": "bb0321ac8a5e8b625e2da077921dcc1e7745b4778c69da8e55f88490cf05a529",
   "pemeriksaan_pii_judul_2026-09-27": "candidates.screen.pii_flags pada judul bersih dan mentah (772): 0 ditandai; pola slug (runtun >= 6 digit, wa-me, bit-ly, s-id, tinyurl, domain/tld): 0 ditandai; kontrol positif pemindai terdeteksi; tinjauan manual 34 judul berkata kunci kontak/tautan/akun/WA: tidak ada nomor, tautan, surel, atau akun.",
   "artikel": [
     {
@@ -9680,7 +9680,561 @@
       "date": "30/09/2025",
       "label": "SALAH",
       "kelompok": "batch_06"
+    },
+    {
+      "article_id": "37017",
+      "url": "https://turnbackhoax.id/articles/37017-salah-susu-formula-mengandung-maltodekstrin-berbahaya-untuk-bayi",
+      "date": "02/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36995",
+      "url": "https://turnbackhoax.id/articles/36995-salah-video-masyarakat-muslim-di-nepal-buang-berhala-ke-laut",
+      "date": "01/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36994",
+      "url": "https://turnbackhoax.id/articles/36994-salah-kilang-minyak-terbesar-di-iran-terbakar-imbas-serangan-as",
+      "date": "30/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36985",
+      "url": "https://turnbackhoax.id/articles/36985-penipuan-tautan-pendaftaran-bantuan-kulkas-hingga-pom-mini-untuk-umkm",
+      "date": "30/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36976",
+      "url": "https://turnbackhoax.id/articles/36976-belum-terbukti-undur-undur-mampu-obati-diabetes",
+      "date": "29/09/2026",
+      "label": "BELUM TERBUKTI",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36975",
+      "url": "https://turnbackhoax.id/articles/36975-salah-prabowo-resmi-bekukan-dpr-ri",
+      "date": "29/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36974",
+      "url": "https://turnbackhoax.id/articles/36974-salah-pengadilan-negeri-surakarta-menyatakan-ijazah-jokowi-palsu",
+      "date": "29/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36949",
+      "url": "https://turnbackhoax.id/articles/36949-penipuan-menkeu-suahasil-umumkan-program-bantuan-pensiunan",
+      "date": "29/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36948",
+      "url": "https://turnbackhoax.id/articles/36948-penipuan-kontak-pendaftaran-dana-bantuan-dari-sherly-tjoanda",
+      "date": "29/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36947",
+      "url": "https://turnbackhoax.id/articles/36947-penipuan-tautan-lowongan-kerja-trans-studio",
+      "date": "28/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36943",
+      "url": "https://turnbackhoax.id/articles/36943-salah-18-gubernur-berontak-ancam-bikin-provinsinya-keluar-nkri",
+      "date": "28/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36942",
+      "url": "https://turnbackhoax.id/articles/36942-salah-survei-pbb-angka-harapan-hidup-di-indonesia-masuk-peringkat-5-terbawah",
+      "date": "28/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36941",
+      "url": "https://turnbackhoax.id/articles/36941-belum-terbukti-daun-awar-awar-mampu-hilangkan-kutil-hingga-tahi-lalat",
+      "date": "28/09/2026",
+      "label": "BELUM TERBUKTI",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36940",
+      "url": "https://turnbackhoax.id/articles/36940-penipuan-tautan-bantuan-laptop-dan-ponsel-untuk-mahasiswa",
+      "date": "28/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36938",
+      "url": "https://turnbackhoax.id/articles/36938-salah-presiden-prabowo-minta-kpk-periksa-jokowi",
+      "date": "28/09/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "36937",
+      "url": "https://turnbackhoax.id/articles/36937-penipuan-tautan-lowongan-kerja-nutrifood-indonesia",
+      "date": "27/09/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-03"
+    },
+    {
+      "article_id": "37095",
+      "url": "https://turnbackhoax.id/articles/37095-salah-video-bunker-bunker-di-israel-mulai-terendam-banjir",
+      "date": "08/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37096",
+      "url": "https://turnbackhoax.id/articles/37096-salah-dokumentasi-lumpur-lapindo-kembali-semburkan-lumpur-panas",
+      "date": "07/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37077",
+      "url": "https://turnbackhoax.id/articles/37077-salah-prabowo-kembali-lantik-purbaya",
+      "date": "07/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37056",
+      "url": "https://turnbackhoax.id/articles/37056-penipuan-tautan-umroh-gratis-dari-pemerintah-indonesia-arab-saudi",
+      "date": "06/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37052",
+      "url": "https://turnbackhoax.id/articles/37052-penipuan-tautan-lowongan-kerja-kawasaki-motor",
+      "date": "06/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37051",
+      "url": "https://turnbackhoax.id/articles/37051-salah-seduhan-daun-kelor-mampu-bersihkan-paru-paru",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37050",
+      "url": "https://turnbackhoax.id/articles/37050-salah-wapres-gibran-resmi-dicopot",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37049",
+      "url": "https://turnbackhoax.id/articles/37049-salah-undip-dan-unpad-jadi-peserta-perdana-program-pendidikan-gratis-prabowo",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37048",
+      "url": "https://turnbackhoax.id/articles/37048-salah-usai-dipecat-purbaya-jadi-pejabat-bank-dunia-pertama-dari-indonesia",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37047",
+      "url": "https://turnbackhoax.id/articles/37047-salah-meta-ai-bisa-akses-seluruh-percakapan-di-whatsapp",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37046",
+      "url": "https://turnbackhoax.id/articles/37046-salah-purbaya-digadang-jadi-ketua-kpk",
+      "date": "06/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37029",
+      "url": "https://turnbackhoax.id/articles/37029-salah-makanan-gmo-merusak-genetik-dan-kesehatan-manusia",
+      "date": "05/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-08"
+    },
+    {
+      "article_id": "37109",
+      "url": "https://turnbackhoax.id/articles/37109-salah-sri-mulyani-dan-suahasil-ditangkap-kpk",
+      "date": "09/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-09"
+    },
+    {
+      "article_id": "37107",
+      "url": "https://turnbackhoax.id/articles/37107-salah-imf-paksa-prabowo-terima-pinjaman-bunga-tinggi",
+      "date": "08/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-09"
+    },
+    {
+      "article_id": "37106",
+      "url": "https://turnbackhoax.id/articles/37106-salah-kendaraan-produksi-sebelum-tahun-2000-bakal-bebas-pajak",
+      "date": "08/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-09"
+    },
+    {
+      "article_id": "37105",
+      "url": "https://turnbackhoax.id/articles/37105-salah-gibran-minta-kaesang-jabat-ketua-bgn",
+      "date": "08/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-09"
+    },
+    {
+      "article_id": "37114",
+      "url": "https://turnbackhoax.id/articles/37114-salah-solo-bakal-jadi-provinsi-di-tahun-2027",
+      "date": "10/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-10"
+    },
+    {
+      "article_id": "37154",
+      "url": "https://turnbackhoax.id/articles/37154-penipuan-kontak-whatsapp-pendaftaran-umrah-gratis-dari-kemenag",
+      "date": "13/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37149",
+      "url": "https://turnbackhoax.id/articles/37149-penipuan-lowongan-kerja-pt-vale-indonesia",
+      "date": "13/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37148",
+      "url": "https://turnbackhoax.id/articles/37148-salah-mk-melarang-pemasangan-foto-gibran-di-sekolah",
+      "date": "13/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37129",
+      "url": "https://turnbackhoax.id/articles/37129-salah-mahfud-md-dilantik-jadi-jaksa-agung",
+      "date": "12/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37128",
+      "url": "https://turnbackhoax.id/articles/37128-salah-prabowo-beri-hadiah-mobil-dan-uang-triliunan-rupiah-ke-pemain-timnas",
+      "date": "12/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37127",
+      "url": "https://turnbackhoax.id/articles/37127-salah-mk-putuskan-ijazah-gibran-sah",
+      "date": "12/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37120",
+      "url": "https://turnbackhoax.id/articles/37120-penipuan-tautan-lowongan-kerja-rohto",
+      "date": "12/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37119",
+      "url": "https://turnbackhoax.id/articles/37119-salah-dokumentasi-pejabat-mossad-tewas-saat-serangan-bom-di-pusat-kota-tel-aviv",
+      "date": "11/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37118",
+      "url": "https://turnbackhoax.id/articles/37118-salah-anggaran-negara-tidak-ada-sekolah-negeri-kembali-bebankan-spp",
+      "date": "11/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37117",
+      "url": "https://turnbackhoax.id/articles/37117-salah-video-wapres-gibran-serahkan-surat-pengunduran-diri",
+      "date": "11/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37115",
+      "url": "https://turnbackhoax.id/articles/37115-penipuan-tautan-lowongan-kerja-adaro-andalan-indonesia",
+      "date": "10/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-13"
+    },
+    {
+      "article_id": "37236",
+      "url": "https://turnbackhoax.id/articles/37236-penipuan-lowongan-kerja-pt-kaltim-prima-coal",
+      "date": "17/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37234",
+      "url": "https://turnbackhoax.id/articles/37234-salah-dprd-bali-larang-study-tour-sekolah-dari-jawa-mulai-oktober-2026",
+      "date": "16/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37233",
+      "url": "https://turnbackhoax.id/articles/37233-salah-bpjs-kini-hanya-tanggung-warga-berpenghasilan-di-bawah-rp1-juta-bulan",
+      "date": "16/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37229",
+      "url": "https://turnbackhoax.id/articles/37229-salah-dokumentasi-opm-membakar-kopdes",
+      "date": "16/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37228",
+      "url": "https://turnbackhoax.id/articles/37228-penipuan-tautan-bantuan-tabung-gas-lpg",
+      "date": "16/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37227",
+      "url": "https://turnbackhoax.id/articles/37227-salah-ketua-ombudsman-diganti-usai-sidak-lapas-cibinong",
+      "date": "16/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37222",
+      "url": "https://turnbackhoax.id/articles/37222-penipuan-lowongan-kerja-nestle-indonesia",
+      "date": "15/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37221",
+      "url": "https://turnbackhoax.id/articles/37221-penipuan-pendaftaran-uji-coba-bansos-jutaan-rupiah",
+      "date": "15/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37220",
+      "url": "https://turnbackhoax.id/articles/37220-salah-mk-kabulkan-permohonan-diskualifikasi-wapres-gibran",
+      "date": "15/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37210",
+      "url": "https://turnbackhoax.id/articles/37210-salah-wapres-gibran-mengundurkan-diri",
+      "date": "15/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37209",
+      "url": "https://turnbackhoax.id/articles/37209-salah-video-pertahanan-udara-arab-saudi-cegat-drone-houthi-di-makkah-september-2026",
+      "date": "15/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37208",
+      "url": "https://turnbackhoax.id/articles/37208-salah-video-pangkalan-udara-di-ukraina-telah-hancur",
+      "date": "15/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37207",
+      "url": "https://turnbackhoax.id/articles/37207-penipuan-gubernur-papua-bagi-bagi-bantuan-lewat-kuis",
+      "date": "15/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37172",
+      "url": "https://turnbackhoax.id/articles/37172-penipuan-tautan-pendaftaran-laptop-gratis-untuk-anak-sekolah",
+      "date": "14/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-17"
+    },
+    {
+      "article_id": "37240",
+      "url": "https://turnbackhoax.id/articles/37240-salah-dokumentasi-gibran-serahkan-surat-pengunduran-diri-ke-dpr-ri-atas-perintah-prabowo",
+      "date": "19/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-19"
+    },
+    {
+      "article_id": "37239",
+      "url": "https://turnbackhoax.id/articles/37239-salah-mk-laporkan-denny-indrayana-usai-putusan-ijazah-gibran",
+      "date": "19/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-19"
+    },
+    {
+      "article_id": "37238",
+      "url": "https://turnbackhoax.id/articles/37238-salah-mk-ancam-ina-liem-7-tahun-penjara-soal-ijazah-gibran",
+      "date": "18/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-19"
+    },
+    {
+      "article_id": "37237",
+      "url": "https://turnbackhoax.id/articles/37237-salah-video-prabowo-sebut-gibran-harus-turun-sebelum-diusir",
+      "date": "17/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-19"
+    },
+    {
+      "article_id": "37255",
+      "url": "https://turnbackhoax.id/articles/37255-salah-dokumentasi-gibran-serahkan-surat-pengunduran-diri-ke-dpr-ri-atas-perintah-prabowo",
+      "date": "20/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37250",
+      "url": "https://turnbackhoax.id/articles/37250-salah-aturan-baru-iringan-pejabat-jadi-urutan-prioritas-pertama",
+      "date": "19/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37249",
+      "url": "https://turnbackhoax.id/articles/37249-salah-prabowo-minta-menkeu-ajukan-utang-ke-china-untuk-mbg",
+      "date": "19/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37248",
+      "url": "https://turnbackhoax.id/articles/37248-penipuan-tautan-pendaftaran-dana-bos-2026",
+      "date": "19/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37246",
+      "url": "https://turnbackhoax.id/articles/37246-penipuan-program-bantuan-tunai-untuk-transmigran-indonesia",
+      "date": "19/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37241",
+      "url": "https://turnbackhoax.id/articles/37241-salah-puan-maharani-minta-rakyat-hormati-dpr-dan-jangan-anarkis",
+      "date": "19/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-20"
+    },
+    {
+      "article_id": "37266",
+      "url": "https://turnbackhoax.id/articles/37266-penipuan-tautan-bantuan-hp-dan-rekening-baru-dari-pemerintah",
+      "date": "21/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37265",
+      "url": "https://turnbackhoax.id/articles/37265-salah-imbas-asap-karhutla-who-larang-penerbangan-ke-ri-singapura-dan-malaysia",
+      "date": "21/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37264",
+      "url": "https://turnbackhoax.id/articles/37264-salah-mk-ubah-batas-usia-minimal-capres-dan-cawapres-jadi-33-tahun",
+      "date": "21/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37263",
+      "url": "https://turnbackhoax.id/articles/37263-salah-kementerian-pu-larang-developer-bangun-cluster-wajib-rusun",
+      "date": "21/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37262",
+      "url": "https://turnbackhoax.id/articles/37262-salah-daun-kenikir-mampu-sembuhkan-kanker",
+      "date": "21/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37261",
+      "url": "https://turnbackhoax.id/articles/37261-salah-bmkg-tidak-bakal-ada-hujan-di-indonesia-sepanjang-2027",
+      "date": "21/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-21"
+    },
+    {
+      "article_id": "37288",
+      "url": "https://turnbackhoax.id/articles/37288-salah-guru-non-asn-dilarang-mengajar-mulai-januari-2027",
+      "date": "25/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-25"
+    },
+    {
+      "article_id": "37286",
+      "url": "https://turnbackhoax.id/articles/37286-penipuan-program-bantuan-perabotan-rumah-dari-pemerintah",
+      "date": "24/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-25"
+    },
+    {
+      "article_id": "37285",
+      "url": "https://turnbackhoax.id/articles/37285-salah-beredar-produk-pertalite-bubuk-tinggal-campur-air",
+      "date": "24/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-25"
+    },
+    {
+      "article_id": "37273",
+      "url": "https://turnbackhoax.id/articles/37273-penipuan-tautan-lowongan-kerja-komatsu-indonesia",
+      "date": "22/10/2026",
+      "label": "PENIPUAN",
+      "kelompok": "forward_2026-10-25"
+    },
+    {
+      "article_id": "37272",
+      "url": "https://turnbackhoax.id/articles/37272-salah-mbg-berhenti-sementara-anggaran-dialihkan-pemadaman-karhutla",
+      "date": "22/10/2026",
+      "label": "SALAH",
+      "kelompok": "forward_2026-10-25"
     }
   ],
-  "pemeriksaan_pii_judul_2026-10-03": "Kelompok 4-6 (610 artikel): candidates.screen.pii_flags pada judul bersih dan mentah: 0 ditandai; pola slug (runtun >= 6 digit, wa-me, bit-ly, s-id, tinyurl, domain/tld): 5 ditandai, semuanya positif palsu kata 'online'/'cod' (31969, 31694, 31612, 29604, 29533); kontrol positif pemindai terdeteksi (nomor, surel, URL); tinjauan manual 113 judul berkata kunci kontak/tautan/akun/WA atau berangka >= 4 digit: tidak ada nomor, tautan, surel, atau akun pribadi (angka yang ada adalah tahun/nominal; nama yang ada adalah tokoh publik). Label diambil dari articles.json setelah reparse (tiga judul berkurung rusak kelompok 5 terbaca SALAH)."
+  "pemeriksaan_pii_judul_2026-10-03": "Kelompok 4-6 (610 artikel): candidates.screen.pii_flags pada judul bersih dan mentah: 0 ditandai; pola slug (runtun >= 6 digit, wa-me, bit-ly, s-id, tinyurl, domain/tld): 5 ditandai, semuanya positif palsu kata 'online'/'cod' (31969, 31694, 31612, 29604, 29533); kontrol positif pemindai terdeteksi (nomor, surel, URL); tinjauan manual 113 judul berkata kunci kontak/tautan/akun/WA atau berangka >= 4 digit: tidak ada nomor, tautan, surel, atau akun pribadi (angka yang ada adalah tahun/nominal; nama yang ada adalah tokoh publik). Label diambil dari articles.json setelah reparse (tiga judul berkurung rusak kelompok 5 terbaca SALAH).",
+  "pemeriksaan_pii_judul_2026-10-25": "Antrean 2026-10-25 (79 artikel): candidates.screen.pii_flags pada judul bersih dan mentah: 0 ditandai; pola slug (runtun >= 6 digit, wa-me, bit-ly, s-id, tinyurl, domain/tld): 0 ditandai; kontrol positif pemindai terdeteksi (nomor, surel, URL); tinjauan manual 22 judul berkata kunci kontak/tautan/akun/WA atau berangka >= 4 digit: tidak ada nomor, tautan, surel, atau akun pribadi (angka yang ada adalah tahun; nama yang ada adalah tokoh publik). Label dari articles.json setelah reparse: SALAH 54, PENIPUAN 23, BELUM TERBUKTI 2."
 }
