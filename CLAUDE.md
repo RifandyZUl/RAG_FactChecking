@@ -12,9 +12,17 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-25, README akhir; branch `readme-akhir`, BELUM digabung; menunggu pemilik proyek membaca hasilnya)*
 
-> **README ditulis ulang untuk pembaca perekrut:** layar pertama = masalah/solusi, evaluasi singkat (36/46
-> memadai, 10/45 belum lulus/gugur, indeks 1.532, ambang dikunci sebelum pengujian), Docker beberapa baris,
-> tangkapan layar beranda + "ditemukan" (390 px). **Detail operasional DIPINDAH ke `docs/operasional.md`**
+> **README = dokumentasi proyek portofolio pribadi** (koreksi pemilik proyek 2026-10-25: bukan khusus untuk
+> perekrut; proyek akan tampil di website portofolio pemilik). Bagian atas: masalah/solusi dengan bahasa
+> sederhana, evaluasi singkat (36/46 memadai, 10/45 **gugur**, indeks 1.532, batas ditentukan sebelum
+> pengujian), potongan tangkapan layar `docs/tampilan/{beranda,ditemukan}-390-atas.png` (2x, dibuat
+> `scripts/screenshots.py --only beranda-atas --only ditemukan-atas`), lalu Docker. **Istilah verdict di README
+> hanya "gugur"** (istilah pra-registrasi); halaman Tentang tetap "Belum lulus" untuk pengguna awam, dan README
+> menyatakan keduanya sama. Langkah `.env` di README memakai `if (-not (Test-Path .env)) { Copy-Item ... }`
+> (tidak menimpa kunci; diuji). Angka artikel tanpa rujukan (205/1.532, 210/1.611) kini dari
+> `docs/evaluasi/rujukan_kosong.json` (`python -m evaluation.reference_gaps`, hanya angka + sidik jari indeks;
+> indeks dibuka lewat salinan sementara). `docs/ringkasan_portofolio.md` = bahan website (angka sama dengan
+> README). **Detail operasional DIPINDAH ke `docs/operasional.md`**
 > (pembaruan berkala [ringkasan baru], ingest antrean langkah 0-6, pemulihan, perekaman, mode offline HF, detail
 > demo, arsip Versi 1, Docker); teks dipotong verbatim dari README lama per rentang baris. Judul "Ingest antrean
 > (pembaruan berkala)", "Arsip indeks Versi 1", dan "Docker" TETAP ada di README sebagai rintisan bertautan,
@@ -74,7 +82,15 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > `salinan_bukti_tahap2_2026-10-24` (98 MB) boleh dihapus (Tahap 2 di main, bukti JSON ter-commit); untuk ingest
 > berikutnya simpan dua `pre_antrean_*` terakhir (KECUALI `pre_antrean_2026-10-25`, yang permanen).
 > **Sisa sebelum proyek ditunjukkan (urutan pemilik proyek):** README akhir (cek menyeluruh + tangkapan layar di
-> atas) -> penulisan ulang riwayat git untuk menghapus atribusi Claude (langkah TERAKHIR) -> bahan lamaran.
+> atas) -> bahan lamaran.
+> **RIWAYAT GIT TIDAK DITULIS ULANG (keputusan pemilik proyek 2026-10-25; rencana menghapus atribusi Claude
+> DIBATALKAN):** hash commit dan tag `testset-v1` adalah bukti pra-registrasi (mis. pedoman `2500013` dan tag
+> `annotation-guide-v1.0`, ambang `f9ecd0f`/`a1459a2`/`c347e20`, label final `bf82657`; CI membandingkan
+> `testset/v1.jsonl` dengan tag `testset-v1`), dan itu lebih penting daripada menghapus atribusi. Jangan
+> mengusulkan `filter-repo`/`rebase` atas riwayat yang sudah di-push. Keadaan riwayat 2026-10-25 (171 commit,
+> semua ref): Claude TIDAK pernah menjadi author/committer; muncul hanya lewat trailer `Co-Authored-By` pada 170
+> commit (Opus 5.5: 117, Sonnet 5: 53). Catatan: email author 170 commit tertulis `rzultiandra@gmail.comm`
+> (salah ketik `.comm`, juga di `git config user.email`), jadi commit itu tidak tertaut ke akun GitHub -- dibiarkan.
 
 *(2026-10-24, Tahap 2)*
 

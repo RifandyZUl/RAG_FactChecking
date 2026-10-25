@@ -2,6 +2,7 @@
 
 | Folder / berkas | Isi |
 | --- | --- |
+| [`ringkasan_portofolio.md`](ringkasan_portofolio.md) | bahan singkat untuk website portofolio (judul, deskripsi, teknologi, keputusan teknis); angkanya sama dengan README |
 | [`operasional.md`](operasional.md) | detail operasional yang dipindah dari README: pembaruan berkala, ingest antrean (pemulihan, perekaman), mode offline, demo, arsip Versi 1, Docker |
 | `rancangan/` | rancangan Versi 2, evaluasi eksternal, dan pembaruan berkala |
 | `audit/` | audit Tahap 0, laporan Tahap 1, rencana Tahap 1b |

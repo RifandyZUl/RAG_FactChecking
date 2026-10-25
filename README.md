@@ -1,47 +1,39 @@
 # Cek Pesan Hoaks: RAG Verifikasi Klaim
 
-Banyak pesan hoaks di Indonesia sudah pernah diperiksa pemeriksa fakta, tetapi artikelnya sulit ditemukan
-karena pesan ditulis dengan kata-kata yang berbeda dari judul artikel. Sistem ini mencari tiga artikel
-TurnBackHoax.id yang paling mirip maknanya dengan pesan yang ditempel pengguna (embedding BGE-M3, ChromaDB),
-lalu meminta Gemini memutuskan apakah salah satunya memeriksa klaim yang sama. Bila ya, label, kesimpulan,
-dan rujukan ditampilkan apa adanya dari artikel itu; bila tidak, jawabannya "belum ditemukan". Sistem ini
-tidak menilai sendiri benar-salahnya klaim baru.
+Banyak pesan hoaks yang beredar sebenarnya sudah pernah diperiksa pemeriksa fakta. Masalahnya, artikel
+pemeriksaannya susah dicari karena kata-kata di pesan sering berbeda dengan judul artikel. Di proyek ini,
+pengguna menempel pesan, lalu sistem mencari tiga artikel TurnBackHoax.id yang isinya paling mirip (embedding
+BGE-M3 dan ChromaDB). Setelah itu Gemini memutuskan apakah salah satu artikel itu membahas klaim yang sama.
+Kalau ya, label, kesimpulan, dan tautan rujukan ditampilkan persis seperti di artikel. Kalau tidak,
+jawabannya "belum ditemukan". Sistem ini tidak menilai sendiri benar atau salahnya klaim baru.
 
 ## Hasil evaluasi singkat
 
-Diuji pada set eksternal 91 klaim nyata dari Liputan6 Cek Fakta, dengan indeks 1.532 artikel yang dibekukan
-selama evaluasi. Ambang ditetapkan sebelum pengujian; tiap klaim dijalankan tiga kali (keputusan modus).
+Sistem diuji pada set eksternal 91 klaim nyata dari Liputan6 Cek Fakta, dengan indeks 1.532 artikel yang
+dibekukan selama pengujian. Batas lulus ditentukan sebelum pengujian dimulai. Setiap klaim dijalankan tiga
+kali, dan yang dihitung adalah keputusan yang paling sering muncul.
 
-| Yang diukur | Hasil (Wilson 95%) | Ambang yang dikunci | Kategori |
+| Yang diukur | Hasil (interval Wilson 95%) | Batas yang ditentukan sebelumnya | Hasil akhir |
 | --- | --- | --- | --- |
-| Klaim yang ada di arsip: artikel yang benar ditemukan | 36/46 = 78,3% [64,4%; 87,7%] | memadai: batas bawah >= 60% | **memadai** |
-| Klaim yang tidak ada di arsip: keliru dicocokkan (kecocokan palsu) | 10/45 = 22,2% [12,5%; 36,3%] | gugur: batas bawah > 10% | **belum lulus** (gugur) |
+| Klaim yang ada di arsip: artikel yang benar ditemukan | 36/46 = 78,3% [64,4%; 87,7%] | memadai kalau batas bawah >= 60% | **memadai** |
+| Klaim yang tidak ada di arsip: tetap dicocokkan dengan artikel lain (kecocokan palsu) | 10/45 = 22,2% [12,5%; 36,3%] | gugur kalau batas bawah > 10% | **gugur** |
 
-Sekitar satu dari lima klaim yang tidak ada di arsip keliru dicocokkan, terutama penipuan berpola sama
-dengan lembaga atau program berbeda, jadi setiap hasil "ditemukan" di demo disertai kotak untuk mencocokkan
-sendiri. Angka ini berlaku untuk indeks 1.532 artikel, tidak otomatis untuk indeks demo yang terus bertambah.
-Sumber: `testset/eksternal_hasil_per_butir.json`, `testset/eksternal_butir.json`, ambang di
-[`docs/rancangan/rancangan_evaluasi_eksternal.md`](docs/rancangan/rancangan_evaluasi_eksternal.md) bagian 6;
-rincian di [Hasil Evaluasi](#hasil-evaluasi).
+**Gugur** berarti kecocokan palsu terbukti lebih sering dari batas 10%, karena seluruh intervalnya ada di
+atas 10%. Halaman Tentang di demo menyebut hasil yang sama dengan "Belum lulus" supaya mudah dipahami
+pengguna umum; keduanya merujuk ke hal yang sama.
 
-## Menjalankan demo dengan Docker
-
-Indeks vektor dan model embedding tidak ikut di repositori (indeks berisi teks artikel pihak ketiga). Siapkan
-venv, `.env` berisi `GEMINI_API_KEY` (tier gratis), indeks, dan model sekali di lokal
-([Cara Menjalankan](#cara-menjalankan)), lalu pertama kali:
-
-```powershell
-New-Item -ItemType Directory -Force data\container\kuota, data\container\logs
-Copy-Item -Recurse data\chroma data\container\chroma   # salinan indeks khusus container
-docker compose up --build   # buka http://127.0.0.1:8501 setelah container berstatus healthy
-```
-
-Kebutuhan memori, volume, dan cara memperbarui salinan indeks: [`docs/operasional.md`](docs/operasional.md#docker).
+Jadi, kalau klaimnya ada di arsip, sistem biasanya menemukannya. Kalau tidak ada, sekitar satu dari lima
+klaim tetap dicocokkan dengan artikel yang keliru, paling sering pada penipuan yang polanya sama tetapi
+lembaga atau programnya berbeda. Karena itu setiap hasil "ditemukan" di demo diberi kotak untuk mengecek
+sendiri. Angka ini berlaku untuk indeks 1.532 artikel, bukan otomatis untuk indeks demo yang terus
+bertambah. Sumber angka: `testset/eksternal_hasil_per_butir.json` dan `testset/eksternal_butir.json`; batas
+lulus ada di [`docs/rancangan/rancangan_evaluasi_eksternal.md`](docs/rancangan/rancangan_evaluasi_eksternal.md)
+bagian 6. Penjelasan lengkapnya ada di [Hasil Evaluasi](#hasil-evaluasi).
 
 <table>
   <tr>
-    <td valign="top"><img src="docs/tampilan/beranda-390.png" width="260" alt="Beranda: kotak pesan, contoh klaim, dan jumlah artikel di arsip"></td>
-    <td valign="top"><img src="docs/tampilan/ditemukan-390.png" width="260" alt="Hasil ditemukan: label SALAH, kesimpulan TurnBackHoax apa adanya, dan kotak untuk mencocokkan klaim"></td>
+    <td valign="top"><img src="docs/tampilan/beranda-390-atas.png" width="300" alt="Beranda demo: judul, kotak untuk menempel pesan, dan tombol Periksa pesan"></td>
+    <td valign="top"><img src="docs/tampilan/ditemukan-390-atas.png" width="300" alt="Hasil ditemukan: label SALAH, kesimpulan TurnBackHoax apa adanya, dan kotak untuk memastikan klaimnya sama"></td>
   </tr>
   <tr>
     <td>Beranda</td>
@@ -49,9 +41,28 @@ Kebutuhan memori, volume, dan cara memperbarui salinan indeks: [`docs/operasiona
   </tr>
 </table>
 
-Proyek portofolio pribadi, bukan layanan resmi Mafindo. Data artikel berasal dari
-[TurnBackHoax.id](https://turnbackhoax.id) (Mafindo) dan tidak disertakan di repositori ini; kode berlisensi
-[MIT](LICENSE). Status: Versi 1 selesai dan terukur; Versi 2 belum dimulai.
+Tangkapan layar lengkap (390 dan 1280 px, termasuk halaman Tentang dan hasil "belum ditemukan") ada di
+[`docs/tampilan/`](docs/tampilan/).
+
+## Menjalankan demo dengan Docker
+
+Indeks vektor dan model embedding tidak disertakan di repositori, karena indeks berisi teks artikel dari pihak
+lain. Jadi siapkan dulu venv, indeks, dan model di komputer sendiri ([Cara Menjalankan](#cara-menjalankan)).
+Setelah itu, untuk pertama kali:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }   # tidak menimpa .env yang sudah ada
+New-Item -ItemType Directory -Force data\container\kuota, data\container\logs
+Copy-Item -Recurse data\chroma data\container\chroma   # salinan indeks khusus container
+docker compose up --build   # buka http://127.0.0.1:8501 setelah container berstatus healthy
+```
+
+Pastikan `GEMINI_API_KEY` di `.env` sudah terisi (kuncinya bisa dibuat gratis di Google AI Studio). Kebutuhan
+memori, volume, dan cara memperbarui salinan indeks ada di [`docs/operasional.md`](docs/operasional.md#docker).
+
+Ini proyek portofolio pribadi dan bukan layanan resmi Mafindo. Data artikel berasal dari
+[TurnBackHoax.id](https://turnbackhoax.id) (Mafindo) dan tidak disertakan di repositori ini. Kodenya
+berlisensi [MIT](LICENSE). Status: Versi 1 selesai dan sudah diukur; Versi 2 belum dimulai.
 
 ---
 
@@ -422,7 +433,8 @@ tidak tercakup, dan artikel yang sudah diambil tidak disegarkan bila diperbarui 
 **Rujukan tidak selalu tersedia.** Pada basis data evaluasi, 205 dari 1.532 artikel
 tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (pada basis data demo 25 Oktober
 2026: 210 dari 1.611; pada basis data baseline Versi 1: 16 dari 150, dengan aturan saat itu); jawaban
-untuk artikel tersebut disusun tanpa bagian rujukan.
+untuk artikel tersebut disusun tanpa bagian rujukan. Angka 205 dan 210 beserta sidik jari indeksnya ada di
+`docs/evaluasi/rujukan_kosong.json` (`python -m evaluation.reference_gaps`).
 
 **Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
 hosting gambar, dan pemendek URL disaring, termasuk akun resmi instansi dan tautan
@@ -515,7 +527,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1                                  # Windows PowerShell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest, ruff
 .\.venv\Scripts\python.exe -m pip install -e . --no-build-isolation  # pasang src/ ke venv (pyproject.toml)
-copy .env.example .env          # lalu isi GEMINI_API_KEY
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }   # tidak menimpa; lalu isi GEMINI_API_KEY
 ```
 
 `pip install -e .` memasang paket proyek dalam mode *editable*: venv menunjuk langsung ke `src/`, jadi
@@ -657,7 +669,7 @@ src/              alur inti RAG di akar (src/README.md)
   webapp/         demo Streamlit: app.py, settings, resources, service, presentation, evaluation_facts, ui/
 tests/            uji otomatis offline, dikelompokkan seperti src/ (tests/README.md) -- BUKAN testset/
 testset/          data set uji beku, bukti pra-registrasi, hasil analisis (testset/README.md)
-docs/             operasional.md, adr/, rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/, evaluasi/ (docs/README.md)
+docs/             operasional.md, ringkasan_portofolio.md, adr/, rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/, evaluasi/ (docs/README.md)
 scripts/          pembaruan berkala (Task Scheduler), tangkapan layar, penyamaran fixture
 assets/brand/     logo (asli 500x500, turunan 32 dan 96 px)
 archive/          v1/ (arsip indeks Versi 1, lokal), fitur_mati/ (artefak fitur yang dihapus)
@@ -697,7 +709,9 @@ heuristik. Menerbitkan `articles.json` berarti ikut menyebarkan kontak dan tauta
 penipuan tersebut. **Catatan:** riwayat git sebelum 2026-09-26 masih
 memuat fixture versi asli. Riwayat sengaja tidak ditulis ulang agar hash commit
 dan tag `testset-v1` tetap sah; alasannya tercatat di `testset/v1.meta.json`
-(`pemeriksaan_data_terpublikasi_2026-09-26`).
+(`pemeriksaan_data_terpublikasi_2026-09-26`). Keputusan ini ditegaskan lagi pada
+25 Oktober 2026: hash commit dan tag dipakai sebagai bukti bahwa set uji, pedoman,
+dan ambang dikunci sebelum hasil dilihat, jadi riwayat tidak diubah untuk alasan apa pun.
 
 Proyek ini dibuat untuk keperluan pembelajaran dan portofolio, bukan sebagai
 pengganti layanan pemeriksa fakta resmi.

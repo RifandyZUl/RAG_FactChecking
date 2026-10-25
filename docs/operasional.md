@@ -168,8 +168,8 @@ Di Command Prompt (cmd): perintah yang sama tanpa `.\` di depan. Browser terbuka
 
 **Pemanasan:** saat halaman pertama kali dibuka, satu utas latar memuat tokenizer, indeks, dan model
 embedding (tanpa memanggil LLM), sementara pengguna masih mengetik. Setiap sumber daya dimuat sekali per
-proses (log server: satu baris `memuat <nama>` per sumber daya). Terukur 2026-10-22, laptop 16 GB:
-pemanasan 21 dtk saat memori lega, 40-60 dtk saat memori sesak; setelah itu embedding kueri 0,1-0,3 dtk
+proses (log server: satu baris `memuat <nama>` per sumber daya). Diukur sekali pada 2026-10-22 di laptop
+pengembangan (RAM 16 GB, venv Windows); angka ini gambaran, bukan jaminan: pemanasan 21 dtk saat memori lega, 40-60 dtk saat memori sesak; setelah itu embedding kueri 0,1-0,3 dtk
 dan pencarian di bawah 0,05 dtk per pemeriksaan. Waktu selebihnya adalah panggilan Gemini (median ~7 dtk
 pada evaluasi; bisa puluhan detik saat layanan membalas 503).
 
@@ -287,7 +287,8 @@ dapat direproduksi**: menjalankan demo di mesin lain tanpa menyiapkan venv, memb
 (pembuktian embedding di bawah), dan menjadi dasar deployment di masa depan. CI membangun image di setiap push
 (job `docker-build`, tanpa menjalankan container) untuk membuktikan Dockerfile masih bisa dibangun.
 
-**Kebutuhan memori (terukur 2026-10-24):** container memuncak di 3,39 GB, jadi `mem_limit` 5 GB dan WSL2
+**Kebutuhan memori (diukur sekali pada 2026-10-24 di laptop RAM 16 GB, WSL2 `memory=6GB`; gambaran, bukan
+jaminan):** container memuncak di 3,39 GB, jadi `mem_limit` 5 GB dan WSL2
 minimal `memory=6GB` (`%USERPROFILE%\.wslconfig`, berlaku setelah `wsl --shutdown`). Di laptop 16 GB, sediakan
 **sekitar 4-5 GB RAM bebas di Windows** sebelum build atau `docker compose up`: build pertama turun dari 4,8 GB
 ke di bawah 0,6 GB RAM bebas Windows dan dihentikan. Tutup peramban, aplikasi obrolan, dan IDE lebih dulu.
@@ -328,7 +329,8 @@ docker compose up -d demo
   tetap tidak sehat.
 - **Memori:** `mem_limit: 5g`.
 
-**Terukur 2026-10-24** (laptop 16 GB, WSL2 `memory=6GB`):
+**Diukur sekali pada 2026-10-24** di laptop pengembangan (RAM 16 GB, WSL2 `memory=6GB`). Angka ini hasil satu
+kali ukur di mesin itu, bukan jaminan untuk mesin lain:
 
 | Ukuran | Nilai |
 | --- | --- |
