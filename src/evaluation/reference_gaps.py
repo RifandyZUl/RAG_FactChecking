@@ -97,7 +97,7 @@ def main() -> int:
                        "python -m evaluation.reference_gaps."),
         "entri": {}}
     out["entri"][args.label] = entry
-    OUT_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    OUT_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({args.label: entry}, ensure_ascii=False, indent=2))
     return 0
 
