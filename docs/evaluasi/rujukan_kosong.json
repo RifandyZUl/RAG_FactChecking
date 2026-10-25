@@ -1,0 +1,35 @@
+{
+  "keterangan": "Artikel tanpa rujukan yang boleh ditampilkan (references kosong setelah penyaringan). Hanya angka; tanpa id, judul, URL, atau teks artikel. Dibuat dengan python -m evaluation.reference_gaps.",
+  "entri": {
+    "evaluasi_1532": {
+      "jumlah_artikel": 1532,
+      "artikel_tanpa_rujukan": 205,
+      "diukur": "2026-10-25",
+      "sidik_jari_indeks": {
+        "jumlah_artikel": 1532,
+        "jumlah_chunk": 4593,
+        "sha256_daftar_artikel": "1a1a4f198c22b98b12b60f83717e5e1a88147cafcc7d80acb8c6147d4c789d5b",
+        "sha256_teks_metadata": "6283f0f6c8db894360116a7487ccf93dd15ded7d9fac33e5d6970c3a05530330",
+        "sha256_embedding_float32": "9851a6dcba0c84c1216e7067f27484aa25b3cc81f3c4a3bb4ae0eeca0b79de94",
+        "ef_search": 2000,
+        "sha256_articles_json_isi": "cc7f1989ad1bf6c6ae7a055b8985ac1800722eb12415e8c2090aee346c77fb28"
+      },
+      "sama_dengan_indeks_beku_evaluasi_eksternal": true
+    },
+    "demo_1611": {
+      "jumlah_artikel": 1611,
+      "artikel_tanpa_rujukan": 210,
+      "diukur": "2026-10-25",
+      "sidik_jari_indeks": {
+        "jumlah_artikel": 1611,
+        "jumlah_chunk": 4830,
+        "sha256_daftar_artikel": "25fd72524f7661a16f38512bb5817a8ec1b1e2867427f5f8ef4331a16623413c",
+        "sha256_teks_metadata": "816de13afe2c6cd2e91756439841d33a50af86a2e9d95f98032926cf4042964d",
+        "sha256_embedding_float32": "5e495c73ffea877e266a9218fb1b288a081218fe917efa76ec6a5d58bb80d794",
+        "ef_search": 2000,
+        "sha256_articles_json_isi": "8fff5451d9cac8a352a84d6f38fb5764ae0d9bed61370dcb2cea029260edd4ed"
+      },
+      "sama_dengan_indeks_beku_evaluasi_eksternal": false
+    }
+  }
+}

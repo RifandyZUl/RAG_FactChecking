@@ -1,111 +1,124 @@
-# Sistem RAG Verifikasi Klaim Berbahasa Indonesia
+# Cek Pesan Hoaks: RAG Verifikasi Klaim
 
-Sistem tanya-jawab berbasis *Retrieval-Augmented Generation* yang memeriksa
-apakah sebuah klaim sudah pernah diverifikasi oleh pemeriksa fakta, lalu
-mengembalikan status verifikasi, klarifikasi faktanya, dan tautan rujukan yang
-sahih.
+Banyak pesan hoaks yang beredar sebenarnya sudah pernah diperiksa pemeriksa fakta. Masalahnya, artikel
+pemeriksaannya susah dicari karena kata-kata di pesan sering berbeda dengan judul artikel. Di proyek ini,
+pengguna menempel pesan, lalu sistem mencari tiga artikel TurnBackHoax.id yang isinya paling mirip (embedding
+BGE-M3 dan ChromaDB). Setelah itu Gemini memutuskan apakah salah satu artikel itu membahas klaim yang sama.
+Kalau ya, label, kesimpulan, dan tautan rujukan ditampilkan persis seperti di artikel. Kalau tidak,
+jawabannya "belum ditemukan". Sistem ini tidak menilai sendiri benar atau salahnya klaim baru.
 
-Proyek ini mencocokkan klaim yang beredar dengan artikel cek fakta TurnBackHoax.id lewat RAG (embedding
-BGE-M3, basis vektor ChromaDB, generator Gemini): bila klaimnya pernah diperiksa, sistem menampilkan label,
-klarifikasi, dan rujukan dari artikel itu. Sistem ini bukan pemeriksa fakta; ia tidak menilai sendiri
-benar-salahnya klaim baru. Sistem diuji dengan set uji yang dibekukan dan dengan set eksternal 91 klaim
-nyata dari Liputan6 Cek Fakta, dengan ambang lulus/gugur yang ditetapkan sebelum evaluasi dijalankan.
-Hasilnya: pada klaim yang ada di basis data, ketepatannya memadai (36/46 = 78,3%, Wilson 95% [64,4%;
-87,7%]), tetapi pada klaim yang tidak ada, sistem terlalu sering menampilkan artikel yang keliru (kecocokan
-palsu 10/45 = 22,2% [12,5%; 36,3%], gugur), terutama pada penipuan berpola sama. Pelajaran utamanya: pada
-penipuan yang berulang, definisi "klaim yang sama" belum cukup tajam, bahkan bagi penilai manusia.
+## Hasil evaluasi singkat
 
-**Status:** Versi 1 terukur pada indeks 150 artikel (`archive/v1`). Evaluasi eksternal pada indeks
-produksi 1.532 artikel sudah selesai: ketepatan positif memadai (36/46 = 78,3%, Wilson 95% [64,4%;
-87,7%]), kecocokan palsu gugur pada label resmi (10/45 = 22,2% [12,5%; 36,3%]), dan uji kemunduran
-set uji v1 mundur pada angka utama (kemunduran bersih 5) tetapi tidak mundur setelah verifikasi (2).
-Sistem belum siap menjadi pemicu langkah korektif bergaya CRAG, dan hasil "ditemukan" perlu diperiksa
-ulang oleh pengguna; peringatan di demo menyatakan ini. Versi 2 (Corrective RAG) belum dimulai.
-Rincian: [Hasil Evaluasi](#hasil-evaluasi).
+Sistem diuji pada set eksternal 91 klaim nyata dari Liputan6 Cek Fakta, dengan indeks 1.532 artikel yang
+dibekukan selama pengujian. Batas lulus ditentukan sebelum pengujian dimulai. Setiap klaim dijalankan tiga
+kali, dan yang dihitung adalah keputusan yang paling sering muncul.
+
+| Yang diukur | Hasil (interval Wilson 95%) | Batas yang ditentukan sebelumnya | Hasil akhir |
+| --- | --- | --- | --- |
+| Klaim yang ada di arsip: artikel yang benar ditemukan | 36/46 = 78,3% [64,4%; 87,7%] | memadai kalau batas bawah >= 60% | **memadai** |
+| Klaim yang tidak ada di arsip: tetap dicocokkan dengan artikel lain (kecocokan palsu) | 10/45 = 22,2% [12,5%; 36,3%] | gugur kalau batas bawah > 10% | **gugur** |
+
+**Gugur** berarti kecocokan palsu terbukti lebih sering dari batas 10%, karena seluruh intervalnya ada di
+atas 10%. Halaman Tentang di demo menyebut hasil yang sama dengan "Belum lulus" supaya mudah dipahami
+pengguna umum; keduanya merujuk ke hal yang sama.
+
+Jadi, kalau klaimnya ada di arsip, sistem biasanya menemukannya. Kalau tidak ada, sekitar satu dari lima
+klaim tetap dicocokkan dengan artikel yang keliru, paling sering pada penipuan yang polanya sama tetapi
+lembaga atau programnya berbeda. Karena itu setiap hasil "ditemukan" di demo diberi kotak untuk mengecek
+sendiri. Angka ini berlaku untuk indeks 1.532 artikel, bukan otomatis untuk indeks demo yang terus
+bertambah. Sumber angka: `testset/eksternal_hasil_per_butir.json` dan `testset/eksternal_butir.json`; batas
+lulus ada di [`docs/rancangan/rancangan_evaluasi_eksternal.md`](docs/rancangan/rancangan_evaluasi_eksternal.md)
+bagian 6. Penjelasan lengkapnya ada di [Hasil Evaluasi](#hasil-evaluasi).
+
+<table>
+  <tr>
+    <td valign="top"><img src="docs/tampilan/beranda-390-atas.png" width="300" alt="Beranda demo: judul, kotak untuk menempel pesan, dan tombol Periksa pesan"></td>
+    <td valign="top"><img src="docs/tampilan/ditemukan-390-atas.png" width="300" alt="Hasil ditemukan: label SALAH, kesimpulan TurnBackHoax apa adanya, dan kotak untuk memastikan klaimnya sama"></td>
+  </tr>
+  <tr>
+    <td>Beranda</td>
+    <td>Hasil "ditemukan"</td>
+  </tr>
+</table>
+
+Tangkapan layar lengkap (390 dan 1280 px, termasuk halaman Tentang dan hasil "belum ditemukan") ada di
+[`docs/tampilan/`](docs/tampilan/).
+
+## Menjalankan demo dengan Docker
+
+Indeks vektor dan model embedding tidak disertakan di repositori, karena indeks berisi teks artikel dari pihak
+lain. Jadi siapkan dulu venv, indeks, dan model di komputer sendiri ([Cara Menjalankan](#cara-menjalankan)).
+Setelah itu, untuk pertama kali:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }   # tidak menimpa .env yang sudah ada
+New-Item -ItemType Directory -Force data\container\kuota, data\container\logs
+Copy-Item -Recurse data\chroma data\container\chroma   # salinan indeks khusus container
+docker compose up --build   # buka http://127.0.0.1:8501 setelah container berstatus healthy
+```
+
+Pastikan `GEMINI_API_KEY` di `.env` sudah terisi (kuncinya bisa dibuat gratis di Google AI Studio). Kebutuhan
+memori, volume, dan cara memperbarui salinan indeks ada di [`docs/operasional.md`](docs/operasional.md#docker).
+
+Ini proyek portofolio pribadi dan bukan layanan resmi Mafindo. Data artikel berasal dari
+[TurnBackHoax.id](https://turnbackhoax.id) (Mafindo) dan tidak disertakan di repositori ini. Kodenya
+berlisensi [MIT](LICENSE). Status: Versi 1 selesai dan sudah diukur; Versi 2 belum dimulai.
 
 ---
 
 ## Daftar Isi
 
-- [Masalah](#masalah)
-- [Posisi dalam Literatur](#posisi-dalam-literatur)
 - [Arsitektur](#arsitektur)
 - [Keputusan Desain Utama](#keputusan-desain-utama)
 - [Hasil Evaluasi](#hasil-evaluasi)
 - [Keterbatasan](#keterbatasan)
 - [Rencana Versi 2](#rencana-versi-2)
 - [Cara Menjalankan](#cara-menjalankan)
+- [Posisi dalam Literatur](#posisi-dalam-literatur)
 - [Struktur Repositori](#struktur-repositori)
+- [Sumber Data](#sumber-data)
 - [Lisensi](#lisensi)
 - [Rujukan](#rujukan)
 
----
-
-## Masalah
-
-Hoaks di Indonesia menyebar jauh lebih cepat daripada kemampuan orang
-memverifikasinya. Sebagian besar klaim yang beredar sebenarnya **sudah pernah
-diperiksa** oleh organisasi pemeriksa fakta, tetapi hasil pemeriksaan itu sulit
-ditemukan: pencarian berbasis kata kunci gagal ketika pengguna menuliskan klaim
-dengan bahasa sehari-hari yang berbeda dari judul artikel pemeriksaan fakta.
-
-Sistem ini mencocokkan klaim yang ditulis pengguna dengan basis data artikel
-pemeriksaan fakta secara semantik, bukan leksikal, dan menolak menjawab ketika
-tidak ada klaim yang benar-benar sepadan.
-
----
-
-## Posisi dalam Literatur
-
-Tugas ini dikenal dalam riset sebagai **deteksi klaim yang sudah pernah dicek
-fakta** (*detecting previously fact-checked claims*, juga disebut *claim
-matching*), yang diperkenalkan Shaar dkk. (ACL 2020) dan menjadi tugas bersama
-tahunan di CLEF CheckThat! Lab.
-
-Tolok ukur baku pada bidang ini mendefinisikan tugasnya sebagai **pemeringkatan**:
-diberikan sebuah klaim dan kumpulan klaim terverifikasi, urutkan sehingga yang
-paling relevan berada setinggi mungkin, dengan metrik Success@K. Dataset
-rujukannya dibangun dengan asumsi setiap klaim memiliki pasangan.
-
-Proyek ini menguji dimensi yang tidak tercakup asumsi itu: **kemampuan sistem
-menyatakan bahwa klaim tidak ada di basis data**, diukur secara eksplisit
-menggunakan *negatif sulit* — klaim yang bertetangga topik tetapi bukan klaim
-yang sama. Dimensi ini penting karena di dunia nyata sebagian besar klaim yang
-beredar memang belum diperiksa.
-
-> Catatan kejujuran: penempatan ini berasal dari penelusuran terbatas, bukan
-> tinjauan pustaka sistematis. Klaim kebaruan apa pun perlu diverifikasi lebih
-> dulu melalui pencarian sistematis.
+Detail operasional (ingest antrean, pemulihan, perekaman, pembaruan berkala, arsip Versi 1, Docker):
+[`docs/operasional.md`](docs/operasional.md).
 
 ---
 
 ## Arsitektur
 
-### Jalur pengindeksan (luring, dijalankan berkala)
+### Jalur kueri (setiap pesan)
 
 ```
-TurnBackHoax.id  →  Scraping & parsing  →  Chunking per seksi  →  Embedding
-  150 artikel        seksi & tautan          450 chunk              BGE-M3 → ChromaDB
+Pesan pengguna (maks. 1.500 karakter)
+      ↓
+Retrieval   bge-m3 → ChromaDB; skor artikel = chunk terbaiknya; 3 artikel teratas    [kode]
+      ↓
+Gemini      gemini-3.5-flash-lite memilih satu dari 3 artikel, atau menolak          [LLM]
+      ↓
+Validasi    id harus salah satu dari 3 kandidat; URL dari LLM dibuang                 [kode]
+      ↓
+Tampilan    label, Kesimpulan, dan rujukan apa adanya dari artikel,                   [kode]
+            ditambah kotak "Pastikan klaimnya benar-benar sama"
 ```
 
-### Jalur kueri (setiap pertanyaan pengguna)
+Hanya satu tahap yang memakai LLM, dan tugasnya sempit: menilai apakah pesan pengguna memuat klaim yang sama
+dengan salah satu dari tiga artikel kandidat. Label diambil dari metadata artikel, Kesimpulan TurnBackHoax
+ditampilkan apa adanya (bukan parafrase LLM), dan tautan hanya berasal dari seksi Referensi yang sudah
+disaring. Demo berjalan sebagai satu proses Streamlit di atas pipeline yang sama dengan yang dievaluasi.
+
+### Jalur pengindeksan (luring)
 
 ```
-Klaim pengguna
-      ↓
-Retrieval  (BGE-M3 → ChromaDB, agregasi skor per artikel, top-3)     [kode]
-      ↓
-LLM        (Gemini 3.5 Flash Lite — memilih artikel atau menolak)    [LLM]
-      ↓
-Perakitan  (status & rujukan diambil dari metadata)                  [kode]
-      ↓
-Jawaban    (status verifikasi, klarifikasi, tautan rujukan)
+TurnBackHoax.id → scraping & parsing → chunking per seksi → embedding bge-m3 → ChromaDB
+                  (rujukan dipisah     (Narasi, Penjelasan,
+                   dari sumber hoaks)   Kesimpulan)
 ```
 
-Hanya satu dari lima tahap yang memakai LLM, dan tugasnya sempit: menilai
-apakah klaim pengguna benar-benar sama dengan salah satu dari tiga artikel
-kandidat. Status verifikasi, tautan rujukan, dan validasi pilihan ditangani kode
-secara deterministik.
+Pembaruan berkala (Task Scheduler, setiap hari) hanya mengambil artikel baru ke antrean. Penggabungan dan
+ingest dijalankan manual setelah pemeriksaan kualitas. Indeks demo saat ini memuat 1.611 artikel / 4.830
+chunk (daftar artikel: `archive/v1/article_ids.json` dan `manifests/expansion_article_ids.json`; jumlah chunk:
+`testset/retriever_exactness_1611.json`).
 
 ---
 
@@ -133,13 +146,26 @@ ditolak dan diperlakukan sebagai "tidak ditemukan".
 Bila tidak ada klaim yang sepadan, sistem menyatakannya secara eksplisit alih-alih
 memaksakan kecocokan.
 
+Keputusan arsitektur tercatat sebagai ADR (konteks, keputusan, alternatif yang ditolak, konsekuensi) di
+[`docs/adr/`](docs/adr/README.md):
+
+| Keputusan | ADR |
+| --- | --- |
+| Streamlit hanya sebagai lapisan tampilan; logika di modul tanpa Streamlit yang diuji offline | [0001](docs/adr/0001-streamlit-untuk-demo.md) |
+| Generator (termasuk prompt), retriever, dan chunker dikunci dengan hash agar angka evaluasi tetap sah untuk kode yang berjalan | [0002](docs/adr/0002-berkas-terkunci.md) |
+| ChromaDB lokal; kesetaraan indeks dibuktikan dari isinya, bukan byte berkas | [0003](docs/adr/0003-chromadb-lokal.md) |
+| Gemini tier gratis lewat antarmuka penyedia yang bisa diganti; pengaman dipasang di kode, bukan di prompt | [0004](docs/adr/0004-gemini-tier-gratis.md) |
+| Docker (Python 3.13) untuk lingkungan yang dapat direproduksi; venv Python 3.11 tetap lingkungan evaluasi | [0005](docs/adr/0005-docker-volume-python-313.md) |
+| Catatan aktivitas tanpa isi pesan (sudah diputuskan, belum dibangun) | [0006](docs/adr/0006-catatan-aktivitas-tanpa-isi-pesan.md) |
+| Satu proses, bukan microservice | [0007](docs/adr/0007-tanpa-microservice.md) |
+
 ---
 
 ## Hasil Evaluasi
 
 Ada dua evaluasi yang dijalankan dengan generator, masing-masing pada indeks yang berbeda: **set uji v1**
 pada indeks arsip 150 artikel (baseline Versi 1), dan **evaluasi eksternal** pada indeks produksi 1.532
-artikel, yaitu indeks yang dipakai demo. Pada keduanya set uji dibekukan dan ambang ditetapkan sebelum
+artikel, yaitu indeks yang dipakai demo saat itu (kini demo memakai indeks yang lebih besar). Pada keduanya set uji dibekukan dan ambang ditetapkan sebelum
 evaluasi dijalankan, prompt, generator, dan retriever dikunci dengan hash, dan setiap butir dijalankan
 **tiga kali** dengan keputusan modus sebagai metrik utama. Generatornya `gemini-3.5-flash-lite` (thinking
 medium). Semua proporsi disertai interval Wilson 95%.
@@ -168,10 +194,12 @@ diisi.
   jadi selisihnya mencampur efek data dan bukan uji arsitektur.
 - **Recall@3 bersyarat** hanya dihitung pada pasangan yang memang terjangkau pencarian judul saat set
   disusun. Ia batas atas; Recall@3 atas seluruh klaim yang ada di TurnBackHoax tidak dapat diukur dari
-  set ini. Sebagai pembanding tanpa LLM: kueri judul Liputan6 menemukan 44/46, kueri kutipan pesan 41/46.
+  set ini. Sebagai pembanding, bila yang dicari judul artikel Liputan6 (bukan kutipan pesan), artikel yang
+  benar masuk tiga besar pada 44/46.
 - **"Lulus" pada kecocokan palsu berarti tidak terbukti buruk, bukan terbukti aman.** Di sini hasilnya
   gugur: interval seluruhnya di atas 10%.
-- Hasil per butir evaluasi eksternal disegel sampai keandalan label dan label final di-commit.
+- Hasil per butir evaluasi eksternal disegel sampai keandalan label dan label final di-commit; segel dibuka
+  2026-10-20 (`testset/eksternal_hasil_per_butir.json`).
 
 ### Baseline Versi 1 (set uji v1, `archive/v1`, 150 artikel)
 
@@ -343,7 +371,7 @@ keliru, dan bahkan pada batas yang menguntungkan sistem hasilnya baru tidak konk
 
 Sejak 2026-10-21 demo menampilkan peringatan pada setiap hasil "ditemukan": pengguna diminta memastikan
 sendiri bahwa tokoh, lembaga, dan program di artikel sama dengan pesan yang diperiksa, dengan judul dan
-tanggal artikel di dekatnya. Sejak tampilan baru (branch `tahap-1-tampilan`), kotak itu memuat potongan
+tanggal artikel di dekatnya. Sejak tampilan baru (Tahap 1, Oktober 2026), kotak itu memuat potongan
 pesan pengguna berdampingan dengan judul artikel, dan hasil "ditemukan" menampilkan **Kesimpulan
 TurnBackHoax apa adanya**, bukan parafrase LLM (parafrase hanya di panel penguji). Keduanya perubahan
 tampilan saja; **angka di atas mengukur keputusan generator dan tidak terpengaruh olehnya** (generator,
@@ -404,8 +432,8 @@ tidak tercakup, dan artikel yang sudah diambil tidak disegarkan bila diperbarui 
 
 **Rujukan tidak selalu tersedia.** Pada basis data evaluasi, 205 dari 1.532 artikel
 tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (pada basis data demo 25 Oktober
-2026: 210 dari 1.611; pada basis data baseline Versi 1: 16 dari 150, dengan aturan saat itu); jawaban
-untuk artikel tersebut disusun tanpa bagian rujukan.
+2026: 210 dari 1.611); jawaban untuk artikel tersebut disusun tanpa bagian rujukan. Angka 205 dan 210 beserta sidik jari indeksnya ada di
+`docs/evaluasi/rujukan_kosong.json` (`python -m evaluation.reference_gaps`).
 
 **Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
 hosting gambar, dan pemendek URL disaring, termasuk akun resmi instansi dan tautan
@@ -490,15 +518,15 @@ tidak boleh dipakai untuk mengarahkan perubahan prompt atau logika.
 
 **Dua versi Python, sengaja.** Venv lokal tetap **Python 3.11**, karena semua angka evaluasi di README ini
 diukur di lingkungan itu. Container Docker dan CI memakai **Python 3.13**. Keduanya menjalankan seluruh uji
-otomatis (571 uji, termasuk uji kunci), dan kesetaraan embedding antara keduanya dibuktikan terpisah (lihat
-"Docker").
+otomatis (termasuk uji kunci), dan kesetaraan embedding antara keduanya dibuktikan terpisah
+([`docs/operasional.md`](docs/operasional.md#docker)).
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1                                  # Windows PowerShell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # requirements.txt + pytest, ruff
 .\.venv\Scripts\python.exe -m pip install -e . --no-build-isolation  # pasang src/ ke venv (pyproject.toml)
-copy .env.example .env          # lalu isi GEMINI_API_KEY
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }   # tidak menimpa; lalu isi GEMINI_API_KEY
 ```
 
 `pip install -e .` memasang paket proyek dalam mode *editable*: venv menunjuk langsung ke `src/`, jadi
@@ -522,107 +550,28 @@ setuptools yang sudah ada di venv (>= 77) alih-alih mengunduhnya.
 .\.venv\Scripts\python.exe -m evaluation.index_check   # verifikasi indeks segar
 ```
 
-Ingest, `--update-metadata`, `index_check`, skrip evaluasi dan pelabelan yang memuat model, serta demo
-berjalan dengan **`HF_HUB_OFFLINE=1`**, disetel `hf_env.prepare_hf_env()` di awal setiap titik masuk (bukan
-saat modul diimpor): model dan tokenizer hanya dibaca dari cache lokal. Ini wajib karena tokenizer di
-`chunker.py` (berkas terkunci) tidak memakai revisi yang dipatok, sehingga tanpa mode offline ia bisa
-mengambil versi terbaru dari Hugging Face Hub. Di mesin baru, unduh model sekali dengan
-`HF_HUB_OFFLINE=0` (lihat "Menjalankan demo").
-
-### Ingest antrean (pembaruan berkala)
-
-Pembaruan berkala hanya mengambil artikel baru ke **antrean** (`data/expansion/forward_*.json`); penggabungan
-ke `articles.json` dan ingest selalu dijalankan **manual oleh pemilik proyek**, di venv Windows. Jangan
-menjalankannya bersamaan dengan demo atau evaluasi, dan hindari jam jalan terjadwal (13.00).
+Skrip yang memuat model (ingest, `index_check`, evaluasi, demo) berjalan dengan `HF_HUB_OFFLINE=1`, jadi model
+hanya dibaca dari cache lokal. Di mesin baru, unduh model sekali dengan Hub menyala:
 
 ```powershell
-# 0. Hentikan demo (lokal dan container) lalu laporan antrean, tanpa menulis apa pun
-docker compose stop demo
-.\.venv\Scripts\python.exe scripts\gabung_antrean.py
-
-# 1. Cadangan indeks (articles.json dicadangkan otomatis oleh langkah 2). Tanggal WIB, sama dengan nama
-#    folder yang dipakai gabung_antrean.py. Menolak bila cadangan sudah ada: Copy-Item ke folder yang
-#    sudah ada akan menaruh salinan baru DI DALAMNYA (chroma\chroma).
-$tgl = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'SE Asia Standard Time').ToString('yyyy-MM-dd')
-if (Test-Path "data\backups\pre_antrean_$tgl") { throw "cadangan pre_antrean_$tgl sudah ada; jangan ditimpa" }
-Copy-Item -Recurse data\chroma "data\backups\pre_antrean_$tgl\chroma"
-
-# 2. Gabungkan antrean di akhir articles.json, cadangan articles.json ke folder $tgl yang SAMA dengan langkah 1
-#    (menolak bila kualitas antrean menahan penggabungan atau cadangan indeks belum ada di folder itu)
-.\.venv\Scripts\python.exe scripts\gabung_antrean.py --tulis --folder-cadangan "data\backups\pre_antrean_$tgl"
-
-# 3. Parse ulang seluruh articles.json dari cache HTML (tanpa jaringan; parser yang berlaku sekarang)
-.\.venv\Scripts\python.exe -m scraping.reparse
-#    periksa: artikel lama harus identik dan berurutan sama (harus mencetak "True")
-.\.venv\Scripts\python.exe -c "import json; a=json.load(open('data/backups/pre_antrean_$tgl/articles.json',encoding='utf-8')); b=json.load(open('data/articles.json',encoding='utf-8')); print(len(a), len(b), a==b[:len(a)])"
-
-# 4. Ingest INKREMENTAL (bukan --rebuild); HF_HUB_OFFLINE=1 disetel prepare_hf_env() di awal ingest
-.\.venv\Scripts\python.exe src\ingest.py
-
-# 5. Pemeriksaan wajib setelah indeks bertambah
-.\.venv\Scripts\python.exe -m evaluation.index_check            # kode 0 = indeks segar
-.\.venv\Scripts\python.exe -m evaluation.retriever_exactness   # kode 0 = HNSW = eksak
-
-# 6. Perbarui salinan indeks container (lihat "Docker"); container harus berhenti lebih dulu
-Remove-Item -Recurse -Force data\container\chroma
-if (Test-Path data\container\chroma) { throw "salinan lama belum terhapus; hentikan container lalu ulangi" }
-Copy-Item -Recurse data\chroma data\container\chroma
-#    periksa: harus mencetak "salinan = produksi: True"
-$h = { param($d) Get-ChildItem $d -Recurse -File | Sort-Object FullName | ForEach-Object { $_.FullName.Substring((Resolve-Path $d).Path.Length) + '|' + (Get-FileHash $_.FullName).Hash } }
-"salinan = produksi: " + (-not (Compare-Object (& $h data\chroma) (& $h data\container\chroma)))
+$env:HF_HUB_OFFLINE = "0"
+.\.venv\Scripts\python.exe -c "import ingest; ingest.load_model()"
+Remove-Item Env:HF_HUB_OFFLINE
 ```
 
-Setelah `reparse`, artikel lama harus tetap identik (yang berubah hanya bila parser berubah sejak artikel
-itu diambil). `ingest.py` mencetak jumlah chunk terpotong 512 token per seksi di awal: catat angkanya.
+`python -m scraping` mengambil 150 artikel terbaru (ukuran basis data Versi 1). Basis data demo diperluas
+dengan `scraping.expand` dan pembaruan berkala; alasan mode offline dan langkah-langkahnya ada di
+[`docs/operasional.md`](docs/operasional.md).
 
-**Pemulihan.** Cadangan dari langkah 1 dan 2 ada di `data\backups\pre_antrean_$tgl\` (`chroma\` dan
-`articles.json`); jangan dihapus sampai hasil ingest diverifikasi. Bila jendela PowerShell sempat tertutup,
-cari foldernya lalu isi ulang `$tgl` dengan tanggal pada nama folder itu:
+### Menjalankan demo
 
 ```powershell
-Get-ChildItem data\backups -Directory -Filter "pre_antrean_*" | Select-Object -ExpandProperty Name
-$tgl = '2026-10-25'   # contoh: sesuaikan dengan nama folder di atas
-
-# A. Gagal SEBELUM langkah 4 (indeks belum tersentuh): pulihkan articles.json saja
-Copy-Item -Force "data\backups\pre_antrean_$tgl\articles.json" data\articles.json
-
-# B. Gagal SAAT atau SETELAH langkah 4: pulihkan indeks DAN articles.json (hentikan demo/evaluasi dulu)
-Remove-Item -Recurse -Force data\chroma
-if (Test-Path data\chroma) { throw "indeks rusak belum terhapus; tutup proses yang membukanya lalu ulangi" }
-Copy-Item -Recurse "data\backups\pre_antrean_$tgl\chroma" data\chroma
-Copy-Item -Force "data\backups\pre_antrean_$tgl\articles.json" data\articles.json
-.\.venv\Scripts\python.exe -m evaluation.index_check --embed-sample 0   # harus INDEKS SEGAR, kode 0
+.\.venv\Scripts\python.exe -m streamlit run src\webapp\app.py   # dari root repositori
 ```
 
-Setelah pemulihan, antrean kembali belum digabung, jadi langkah 0-6 bisa diulang. Jangan memakai
-`ingest.py --rebuild` sebagai jalan pintas. Bila ingest hanya terhenti di tengah (mis. memori habis) tanpa
-galat SQLite/ChromaDB, cukup jalankan ulang langkah 4: chunk tersimpan bertahap.
-
-**Merekam keluaran.** Di Windows PowerShell 5.1, `Start-Transcript` **tidak merekam keluaran program
-native** (`python.exe`, `docker`) yang diketik langsung di prompt: rekaman ingest 2026-10-25 hanya memuat
-baris perintah dan keluaran cmdlet PowerShell (mis. `salinan = produksi: True`), tanpa satu baris pun dari
-Python. Dalam skrip `.ps1` atau `powershell -Command` keluaran itu ikut terekam (diuji 2026-10-25), jadi
-gejalanya khusus perintah yang diketik interaktif. Untuk lain kali, alirkan setiap perintah Python lewat
-`Tee-Object` (keluaran tetap tampil di layar):
-
-```powershell
-$env:PYTHONIOENCODING = "utf-8"   # tanpa ini Python yang keluarannya dialirkan memakai cp1252 dan gagal pada karakter seperti "→"
-$env:PYTHONUNBUFFERED = "1"       # keluaran tampil saat itu juga, bukan saat program selesai
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8   # PowerShell membaca keluaran Python sebagai UTF-8
-function Rekam { process { "$_" } }   # baris stderr (ErrorRecord di 5.1) menjadi teks biasa
-$log = "data\ingest_antrean_" + [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'SE Asia Standard Time').ToString('yyyy-MM-dd') + ".log"
-
-# pola untuk SETIAP perintah Python di langkah 0-6:
-.\.venv\Scripts\python.exe src\ingest.py 2>&1 | Rekam | Tee-Object -FilePath $log -Append
-"kode keluar: $LASTEXITCODE" | Tee-Object -FilePath $log -Append
-```
-
-Diuji 2026-10-25 di folder sementara (PowerShell 5.1.26100, jendela konsol sungguhan): stdout dan stderr
-terekam, karakter non-ASCII utuh, `$LASTEXITCODE` tetap kode keluar Python (3 pada program uji), dan
-perintah `python -c "..."` langkah 3 berjalan tanpa perubahan kutip. Catatan: berkasnya UTF-16 (bawaan
-`Tee-Object` di 5.1; terbaca Notepad dan `Get-Content`), dan urutan baris stderr terhadap stdout bisa
-bergeser karena keduanya pipa terpisah. Jangan memakai pola ini bila `$ErrorActionPreference = 'Stop'`:
-baris stderr akan menghentikan perintah.
+Browser terbuka ke `http://localhost:8501`. Butuh indeks di `data/chroma/` dan `GEMINI_API_KEY` di `.env`.
+Pemanasan, batas masukan dan batas laju, mode penguji, serta pembagian kuota dengan evaluasi:
+[`docs/operasional.md`](docs/operasional.md#menjalankan-demo).
 
 ### Menjalankan evaluasi
 
@@ -636,149 +585,12 @@ baris stderr akan menghentikan perintah.
 ```
 
 Evaluasi yang hasilnya akan **dibandingkan dengan baseline Versi 1** wajib memakai
-indeks arsip (bagian berikut), bukan indeks utama yang akan diperluas.
-
-### Arsip indeks Versi 1
-
-`archive/v1/` berisi salinan indeks ChromaDB dan `articles.json` (150 artikel,
-450 chunk, ~9,5 MB) persis seperti saat Versi 1 dievaluasi. Tujuannya agar
-evaluasi Versi 1 tetap dapat direproduksi setelah basis data diperluas, dan agar
-Versi 2 dapat dievaluasi pada data yang sama, sehingga perbedaan hasil murni
-karena arsitektur. Arsip **tidak di-commit**: isinya teks artikel pihak ketiga,
-dan ChromaDB menulis ulang berkasnya setiap kali dibuka. Sidik jari **isinya**
-(bukan hash berkas) tercatat di `testset/v1.meta.json`
-(`arsip_indeks_v1_2026-09-25`).
-
-Memakai arsip, tanpa mengubah kode:
-
-```powershell
-$env:RAG_INDEX_DIR = "archive/v1"
-.\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive   # wajib lolos (kode 0)
-.\.venv\Scripts\python.exe -m evaluation.testset_eval                      # atau skrip lain
-Remove-Item Env:RAG_INDEX_DIR                                              # kembali ke data/
-```
-
-**Bila arsip hilang, bangun ulang dari daftar artikel.** Yang ter-commit hanya
-`archive/v1/article_ids.json`: id, URL, judul, label, kategori, dan tanggal ke-150
-artikel, dalam urutan arsip. `articles.json` sengaja tidak di-commit karena memuat
-teks hoaks apa adanya, termasuk nomor dan tautan penipuan.
-
-1. Pulihkan `archive/v1/articles.json` lewat scraping ulang berdasarkan daftar
-   URL itu. Artikel diambil dari cache `data/raw_html/` bila ada, dan dari situs
-   sumber bila tidak (timeout 45 dtk, retry, jeda 1,5 dtk). Proses gagal tanpa
-   menulis berkas bila ada artikel yang tidak dapat dipulihkan:
-
-   ```powershell
-   .\.venv\Scripts\python.exe -m scraping.restore archive\v1\article_ids.json --out archive\v1\articles.json
-   ```
-
-2. Bangun ulang indeksnya. `ingest` menolak menulis ke `archive/` tanpa
-   `--allow-archive`:
-
-   ```powershell
-   .\.venv\Scripts\python.exe src\ingest.py --rebuild --articles archive\v1\articles.json --chroma-dir archive\v1\chroma --allow-archive
-   ```
-
-3. Verifikasi:
-
-   ```powershell
-   $env:RAG_INDEX_DIR = "archive/v1"
-   .\.venv\Scripts\python.exe -m evaluation.index_check --expect-v1-archive
-   .\.venv\Scripts\python.exe -m evaluation.retrieval_ablation --out-json cek.json --out-report cek.txt
-   ```
-
-   `sha256_teks_metadata` dan `sha256_articles_json_isi` harus cocok persis, dan
-   `cek.json` harus identik dengan `testset/retrieval_ablation.json` (selain
-   tanggal). Prosedur ini sudah diuji (2026-09-25, mesin
-   pengembangan, ke direktori sementara): keenam sidik jari cocok, **termasuk byte
-   embedding**, dalam ~8 menit di CPU. Pada mesin atau versi pustaka lain,
-   `sha256_embedding_float32` bisa berbeda di digit presisi. Dalam kasus itu,
-   kesetaraan dibuktikan lewat kosinus `index_check` dan ablasi yang identik.
-
-Pemulihan dari cache sudah diuji (2026-09-26): `scraping.restore` menghasilkan
-`articles.json` dengan `sha256_articles_json_isi` identik dengan yang tercatat.
-Jalur jaringan belum diuji.
-
-**Keterbatasan pemulihan lewat scraping ulang:**
-
-- Bergantung pada artikel yang **masih tersedia** di situs sumber. Artikel yang
-  dihapus atau dipindahkan penerbit membuat pemulihan gagal.
-- Artikel yang **diperbarui penerbitnya** setelah diambil (September 2026) menghasilkan teks
-  berbeda, sehingga sidik jari (`sha256_articles_json_isi`, `sha256_teks_metadata`)
-  tidak cocok lagi. Arsip seperti itu **bukan** arsip Versi 1 dan tidak sah
-  untuk dibandingkan dengan baseline.
-- Hasil parse juga bergantung pada parser. Selama parser berubah, pemulihan hanya
-  setara bila dijalankan dengan kode pada tag atau commit yang sama.
-
-### Menjalankan demo
-
-Antarmuka Streamlit dua halaman (beranda + "Tentang sistem ini") di atas pipeline yang sama dengan yang
-dievaluasi. Lapisannya: `src/webapp/ui/` (tampilan) -> `src/webapp/service.py` (validasi, batas laju, serialisasi) ->
-`generator.py` + `retriever.py` (terkunci). Butuh indeks di `data/chroma/` (lihat "Membangun basis
-pengetahuan") dan `GEMINI_API_KEY` di `.env`.
-
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run src\webapp\app.py   # dari root repositori
-```
-
-Di Command Prompt (cmd): perintah yang sama tanpa `.\` di depan. Browser terbuka ke
-`http://localhost:8501`; hentikan dengan Ctrl+C. Pemantau berkas Streamlit dimatikan
-(`.streamlit/config.toml`), jadi **jalankan ulang server setelah mengubah kode**.
-
-**Model dibaca dari cache lokal tanpa cek ke Hugging Face Hub** (`HF_HUB_OFFLINE=1`, disetel
-`hf_env.prepare_hf_env()` di awal setiap titik masuk; revisi bge-m3 dipatok di `ingest.MODEL_REVISION`). Di mesin baru, unduh sekali dengan Hub menyala:
-
-```powershell
-$env:HF_HUB_OFFLINE = "0"
-.\.venv\Scripts\python.exe -c "import ingest; ingest.load_model()"
-Remove-Item Env:HF_HUB_OFFLINE
-```
-
-**Pemanasan:** saat halaman pertama kali dibuka, satu utas latar memuat tokenizer, indeks, dan model
-embedding (tanpa memanggil LLM), sementara pengguna masih mengetik. Setiap sumber daya dimuat sekali per
-proses (log server: satu baris `memuat <nama>` per sumber daya). Terukur 2026-10-22, laptop 16 GB:
-pemanasan 21 dtk saat memori lega, 40-60 dtk saat memori sesak; setelah itu embedding kueri 0,1-0,3 dtk
-dan pencarian di bawah 0,05 dtk per pemeriksaan. Waktu selebihnya adalah panggilan Gemini (median ~7 dtk
-pada evaluasi; bisa puluhan detik saat layanan membalas 503).
-
-Masukan dibatasi **1.500 karakter** (wilayah yang terukur bekerja; lihat "Keterbatasan"); validasinya di
-lapisan layanan, termasuk pembuangan karakter kontrol. Sejak ~220 token demo menampilkan peringatan
-**sebelum** pemeriksaan; kalau teks panjang ditempel lalu tombol langsung ditekan, klik pertama hanya
-menampilkan peringatan.
-
-**Batas laju** (`src/webapp/settings.py`): jeda 15 detik dan 10 pemeriksaan per jam per sesi, 60 per jam per
-proses, dan demo berhenti di **400 permintaan per hari** menurut buku besar kuota yang sama dengan skrip
-evaluasi (panggilan evaluasi ikut terhitung). Batas per sesi bisa dilewati dengan memuat ulang halaman
-(sesi Streamlit baru); perlindungan sebenarnya ada di batas per proses dan batas harian. Pemeriksaan
-diserialkan per proses: pengguna kedua melihat pesan "menunggu giliran", dan setelah 150 detik menunggu
-diberi pesan untuk mencoba lagi.
-
-**Mode penguji** (bawaan mati) menampilkan panel "Detail untuk penguji": kandidat retrieval beserta skor,
-alasan dan parafrase LLM, waktu per tahap, token, dan jenis galat. Hanya bisa dinyalakan dari sisi server,
-tidak dari URL:
-
-```powershell
-$env:DEMO_TESTER_MODE = "1"          # variabel lingkungan (diutamakan), sesi PowerShell ini saja
-```
-
-atau buat `.streamlit/secrets.toml` (di-gitignore) berisi `demo_tester_mode = true`. Nilai
-`1`/`true`/`ya`/`yes`/`on` menyalakan; nilai lain atau tidak diatur berarti mati.
-
-> **Jangan menjalankan demo di container Docker dan skrip di host secara bersamaan.** Di host, buku besar kuota
-> (`data/quota_ledger.json`) dilindungi kunci antar-utas dan kunci berkas OS, jadi demo dan skrip evaluasi di
-> host aman berjalan bersamaan. Container memakai buku besarnya sendiri (lihat "Docker"), sehingga
-> hitungan kuota container dan host tidak saling terlihat.
-
-> **Kuota bersama dengan evaluasi.** Demo dan evaluasi berbagi kuota harian
-> yang sama: 500 permintaan per hari untuk `gemini-3.5-flash-lite`, tercatat di
-> `data/quota_ledger.json`, satu permintaan per pemeriksaan. Bila keduanya
-> diperlukan di hari yang sama, **jalankan evaluasi lebih dulu**, agar evaluasi
-> tidak berhenti di tengah karena kuota sudah terpakai demo.
+indeks arsip ([Arsip indeks Versi 1](#arsip-indeks-versi-1)), bukan indeks utama yang terus diperluas.
 
 ### Menjalankan uji
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest                      # semua (571), offline, tanpa API
+.\.venv\Scripts\python.exe -m pytest                      # semua uji, offline, tanpa API
 .\.venv\Scripts\python.exe -m ruff check src tests scripts
 ```
 
@@ -794,91 +606,46 @@ gagal, bukan mengunduh), tidak memakai rahasia, dan hanya melihat berkas yang di
 seluruh riwayat dan tag, karena satu uji kunci membandingkan `testset/v1.jsonl` dengan tag `testset-v1`. CI
 juga gagal bila ada uji yang dilewati, supaya uji kunci tidak bisa melemah diam-diam.
 
+### Ingest antrean (pembaruan berkala)
+
+Pembaruan berkala hanya mengambil artikel baru ke antrean. Urutan perintah penggabungan dan ingest (langkah
+0-6), pemulihan bila gagal, dan cara merekam keluarannya ada di
+[`docs/operasional.md`](docs/operasional.md#ingest-antrean-pembaruan-berkala).
+
+### Arsip indeks Versi 1
+
+Evaluasi yang dibandingkan dengan baseline Versi 1 wajib memakai indeks arsip `archive/v1/`. Cara memakainya
+dan cara membangunnya ulang bila hilang: [`docs/operasional.md`](docs/operasional.md#arsip-indeks-versi-1).
+
 ### Docker
 
-**Peran Docker.** Venv Windows (Python 3.11) adalah **cara utama** untuk pengembangan, evaluasi, dan demo
-harian; semua angka evaluasi diukur di sana. Docker (Python 3.13) adalah **cara resmi untuk lingkungan yang
-dapat direproduksi**: menjalankan demo di mesin lain tanpa menyiapkan venv, membuktikan kesetaraan lingkungan
-(pembuktian embedding di bawah), dan menjadi dasar deployment di masa depan. CI membangun image di setiap push
-(job `docker-build`, tanpa menjalankan container) untuk membuktikan Dockerfile masih bisa dibangun.
+Langkah singkat ada di [bagian atas](#menjalankan-demo-dengan-docker). Peran Docker, kebutuhan memori, volume,
+pembaruan salinan indeks, ukuran terukur, dan bukti kesetaraan embedding:
+[`docs/operasional.md`](docs/operasional.md#docker).
 
-**Kebutuhan memori (terukur 2026-10-24):** container memuncak di 3,39 GB, jadi `mem_limit` 5 GB dan WSL2
-minimal `memory=6GB` (`%USERPROFILE%\.wslconfig`, berlaku setelah `wsl --shutdown`). Di laptop 16 GB, sediakan
-**sekitar 4-5 GB RAM bebas di Windows** sebelum build atau `docker compose up`: build pertama turun dari 4,8 GB
-ke di bawah 0,6 GB RAM bebas Windows dan dihentikan. Tutup peramban, aplikasi obrolan, dan IDE lebih dulu.
+---
 
-`docker compose up --build` menjalankan demo di http://127.0.0.1:8501 (hanya dapat diakses dari mesin ini).
-Image hanya berisi kode, konfigurasi tampilan, logo, dan dua berkas angka publik untuk halaman "Tentang"
-(`.dockerignore` berupa daftar-putih). **Container tidak pernah menulis ke `data/` produksi**: semua
-keadaannya ada di `data/container/` (di-gitignore).
+## Posisi dalam Literatur
 
-| Di host | Di container | Mode | Untuk |
-| --- | --- | --- | --- |
-| `data/container/chroma/` | `/app/data/chroma` | baca-tulis | SALINAN indeks khusus container |
-| `data/container/kuota/` | `/app/data/kuota` | baca-tulis | buku besar kuota container (`RAG_LEDGER_DIR`) |
-| `data/container/logs/` | `/app/logs` | baca-tulis | log server (`RAG_LOG_DIR`) |
-| `.env` | `/app/.env` | baca-saja | kunci API; wajib ada |
-| cache Hugging Face host (`HF_CACHE_DIR`, bawaan `%USERPROFILE%\.cache\huggingface`) | `/home/app/.cache/huggingface` | baca-saja | bge-m3, revisi dipatok |
-| `data/container/hasil/` (hanya `tools`) | `/app/data/hasil` | baca-tulis | keluaran alat |
-| `testset/` (hanya `tools`) | `/app/testset` | baca-saja | kueri tetap, set uji |
+Tugas ini dikenal dalam riset sebagai **deteksi klaim yang sudah pernah dicek
+fakta** (*detecting previously fact-checked claims*, juga disebut *claim
+matching*), yang diperkenalkan Shaar dkk. (ACL 2020) dan menjadi tugas bersama
+tahunan di CLEF CheckThat! Lab.
 
-**Mengapa salinan indeks, bukan pemasangan hanya-baca:** ChromaDB 1.5.9 tidak bisa membuka indeks yang
-dipasang hanya-baca (diuji 2026-10-24: `attempt to write a readonly database` saat klien dibuat), dan menulis
-SQLite lewat folder bersama Windows/WSL2 berisiko merusaknya. Salinan dibuat sekali, dan **dibuat ulang
-setiap kali indeks produksi berubah** (setelah ingest di host):
+Tolok ukur baku pada bidang ini mendefinisikan tugasnya sebagai **pemeringkatan**:
+diberikan sebuah klaim dan kumpulan klaim terverifikasi, urutkan sehingga yang
+paling relevan berada setinggi mungkin, dengan metrik Success@K. Dataset
+rujukannya dibangun dengan asumsi setiap klaim memiliki pasangan.
 
-```powershell
-docker compose stop demo
-Remove-Item -Recurse -Force data\container\chroma
-Copy-Item -Recurse data\chroma data\container\chroma
-New-Item -ItemType Directory -Force data\container\kuota, data\container\logs, data\container\hasil
-docker compose up -d demo
-```
+Proyek ini menguji dimensi yang tidak tercakup asumsi itu: **kemampuan sistem
+menyatakan bahwa klaim tidak ada di basis data**, diukur secara eksplisit
+menggunakan *negatif sulit* — klaim yang bertetangga topik tetapi bukan klaim
+yang sama. Dimensi ini penting karena di dunia nyata sebagian besar klaim yang
+beredar memang belum diperiksa.
 
-- **Image:** Python 3.13 slim (dipatok ke digest), torch build CPU, versi dari `requirements.txt`,
-  multi-stage, berjalan sebagai pengguna non-root `app`, sistem berkas container baca-saja.
-- **Kesehatan:** container dijalankan lewat `python -m webapp.serve`, yang memulai pemanasan saat server
-  menyala, di proses yang sama dengan Streamlit (setiap baris log memuat PID). Status `healthy` baru muncul
-  setelah pemanasan selesai tanpa galat. Bila indeks tidak ada atau `GEMINI_API_KEY` kosong, container
-  tetap tidak sehat.
-- **Memori:** `mem_limit: 5g`.
-
-**Terukur 2026-10-24** (laptop 16 GB, WSL2 `memory=6GB`):
-
-| Ukuran | Nilai |
-| --- | --- |
-| Image | 2,93 GB di disk (lapisan venv 2,17 GB), 626 MB terkompresi |
-| Build | ~5,5 menit tanpa cache (`pip install` 194 dtk), 39 dtk dengan cache |
-| Sampai `healthy` | 26 dtk |
-| Muat model / tokenizer / indeks | 3,3 / 10,0 / 1,5 dtk, masing-masing sekali, satu proses (pid 1) |
-| Puncak memori container | 3,39 GB (`memory.peak`); 1,29 GiB setelah pemanasan dan satu pemeriksaan |
-| Pemeriksaan dari peramban Windows | berhasil, 1 panggilan Gemini |
-
-Waktu muat model di container (3,3 dtk) lebih cepat daripada di venv (15,2 dtk), jadi cache host yang
-dipasang baca-saja dipertahankan.
-
-**Kesetaraan embedding** (`python -m evaluation.embedding_proof`; 200 chunk acak benih 20261022 di-embed ulang
-dan dibandingkan dengan vektor tersimpan, ditambah top-3 untuk 64 kueri tetap; ambang ditetapkan sebelum
-mengukur; masing-masing pada salinan indeks yang belum pernah dibuka):
-
-| Lingkungan | Kosinus min / rata-rata | Top-3 HNSW = eksak | Top-3 sama antar-lingkungan | Putusan |
-| --- | --- | --- | --- | --- |
-| venv Windows, Python 3.11.4 | 0,9999999999985 / 0,9999999999997 | 64/64 | (pembanding) | SAMA |
-| container Linux, Python 3.13.16 | 0,9999999999987 / 0,9999999999996 | 64/64 | 64/64 | SAMA |
-
-Bukti: `docs/evaluasi/tahap2_bukti_embedding_{windows,container}.json`.
-
-Alat di container berjalan lewat layanan `tools` (tidak ikut `up`), juga hanya pada salinan indeks container.
-**Ingest dan evaluasi untuk indeks produksi tetap dijalankan di venv host**, tempat angka evaluasi diukur:
-
-```powershell
-docker compose run --rm tools python -m evaluation.retriever_exactness --out-json /app/data/hasil/exactness.json
-```
-
-> **Jangan menjalankan demo di container dan skrip (evaluasi, ingest, atau demo) di host secara bersamaan.**
-> Kuota Gemini dihitung per proyek Google, sedangkan container mencatat ke buku besarnya sendiri
-> (`data/container/kuota/`). Keduanya tidak saling melihat hitungan, jadi batas harian demo (400) dan
-> pemeriksaan anggaran evaluasi bisa meleset tanpa ketahuan.
+> Catatan kejujuran: penempatan ini berasal dari penelusuran terbatas, bukan
+> tinjauan pustaka sistematis. Klaim kebaruan apa pun perlu diverifikasi lebih
+> dulu melalui pencarian sistematis.
 
 ---
 
@@ -901,7 +668,7 @@ src/              alur inti RAG di akar (src/README.md)
   webapp/         demo Streamlit: app.py, settings, resources, service, presentation, evaluation_facts, ui/
 tests/            uji otomatis offline, dikelompokkan seperti src/ (tests/README.md) -- BUKAN testset/
 testset/          data set uji beku, bukti pra-registrasi, hasil analisis (testset/README.md)
-docs/             rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/, evaluasi/ (docs/README.md)
+docs/             operasional.md, ringkasan_portofolio.md, adr/, rancangan/, audit/, riwayat/ (pemetaan jalur lama), tampilan/, evaluasi/ (docs/README.md)
 scripts/          pembaruan berkala (Task Scheduler), tangkapan layar, penyamaran fixture
 assets/brand/     logo (asli 500x500, turunan 32 dan 96 px)
 archive/          v1/ (arsip indeks Versi 1, lokal), fitur_mati/ (artefak fitur yang dihapus)
@@ -911,25 +678,6 @@ data/             lokal, tidak di-commit (data/README.md)
 pyproject.toml    pengemasan (pip install -e .) + konfigurasi pytest dan ruff
 Dockerfile, docker-compose.yml, .dockerignore   demo di container (Python 3.13)
 ```
-
----
-
-## Lisensi
-
-Kode di repositori ini berlisensi **MIT** (lihat [`LICENSE`](LICENSE)), hak cipta 2026 Zul Tiandra Rifandy.
-**Lisensi itu hanya berlaku untuk kode.** Data artikel TurnBackHoax.id (Mafindo) tidak disertakan di
-repositori ini dan tunduk pada ketentuan Mafindo; begitu pula keluaran model dan layanan pihak ketiga.
-
----
-
-## Rujukan
-
-1. Shaar, S., Babulkov, N., Da San Martino, G., & Nakov, P. (2020). *That is a Known Lie: Detecting Previously Fact-Checked Claims.* Proceedings of ACL 2020, 3607–3618.
-2. Shaar, S., dkk. (2021). *Overview of the CLEF-2021 CheckThat! Lab Task 2 on Detecting Previously Fact-Checked Claims.* CEUR-WS Vol. 2936.
-3. Lewis, P., dkk. (2020). *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.* NeurIPS 2020.
-4. Gao, Y., dkk. (2023). *Retrieval-Augmented Generation for Large Language Models: A Survey.* arXiv:2312.10997.
-5. Chen, J., dkk. (2024). *M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation.* Findings of ACL 2024, 2318–2335.
-6. Yan, S.-Q., dkk. (2024). *Corrective Retrieval Augmented Generation.* arXiv:2401.15884.
 
 ---
 
@@ -960,7 +708,34 @@ heuristik. Menerbitkan `articles.json` berarti ikut menyebarkan kontak dan tauta
 penipuan tersebut. **Catatan:** riwayat git sebelum 2026-09-26 masih
 memuat fixture versi asli. Riwayat sengaja tidak ditulis ulang agar hash commit
 dan tag `testset-v1` tetap sah; alasannya tercatat di `testset/v1.meta.json`
-(`pemeriksaan_data_terpublikasi_2026-09-26`).
+(`pemeriksaan_data_terpublikasi_2026-09-26`). Keputusan ini ditegaskan lagi pada
+25 Oktober 2026: hash commit dan tag dipakai sebagai bukti bahwa set uji, pedoman,
+dan ambang dikunci sebelum hasil dilihat, jadi riwayat tidak diubah untuk alasan apa pun.
+
+**Catatan sejarah Versi 1.** Pada basis data Versi 1 (150 artikel, saat scraping awal), 16 artikel tidak
+punya rujukan yang boleh ditampilkan. Angka ini dihitung dengan aturan penyaringan Versi 1. Aturan itu sudah
+diperketat sejak itu (misalnya tautan pendek dan arsip kini ikut disaring), jadi angkanya tidak bisa dihitung
+ulang persis dengan aturan sekarang dan tidak bisa dibandingkan dengan angka 205 dan 210 di
+[Keterbatasan](#keterbatasan).
 
 Proyek ini dibuat untuk keperluan pembelajaran dan portofolio, bukan sebagai
 pengganti layanan pemeriksa fakta resmi.
+
+---
+
+## Lisensi
+
+Kode di repositori ini berlisensi **MIT** (lihat [`LICENSE`](LICENSE)), hak cipta 2026 Zul Tiandra Rifandy.
+**Lisensi itu hanya berlaku untuk kode.** Data artikel TurnBackHoax.id (Mafindo) tidak disertakan di
+repositori ini dan tunduk pada ketentuan Mafindo; begitu pula keluaran model dan layanan pihak ketiga.
+
+---
+
+## Rujukan
+
+1. Shaar, S., Babulkov, N., Da San Martino, G., & Nakov, P. (2020). *That is a Known Lie: Detecting Previously Fact-Checked Claims.* Proceedings of ACL 2020, 3607–3618.
+2. Shaar, S., dkk. (2021). *Overview of the CLEF-2021 CheckThat! Lab Task 2 on Detecting Previously Fact-Checked Claims.* CEUR-WS Vol. 2936.
+3. Lewis, P., dkk. (2020). *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.* NeurIPS 2020.
+4. Gao, Y., dkk. (2023). *Retrieval-Augmented Generation for Large Language Models: A Survey.* arXiv:2312.10997.
+5. Chen, J., dkk. (2024). *M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation.* Findings of ACL 2024, 2318–2335.
+6. Yan, S.-Q., dkk. (2024). *Corrective Retrieval Augmented Generation.* arXiv:2401.15884.
