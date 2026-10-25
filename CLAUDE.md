@@ -81,8 +81,17 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > dihapus bila pengukuran indeks 922 tidak perlu direproduksi (hasilnya ter-commit di `testset/*_922.json`);
 > `salinan_bukti_tahap2_2026-10-24` (98 MB) boleh dihapus (Tahap 2 di main, bukti JSON ter-commit); untuk ingest
 > berikutnya simpan dua `pre_antrean_*` terakhir (KECUALI `pre_antrean_2026-10-25`, yang permanen).
-> **Sisa sebelum proyek ditunjukkan (urutan pemilik proyek):** README akhir (cek menyeluruh + tangkapan layar di
-> atas) -> bahan lamaran.
+> **STATUS PORTOFOLIO (2026-10-25): README akhir SELESAI, digabung ke main di `87020e2`. Proyek SIAP
+> ditampilkan sebagai portofolio.** Bahan lamaran dikerjakan pemilik proyek di luar repositori ini.
+> **Jalan terjadwal 2026-10-26 13.00 akan dicek pemilik proyek SENDIRI** (jalan terjadwal 25 Okt gagal kode 4
+> karena jaringan; yang berhasil adalah jalan manual `Start-ScheduledTask` 13.49). Jangan dicek atau dijalankan
+> ulang tanpa diminta.
+> **PEKERJAAN PASCA-TENGGAT (dicatat 2026-10-25; JANGAN dikerjakan tanpa diminta):** (1) 22 galat tipe pyright di
+> `tests/` (tercatat 2026-09-21, belum dicek ulang) dan konfigurasi pyright; (2) log pembaruan berkala mencatat
+> pesan galat asli, bukan hanya jenisnya; (3) jeda percobaan ulang lebih panjang untuk halaman daftar pertama;
+> (4) pemicu Task Scheduler saat laptop bangun dari tidur (DITUNDA; bisa menjalankan scraping beberapa kali
+> sehari); (5) Tahap 3: catatan aktivitas tanpa isi pesan (ADR 0006, sudah diputuskan, belum dibangun);
+> (6) Versi 2 (belum dimulai; cakupan menunggu keputusan pemilik proyek; `archive/v2_snapshot/` belum dibuat).
 > **RIWAYAT GIT TIDAK DITULIS ULANG (keputusan pemilik proyek 2026-10-25; rencana menghapus atribusi Claude
 > DIBATALKAN):** hash commit dan tag `testset-v1` adalah bukti pra-registrasi (mis. pedoman `2500013` dan tag
 > `annotation-guide-v1.0`, ambang `f9ecd0f`/`a1459a2`/`c347e20`, label final `bf82657`; CI membandingkan
