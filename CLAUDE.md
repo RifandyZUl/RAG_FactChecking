@@ -10,6 +10,17 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-25, README akhir; branch `readme-akhir`, BELUM digabung; menunggu pemilik proyek membaca hasilnya)*
+
+> **README ditulis ulang untuk pembaca perekrut:** layar pertama = masalah/solusi, evaluasi singkat (36/46
+> memadai, 10/45 belum lulus/gugur, indeks 1.532, ambang dikunci sebelum pengujian), Docker beberapa baris,
+> tangkapan layar beranda + "ditemukan" (390 px). **Detail operasional DIPINDAH ke `docs/operasional.md`**
+> (pembaruan berkala [ringkasan baru], ingest antrean langkah 0-6, pemulihan, perekaman, mode offline HF, detail
+> demo, arsip Versi 1, Docker); teks dipotong verbatim dari README lama per rentang baris. Judul "Ingest antrean
+> (pembaruan berkala)", "Arsip indeks Versi 1", dan "Docker" TETAP ada di README sebagai rintisan bertautan,
+> jadi rujukan lama `README, "..."` (kode, docker-compose, ADR, `testset/v1.meta.json`) tetap mengarah ke tempat
+> yang benar. Uji `test_doc_links` dan `test_evaluation_facts` lolos.
+
 *(2026-10-25, pasca-ingest; branch `pasca-ingest-2026-10-25`, DIGABUNG ke main 2026-10-25 atas persetujuan pemilik proyek)*
 
 > **INGEST ANTREAN SELESAI 2026-10-25 (dijalankan pemilik proyek, ~13.53-14.06 WIB, setelah pembaruan manual
