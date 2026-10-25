@@ -10,7 +10,7 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
-*(2026-10-25, README akhir; branch `readme-akhir`, BELUM digabung; menunggu pemilik proyek membaca hasilnya)*
+*(2026-10-25, README akhir; branch `readme-akhir`, DIGABUNG ke main 2026-10-25 atas persetujuan pemilik proyek, merge commit `--no-ff` dengan email benar)*
 
 > **README = dokumentasi proyek portofolio pribadi** (koreksi pemilik proyek 2026-10-25: bukan khusus untuk
 > perekrut; proyek akan tampil di website portofolio pemilik). Bagian atas: masalah/solusi dengan bahasa
@@ -89,8 +89,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > `testset/v1.jsonl` dengan tag `testset-v1`), dan itu lebih penting daripada menghapus atribusi. Jangan
 > mengusulkan `filter-repo`/`rebase` atas riwayat yang sudah di-push. Keadaan riwayat 2026-10-25 (171 commit,
 > semua ref): Claude TIDAK pernah menjadi author/committer; muncul hanya lewat trailer `Co-Authored-By` pada 170
-> commit (Opus 5.5: 117, Sonnet 5: 53). Catatan: email author 170 commit tertulis `rzultiandra@gmail.comm`
-> (salah ketik `.comm`, juga di `git config user.email`), jadi commit itu tidak tertaut ke akun GitHub -- dibiarkan.
+> commit (Opus 5.5: 117, Sonnet 5: 53).
+> **Email author (diperbaiki 2026-10-25 atas izin pemilik proyek):** semua commit SAMPAI DAN TERMASUK `d53c719`
+> (2026-10-25 15:04 WIB; 172 commit di semua ref) memakai `rzultiandra@gmail.comm` (salah ketik `.comm`), jadi
+> TIDAK terhubung ke akun GitHub pemilik proyek. Ini **sengaja dibiarkan**: mengubahnya berarti menulis ulang
+> riwayat dan mengubah hash pra-registrasi. Sejak 2026-10-25 `user.email` = `rzultiandra@gmail.com` di config
+> repo (`--local`) DAN global (sebelumnya: repo tidak disetel, global `.comm`); commit baru memakai email benar.
 
 *(2026-10-24, Tahap 2)*
 

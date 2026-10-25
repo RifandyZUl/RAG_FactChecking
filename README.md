@@ -432,8 +432,7 @@ tidak tercakup, dan artikel yang sudah diambil tidak disegarkan bila diperbarui 
 
 **Rujukan tidak selalu tersedia.** Pada basis data evaluasi, 205 dari 1.532 artikel
 tidak memiliki rujukan yang boleh ditampilkan setelah penyaringan (pada basis data demo 25 Oktober
-2026: 210 dari 1.611; pada basis data baseline Versi 1: 16 dari 150, dengan aturan saat itu); jawaban
-untuk artikel tersebut disusun tanpa bagian rujukan. Angka 205 dan 210 beserta sidik jari indeksnya ada di
+2026: 210 dari 1.611); jawaban untuk artikel tersebut disusun tanpa bagian rujukan. Angka 205 dan 210 beserta sidik jari indeksnya ada di
 `docs/evaluasi/rujukan_kosong.json` (`python -m evaluation.reference_gaps`).
 
 **Penyaringan rujukan bersifat konservatif.** Seluruh domain media sosial, arsip,
@@ -712,6 +711,12 @@ dan tag `testset-v1` tetap sah; alasannya tercatat di `testset/v1.meta.json`
 (`pemeriksaan_data_terpublikasi_2026-09-26`). Keputusan ini ditegaskan lagi pada
 25 Oktober 2026: hash commit dan tag dipakai sebagai bukti bahwa set uji, pedoman,
 dan ambang dikunci sebelum hasil dilihat, jadi riwayat tidak diubah untuk alasan apa pun.
+
+**Catatan sejarah Versi 1.** Pada basis data Versi 1 (150 artikel, saat scraping awal), 16 artikel tidak
+punya rujukan yang boleh ditampilkan. Angka ini dihitung dengan aturan penyaringan Versi 1. Aturan itu sudah
+diperketat sejak itu (misalnya tautan pendek dan arsip kini ikut disaring), jadi angkanya tidak bisa dihitung
+ulang persis dengan aturan sekarang dan tidak bisa dibandingkan dengan angka 205 dan 210 di
+[Keterbatasan](#keterbatasan).
 
 Proyek ini dibuat untuk keperluan pembelajaran dan portofolio, bukan sebagai
 pengganti layanan pemeriksa fakta resmi.

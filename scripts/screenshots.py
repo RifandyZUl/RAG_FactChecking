@@ -11,6 +11,13 @@ Versi potongan bagian atas (390px, skala 2x agar tajam; untuk README dan website
 berkas terpisah `beranda-390-atas.png` dan `ditemukan-390-atas.png`, tidak menimpa berkas penuh:
 
     .\\.venv\\Scripts\\python.exe scripts\\screenshots.py --only beranda-atas --only ditemukan-atas --found "<klaim>"
+
+KUOTA GEMINI: keadaan `ditemukan`, `belum-ditemukan`, dan `ditemukan-atas` masing-masing menjalankan SATU
+pemeriksaan sungguhan lewat layanan demo (`ditemukan-atas` memeriksa ulang di halaman 2x, tidak memakai hasil
+`ditemukan`). Biasanya 1 permintaan Gemini per pemeriksaan; paling banyak 8 bila format diulang
+(`generator.MAX_FORMAT_RETRIES` = 1) dan server membalas 429/5xx (`llm.gemini.MAX_ATTEMPTS` = 4). Per jalan:
+tanpa `--only` dengan `--found` dan `--not-found` = 2 pemeriksaan; ditambah `ditemukan-atas` = 3; `beranda`,
+`tentang`, dan `beranda-atas` = 0. Permintaan tercatat di buku besar kuota yang sama dengan evaluasi.
 """
 
 import argparse
