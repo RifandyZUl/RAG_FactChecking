@@ -74,13 +74,17 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > `sha256_embedding_float32` `9851a6dcba0c84c1216e7067f27484aa25b3cc81f3c4a3bb4ae0eeca0b79de94`,
 > `sha256_articles_json_isi` `cc7f1989ad1bf6c6ae7a055b8985ac1800722eb12415e8c2090aee346c77fb28`, `ef_search` 2000.
 > Jangan membuka cadangan ini langsung (ChromaDB menulis ulang berkas saat dibuka): salin dulu, buka salinannya.
-> Salinan ke penyimpanan eksternal dibuat pemilik proyek sendiri. **Cadangan lain juga JANGAN dihapus;**
-> usulan Claude Code (DIPUTUSKAN pemilik proyek setelah proyek selesai, belum disetujui): `pre_ef_search_2026-10-03`
-> (54 MB, indeks 1.532 dengan `ef_search` 100) boleh dihapus setelah sidik jari isinya dicocokkan (belum diperiksa)
-> dan salinan eksternal `pre_antrean_2026-10-25` ada; `pre_batch04-06_2026-10-03` (35 MB, indeks 922) boleh
-> dihapus bila pengukuran indeks 922 tidak perlu direproduksi (hasilnya ter-commit di `testset/*_922.json`);
-> `salinan_bukti_tahap2_2026-10-24` (98 MB) boleh dihapus (Tahap 2 di main, bukti JSON ter-commit); untuk ingest
-> berikutnya simpan dua `pre_antrean_*` terakhir (KECUALI `pre_antrean_2026-10-25`, yang permanen).
+> Salinan ke penyimpanan eksternal SUDAH dibuat pemilik proyek (2026-10-25), juga untuk
+> `data/backups/riwayat_asli_2026-10-25.bundle` (cadangan riwayat git asli sebelum penulisan ulang, 176 commit + 2 tag,
+> SHA-256 `db83fad310e6e9ae0b604979f27ce3256cdee3aad09a3519cadda13b9ba7e5a5`; PERMANEN, tidak boleh dihapus).
+> **Pembersihan 2026-10-25 (atas persetujuan pemilik proyek):** DIHAPUS `salinan_bukti_tahap2_2026-10-24`,
+> `pre_batch04-06_2026-10-03`, dan `pre_ef_search_2026-10-03` (sebelum dihapus: 6 kunci sidik jari isinya SAMA dengan
+> `indeks_beku`; hanya `ef_search` 100 vs 2000, yang memang alasan cadangan itu dibuat). Juga dihapus: ter-commit
+> `docs/riwayat/draf_readme_evaluasi.md` (isinya sudah di README) dan `docs/audit/rencana_tahap1b.md`; lokal
+> `.mypy_cache/`, `.ruff_cache/`, `.pytest_cache/`, semua `__pycache__/`, lima log lama di `data/` (ingest.log,
+> ingest2.log, scrape_150*.log, venv_install.log), dan `docs/desain_tampilan/` (mockup desain, tidak pernah
+> di-commit; komentar yang merujuknya dirapikan). Untuk ingest berikutnya simpan dua `pre_antrean_*` terakhir
+> (KECUALI `pre_antrean_2026-10-25`, yang permanen).
 > **STATUS PORTOFOLIO (2026-10-25): README akhir SELESAI, digabung ke main di `87020e2`. Proyek SIAP
 > ditampilkan sebagai portofolio.** Bahan lamaran dikerjakan pemilik proyek di luar repositori ini.
 > **Jalan terjadwal 2026-10-26 13.00 akan dicek pemilik proyek SENDIRI** (jalan terjadwal 25 Okt gagal kode 4
@@ -1390,6 +1394,10 @@ RAG_FactChecking/
 
 ## Cara Kerja yang Diharapkan
 
+- **Jangan menambahkan baris atribusi apa pun di pesan commit atau PR.** (Aturan pemilik proyek, 2026-10-25.
+  Tidak ada `Co-Authored-By`, `Claude-Session`, maupun "Generated with Claude Code". Pengaturan Claude Code
+  `attribution` = `{"commit": "", "pr": "", "sessionUrl": false}` dipasang di `~/.claude/settings.json` dan
+  `.claude/settings.local.json`.)
 - **Tidak ada teks artikel, tautan sumber hoaks, atau kontak di berkas ter-commit.** Fixture HTML
   baru WAJIB disamarkan dulu (`python scripts/anonymize_fixtures.py <asli> <keluaran>`),
   dan literal uji diambil dari hasil tersamar. `articles.json` dan HTML mentah tetap lokal.

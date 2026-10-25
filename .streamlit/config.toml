@@ -5,7 +5,7 @@
 # Terang dipaksa agar semantik warna status sama di semua perangkat.
 base = "light"
 
-# Palet berkas acuan docs/desain_tampilan/ (2026-10-22). Warna pendukung tanpa slot tema ada di
+# Palet berkas acuan (mockup desain dari pemilik proyek, 2026-10-22; tidak disimpan di repositori). Warna pendukung tanpa slot tema ada di
 # src/ui/style.css; warna di bawah diteruskan ke CSS sebagai --theme-* oleh ui/components.py.
 # Aksen tunggal: biru (tombol Periksa, tautan, fokus input).
 primaryColor = "#1F4E9E"

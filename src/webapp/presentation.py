@@ -28,7 +28,8 @@ from webapp.service import CheckError, CheckOutcome
 logger = logging.getLogger("presentation")
 
 # --------------------------------------------------------------------------
-# Salinan antarmuka (dari berkas acuan docs/desain_tampilan/; teks baru ditandai "BARU")
+# Salinan antarmuka (dari berkas acuan, yaitu mockup desain pemilik proyek yang tidak disimpan di repositori;
+# teks baru ditandai "BARU")
 # --------------------------------------------------------------------------
 
 APP_NAME = "Cek Pesan Hoaks"

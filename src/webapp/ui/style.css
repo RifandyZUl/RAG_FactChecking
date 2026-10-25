@@ -1,6 +1,7 @@
 /*
  * Satu-satunya CSS kustom demo (dimuat sekali per rerun oleh ui/components.load_css).
- * Ukuran, jarak, dan sudut mengikuti docs/desain_tampilan/*.dc.html.
+ * Ukuran, jarak, dan sudut mengikuti berkas acuan (mockup desain dari pemilik proyek, 2026-10-22; tidak disimpan di
+ * repositori).
  * Warna tema Streamlit (latar, teks, aksen, garis) dan WARNA STATUS tidak ditulis di sini: nilainya
  * dari .streamlit/config.toml, diteruskan sebagai variabel --theme-* dan --status-*. Di bawah ini hanya
  * warna pendukung dari berkas acuan yang tidak punya slot di tema Streamlit. Tanpa hijau.
