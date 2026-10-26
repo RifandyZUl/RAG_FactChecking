@@ -89,9 +89,13 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (KECUALI `pre_antrean_2026-10-25`, yang permanen).
 > **STATUS PORTOFOLIO (2026-10-25): README akhir SELESAI, digabung ke main di `87020e2`. Proyek SIAP
 > ditampilkan sebagai portofolio.** Bahan lamaran dikerjakan pemilik proyek di luar repositori ini.
-> **Jalan terjadwal 2026-10-26 13.00 akan dicek pemilik proyek SENDIRI** (jalan terjadwal 25 Okt gagal kode 4
-> karena jaringan; yang berhasil adalah jalan manual `Start-ScheduledTask` 13.49). Jangan dicek atau dijalankan
-> ulang tanpa diminta.
+> **Jalan terjadwal 2026-10-26 13.00 BERHASIL** (dicek pemilik proyek; dicocokkan Claude Code secara baca-saja):
+> `LastRunTime` 10/26/2026 1:00:01 PM, `LastTaskResult` 0, `pembaruan_status.json` kode 0 "bersih", antrean belum
+> digabung 1, penanda tidak ada; Event Viewer mencatat event 107/100/129/200 pukul 13.00.01 dan 201/102 pukul
+> 13.00.18. Ini jalan terjadwal berhasil PERTAMA SETELAH perubahan 2026-10-24 (perapian Tahap 1b, `pip install -e`
+> tanpa PYTHONPATH, `RunOnlyIfNetworkAvailable` False) dan yang pertama tercatat di Event Viewer. **Bukan** jalan
+> terjadwal berhasil pertama secara mutlak: `pembaruan_riwayat.jsonl` mencatat jalan 13.00 berkode 0 pada 8, 10, 19,
+> dan 20 Oktober. Jalan terjadwal 25 Okt gagal kode 4 (jaringan); jalan manual 13.49 hari itu berkode 0.
 > **PEKERJAAN PASCA-TENGGAT (dicatat 2026-10-25; JANGAN dikerjakan tanpa diminta):** (1) 22 galat tipe pyright di
 > `tests/` (tercatat 2026-09-21, belum dicek ulang) dan konfigurasi pyright; (2) log pembaruan berkala mencatat
 > pesan galat asli, bukan hanya jenisnya; (3) jeda percobaan ulang lebih panjang untuk halaman daftar pertama;
@@ -142,7 +146,8 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > **AKTIF** sejak 2026-10-24 malam (`wevtutil gl` -> `enabled: true`; dijalankan pemilik proyek sebagai admin),
 > jadi jalan berikutnya tercatat di Event Viewer. Pemicu saat bangun DITUNDA (bisa menjalankan
 > scraping beberapa kali sehari). **Bukti keberhasilan = jalan terjadwal 2026-10-25 13.00** (cek
-> `Get-ScheduledTaskInfo` dan `data/expansion/pembaruan_status.json`). Rincian:
+> `Get-ScheduledTaskInfo` dan `data/expansion/pembaruan_status.json`). *(Hasil: 25 Okt gagal kode 4 karena
+> jaringan; 26 Okt 13.00 berhasil kode 0 -- lihat status 2026-10-26 di atas.)* Rincian:
 > `docs/rancangan/rancangan_pembaruan_berkala.md`, bagian terakhir. ADR di `docs/adr/`.
 >
 > **RENCANA INGEST ANTREAN (dicatat 2026-10-24 malam, atas keputusan pemilik proyek): DIJALANKAN PEMILIK PROYEK
