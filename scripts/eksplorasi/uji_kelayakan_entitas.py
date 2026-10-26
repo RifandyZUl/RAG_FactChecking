@@ -124,6 +124,11 @@ PROGRAM = {
 
 NOMINAL_RE = re.compile(
     r"\brp\.?\s*([\d.,]+)\s*(juta|jt|ribu|rb|miliar|m)?\b|\b([\d.,]+)\s*(juta|jt|ribu|rb|miliar)\b")
+# PERBAIKAN SETELAH HASIL DILIHAT (2026-10-26, rancangan A2.5): "5,7 ribu tanda suka" dan "1,9 ribu komentar"
+# pada artikel P2-31 terbaca sebagai uang. Angka bersatuan tanpa "Rp" yang langsung diikuti kata hitungan media
+# sosial tidak dihitung nominal.
+SOCIAL_COUNT_RE = re.compile(r"\s*(tanda suka|suka|like|likes|komentar|kali dibagikan|dibagikan|share|penonton|"
+                             r"pengikut|followers|tayangan|views|kali ditonton)\b")
 PHONE_RE = re.compile(r"(?<!\d)(?:\+?62[\s\-–—]?|0)8[\d\-–—\s]{8,13}\d")
 URL_RE = re.compile(r"(?:https?://)?(?:www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)+)(?:/\S*)?", re.IGNORECASE)
 ORG_HINT_RE = re.compile(r"\b(kementerian|badan|dinas|pt\.?|bank|lembaga|direktorat|otoritas|pemerintah)\b")
@@ -154,8 +159,11 @@ def nominal(text: str) -> set[int]:
     """Nominal rupiah sebagai bilangan bulat (Rp 600.000, Rp600 ribu, 1,2 juta)."""
     out = set()
     mult = {"juta": 10**6, "jt": 10**6, "ribu": 10**3, "rb": 10**3, "miliar": 10**9, "m": 10**9}
-    for m in NOMINAL_RE.finditer(_norm(text)):
+    t = _norm(text)
+    for m in NOMINAL_RE.finditer(t):
         num, unit = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+        if not m.group(1) and SOCIAL_COUNT_RE.match(t, m.end()):
+            continue  # jumlah reaksi media sosial, bukan uang
         if unit:  # 1,2 juta / 1.5 juta: koma atau titik sebagai desimal
             try:
                 val = float(num.replace(",", ".").strip(".")) * mult[unit]
@@ -267,5 +275,60 @@ def main() -> int:
     return 0
 
 
+def split_causes(sheet: Path | None) -> int:
+    """
+    Pisahkan "tidak dapat dibandingkan" menjadi (a) unsur memang tidak disebut dan (b) daftar gagal membacanya,
+    memakai ekstraksi LLM sebagai acuan (rancangan A2.6). Tanpa `sheet`: acuan = run 1 yang BELUM diperiksa
+    (hitungan SEMENTARA). Dengan `sheet` (lembar yang sudah diisi pemilik proyek): hanya unsur yang ditandai B
+    dipakai sebagai acuan; yang ditandai S dikeluarkan dari hitungan.
+    """
+    rows = json.loads(OUT_PATH.read_text(encoding="utf-8"))["butir"]
+    results = {b["kode"]: b for b in json.loads((ROOT / "testset" / "eksternal_hasil_per_butir.json").read_text(encoding="utf-8"))["butir"]}
+    ref = {json.loads(x)["sid"]: json.loads(x) for x in (OUT_PATH.parent / "ekstraksi_run1.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()}
+    verdict: dict[tuple[str, str], str] = {}
+    if sheet is not None:
+        from openpyxl import load_workbook
+        ws = load_workbook(sheet)["periksa"]
+        head = [c.value for c in ws[1]]
+        for r in ws.iter_rows(min_row=2):
+            d = dict(zip(head, (c.value for c in r)))
+            for u in ("subjek", "tawaran", "nominal"):
+                verdict[(d["id_sumber"], u)] = str(d.get(f"{u}_benar (B/S)") or "").strip().upper()
+    # entitas daftar -> unsur acuan; program dibandingkan dengan "tawaran" (lebih luas dari program spesifik)
+    mapping = {"lembaga": "subjek", "program": "tawaran", "nominal": "nominal"}
+
+    def present(sid: str, ent: str) -> bool | None:
+        u = mapping[ent]
+        if sheet is not None and verdict.get((sid, u)) != "B":
+            return None  # acuan salah atau belum diperiksa: dikeluarkan
+        val = ref[sid]["unsur"][u]
+        if ent == "lembaga":
+            return any(x.get("jenis") == "lembaga" for x in val)
+        return bool(val)
+
+    out = {ent: {"memang_tidak_disebut": 0, "daftar_gagal": 0, "acuan_dikeluarkan": 0} for ent in mapping}
+    for x in rows:
+        aid = results[x["kode"]]["article_id_modus"]
+        for ent in mapping:
+            for side, sid in ((0, f"pesan:{x['kode']}"), (1, f"artikel:{aid}")):
+                if x["terbaca_pesan_artikel"][ent][side]:
+                    continue  # daftar sudah membacanya
+                p = present(sid, ent)
+                key = "acuan_dikeluarkan" if p is None else ("daftar_gagal" if p else "memang_tidak_disebut")
+                out[ent][key] += 1
+    label = "FINAL (acuan diperiksa pemilik proyek)" if sheet is not None else "SEMENTARA (acuan run 1 belum diperiksa)"
+    print(label)
+    print(json.dumps(out, ensure_ascii=False, indent=1))
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
+    ap.add_argument("--pisah-penyebab", nargs="?", const="sementara", default=None,
+                    help="pisahkan penyebab 'tidak dapat dibandingkan'; beri jalur lembar terisi untuk hitungan final")
+    args = ap.parse_args()
+    if args.pisah_penyebab is None:
+        sys.exit(main())
+    sys.exit(split_causes(None if args.pisah_penyebab == "sementara" else Path(args.pisah_penyebab)))

@@ -219,6 +219,85 @@ artikel yang diambil sekali. Bila pilihan 1 juga gagal, ambil pilihan 3.
 - A6 aturan 4 dan aturan 3: pertentangan nominal antar-gelombang muncul dari P2-21. Pilihannya diserahkan ke
   pemilik proyek (A10).
 - Tidak ada daftar lembaga atau program di skrip yang diubah setelah hasil dilihat.
+- **Perbaikan pola setelah hasil dilihat (2026-10-26):** pola nominal membaca jumlah reaksi media sosial
+  ("... ribu tanda suka", "... ribu komentar") sebagai uang pada artikel P2-31. Angka bersatuan tanpa "Rp" yang
+  langsung diikuti kata hitungan media sosial kini tidak dihitung. Hasil A2.5 di atas adalah hasil SEBELUM perbaikan;
+  hasil sesudahnya ditulis di A2.7.
+
+### A2.6 Rencana uji ketepatan ekstraksi unsur inti dengan LLM (EKSPLORATIF; ditulis dan di-commit SEBELUM dijalankan)
+
+**Aturan baru pemilik proyek (2026-10-26):** untuk analisis apa pun, kriteria ditulis dan di-commit sebelum skrip
+dijalankan. Bagian ini mengikuti aturan itu. Hasilnya ditulis di A2.7 setelah dijalankan.
+
+**Tujuan.** Mengukur **ketepatan ekstraksi** per unsur (keputusan pemilik proyek), bukan jumlah kecocokan palsu yang
+tertangkap. Data yang dipakai sudah pernah dilihat, jadi hasilnya hanya menjawab "apakah LLM bisa mengambil unsur
+dengan tepat", bukan "apakah Versi 2 bekerja".
+
+**Data.** 47 pesan (kutipan Liputan6 dari butir evaluasi eksternal yang dijawab "ditemukan") dan 45 artikel
+TurnBackHoax yang dipilih sistem untuk butir itu (judul + Narasi + Kesimpulan). Teks dan hasil hanya disimpan di
+`data/eksplorasi/` (di-gitignore).
+
+**Alat.** `scripts/eksplorasi/uji_ekstraksi_llm.py`. Modul ini memakai lapisan penyedia `src/llm/` (pembatas laju
+dan buku besar kuota yang sama dengan evaluasi) dan tidak menyentuh `src/generator.py`. Model:
+`gemini-3.5-flash-lite`, `thinking_level` medium (sama dengan generator), keluaran terstruktur dengan skema JSON.
+
+**Prompt** (teks lengkap di `SYSTEM_PROMPT` modul itu): LLM diminta mencatat hanya yang tertulis eksplisit, tanpa
+menilai benar-salah dan tanpa pengetahuan luar. Untuk artikel, unsur diambil dari klaim yang diperiksa, bukan dari
+bantahan pemeriksa fakta. Unsur yang diambil:
+
+| Unsur | Isi | Bentuk |
+| --- | --- | --- |
+| subjek | lembaga, instansi, perusahaan, atau tokoh yang menawarkan, mengumumkan, atau melakukan sesuatu dalam klaim; pihak yang hanya disebut sebagai latar tidak dimasukkan | daftar `{nama, jenis: lembaga atau tokoh}` |
+| tawaran | program, bantuan, lowongan, hadiah, atau keuntungan; bila bukan tawaran, pokok klaim dalam frasa pendek | teks |
+| tindakan | apa yang diklaim terjadi atau diminta dari pembaca (mis. "pendaftaran dibuka") | teks |
+| nominal | semua jumlah uang yang disebut; jumlah suka, komentar, atau tayangan bukan nominal | daftar |
+| saluran | tautan, domain, nomor telepon atau WhatsApp, atau aplikasi tempat pembaca diminta mendaftar atau menghubungi | daftar |
+| periode | tanggal, bulan, tahun, atau gelombang yang disebut sebagai waktu tawaran atau peristiwa | daftar |
+
+Unsur **periode** ditambahkan di luar lima unsur yang diminta, karena aturan 4 pedoman yang baru bergantung pada
+tanda gelombang (A6).
+
+**Jalannya.** Dua run penuh (run 1 dan run 2), masing-masing 92 panggilan, total **184 panggilan** pada kuota hari
+yang sama, untuk mengukur kestabilan antar-run. Galat kuota menghentikan jalan; galat lain dicatat per sumber dan
+dicoba lagi.
+
+**Pemeriksaan manual oleh pemilik proyek, tanpa AI.** Lembar `data/eksplorasi/lembar_pemeriksaan_ekstraksi.xlsx`
+dibuat dari run 1: satu baris per sumber (pesan butir, lalu artikelnya; artikel yang sudah muncul tidak diulang),
+dengan teks sumber di sebelah hasil ekstraksi, dan kolom B/S per unsur. Definisi:
+
+- **B (benar):** semua yang tertulis eksplisit untuk unsur itu terambil, dan tidak ada tambahan yang tidak ada di teks.
+  "(tidak disebut)" juga B bila unsur itu memang tidak ada di teks. Kata-kata tidak harus persis.
+- **S (salah):** ada yang terlewat, ada tambahan yang tidak ada di teks, salah jenis (lembaga/tokoh), atau unsur
+  diambil dari bantahan pemeriksa fakta, bukan dari klaim.
+
+Claude Code tidak mengisi atau menilai kolom B/S, dan hasil run 2 tidak ditampilkan di lembar supaya tidak
+memengaruhi penilaian.
+
+**Ukuran.**
+
+- **Ketepatan** per unsur = B / (B + S), dihitung terpisah untuk pesan (47) dan artikel (45).
+- **Kestabilan** per unsur = jumlah sumber yang hasil run 1 dan run 2-nya sama setelah dinormalkan (huruf kecil,
+  spasi, urutan daftar), terpisah untuk pesan dan artikel.
+
+**Kriteria lanjut atau berhenti (dikunci di commit ini, sebelum ada panggilan):**
+
+| Keputusan | Syarat |
+| --- | --- |
+| **Lanjut** (ekstraksi LLM dipakai di rancangan Versi 2) | ketepatan >= 90% untuk subjek, nominal, saluran, dan periode, **dan** >= 80% untuk tawaran dan tindakan, di **kedua** sisi (pesan dan artikel); **dan** kestabilan >= 85% per unsur di kedua sisi |
+| **Berhenti** (ambil pilihan "persempit Versi 2", A10) | ketepatan < 70% untuk salah satu dari subjek, tawaran, atau tindakan di salah satu sisi; **atau** kestabilan < 70% untuk salah satu unsur |
+| **Tidak konklusif** | selain dua di atas. Prompt boleh direvisi sekali, tetapi uji ulangnya **wajib memakai data lain** (bukan 47 butir ini), misalnya butir set (a) yang sudah dilabeli, dengan kriteria yang sama |
+
+Alasan angka: 90% berarti sekitar 4-5 kesalahan dari 45-47 sumber per unsur, batas yang menurut saya masih bisa
+ditangani aturan pembanding; tawaran dan tindakan lebih bersifat penilaian, jadi diberi 80%. Angka ini usulan saya,
+dikunci atas permintaan pemilik proyek; ia tidak berasal dari data.
+
+**Yang juga dihitung dari lembar yang sudah diisi** (tanpa panggilan tambahan):
+
+- Pemisahan penyebab "tidak dapat dibandingkan" pada daftar lama (A2.5): unsur **memang tidak disebut**, atau
+  **daftar gagal membacanya**, memakai unsur yang ditandai B sebagai acuan
+  (`uji_kelayakan_entitas.py --pisah-penyebab <lembar terisi>`). Sebelum lembar diisi, hitungan sementara memakai
+  run 1 yang belum diperiksa, dan diberi label SEMENTARA.
+- Dampak kuota bila ekstraksi dipakai di sistem (A8).
 
 ## A3. Urutan kerja yang menjaga kejujuran evaluasi (kunci dua tahap)
 
