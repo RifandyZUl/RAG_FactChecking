@@ -3,9 +3,10 @@
 
 # Rancangan Versi 2
 
-**Status (2026-10-26, revisi 1): rancangan untuk ditinjau pemilik proyek; belum ada kode Versi 2, dan belum ada
-yang dikunci. Uji kelayakan pemeriksaan entitas (A2.5, eksploratif) tidak memenuhi kriteria lanjut, jadi arah
-pemeriksaan entitas menunggu keputusan pemilik proyek (A10).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
+**Status (2026-10-26, revisi 2): rancangan untuk ditinjau pemilik proyek; belum ada kode Versi 2, dan belum ada
+yang dikunci. Inti Versi 2 adalah ukuran yang bisa dipercaya: pedoman A6, anotator kedua A7, set uji pesan benar, dan
+kunci dua tahap. Pemeriksaan entitas tidak lolos uji kelayakan daftar (A2.5) maupun uji ekstraksi LLM (A2.7, berhenti
+menurut kriteria yang dikunci), jadi Versi 2 mengikuti "persempit" (A10).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
 pengukurannya; isinya dipertahankan, dan setiap bagiannya diberi tanda **[MASIH BERLAKU]**, **[SEBAGIAN
 BERLAKU]**, atau **[TIDAK BERLAKU LAGI]**. Tempat yang perlu keputusan pemilik proyek ditandai
 **KEPUTUSAN PEMILIK PROYEK**.
@@ -35,6 +36,32 @@ eksploratif F dicatat di A2.5.
 | 5 | Ambang A4.e | Disetujui apa adanya |
 | 6 | Aturan 3 (gelombang) | Pilihan 1: gelombang berbeda tetap klaim sama; Versi 2 tidak memperbaiki penolakan lintas gelombang |
 | 7 | Ambang kappa | 0,60 disetujui; anotator kedua dicari pemilik proyek |
+| 8 | Arah entitas | Uji ekstraksi LLM secara eksploratif; yang diukur ketepatan ekstraksi, bukan kecocokan palsu yang tertangkap (A2.6, A2.7) |
+| 9 | Nominal antar-gelombang | Bila lembaga dan tawaran sama dan gelombangnya jelas berbeda (tanggal atau periode eksplisit di kedua sisi), tetap klaim sama walau nominalnya berbeda; aturan 4 hanya berlaku bila tidak ada tanda gelombang berbeda (A6) |
+| 10 | Penyimpanan set (a) | Yang di-commit hanya URL, tanggal terbit, hash teks, dan metadata; potongan teks pengumuman disimpan lokal, seperti `articles.json`. Sumber dipilih pemilik proyek setelah membaca halaman hak cipta tiap situs |
+| 11 | Anotator kedua | 40 + 40 disetujui; untuk set (a) juga dilaporkan kesepakatan mentah, Gwet AC1, dan PABAK, dengan ambang yang ditetapkan sekarang (A7) |
+| 12 | Kriteria analisis | Untuk analisis apa pun, kriteria ditulis dan di-commit sebelum skrip dijalankan |
+
+**Pembacaan hasil uji kelayakan A2.5 (dari pemilik proyek), beserta tanggapan saya.** Dari 10 kecocokan palsu, 7
+menurut adjudikasi adalah kesalahan label. Jadi kesalahan sistem yang terbukti pada kecocokan palsu hanya 3, dan
+ketiganya (tokoh, tindakan, nominal yang tidak disebut) memang di luar jangkauan pemeriksaan daftar. Artinya, sumber
+ketidakpastian terbesar adalah **definisi "klaim sama" dan konsistensi label**, bukan sistemnya. Karena itu
+**pedoman A6 dan anotator kedua A7 menjadi inti Versi 2**, dan pemeriksaan entitas menjadi komponen yang menunggu bukti.
+
+Saya setuju dengan arah pembacaan ini, dengan dua batasan yang perlu ikut dicatat:
+
+1. **"Hanya 3 yang terbukti" adalah batas yang menguntungkan sistem, bukan angka yang lebih tepat.** Adjudikasi hanya
+   meninjau 20 butir yang tidak sepakat, penilainya tahu setiap butir adalah ketidaksesuaian, dan dua pilihan yang
+   disajikan bisa membuat penilai condong menerima pilihan yang tampak masuk akal (`rancangan_evaluasi_eksternal.md`
+   11.9). Jumlah kesalahan sistem yang sebenarnya di antara 10 itu ada di antara 3 dan 10. Yang terbukti bukan
+   "sistemnya baik", melainkan "kita belum bisa mengukurnya dengan tepat selama label tidak stabil".
+2. **Kesalahan sistem di luar kecocokan palsu tetap nyata.** Setelah adjudikasi, 6 dari 9 penolakan palsu tetap
+   kesalahan sistem, dan 5 dari 10 kegagalan positif terjadi di retrieval. Pedoman dan anotator kedua menstabilkan
+   ukuran, tetapi tidak memperbaiki kesalahan itu.
+
+Kesimpulan untuk rancangan: inti Versi 2 adalah **ukuran yang bisa dipercaya** (pedoman, anotator kedua, set uji pesan
+benar, kunci dua tahap). Komponen yang mengubah jawaban (pemeriksaan entitas, tiga jenis jawaban) hanya masuk bila lolos
+uji kelayakan dengan kriteria yang dikunci lebih dulu.
 
 ## A1. Tujuan dan ruang lingkup
 
@@ -48,8 +75,9 @@ keliru pada pengumuman resmi bisa membuat orang tidak percaya informasi yang ben
 1. **Mengukur dan menekan salah menuduh** dengan set uji pesan yang benar (A4.a).
 2. **Pemeriksaan entitas** sebelum kecocokan diterima: lembaga, nama program, dan nominal dibandingkan antara
    pesan dan artikel (A2). Domain dan nomor telepon hanya menjadi **bukti pendukung** bila sama persis, dan
-   ditampilkan kepada pengguna; keduanya tidak pernah menurunkan jawaban. **Status: rancangan entitas sedang
-   ditinjau ulang** karena uji kelayakan A2.5 tidak memenuhi kriteria lanjut.
+   ditampilkan kepada pengguna; keduanya tidak pernah menurunkan jawaban. **Status: tidak masuk Versi 2 menurut
+   kriteria yang dikunci.** Uji kelayakan daftar (A2.5) tidak memenuhi kriteria lanjut, dan uji ekstraksi LLM (A2.7)
+   berhenti karena kestabilan antar-run di bawah 70% pada beberapa unsur. Versi 2 mengikuti "persempit" (A10).
 3. **Tiga jenis jawaban:**
    - **"Klaim yang sama pernah diperiksa"**: generator memilih artikel, dan pemeriksaan entitas tidak menemukan
      pertentangan;
@@ -84,6 +112,7 @@ keliru pada pengumuman resmi bisa membuat orang tidak percaya informasi yang ben
 | Lembaga | **inti** (bisa menurunkan) | daftar eksplisit kementerian, lembaga, BUMN, dan pemerintah daerah dari sumber resmi, bukan dari artikel basis data (agar tidak melingkar) | judul dan Narasi |
 | Nama program | **inti** | daftar program **spesifik** (mis. PKH, BPNT, BSU, KIP, Prakerja, mudik gratis, CPNS). Istilah umum seperti "bansos", "bantuan", atau "lowongan" tidak dimasukkan, karena istilah umum tidak boleh dianggap bertentangan dengan program spesifik | judul dan Narasi |
 | Nominal | **inti** | pola `Rp`, `juta`, `ribu`, angka dengan satuan | judul, Narasi, Kesimpulan |
+| Periode (tanggal, bulan, tahun, gelombang) | **penanda gelombang** (tidak pernah menurunkan) | pola tahun, nama bulan, tanggal, dan kata "gelombang" | judul dan Narasi |
 | Domain dan tautan | **pendukung** (tidak pernah menurunkan) | pola URL, termasuk yang tanpa skema dan `wa.me`, dinormalkan ke domain | `claim_sources` dan Narasi |
 | Nomor telepon | **pendukung** | pola yang sudah ada di `labeling.candidates.screen.pii_flags` | Narasi |
 
@@ -104,6 +133,8 @@ lama (hanya detail yang bertentangan yang menolak; B.11.6) dan aturan 2 pedoman 
 - Generator memilih artikel dan ada minimal satu **entitas inti** (lembaga, nama program, nominal) yang
   bertentangan -> **"pola mirip"**.
 - Generator memilih artikel dan tidak ada pertentangan entitas inti -> **"klaim sama"**.
+- **Pertentangan nominal diabaikan bila gelombangnya jelas berbeda:** periode disebut eksplisit di kedua sisi dan
+  nilainya berbeda (keputusan 9, A6 aturan 4). Pertentangan lembaga atau program tidak terpengaruh periode.
 - Generator tidak memilih artikel -> **"belum ditemukan"**, apa pun hasil pemeriksaan entitas (keputusan 1).
 - Domain atau nomor yang **sama persis** dengan artikel ditampilkan sebagai bukti pendukung pada jawaban apa pun
   yang menampilkan artikel ("pola mirip" atau "klaim sama"). Domain atau nomor yang **berbeda** tidak memengaruhi
@@ -195,7 +226,7 @@ pra-registrasi; dicatat supaya keputusannya bisa diperiksa):
 dibandingkan" 74-77% per entitas. Batas "benar yang turun" terpenuhi (2 dari 36), tetapi salah satunya karena
 kesalahan pola.
 
-**Pilihan tinjauan ulang (KEPUTUSAN PEMILIK PROYEK, sebelum pelabelan dimulai):**
+**Pilihan tinjauan ulang** (diputuskan pemilik proyek 2026-10-26: pilihan 1 diuji secara eksploratif, dengan yang diukur adalah ketepatan ekstraksi; keputusan 8, A2.6):
 
 1. **Ekstraksi unsur inti dengan LLM.** Satu panggilan per pesan untuk mengambil subjek atau lembaga atau tokoh,
    tindakan, tawaran, dan nominal dalam bentuk terstruktur. Unsur artikel diambil sekali secara luring dan
@@ -216,13 +247,27 @@ artikel yang diambil sekali. Bila pilihan 1 juga gagal, ambil pilihan 3.
 
 - A2.4: pencatutan tokoh dan perbedaan tindakan ditambahkan sebagai batas yang diketahui. Keputusan tidak menambah
   entitas tokoh diambil setelah melihat P2-17.
-- A6 aturan 4 dan aturan 3: pertentangan nominal antar-gelombang muncul dari P2-21. Pilihannya diserahkan ke
-  pemilik proyek (A10).
+- A6 aturan 4 dan aturan 3: pertentangan nominal antar-gelombang muncul dari P2-21. Diputuskan pemilik proyek
+  (keputusan 9): bila gelombang jelas berbeda, nominal yang berbeda tidak membuat klaim menjadi berbeda.
 - Tidak ada daftar lembaga atau program di skrip yang diubah setelah hasil dilihat.
 - **Perbaikan pola setelah hasil dilihat (2026-10-26):** pola nominal membaca jumlah reaksi media sosial
   ("... ribu tanda suka", "... ribu komentar") sebagai uang pada artikel P2-31. Angka bersatuan tanpa "Rp" yang
   langsung diikuti kata hitungan media sosial kini tidak dihitung. Hasil A2.5 di atas adalah hasil SEBELUM perbaikan;
   hasil sesudahnya ditulis di A2.7.
+
+**Hasil setelah perbaikan pola nominal (dijalankan ulang 2026-10-26, tanpa LLM; masih EKSPLORATIF):**
+
+| Ukuran | Sebelum perbaikan | Sesudah perbaikan |
+| --- | --- | --- |
+| Kecocokan palsu yang turun | 0 dari 10 | 0 dari 10 |
+| Jawaban benar yang ikut turun | 2 dari 36 (P2-21, P2-31) | **1 dari 36** (P2-21) |
+| "Tidak dapat dibandingkan": lembaga / program / nominal | 35 / 36 / 35 | 35 / 36 / 36 |
+| Nominal terbaca di artikel | 17 dari 47 | 16 dari 47 |
+
+P2-31 kini "tidak dapat dibandingkan" pada nominal (jumlah reaksi media sosial tidak lagi dibaca sebagai uang). P2-21
+tetap turun, karena nominalnya memang berbeda; menurut aturan 4 yang baru (keputusan 9), kasus seperti ini tetap klaim
+sama bila periodenya eksplisit dan berbeda di kedua sisi, jadi sistem perlu membaca periode (A2.1). Kriteria lanjut
+tetap tidak terpenuhi.
 
 ### A2.6 Rencana uji ketepatan ekstraksi unsur inti dengan LLM (EKSPLORATIF; ditulis dan di-commit SEBELUM dijalankan)
 
@@ -298,6 +343,84 @@ dikunci atas permintaan pemilik proyek; ia tidak berasal dari data.
   (`uji_kelayakan_entitas.py --pisah-penyebab <lembar terisi>`). Sebelum lembar diisi, hitungan sementara memakai
   run 1 yang belum diperiksa, dan diberi label SEMENTARA.
 - Dampak kuota bila ekstraksi dipakai di sistem (A8).
+
+### A2.7 Hasil uji ekstraksi unsur inti dengan LLM (EKSPLORATIF, dijalankan 2026-10-26)
+
+**EKSPLORATIF.** Rencana dan kriteria di-commit lebih dulu (A2.6, commit `96a8888`), sebelum ada panggilan.
+
+**Pelaksanaan.** Dua run penuh, masing-masing 92 sumber (47 pesan, 45 artikel): **184 panggilan**, 0 gagal, 0 sumber
+yang perlu diulang. Buku besar kuota: 127 panggilan di hari Pasifik 2026-10-25 dan 57 di 2026-10-26 (reset kuota
+pukul 14.00 WIB terjadi di tengah jalan). Hasil lokal: `data/eksplorasi/ekstraksi_run1.jsonl` dan `_run2.jsonl`.
+
+**Kestabilan antar-run** (sama setelah dinormalkan, ukuran yang dikunci di A2.6):
+
+| Unsur | Pesan (47) | Artikel (45) |
+| --- | --- | --- |
+| subjek | 38 (81%) | 33 (73%) |
+| tawaran | **28 (60%)** | **20 (44%)** |
+| tindakan | **20 (43%)** | **23 (51%)** |
+| nominal | 46 (98%) | 44 (98%) |
+| saluran | 42 (89%) | 41 (91%) |
+| periode | 42 (89%) | **26 (58%)** |
+
+Huruf tebal: di bawah 70%.
+
+**Keputusan menurut kriteria yang dikunci: BERHENTI.** Kriteria A2.6 menyatakan berhenti bila kestabilan salah satu
+unsur di bawah 70%. Lima nilai di bawah 70% (tawaran dan tindakan di kedua sisi, periode di artikel). Keputusan ini
+sudah pasti dari kestabilan saja: hasil pemeriksaan ketepatan, apa pun nilainya, tidak bisa mengubahnya, karena
+kriteria "lanjut" juga mensyaratkan kestabilan >= 85% per unsur. Sesuai A2.6, pilihannya adalah "persempit Versi 2"
+(A10).
+
+**Catatan jujur tentang ukuran kestabilan.** Ukuran "sama setelah dinormalkan" keras untuk unsur teks bebas: dua
+frasa berbeda dengan makna sama dihitung tidak stabil. Kriterianya tidak diubah setelah hasil keluar. Untuk melihat
+apakah ketidakstabilan itu soal kata-kata atau soal isi, saya menghitung satu analisis tambahan (**EKSPLORATIF,
+dibuat setelah hasil di atas dilihat; tidak mengubah keputusan**): tumpang tindih kata antara run 1 dan run 2 pada
+pasangan yang tidak sama.
+
+| Unsur | Pasangan tidak sama (pesan / artikel) | Salah satu run kosong | Median tumpang tindih kata, sisanya |
+| --- | --- | --- | --- |
+| subjek | 9 / 12 | 1 / 1 | 0,75 / 0,75 |
+| tawaran | 19 / 25 | 4 / 1 | 0,67 / 0,63 |
+| tindakan | 27 / 22 | 1 / 1 | **0,33 / 0,33** |
+| periode | 5 / 19 | 0 / **8** | 0,67 / 0,50 |
+
+Pembacaan:
+
+- **Subjek dan tawaran:** sebagian besar perbedaannya soal kata-kata. Ukuran kestabilan semantik (diperiksa manusia)
+  kemungkinan akan menaikkan angkanya.
+- **Tindakan:** perbedaannya soal isi. LLM tidak konsisten memutuskan apa "tindakan" dalam sebuah klaim, padahal
+  tindakan adalah pembeda pada salah satu kesalahan sistem yang terbukti (P2-33).
+- **Periode di artikel:** pada 8 artikel, satu run mengisi periode dan run lain mengosongkannya. Aturan nominal
+  antar-gelombang (keputusan 9) bergantung pada periode, jadi ketidakstabilan ini langsung memengaruhi keputusan.
+- **Nominal dan saluran** stabil (89-98%). Bagian yang deterministik (pola teks) untuk nominal juga sudah bekerja
+  cukup baik pada daftar lama (lihat pemisahan penyebab di bawah).
+
+**Pelajaran untuk uji berikutnya:** untuk unsur teks bebas, kestabilan sebaiknya didefinisikan secara semantik (dua
+hasil dinilai manusia "bermakna sama"), dan definisi itu dikunci sebelum dijalankan. Ini dicatat sebagai pelajaran,
+bukan alasan mengulang uji ini dengan kriteria baru.
+
+**Ketepatan per unsur:** belum dihitung. Lembar `data/eksplorasi/lembar_pemeriksaan_ekstraksi.xlsx` sudah dibuat
+(92 baris, hasil run 1, kolom B/S per unsur). Karena keputusan sudah pasti, pengisiannya **tidak wajib** untuk keputusan
+ini. Gunanya bila diisi: mengetahui apakah hasil yang stabil juga tepat, dan menyelesaikan pemisahan penyebab di bawah
+dengan acuan yang sudah diperiksa. Bila diisi, cukup kolom subjek dan nominal (sekitar 1 jam), karena kedua unsur itu
+yang dipakai pemisahan penyebab.
+
+**Pemisahan penyebab "tidak dapat dibandingkan" pada daftar lama (A2.5), SEMENTARA** (acuan: hasil run 1 yang belum
+diperiksa; dihitung per sisi, 47 butir x 2 sisi):
+
+| Entitas daftar | Daftar tidak membaca | Memang tidak disebut | Daftar gagal membaca | Catatan |
+| --- | --- | --- | --- | --- |
+| Lembaga | 66 | 41 | **25** | acuan = subjek berjenis lembaga |
+| Program | 69 | 2 | 67 | **tidak bermakna**: acuan "tawaran" jauh lebih luas daripada daftar program spesifik, jadi hampir semua sisi punya "tawaran" |
+| Nominal | 64 | **60** | 4 | daftar nominal hampir selalu benar; yang tidak terbaca umumnya memang tidak menyebut nominal |
+
+Pembacaan sementara: untuk lembaga, sekitar sepertiga dari yang tidak terbaca adalah kegagalan daftar (nama yang
+tidak ada di daftar, singkatan, atau ejaan lain); dua pertiga memang tidak menyebut lembaga. Untuk nominal, hampir
+semuanya memang tidak disebut. Angka ini menjadi final bila kolom subjek dan nominal di lembar sudah diisi
+(`uji_kelayakan_entitas.py --pisah-penyebab <lembar terisi>`).
+
+**Akibatnya bagi rancangan.** A2.1-A2.4 dan baris "daftar entitas" di Kunci 1 (A3.1) hanya berlaku bila pemilik proyek
+memutuskan tetap memakai pemeriksaan entitas. Dengan keputusan BERHENTI, rancangan mengikuti "persempit Versi 2" (A10).
 
 ## A3. Urutan kerja yang menjaga kejujuran evaluasi (kunci dua tahap)
 
@@ -400,9 +523,14 @@ diambil):
 Catatan: ketentuan untuk situs pemerintah dicari lewat mesin pencari, bukan dengan membuka halaman utama tiap
 situs, jadi bisa ada tautan ketentuan di kaki halaman yang belum terbaca. Saya bukan penasihat hukum. Yang
 relevan secara umum: set ini hanya menyimpan potongan teks pendek (judul atau kalimat inti pengumuman) beserta
-alamat sumbernya, untuk penelitian nonkomersial, dan teks lengkap tidak diterbitkan. **KEPUTUSAN PEMILIK
-PROYEK:** sumber mana yang dipakai, dan apakah potongan teks pengumuman boleh di-commit atau hanya hash-nya
-(seperti kutipan Liputan6 pada evaluasi eksternal).
+alamat sumbernya, untuk penelitian nonkomersial, dan teks lengkap tidak diterbitkan. Bentuk penyimpanannya
+sudah diputuskan (keputusan 10, di bawah). **KEPUTUSAN PEMILIK PROYEK:** sumber mana yang dipakai, setelah membaca
+sendiri halaman hak cipta tiap situs.
+
+**Penyimpanan (keputusan 10):** yang di-commit hanya URL, tanggal terbit, hash teks (`sha256`, seperti
+`sha256_kutipan` evaluasi eksternal), dan metadata (kategori topik, label, kode butir). Potongan teks pengumuman
+disimpan lokal di `data/`, sama dengan kebijakan `articles.json`. Sumber yang dipakai diputuskan pemilik proyek setelah
+membaca sendiri halaman hak cipta tiap situs.
 
 **Aturan butir:**
 
@@ -523,9 +651,11 @@ yang dicatut, tawaran (jenis program atau keuntungan), dan saluran (tautan atau 
    Keputusan bergantung pada unsur inti lain.
 3. **Gelombang berbeda (tahun atau tanggal berbeda), lembaga dan tawaran sama -> klaim sama**, kecuali tahun atau
    periode disebut eksplisit di kedua sisi dan berbeda (Aturan A; keputusan 6).
-4. **Nominal berbeda pada tawaran yang sama -> BUKAN klaim sama** bila nominal disebut eksplisit di kedua sisi. Bila
-   hanya satu sisi menyebut nominal: tidak dapat dibandingkan. **Belum diputuskan** bagaimana aturan ini berlaku bila
-   gelombangnya juga berbeda (A10).
+4. **Nominal berbeda pada tawaran yang sama -> BUKAN klaim sama** bila nominal disebut eksplisit di kedua sisi **dan
+   tidak ada tanda gelombang berbeda**. Bila lembaga dan tawaran sama dan gelombangnya jelas berbeda (tanggal atau
+   periode disebut eksplisit di kedua sisi dan berbeda), **tetap klaim sama** walau nominalnya berbeda (keputusan 9;
+   kasus P2-21). Bila hanya satu sisi menyebut nominal: tidak dapat dibandingkan. *Aturan ini diubah setelah analisis
+   eksploratif A2.5 memperlihatkan P2-21.*
 5. **Tautan atau nomor berbeda, lembaga dan tawaran sama -> klaim sama.** Penipu sering berganti tautan. Tautan atau
    nomor yang sama persis dengan sumber hoaks di artikel adalah bukti pendukung yang kuat, tetapi bukan syarat.
 6. **Judul sama, isi tawaran berbeda -> BUKAN klaim sama.** Yang dibandingkan adalah isi pesan dengan Narasi, bukan
@@ -564,7 +694,8 @@ pesan Liputan6 tidak dikutip; yang ditulis hanya kode butir, artikel TurnBackHoa
 | 1. Tokoh berbeda -> bukan sama | tokoh tidak diperiksa | **Selisih yang disengaja** (A2.4) |
 | 2. Lembaga atau tokoh tidak disebut -> tidak dapat dibandingkan | "tidak dapat dibandingkan" tidak menurunkan | **Ya** |
 | 3. Gelombang berbeda -> sama | tanggal dan tahun bukan entitas; generator Versi 1 sering menolak lintas gelombang | **Selisih yang disengaja** (keputusan 6): penolakan lintas gelombang tetap terhitung kesalahan, dan Versi 2 tidak memperbaikinya |
-| 4. Nominal berbeda eksplisit -> bukan sama | nominal **bertentangan** -> "pola mirip" | **Ya**, tetapi interaksinya dengan aturan 3 belum diputuskan (P2-21; A10) |
+| 4. Nominal berbeda eksplisit, tanpa tanda gelombang berbeda -> bukan sama | nominal **bertentangan** dan periode tidak jelas berbeda -> "pola mirip" | **Ya** |
+| 4. Nominal berbeda, gelombang jelas berbeda -> tetap sama | pertentangan nominal diabaikan bila periode eksplisit di kedua sisi dan berbeda | **Ya**, bila periode terbaca di kedua sisi. Bila periode hanya terbaca di satu sisi, nominal tetap dihitung bertentangan -> "pola mirip" (lebih berhati-hati daripada pedoman) |
 | 4. Nominal hanya di satu sisi -> tidak dapat dibandingkan | "tidak dapat dibandingkan" tidak menurunkan | **Ya** |
 | 5. Tautan atau nomor berbeda -> tetap sama | domain dan nomor bukan entitas inti; tidak pernah menurunkan | **Ya** (setelah koreksi A) |
 | 5. Tautan atau nomor sama persis -> bukti kuat | ditampilkan sebagai bukti pendukung; tidak menaikkan (keputusan 1) | **Ya**: sistem lebih berhati-hati daripada pedoman, karena tidak pernah menaikkan |
@@ -590,9 +721,21 @@ pesan Liputan6 tidak dikutip; yang ditulis hanya kode butir, artikel TurnBackHoa
   butir yang tidak sepakat dibahas, lalu 20 butir baru dilabeli ulang oleh keduanya. Bila < 0,40, evaluasi ditunda.
   Dengan 40 butir per set, interval kappa masih lebar, jadi ambang dibaca dari estimasi titik dan intervalnya
   dilaporkan apa adanya.
-- **Catatan khusus set (a):** sebagian besar butir set (a) kemungkinan dilabeli "tidak sama" oleh keduanya. Bila
-  hampir semua butir jatuh di satu kategori, kappa bisa rendah walau kesepakatannya tinggi. Karena itu persentase
-  kesepakatan juga dilaporkan, dan keputusan memakai label pada set (a) melihat keduanya.
+- **Set (a): ukuran kesepakatan dan ambangnya (keputusan 11; ditetapkan 2026-10-26, sebelum ada data).** Sebagian
+  besar butir set (a) kemungkinan dilabeli "tidak sama" oleh keduanya. Bila hampir semua butir jatuh di satu kategori,
+  kappa bisa rendah walau kesepakatannya tinggi (paradoks prevalensi). Karena itu untuk set (a) dilaporkan kesepakatan
+  mentah, kappa Cohen, **Gwet AC1**, dan **PABAK**, masing-masing dengan interval bootstrap 10.000 ulangan.
+
+  | Hasil | Syarat (set a, 40 butir) |
+  | --- | --- |
+  | **Label dipakai** | kesepakatan mentah >= 90% **dan** Gwet AC1 >= 0,80 |
+  | **Pedoman direvisi**, butir yang tidak sepakat dibahas, 20 butir baru dilabeli ulang oleh keduanya | kesepakatan mentah 80-89% **atau** AC1 0,60-0,79 |
+  | **Ditunda** | kesepakatan mentah < 80% **atau** AC1 < 0,60 |
+
+  Kappa dan PABAK dilaporkan tanpa ambang sendiri untuk set (a). PABAK = 2 x kesepakatan mentah - 1, jadi syarat
+  kesepakatan 90% setara PABAK 0,80. Bila kappa < 0,60 tetapi syarat di atas terpenuhi, label tetap dipakai dengan
+  catatan paradoks prevalensi. Untuk set (b), yang proporsi positif dan negatifnya seimbang, ambang kappa 0,60
+  (keputusan 7) tetap berlaku, dan AC1 serta kesepakatan mentah dilaporkan sebagai pendamping.
 - **Label akhir:** tetap ditetapkan pemilik proyek. Butir yang tidak sepakat diadjudikasi pemilik proyek tanpa melihat
   keluaran sistem, dan hasilnya dicatat.
 
@@ -616,7 +759,7 @@ pengukuran.
 | Tahap | Panggilan |
 | --- | --- |
 | Penyusunan set dan pelabelan | 0 |
-| Uji kelayakan ekstraksi LLM (bila disetujui; A2.5 pilihan 1) | ~47 untuk pesan + sekitar 50 untuk unsur artikel yang terlibat |
+| Uji kelayakan ekstraksi LLM (A2.6, A2.7) | **184, sudah terpakai** (2 run x 92 sumber) |
 | Kode pemeriksaan entitas dan uji offline | 0 |
 | Kemunduran Versi 1 (set uji v1 pada `archive/v1`) | 0 bila memakai keluaran 3 run yang tersimpan; 162 bila dijalankan ulang |
 | Evaluasi set (a), 150 butir x 3 run | 450 (+450 bila ekstraksi LLM dipakai) |
@@ -625,6 +768,19 @@ pengukuran.
 
 Dengan RPD 500 dan demo dimatikan: sekitar 2 hari kuota tanpa ekstraksi LLM, sekitar 4 hari dengan ekstraksi LLM.
 Kasus terburuk per pemeriksaan adalah 8 permintaan, jadi sisakan cadangan.
+
+**Dampak ke demo bila ekstraksi LLM dipakai di sistem:**
+
+| | Tanpa ekstraksi (sekarang) | Dengan ekstraksi |
+| --- | --- | --- |
+| Panggilan per pemeriksaan, biasanya | 1 (generator) | 2 (generator + ekstraksi pesan) |
+| Panggilan per pemeriksaan, terburuk | 8 (format diulang sekali, tiap panggilan sampai 4 percobaan) | 12 (8 + 4 untuk ekstraksi) |
+| Pemeriksaan per hari, batas demo 400 (`DAILY_STOP_REQUESTS`) | sekitar 400 | sekitar 200, dikurangi ekstraksi artikel baru (sekitar 5 per hari) |
+| Pemeriksaan per hari, seluruh RPD 500 | sekitar 500 | sekitar 250 |
+| Ekstraksi artikel sekali jalan | -- | 1.611 panggilan untuk indeks sekarang (sekitar 3-4 hari kuota), lalu 1 per artikel baru saat ingest |
+
+Jadi ekstraksi LLM kira-kira **memotong separuh** kapasitas demo harian, dan menambah pekerjaan sekali jalan untuk
+seluruh artikel.
 
 ## A9. Prasyarat sebelum layanan publik (tidak dikerjakan di Versi 2)
 
@@ -638,17 +794,25 @@ Kasus terburuk per pemeriksaan adalah 8 permintaan, jadi sisakan cadangan.
 
 ## A10. Keputusan yang masih terbuka
 
-1. **Arah pemeriksaan entitas setelah uji kelayakan (A2.5):** ekstraksi LLM diuji dulu secara eksploratif
-   (usul saya), perbaiki daftar saja, atau persempit Versi 2 menjadi pengukuran dan tampilan.
-2. **Nominal antar-gelombang (A6 aturan 4 dengan aturan 3):** bila lembaga dan tawaran sama tetapi gelombang dan
-   nominalnya berbeda (seperti P2-21), apakah tetap klaim sama? Pilihan: (a) nominal tetap pembeda, sehingga kasus
-   seperti itu menjadi "bukan sama" dan sistem menurunkannya ke "pola mirip"; (b) nominal tidak menjadi pembeda
-   bila gelombangnya berbeda. Pertanyaan ini muncul dari data yang sudah dilihat, jadi dicatat sebagai aturan yang
-   diubah karena analisis eksploratif.
-3. **Sumber set (a) dan bentuk penyimpanannya** setelah membaca A4.a: sumber mana yang dipakai, dan apakah potongan
-   teks pengumuman boleh di-commit atau hanya hash-nya.
-4. **Pembagian anotator kedua 40 + 40 (A7):** disesuaikan dari usulan sebelumnya (60) karena kunci dua tahap
-   membutuhkan kappa terpisah untuk set (a) sebelum Kunci 1.
+1. **Mengonfirmasi "persempit Versi 2".** Menurut kriteria A2.6 yang dikunci, uji ekstraksi LLM berhenti (A2.7),
+   jadi Versi 2 mengikuti "persempit". Yang perlu dikonfirmasi pemilik proyek: menerima hasil ini, dan apakah lembar
+   pemeriksaan tetap diisi (tidak wajib; berguna untuk ketepatan dan pemisahan penyebab final).
+2. **Sumber set (a):** dipilih pemilik proyek setelah membaca sendiri halaman hak cipta tiap situs (A4.a). Bentuk
+   penyimpanannya sudah diputuskan (keputusan 10).
+3. **Bila "persempit Versi 2" yang diambil: apa pemicu jawaban "pola mirip"?** Tanpa pemeriksaan entitas, jawaban
+   "pola mirip" tidak punya pemicu, karena generator terkunci. Generator yang ada mengembalikan `klaim_sama`,
+   `artikel_terpilih`, `alasan`, dan `klarifikasi`; saat `klaim_sama=false`, artikel dikosongkan dan perbedaannya hanya
+   dijelaskan di `alasan` sebagai teks bebas. Tidak ada sinyal terstruktur untuk "pola mirip". Pilihan yang ada:
+
+   | Pilihan | Cara | Kelemahan |
+   | --- | --- | --- |
+   | (a) Tanpa "pola mirip" | Versi 2 tetap dua jenis jawaban; isinya pedoman, anotator kedua, set (a), tombol salin klarifikasi, dan perbaikan tampilan | Pengguna tidak mendapat peringatan khusus untuk pola yang mirip; kotak "Pastikan klaimnya sama" yang sudah ada tetap menjadi satu-satunya pengaman |
+   | (b) Saluran sama persis | "Belum ditemukan", tetapi domain atau nomor di pesan sama persis dengan `claim_sources` salah satu kandidat -> "pola mirip" | Membalik keputusan 1 (domain atau nomor tidak boleh menaikkan "belum ditemukan"); jarang terjadi (2 dari 47 pada A2.5) |
+   | (c) Membaca `alasan` generator | Pola kata di `alasan` (mis. "lembaga berbeda") dipakai sebagai pemicu | Teks bebas tanpa jaminan format; berubah antar-run; tidak bisa diaudit dengan baik. Tidak saya sarankan |
+   | (d) Generator Versi 2 dengan tiga jawaban | Modul generator baru dengan prompt dan skema baru, terpisah dari `generator.py` yang tetap terkunci | Mengubah ruang lingkup (perubahan prompt sengaja di luar Versi 2), butuh set uji dan evaluasi generator baru |
+   | (e) Ambang skor retrieval | Skor kandidat teratas di atas ambang -> "pola mirip" | Sudah terbukti tidak memisahkan klaim yang ada dari yang tidak ada (B.1, M3). Tidak saya sarankan |
+
+   Usul saya: **(a)** untuk Versi 2, dan (b) atau (d) dicatat sebagai calon Versi 3 bila datanya mendukung.
 
 ## A11. Setelah Versi 2: fitur lanjutan dan umpan balik pengguna (tidak masuk ruang lingkup, tidak dikunci)
 
@@ -720,20 +884,22 @@ ketidaksetujuan, bukan penyebabnya.
 
 | No | Pekerjaan | Siapa | Perkiraan jam | Bisa dicicil? |
 | --- | --- | --- | --- | --- |
-| 1 | Uji kelayakan pemeriksaan entitas (A2.5) | Claude Code | selesai | -- |
-| 2 | Memutuskan arah pemeriksaan entitas (A10 no. 1) | Pemilik proyek | 0,5-1 | Tidak |
-| 3 | Bila dipilih: uji kelayakan ekstraksi LLM pada 47 butir yang sama, dengan kriteria yang sama | Claude Code (+ persetujuan kuota) | 2-4 (Claude), ~100 panggilan | -- |
-| 4 | Menyetujui pedoman A6, termasuk A10 no. 2 (nominal antar-gelombang) | Pemilik proyek | 2-3 | Ya, per aturan |
-| 5 | Membaca ketentuan sumber set (a) dan memutuskan sumber serta bentuk penyimpanan (A10 no. 3) | Pemilik proyek | 1 | Ya |
-| 6 | Menyusun daftar lembaga dan program dari sumber resmi, atau prompt ekstraksi bila pilihan 1 lolos | Claude Code + tinjauan pemilik proyek | 3-5 + 1 | Ya |
-| 7 | Mengumpulkan dan melabeli set (a), 150 butir | Pemilik proyek | 15-25 | **Ya**, misalnya 10-20 butir per sesi |
-| 8 | Mencari anotator kedua; latihan 5 butir; melabeli 40 butir set (a) | Pemilik proyek dan anotator kedua | 3-4 (anotator) | Ya |
-| 9 | Menghitung kappa set (a) dan mengadjudikasi yang tidak sepakat | Claude Code + pemilik proyek | 1-2 | Tidak |
-| 10 | Menulis `testset/v2.meta.json` versi 1 (pedoman, set a, prosedur set b, daftar atau prompt, metrik, ambang) | Claude Code + tinjauan pemilik proyek | 2 + 1 | Tidak |
-| 11 | Kunci 1: commit, tag `testset-v2-kunci1`, push, GitHub Release, Internet Archive (A3.3) | Pemilik proyek | 0,5 | Tidak |
+| 1 | Uji kelayakan daftar (A2.5) | Claude Code | selesai | -- |
+| 2 | Rencana uji ekstraksi LLM dikunci (A2.6), lalu dua run dijalankan | Claude Code | selesai | -- |
+| 3 | Mengonfirmasi "persempit Versi 2" (A10 no. 1) dan memilih pemicu "pola mirip" (A10 no. 3) | Pemilik proyek | 0,5-1 | Tidak |
+| 4 | (Tidak wajib) Mengisi kolom subjek dan nominal di lembar pemeriksaan, tanpa AI; lalu ketepatan dan pemisahan penyebab final dihitung | Pemilik proyek + Claude Code | ~1 + 0,5 | Ya, per baris |
+| 5 | Bila pilihan (a): menyesuaikan rancangan ke dua jenis jawaban dan menghapus bagian entitas dari Kunci 1 | Claude Code + tinjauan pemilik proyek | 1-2 + 0,5 | Tidak |
+| 6 | Menyetujui pedoman A6 | Pemilik proyek | 2-3 | Ya, per aturan |
+| 7 | Membaca halaman hak cipta sumber set (a) dan memilih sumber (A10 no. 2) | Pemilik proyek | 1 | Ya |
+| 8 | Hanya bila pemeriksaan entitas tetap dipakai: menyusun daftar lembaga dan program dari sumber resmi | Claude Code + tinjauan pemilik proyek | 3-5 + 1 | Ya |
+| 9 | Mengumpulkan dan melabeli set (a), 150 butir | Pemilik proyek | 15-25 | **Ya**, misalnya 10-20 butir per sesi |
+| 10 | Mencari anotator kedua; latihan 5 butir; melabeli 40 butir set (a) | Pemilik proyek dan anotator kedua | 3-4 (anotator) | Ya |
+| 11 | Menghitung kesepakatan set (a) (mentah, kappa, AC1, PABAK) dan mengadjudikasi yang tidak sepakat | Claude Code + pemilik proyek | 1-2 | Tidak |
+| 12 | Menulis `testset/v2.meta.json` versi 1 (pedoman, set a, prosedur set b, daftar atau prompt, metrik, ambang) | Claude Code + tinjauan pemilik proyek | 2 + 1 | Tidak |
+| 13 | Kunci 1: commit, tag `testset-v2-kunci1`, push, GitHub Release, Internet Archive (A3.3) | Pemilik proyek | 0,5 | Tidak |
 
-Setelah Kunci 1: kode pemeriksaan entitas ditulis dan diuji offline pada indeks 1.532 artikel (A3.2), lalu menunggu
-Januari 2027 untuk set (b) dan Kunci 2.
+Setelah Kunci 1: kode ditulis dan diuji offline pada indeks 1.532 artikel (A3.2), lalu menunggu Januari 2027 untuk
+set (b) dan Kunci 2.
 
 ---
 
