@@ -3,7 +3,7 @@
 
 # Rancangan Versi 2
 
-**Status (2026-10-26, revisi 3): rancangan untuk ditinjau pemilik proyek; belum ada yang dikunci. Versi 2 mengukur
+**Status (2026-10-26, revisi 4): rancangan untuk ditinjau pemilik proyek; belum ada yang dikunci. Versi 2 mengukur
 sistem Versi 1 tanpa mengubah keputusannya: pedoman yang dipertegas, anotator kedua, set uji (a) dan (b), dan tombol
 salin klarifikasi. Pemeriksaan entitas dan "pola mirip" tidak masuk (A2.7, keputusan 13-14).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
 pengukurannya; isinya dipertahankan, dan setiap bagiannya diberi tanda **[MASIH BERLAKU]**, **[SEBAGIAN
@@ -18,10 +18,11 @@ gugur, terutama pada penipuan yang polanya sama tetapi lembaga atau programnya b
 
 ---
 
-# Bagian A. Rancangan Versi 2 (2026-10-26, revisi 3)
+# Bagian A. Rancangan Versi 2 (2026-10-26, revisi 4)
 
 **Versi 2 mengukur sistem Versi 1; ia tidak mengubah keputusan sistem.** Retrieval, generator (termasuk prompt), dan
-cara sistem memutuskan "ditemukan" atau "belum ditemukan" tetap persis seperti Versi 1. Yang dibangun Versi 2 adalah
+cara sistem memutuskan "ditemukan" atau "belum ditemukan" tetap persis seperti Versi 1 di sisi kode. Model Gemini dan
+pustaka di luar kode bisa berubah, jadi perilaku sistem diawasi dengan uji pergeseran (A4.f). Yang dibangun Versi 2 adalah
 ukuran yang lebih bisa dipercaya (pedoman yang dipertegas, anotator kedua, set uji baru) dan satu alat bantu tampilan
 (tombol salin klarifikasi). Angka Versi 2 karena itu adalah angka **sistem Versi 1 yang diukur ulang**, bukan bukti
 bahwa perilaku sistem membaik. Perbaikan perilaku sistem dicatat sebagai arah versi berikutnya (A13).
@@ -29,7 +30,7 @@ bahwa perilaku sistem membaik. Perbaikan perilaku sistem dicatat sebagai arah ve
 **Riwayat revisi Bagian A.** Versi pertama `b1691c0`; revisi 1 `1ebbba4` (keputusan pertama, koreksi A-E, tambahan
 F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-26): ruang lingkup dipersempit
 (keputusan 13-15), tinjauan kunci dua tahap, alat bantu tampilan nominal dan saluran (A11.3), arah perbaikan sistem
-(A13).
+(A13); revisi 4 (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19.
 
 **Keputusan pemilik proyek:**
 
@@ -39,7 +40,7 @@ F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-
 | 2 | Bukti waktu luar | GitHub Release pada tag dan Internet Archive (A3.4) | berlaku |
 | 3 | Set (a) | 150 butir, target salah menuduh di bawah 5% | berlaku |
 | 4 | Periode set (b) | 28 September-31 Desember 2026 | berlaku |
-| 5 | Ambang A4.e | Disetujui | berlaku untuk tiga ambang yang tersisa; tiga ambang lain gugur bersama pemeriksaan entitas (A4.e) |
+| 5 | Ambang A4.e | Disetujui | berlaku untuk tiga ambang metrik; dua ambang gugur bersama pemeriksaan entitas; ambang kemunduran diganti uji pergeseran (A4.e, A4.f) |
 | 6 | Aturan 3 (gelombang) | Gelombang berbeda tetap klaim sama; sistem tidak diperbaiki untuk ini | berlaku |
 | 7 | Ambang kappa | 0,60; anotator kedua dicari pemilik proyek | berlaku |
 | 8 | Arah entitas | Uji ekstraksi LLM secara eksploratif | selesai: berhenti (A2.7) |
@@ -50,6 +51,10 @@ F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-
 | 13 | Hasil uji ekstraksi | BERHENTI diterima; Versi 2 dipersempit | berlaku |
 | 14 | "Pola mirip" | Tidak ada (pilihan a); Versi 2 tidak mengubah keputusan sistem | berlaku |
 | 15 | Lembar pemeriksaan ekstraksi | Tidak diisi sekarang; pemisahan penyebab tetap sementara (A2.5, A2.7) | berlaku |
+| 16 | Kunci dua tahap | Dikonfirmasi, dengan alasan definisi dikunci sebelum data (A3.1) | berlaku |
+| 17 | Evaluasi set (a) | Dijalankan segera setelah Kunci 1, didahului uji pergeseran | berlaku |
+| 18 | Pemeriksaan ketepatan alat bantu tampilan (A11.3) | Ditunda sampai pedoman disetujui dan set (a) selesai dilabeli | berlaku |
+| 19 | Uji kemunduran Versi 1 | **Tidak dihapus**; diganti nama menjadi **uji pergeseran**, karena model Gemini dan pustaka bisa berubah walau kode tidak (A4.f) | berlaku |
 
 **Pembacaan hasil uji kelayakan A2.5 (dari pemilik proyek), beserta tanggapan saya.** Dari 10 kecocokan palsu, 7
 menurut adjudikasi adalah kesalahan label. Jadi kesalahan sistem yang terbukti pada kecocokan palsu hanya 3, dan
@@ -88,6 +93,7 @@ bahwa sumber ketidakpastian terbesar adalah definisi "klaim sama" dan konsistens
 | Anotator kedua | 40 butir set (a) + 40 butir set (b), buta terhadap label pemilik proyek dan keluaran sistem | A7 |
 | Set (a) | 150 pengumuman resmi yang benar, untuk tingkat salah menuduh | A4.a |
 | Set (b) | sampel Liputan6 periode baru, untuk mengukur ulang ketepatan temuan dan kecocokan palsu dengan pedoman yang dipertegas dan diperiksa anotator kedua | A4.b |
+| Uji pergeseran | set uji v1 pada `archive/v1` dijalankan ulang sebelum setiap evaluasi, untuk memastikan model dan pustaka tidak berubah diam-diam | A4.f |
 | Tombol salin klarifikasi | menyalin label, Kesimpulan TurnBackHoax apa adanya, dan tautan artikel pada jawaban "ditemukan"; tidak ada tombol untuk "belum ditemukan" | -- |
 
 Tombol salin klarifikasi adalah perubahan tampilan saja: ia muncul setelah keputusan dibuat, tidak memengaruhi
@@ -459,7 +465,7 @@ sebelum data set (b) ada. Kode itu kini tidak ada. Pertanyaannya: apakah satu ku
    menutup celah itu.
 3. **Biayanya kecil:** satu commit, satu tag, satu Release, dan tiga snapshot Internet Archive.
 
-**Argumen untuk satu kunci, dan mengapa tidak saya pilih:** sistem Versi 1 tidak bisa berubah, jadi tidak ada risiko
+**Argumen untuk satu kunci, dan mengapa tidak saya pilih:** kode sistem Versi 1 tidak bisa berubah, jadi tidak ada risiko
 kode disetel pada data, dan satu kunci lebih sederhana. Tetapi risiko yang tersisa justru ada di sisi label, bukan
 kode, dan satu kunci di Januari tidak melindungi pedoman selama pelabelan set (b).
 
@@ -470,14 +476,14 @@ kode, dan satu kunci di Januari tidak melindungi pedoman selama pelabelan set (b
 | Pedoman | Pedoman A6 final | -- |
 | Set (a) | 150 butir yang sudah dilabeli dan lolos ambang kesepakatan (A7) | -- |
 | Set (b) | **Prosedur saja:** periode, benih `20261026`, aturan pemilihan dan penghentian, pengecualian 100 `l6_id` lama | Butir yang sudah dilabeli dan lolos kappa |
-| Metrik dan ambang | Semua (A4.d, A4.e) | -- |
+| Metrik dan ambang | Semua (A4.d, A4.e), termasuk ambang uji pergeseran (A4.f) | -- |
 | Indeks | -- | Indeks beku dan sidik jarinya (A4.c) |
 | Bukti | `testset/v2.meta.json` versi 1, tag `testset-v2-kunci1`, GitHub Release, Internet Archive | `testset/v2.meta.json` versi 2, tag `testset-v2-kunci2`, GitHub Release, Internet Archive |
 
-**Kapan evaluasi set (a) boleh dijalankan?** Setelah Kunci 1, karena sistemnya terkunci dan tidak ada yang bisa
-disetel. Satu-satunya risiko adalah pemilik proyek melihat perilaku sistem pada pesan yang benar sebelum melabeli set
-(b). Risiko itu kecil (set (b) berisi klaim hoaks, bukan pengumuman resmi), tetapi tetap ada. **KEPUTUSAN PEMILIK
-PROYEK** (A10): jalankan evaluasi set (a) segera setelah Kunci 1, atau tunggu sampai Kunci 2.
+**Kapan evaluasi dijalankan (keputusan 17):** evaluasi set (a) segera setelah Kunci 1, dan evaluasi set (b) setelah
+Kunci 2. **Masing-masing didahului uji pergeseran (A4.f) pada hari yang sama.** Risiko yang tersisa, yaitu pemilik
+proyek melihat perilaku sistem pada pesan yang benar sebelum melabeli set (b), dicatat dan diterima; risikonya kecil
+karena set (b) berisi klaim hoaks, bukan pengumuman resmi.
 
 ### A3.3 Pengaman yang tersisa
 
@@ -504,8 +510,10 @@ diperlukan lagi, karena tidak ada kode keputusan yang ditulis.
 ### A3.5 Berkas terkunci Versi 1 tetap utuh
 
 `src/generator.py` (termasuk prompt), `src/retriever.py`, dan `src/chunker.py` tidak disentuh, dan hash-nya tetap dijaga
-`tests/core/test_testset_locks.py`. Versi 2 tidak menambah modul keputusan. Satu-satunya perubahan kode adalah tombol
-salin klarifikasi di lapisan tampilan (`src/webapp/`), yang tidak mengubah keputusan maupun berkas hasil evaluasi.
+`tests/core/test_testset_locks.py`. Versi 2 tidak menambah modul keputusan. Perubahan kode hanya dua: tombol salin klarifikasi di lapisan tampilan
+(`src/webapp/`), yang tidak mengubah keputusan, dan **pencatatan versi** di skrip evaluasi (A4.f), yang hanya menambah
+kolom di berkas hasil. **Catatan:** kode yang terkunci tidak berarti perilaku sistem tidak berubah; model di balik nama
+yang sama dan pustaka bisa berubah. Itu sebabnya ada uji pergeseran.
 Hasil Versi 1 tetap bisa direproduksi lewat tag `testset-v1` dan `annotation-guide-v1.0`, indeks `archive/v1`, dan
 cadangan indeks evaluasi 1.532 artikel (`data/backups/pre_antrean_2026-10-25`).
 
@@ -606,7 +614,7 @@ konklusif.
   `indeks_beku` evaluasi eksternal) dicatat di `testset/v2.meta.json` sebelum Kunci 2 di-push.
 - Indeks demo tetap bertambah setiap hari dan tidak dipakai untuk evaluasi Versi 2. Salinan beku dibuka hanya lewat
   salinan kedua (ChromaDB menulis ulang berkas saat dibuka).
-- Uji kemunduran Versi 1 tetap memakai `archive/v1` dengan set uji v1 (aturan wajib #6).
+- Uji pergeseran (A4.f) tetap memakai `archive/v1` dengan set uji v1 (aturan wajib #6).
 
 ### A4.d Cara menghitung
 
@@ -635,6 +643,10 @@ Keputusan per butir = keputusan modus dari 3 run, seperti evaluasi sebelumnya.
 Di antara "lolos" dan "gugur" berarti **tidak konklusif**. Bila jumlah butir set (b) bukan 50, ambang dihitung dengan
 aturan Wilson yang sama pada n yang sebenarnya.
 
+**Koreksi revisi 4:** revisi 3 juga menghapus ambang kemunduran Versi 1 dengan alasan "sistem tidak berubah". Alasan itu
+hanya benar untuk kode kita; model Gemini dan pustaka bisa berubah. Ambang itu dipertahankan sebagai **uji pergeseran**
+(A4.f, keputusan 19).
+
 **Ambang yang gugur bersama pemeriksaan entitas** (disetujui di revisi 1, tidak berlaku lagi karena Versi 2 tidak
 mengubah keputusan sistem):
 
@@ -642,10 +654,82 @@ mengubah keputusan sistem):
 | --- | --- |
 | "Terlalu berhati-hati" (Versi 2 menurunkan jawaban benar Versi 1) | Tidak ada "pola mirip" dan tidak ada penurunan jawaban |
 | Perbandingan Versi 1 dan Versi 2 (McNemar) | Keputusan Versi 1 dan Versi 2 identik; tidak ada yang dibandingkan |
-| Kemunduran Versi 1 pada set uji v1 di `archive/v1` | Sistem tidak berubah, jadi tidak ada yang bisa mundur. Tombol salin klarifikasi tidak menyentuh keputusan |
 
 **Perbandingan dengan evaluasi eksternal lama** (36/46 dan 10/45) hanya deskriptif. Set, periode, pedoman, dan
 anotatornya berbeda, jadi selisihnya tidak boleh dibaca sebagai perubahan sistem.
+
+### A4.f Uji pergeseran (keputusan 19; ambang dikunci di Kunci 1)
+
+**Mengapa perlu.** Kode keputusan Versi 1 terkunci, tetapi tiga hal di luar kode bisa berubah tanpa diketahui:
+
+1. **Model Gemini.** Proyek memakai `gemini-3.5-flash-lite`. Menurut halaman model resmi
+   (https://ai.google.dev/gemini-api/docs/models, diperiksa 2026-10-26), nama itu tercantum sebagai model **Stable**,
+   dengan definisi "Points to a specific stable model. Stable models usually don't change." Kata kuncinya *usually*:
+   tidak ada jaminan. **Tidak ada versi bertanggal atau bernomor** untuk model ini (seperti `-001`) yang bisa dipatok.
+   Konfigurasi tidak diubah.
+2. **Informasi versi dari API.** Respons Interactions API di `google-genai` 2.24.0 punya medan `model`, `id`, `created`,
+   `updated`, `usage`, dan `service_tier`, tetapi **tidak punya medan versi model khusus** (berbeda dengan
+   `generateContent`, yang punya `modelVersion`). Apakah medan `model` di respons berisi nama yang sudah diselesaikan
+   server belum diperiksa, karena itu butuh panggilan API. Berkas hasil evaluasi lama hanya menyimpan nama model yang
+   diminta.
+3. **Pustaka** seperti ChromaDB, sentence-transformers, transformers, dan torch. Versinya dipatok di `requirements.txt`,
+   tetapi lingkungan bisa berbeda bila venv dibangun ulang.
+
+**Cara kerja.**
+
+1. Set uji v1 (54 butir) dijalankan ulang 3 run pada `archive/v1` (`ef_search` 100), sesuai aturan wajib #6, **pada hari
+   yang sama sebelum evaluasi set (a)**, dan sekali lagi **sebelum evaluasi set (b)**.
+2. Keputusan modus per butir (vonis dan `article_id`) dibandingkan dengan keputusan modus dari 3 run yang tersimpan di
+   `data/testset_v1_eval_gemini-3.5-flash-lite.jsonl`.
+3. Top-3 retrieval per butir dibandingkan dengan yang tersimpan. Bagian ini deterministik dan tidak memanggil LLM.
+
+**Membedakan pergeseran dari keacakan biasa.** Pembandingnya adalah variasi antar-run yang sudah tercatat pada evaluasi
+lama yang sama:
+
+- Dari 54 butir, **48 bulat** di ketiga run dan **6 tidak bulat** (2-1: v1-006, v1-010, v1-036, v1-039, v1-040, v1-053).
+- Top-3 retrieval identik di ketiga run untuk **54 dari 54** butir.
+- Model keacakan (berhati-hati): pada butir bulat, peluang satu run menyimpang dianggap sebesar batas atas Wilson 95% dari
+  0 penyimpangan dalam 144 keputusan, yaitu **2,6%**; pada butir tidak bulat, **1/3**. Modus baru berbeda bila sedikitnya
+  2 dari 3 run baru jatuh ke keputusan lain. Hasilnya: peluang modus berubah 0,2% per butir bulat dan 25,9% per butir
+  tidak bulat.
+
+| Jumlah butir yang modusnya berubah, karena keacakan saja | Peluang | Kumulatif |
+| --- | --- | --- |
+| 0 | 15,0% | 15,0% |
+| 1 | 33,0% | 48,0% |
+| 2 | 30,7% | 78,7% |
+| 3 | 15,7% | 94,3% |
+| 4 | 4,7% | 99,1% |
+| 5 | 0,9% | 99,9% |
+
+Peluang sedikitnya 1 butir **bulat** berubah karena keacakan: 9,1%; sedikitnya 2: 0,4%. Rata-rata total yang berubah:
+1,65 butir.
+
+Batas model ini: ia menganggap run dan butir saling bebas, padahal 44% butir set uji v1 berbagi artikel jangkar; jadi
+angkanya perkiraan, bukan peluang yang tepat.
+
+**Ambang (usulan, dikunci di Kunci 1):**
+
+| Hasil | Syarat |
+| --- | --- |
+| **Sebanding** | top-3 retrieval identik 54/54, **dan** modus berubah pada paling banyak 1 butir yang dulu bulat, **dan** total modus berubah paling banyak 4 butir |
+| **Pergeseran retrieval** | ada top-3 yang berbeda. Penyebabnya pasti di luar LLM (pustaka, indeks, atau lingkungan); evaluasi ditunda sampai penyebabnya ditemukan |
+| **Pergeseran model** | top-3 identik, tetapi modus berubah pada >= 2 butir yang dulu bulat, **atau** total >= 5 butir |
+
+**Akibat bila terjadi pergeseran model:** evaluasi tetap boleh dijalankan, tetapi hasilnya dilaporkan **tidak sebanding**
+dengan angka evaluasi lama, dan, bila pergeseran terdeteksi di antara evaluasi set (a) dan set (b), hasil kedua set
+juga dilaporkan tidak sebanding satu sama lain. Pergeseran dilaporkan apa adanya, termasuk butir yang berubah.
+
+**Yang dicatat pada setiap evaluasi (set a, set b, dan uji pergeseran):**
+
+- nama model yang diminta, `thinking_level`, dan seluruh medan respons yang tersedia (`model`, `id`, `created`, `updated`,
+  `service_tier`, `usage`) per panggilan;
+- versi Python dan versi pustaka yang terpasang (`google-genai`, `chromadb`, `sentence-transformers`, `transformers`,
+  `torch`), revisi bge-m3 (`ingest.MODEL_REVISION`), dan sidik jari indeks yang dipakai;
+- tanggal dan jam (UTC) setiap run.
+
+Skrip evaluasi sekarang belum mencatat medan respons dan versi pustaka. Menambahkannya adalah perubahan kecil di skrip
+evaluasi, bukan di kode keputusan, dan harus selesai sebelum Kunci 1 (A12).
 
 ## A5. Ukuran kegunaan nyata: jeda sampai hoaks bisa ditemukan
 
@@ -778,13 +862,16 @@ pengukuran.
 | --- | --- |
 | Penyusunan pedoman, set, dan pelabelan | 0 |
 | Uji kelayakan ekstraksi LLM (A2.6, A2.7) | 184, sudah terpakai |
+| Uji pergeseran sebelum evaluasi set (a): 54 butir x 3 run | 162 |
 | Evaluasi set (a), 150 butir x 3 run | 450 |
+| Uji pergeseran sebelum evaluasi set (b): 54 butir x 3 run | 162 |
 | Evaluasi set (b), ~100 butir x 3 run | ~300 |
 | Tombol salin klarifikasi | 0 |
-| **Jumlah yang masih akan dipakai** | **~750** |
+| **Jumlah yang masih akan dipakai** | **~1.074** |
 
-Dengan RPD 500 dan demo dimatikan, evaluasi butuh 2 hari kuota (bisa dipisah: set (a) setelah Kunci 1, set (b)
-setelah Kunci 2). Kasus terburuk per pemeriksaan adalah 8 permintaan, jadi sisakan cadangan. Kapasitas demo tidak
+Uji pergeseran dan evaluasi set (a) bersama butuh 612 panggilan, lebih dari RPD 500, jadi dikerjakan dalam 2 hari kuota
+berturut-turut. Uji pergeseran cukup dijalankan sekali, pada hari evaluasi dimulai. Untuk set (b), uji pergeseran dan
+evaluasi bersama sekitar 462 panggilan, jadi cukup satu hari kuota bila demo dimatikan. Kasus terburuk per pemeriksaan adalah 8 permintaan, jadi sisakan cadangan. Kapasitas demo tidak
 berubah, karena Versi 2 tidak menambah panggilan per pemeriksaan.
 
 ## A9. Prasyarat sebelum layanan publik (tidak dikerjakan di Versi 2)
@@ -800,10 +887,7 @@ berubah, karena Versi 2 tidak menambah panggilan per pemeriksaan.
 ## A10. Keputusan yang masih terbuka
 
 1. **Sumber set (a):** dipilih pemilik proyek setelah membaca sendiri halaman hak cipta tiap situs (A4.a).
-2. **Kunci dua tahap atau satu kunci (A3.1):** saran saya tetap dua tahap, dengan alasan baru (pedoman dikunci sebelum
-   set (b) dilabeli). Perlu dikonfirmasi.
-3. **Waktu evaluasi set (a) (A3.2):** segera setelah Kunci 1, atau menunggu Kunci 2.
-4. **Alat bantu tampilan nominal dan saluran (A11.3):** apakah pemeriksaan ketepatannya dikerjakan, dan kapan.
+2. **Ambang uji pergeseran (A4.f):** usulan saya, disetujui atau diubah sebelum Kunci 1.
 
 ## A11. Setelah Versi 2: fitur lanjutan dan umpan balik pengguna (tidak masuk ruang lingkup, tidak dikunci)
 
@@ -921,7 +1005,8 @@ deterministik membacanya dengan benar. Untuk ekstraksi deterministik, buktinya b
 - **Biaya:** 0 panggilan LLM; sekitar 2-3 jam pemeriksaan manual.
 
 **Tempatnya:** fitur setelah Versi 2 (A11), tetapi boleh dikerjakan bersamaan dengan Versi 2 karena tidak menyentuh
-keputusan maupun evaluasi. **KEPUTUSAN PEMILIK PROYEK** (A10): apakah pemeriksaan ketepatannya dikerjakan, dan kapan.
+keputusan maupun evaluasi. **Keputusan 18:** pemeriksaan ketepatannya ditunda sampai pedoman disetujui dan set (a)
+selesai dilabeli.
 
 ## A12. Urutan kerja sampai Kunci 1
 
@@ -929,19 +1014,23 @@ keputusan maupun evaluasi. **KEPUTUSAN PEMILIK PROYEK** (A10): apakah pemeriksaa
 | --- | --- | --- | --- | --- |
 | 1 | **Menyetujui pedoman A6** lewat lembar persetujuan (per aturan: setuju / ubah / catatan, dengan contoh butirnya) | Pemilik proyek | 2-3 | **Ya**, per aturan |
 | 2 | Merevisi pedoman sesuai lembar, lalu pemilik proyek memeriksa teks akhirnya | Claude Code + pemilik proyek | 1 + 0,5 | Tidak |
-| 3 | Mengonfirmasi kunci dua tahap dan waktu evaluasi set (a) (A10 no. 2 dan 3) | Pemilik proyek | 0,5 | Tidak |
+| 3 | Menyetujui ambang uji pergeseran (A4.f) | Pemilik proyek | 0,5 | Tidak |
 | 4 | Membaca halaman hak cipta sumber set (a) dan memilih sumber (A10 no. 1) | Pemilik proyek | 1 | Ya |
 | 5 | Mengumpulkan dan melabeli set (a), 150 butir | Pemilik proyek | 15-25 | **Ya**, misalnya 10-20 butir per sesi |
 | 6 | Mencari anotator kedua; latihan 5 butir; melabeli 40 butir set (a) | Pemilik proyek dan anotator kedua | 3-4 (anotator) | Ya |
 | 7 | Menghitung kesepakatan set (a) (mentah, kappa, AC1, PABAK) dan mengadjudikasi yang tidak sepakat | Claude Code + pemilik proyek | 1-2 | Tidak |
-| 8 | Menulis `testset/v2.meta.json` versi 1 (pedoman, set a, prosedur set b, metrik, ambang) | Claude Code + tinjauan pemilik proyek | 2 + 1 | Tidak |
+| 8a | Menambah pencatatan versi (medan respons API, versi pustaka, revisi model embedding, sidik jari indeks) ke skrip evaluasi; uji offline | Claude Code + tinjauan pemilik proyek | 1-2 + 0,5 | Tidak |
+| 8 | Menulis `testset/v2.meta.json` versi 1 (pedoman, set a, prosedur set b, metrik, ambang, ambang uji pergeseran) | Claude Code + tinjauan pemilik proyek | 2 + 1 | Tidak |
 | 9 | Kunci 1: commit, tag `testset-v2-kunci1`, push, GitHub Release, Internet Archive (A3.4) | Pemilik proyek | 0,5 | Tidak |
 
 **Boleh dikerjakan kapan saja, karena tidak menyentuh keputusan maupun evaluasi:** tombol salin klarifikasi (1-2 jam
-Claude Code + tinjauan), dan bila disetujui, pemeriksaan ketepatan alat bantu tampilan A11.3.
+Claude Code + tinjauan).
 
-**Setelah Kunci 1:** evaluasi set (a) (450 panggilan) bila pemilik proyek memilih tidak menunggu; lalu Januari 2027 untuk
-set (b) dan Kunci 2.
+**Ditunda (keputusan 18):** pemeriksaan ketepatan alat bantu tampilan A11.3, sampai pedoman disetujui dan set (a) selesai
+dilabeli.
+
+**Setelah Kunci 1 (keputusan 17):** uji pergeseran (162 panggilan), lalu evaluasi set (a) (450 panggilan) pada hari yang
+sama dan hari berikutnya. Januari 2027: set (b) dilabeli, Kunci 2, uji pergeseran, lalu evaluasi set (b).
 
 ## A13. Arah perbaikan perilaku sistem untuk versi berikutnya (belum dikunci)
 
