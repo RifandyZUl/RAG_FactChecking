@@ -45,6 +45,9 @@ data/backups/
 # Keadaan container Docker (salinan indeks, buku besar kuota container, log, hasil alat)
 data/container/
 
+# Keluaran analisis eksploratif (scripts/eksplorasi/; berasal dari data lokal)
+data/eksplorasi/
+
 # Penanda pembaruan berkala (ditulis/dihapus otomatis oleh scraping.scheduled)
 PERHATIAN_PEMBARUAN.txt
 
