@@ -10,6 +10,18 @@ mengerjakan tugas apa pun di repositori ini.
 **Diperbarui setiap kali satu tahap selesai. Baca bagian ini LEBIH DULU saat memulihkan
 sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
+*(2026-10-27, pedoman Versi 2; branch `pedoman-a6-v2`, BELUM digabung)*
+
+> **Lembar persetujuan pedoman A6 diisi pemilik proyek 2026-10-27** (dengan bantuan AI, pernyataan lengkap di
+> `docs/rancangan/rancangan_v2.md` A6.3; templat ikut tertimpa, hash kedua berkas di A6.3). Rancangan revisi 6:
+> keputusan 23-31 (keputusan 9 DIGANTIKAN 23: nominal eksplisit berbeda -> bukan klaim sama, juga lintas gelombang;
+> akibatnya P2-21 bukan klaim sama, perubahan yang merugikan sistem; angka evaluasi eksternal TIDAK berubah).
+> **Pedoman 2.0 = `testset/ANNOTATION_GUIDE_v2.md`, DRAF: belum boleh dipakai melabeli.** 13 temuan konsistensi
+> (A6.4, K1-K13; K1 berat: pesan resmi set (a) bisa dinilai klaim sama dengan artikel penipuan lewat aturan 5)
+> menunggu keputusan pemilik proyek; jangan diperbaiki tanpa diminta. Penguncian (A6.5, usulan): `GUIDE_LOCK_v2.json`
+> + uji kunci, tag `annotation-guide-v2.0` + Release + Internet Archive oleh pemilik proyek, SEBELUM pelabelan apa
+> pun (pedoman tidak lagi dikunci di Kunci 1). Jangan membuat tag atau push.
+
 *(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
 
 *(2026-10-25, README akhir; branch `readme-akhir`, DIGABUNG ke main 2026-10-25 atas persetujuan pemilik proyek, merge commit `--no-ff` dengan email benar)*

@@ -8,7 +8,7 @@
 **Aturan:**
 - Tidak ada berkas di sini yang dipindah atau diubah tanpa catatan. Berkas yang dirujuk `v1.meta.json`
   sebagai bukti tetap di jalur aslinya (keputusan pemilik proyek 2026-10-24).
-- Salinan kerja berkas di folder ini **CRLF** (kecuali `ANNOTATION_GUIDE.md`, LF), lewat `.gitattributes`.
+- Salinan kerja berkas di folder ini **CRLF** (kecuali `ANNOTATION_GUIDE.md` dan `ANNOTATION_GUIDE_v2.md`, LF), lewat `.gitattributes`.
   Alasannya, dua hash bukti dicatat dari byte salinan kerja CRLF:
 
   | Berkas | sha256 byte CRLF (tercatat) | sha256 isi git LF (pembanding) |
@@ -23,6 +23,7 @@
 | --- | --- | --- | --- |
 | `ANNOTATION_GUIDE.md` | data beku (pedoman anotasi v1.0) | ditulis manusia; dibaca `evaluation.devset`, `labeling.*` (teks pedoman di berkas tinjauan), uji kunci | dikunci `2500013` 2026-09-21, tag `annotation-guide-v1.0` |
 | `GUIDE_LOCK.json` | bukti pembekuan (hash pedoman) | ditulis saat penguncian; dibaca `tests/core/test_testset_locks.py` | `2500013` 2026-09-21 |
+| `ANNOTATION_GUIDE_v2.md` | pedoman anotasi 2.0 untuk set Versi 2 (**DRAF, belum dikunci**; belum boleh dipakai untuk melabeli) | disusun Claude Code dari keputusan pemilik proyek (`docs/rancangan/rancangan_v2.md` A6) | belum dikunci; rencana tag `annotation-guide-v2.0` (rancangan A6.5) |
 | `v1.meta.json` | bukti pra-registrasi + catatan bertanggal (entri baru ditambahkan, pra-registrasi tidak diubah) | manual; dibaca `evaluation.{testset_eval, testset_analysis, index_check, index_comparison, external_eval}`, `labeling.*`, uji kunci | pra-registrasi `2500013` 2026-09-21; entri terakhir `ddcbf5c` 2026-10-21 |
 | `v1.jsonl` | data beku (54 butir set uji v1) | disusun manual dari kandidat (`labeling.candidates.*`); dibaca evaluasi dan uji kunci | tag `testset-v1` (`028bea7`) 2026-09-23 |
 | `targets_v1.json` | data beku (20 artikel target positif) | `labeling.candidates.targets` | `922d4e6` 2026-09-22 |
