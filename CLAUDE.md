@@ -30,6 +30,11 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > `data/candidates/pedoman_v2/daftar_acuan_saluran_resmi_draf.xlsx` (hash di A6.12), diverifikasi pemilik proyek.
 > Lembar uji coba `data/candidates/uji_coba_pedoman_v2/` diisi pemilik proyek SENDIRI tanpa AI; jangan membuka
 > `kunci_uji_coba.json`.
+> **Revisi 10 (2026-10-27):** keputusan 59-60. Butir set (a) (asal-usul terverifikasi dari situs resmi di daftar
+> acuan) TIDAK PERNAH dibantah; label set (a) = "bukan klaim sama" menurut susunannya; pedoman 2.0 dipakai untuk set (b)
+> (pedoman bagian 3.1). Menunggu keputusan: usulan protokol anotator kedua A7.1 (pengaman 1: 40 butir acak sebelum
+> Kunci 1; pengaman 2: semua butir "ditemukan" + acak 2k setelah evaluasi; set b 60 butir) dan temuan berat A6.14
+> H2 (indeks set a belum ditetapkan) dan H3 (cara mencari artikel pembanding S2 belum ditetapkan).
 
 *(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
 

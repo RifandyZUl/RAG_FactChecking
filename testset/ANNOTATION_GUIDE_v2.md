@@ -1,6 +1,7 @@
 # Pedoman Anotasi "Klaim Sama" — Versi 2.0 (DRAF, BELUM DIKUNCI)
 
-**Status:** draf 2026-10-27 (revisi 9 rancangan): bentuk dua pertanyaan. Disusun dari lembar persetujuan pedoman A6
+**Status:** draf 2026-10-27 (revisi 10 rancangan): bentuk dua pertanyaan; dipakai untuk set (b), sedangkan label
+set (a) ditetapkan dari susunannya (bagian 3.1). Disusun dari lembar persetujuan pedoman A6
 dan keputusan pemilik proyek (`docs/rancangan/rancangan_v2.md` A6). **Belum boleh dipakai untuk melabeli butir set
 uji.** Revisi berikutnya hanya berdasarkan uji coba 10 butir, lalu pemeriksaan independen; sesudah itu pedoman dikunci
 lewat tag `annotation-guide-v2.0` (rancangan A6.5, A12).
@@ -78,10 +79,25 @@ Ditentukan **per pasangan pesan–artikel**. Sebuah pasangan memakai bagian 4 bi
 - (b) pesannya meminta pembaca mendaftar, mengisi data pribadi, mentransfer uang, atau menghubungi tautan atau nomor
   atas nama lembaga atau tokoh.
 
-Pengumuman resmi yang mengajak mendaftar memenuhi (b), jadi ikut dinilai dengan bagian 4. Pasangan lain memakai
-pedoman v1.0 (klaim inti, unsur inti, uji dua arah, uji Kesimpulan). Dalam satu butir, pasangan yang berbeda bisa
-memakai aturan yang berbeda. Bila ragu apakah sebuah pasangan termasuk pola ini, catat keraguannya dan alasan memilih
-aturan yang dipakai.
+Pasangan lain memakai pedoman v1.0 (klaim inti, unsur inti, uji dua arah, uji Kesimpulan). Dalam satu butir, pasangan
+yang berbeda bisa memakai aturan yang berbeda. Bila ragu apakah sebuah pasangan termasuk pola ini, catat keraguannya dan
+alasan memilih aturan yang dipakai.
+
+### 3.1 Butir yang asal-usulnya terverifikasi (set a)
+
+Butir yang asal-usulnya terverifikasi dari situs resmi lembaga yang ada di daftar acuan (yaitu butir set a) dianggap
+memakai saluran resmi dan **tidak dapat dinilai "dibantah" oleh jenis bantahan apa pun** (aturan 10, jenis a–d, termasuk
+c). Alasannya: pengumuman resmi bisa menyebut biaya atau syarat yang sah, yang mirip dengan unsur yang dibantah di
+artikel penipuan. Kasus ketika TurnBackHoax membantah pengumuman resmi itu sendiri sudah dikeluarkan saat set (a)
+disusun.
+
+Akibatnya **label set (a) adalah "bukan klaim sama" menurut cara set itu disusun**, dan pedoman ini tidak dipakai untuk
+melabeli set (a). Yang diperiksa pada set (a) adalah syarat penyusunannya (asal-usul resmi, dan klaimnya tidak pernah
+dinyatakan salah oleh TurnBackHoax), dengan prosedur di rancangan Versi 2, bukan di pedoman ini.
+
+**Pedoman ini (bagian 4) dipakai untuk set (b).** Pesan set (b) dinilai biasa, walaupun isinya tampak seperti salinan
+pengumuman resmi: aturan bagian ini hanya berlaku bila asal-usul butir diketahui. Pengumuman resmi yang diteruskan dan
+mengajak mendaftar memenuhi bagian 3 (b), jadi dinilai dengan bagian 4.
 
 ## 4. Dua pertanyaan (pasangan pola pendaftaran atau tawaran)
 
@@ -161,7 +177,7 @@ ditandai ragu dan dicatat.
 
 **Aturan 10.** Pertanyaan 2 "ya" bila Kesimpulan artikel membantah apa yang dinyatakan atau diajak pesan. Dinilai
 **per jenis bantahan**, bukan per untaian teks. Bila Kesimpulan memuat beberapa jenis bantahan, cukup satu jenis yang
-membantah pesan.
+membantah pesan. Butir yang asal-usulnya terverifikasi (bagian 3.1) tidak pernah dibantah.
 
 - **(a) Saluran tidak resmi.** Kesimpulan menyatakan tautan, akun, atau nomor yang beredar tidak resmi. Membantah pesan
   yang memakai **atau merujuk** saluran tidak resmi (bagian 2), termasuk "klik tautan berikut" tanpa alamat.
@@ -274,6 +290,9 @@ Nilai `ambigu` v1.0 tidak dipakai untuk pasangan bagian 4 (aturan 7 menggantikan
 - **Sikap berhati-hati mengurangi positif set (b).** Bila Kesimpulan membantah satu unsur (misalnya tautannya) dan pesan
   tidak memuat unsur itu (misalnya hanya meminta transfer, atau kutipan pesannya tidak memuat tautan), pasangan bukan
   klaim sama walau penipuannya mungkin sama.
+- **Kebenaran label set (a) sepenuhnya bergantung pada pemeriksaan syarat penyusunannya** (bagian 3.1), bukan pada
+  penilaian klaim sama. Butir set (a) yang ternyata pernah dibantah TurnBackHoax akan terhitung sebagai kesalahan sistem;
+  pengamannya diatur di rancangan Versi 2.
 - Aturan 9 condong ke "bukan klaim sama". Pada pasangan yang buktinya tipis, sistem yang menjawab "ditemukan" akan
   dihitung salah, walau pembaca lain bisa menilainya cocok.
 - Menilai "apakah Kesimpulan membantah pesan" adalah penilaian yang bisa berbeda antar-pelabel, terutama pada bantahan
@@ -287,3 +306,4 @@ Nilai `ambigu` v1.0 tidak dipakai untuk pasangan bagian 4 (aturan 7 menggantikan
 | 2.0 (draf) | 2026-10-27 | Aturan penipuan berulang 1–9, definisi periode, catatan wajib, tanda ragu. |
 | 2.0 (draf, revisi 7) | 2026-10-27 | Nama "pola pendaftaran atau tawaran"; pengecualian saluran resmi; definisi nominal, jenis periode, lembaga umum, tokoh lawan lembaganya; aturan 3 dan 9 dirumuskan ulang. |
 | 2.0 (draf, revisi 9) | 2026-10-27 | Bentuk dua pertanyaan (program sama; Kesimpulan membantah pesan, aturan 10); pengecualian saluran resmi dan verifikasi lima langkah dihapus, diganti daftar acuan; prioritas atas v1.0 untuk tiga titik; peran nominal; ragu menggantikan `batas`. Belum dikunci; revisi berikutnya hanya dari uji coba dan pemeriksaan independen. |
+| 2.0 (draf, revisi 10) | 2026-10-27 | Bagian 3.1: butir yang asal-usulnya terverifikasi (set a) tidak pernah dibantah; label set (a) ditetapkan dari susunannya; pedoman dipakai untuk set (b). |
