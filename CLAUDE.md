@@ -22,6 +22,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > berat: pengumuman resmi TANPA saluran tetap dinilai klaim sama dengan artikel penipuan). Jangan diperbaiki tanpa
 > diminta. Penguncian (A6.5, usulan): `GUIDE_LOCK_v2.json` + uji kunci, tag `annotation-guide-v2.0` + Release +
 > Internet Archive oleh pemilik proyek, SEBELUM pelabelan apa pun. Jangan membuat tag, menggabung, atau push.
+> **Revisi 8 (2026-10-27):** keputusan 44-52 (K4 a/b, K11, N5-N8, uji coba + pemeriksaan independen sebelum kunci)
+> dicatat tetapi BELUM diterapkan ke teks pedoman: pemilik proyek menimbang prinsip "Kesimpulan membantah pesan"
+> (A6.10; Claude Code menyarankan bentuk dua pertanyaan yang dimodifikasi, G1 diputuskan dulu). JANGAN ubah teks
+> pedoman sebelum keputusan itu. Lembar uji coba `data/candidates/uji_coba_pedoman_v2/` (alat
+> `labeling.sessions.guide_trial`; hash di A6.5) diisi pemilik proyek SENDIRI tanpa AI, setelah pedoman direvisi;
+> jangan membuka `kunci_uji_coba.json`.
 
 *(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
 

@@ -3,7 +3,7 @@
 
 # Rancangan Versi 2
 
-**Status (2026-10-27, revisi 7): temuan K1-K13 sudah diputuskan dan diterapkan (A6.6); pedoman 2.0 [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) masih DRAF. Pedoman belum boleh dipakai dan belum dikunci: usulan K4 dan K11 (A6.8) dan 8 temuan konsistensi kedua (A6.9, N1 berat) menunggu keputusan pemilik proyek. Versi 2 mengukur
+**Status (2026-10-27, revisi 8): K4 (a), K4 (b), K11, dan N5-N8 sudah diputuskan (keputusan 44-51), tetapi BELUM diterapkan ke teks aturan: pemilik proyek sedang menimbang prinsip utama "Kesimpulan membantah pesan" (A6.10), yang menentukan bentuk K4 (c), N1-N4, dan N8. Pedoman 2.0 [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) tetap DRAF revisi 7; belum boleh dipakai dan belum dikunci. Lembar uji coba pedoman sudah dibuat (A6.5). Versi 2 mengukur
 sistem Versi 1 tanpa mengubah keputusannya: pedoman yang dipertegas, anotator kedua, set uji (a) dan (b), dan tombol
 salin klarifikasi. Pemeriksaan entitas dan "pola mirip" tidak masuk (A2.7, keputusan 13-14).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
 pengukurannya; isinya dipertahankan, dan setiap bagiannya diberi tanda **[MASIH BERLAKU]**, **[SEBAGIAN
@@ -30,7 +30,7 @@ bahwa perilaku sistem membaik. Perbaikan perilaku sistem dicatat sebagai arah ve
 **Riwayat revisi Bagian A.** Versi pertama `b1691c0`; revisi 1 `1ebbba4` (keputusan pertama, koreksi A-E, tambahan
 F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-26): ruang lingkup dipersempit
 (keputusan 13-15), tinjauan kunci dua tahap, alat bantu tampilan nominal dan saluran (A11.3), arah perbaikan sistem
-(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31); revisi 7 (2026-10-27): keputusan atas K1-K13 (keputusan 32-43), perbandingan pilihan K1, usulan K4 dan K11, pemeriksaan konsistensi kedua.
+(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31); revisi 7 (2026-10-27): keputusan atas K1-K13 (keputusan 32-43), perbandingan pilihan K1, usulan K4 dan K11, pemeriksaan konsistensi kedua; revisi 8 (2026-10-27): keputusan 44-52, penilaian prinsip utama (A6.10), uji coba pedoman dan pemeriksaan independen sebelum kunci (A6.5), lembar uji coba.
 
 **Keputusan pemilik proyek:**
 
@@ -79,6 +79,15 @@ F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-
 | 41 | K10: label kandidat | Label TurnBackHoax tiap kandidat tampil di lembar pelabelan (metadata, bukan keluaran sistem) | berlaku |
 | 42 | K12: aturan 3 | Gelombang yang hanya terlihat dari tanggal terbit = sama; tahun atau periode tertulis di kedua teks dan berbeda = bukan sama | berlaku |
 | 43 | K13: butir ragu di metrik | Metrik utama memakai label akhir; sensitivitas tanpa butir ragu (A4.d, dikunci di Kunci 1) | berlaku |
+| 44 | Periode di satu sisi | Kalimat "Tahun atau periode yang hanya tertulis di satu sisi: tidak dapat dibandingkan" (tambahan Claude Code di revisi 7) disetujui | berlaku |
+| 45 | K4 (a) | Untuk pasangan A6, aturan 8 dan 9 menggantikan baris "lebih umum -> TIDAK SAMA" v1.0 | berlaku; belum diterapkan ke teks |
+| 46 | K4 (b) | Untuk pasangan A6, aturan 7 menggantikan baris "keluarga artikel -> ambigu" v1.0; jumlah artikel sah dicatat per butir dan akurasi butir dengan > 1 artikel sah dilaporkan terpisah | berlaku; belum diterapkan ke teks |
+| 47 | K11 | Ragu menggantikan `batas`; `kekhususan` hanya untuk butir yang semua pasangannya dinilai v1.0 (lainnya `a6`); `ambigu` tidak dipakai untuk pasangan A6 | berlaku; belum diterapkan ke teks |
+| 48 | N5: peran nominal | Nominal hanya dibandingkan bila perannya sama (ditawarkan dengan ditawarkan, diminta dengan diminta); peran berbeda = tidak dapat dibandingkan | berlaku; belum diterapkan ke teks |
+| 49 | N6: daftar acuan | Daftar acuan saluran resmi bertanggal disiapkan di lembar pelabelan, supaya kedua pelabel memakai acuan yang sama tanpa internet | berlaku; daftar belum disusun |
+| 50 | N7: butir ragu | Analisis sensitivitas mengeluarkan butir yang ditandai ragu oleh salah satu pelabel | berlaku (A4.d) |
+| 51 | N8 | Mengikuti pendekatan yang dipilih; di bawah prinsip baru, saluran resmi yang sama di kedua sisi bukan bukti klaim sama | menunggu A6.10 |
+| 52 | Sebelum kunci | Uji coba pedoman (~10 butir set eksternal lama) dan pemeriksaan independen oleh sesi agent baru (A6.5) | berlaku |
 
 **Pembacaan hasil uji kelayakan A2.5 (dari pemilik proyek), beserta tanggapan saya.** Dari 10 kecocokan palsu, 7
 menurut adjudikasi adalah kesalahan label. Jadi kesalahan sistem yang terbukti pada kecocokan palsu hanya 3, dan
@@ -665,8 +674,9 @@ Keputusan per butir = keputusan modus dari 3 run, seperti evaluasi sebelumnya.
 
 **Butir ragu (keputusan 43; dikunci di Kunci 1).** Metrik utama memakai label akhir semua butir, termasuk butir yang
 ditandai ragu. Analisis sensitivitas menghitung ulang setiap metrik tanpa butir ragu, seperti di evaluasi eksternal.
-Hasil sensitivitas tidak menggantikan hasil utama. Siapa yang menandai "butir ragu" untuk keperluan ini belum
-ditetapkan (A6.9 N7).
+Hasil sensitivitas tidak menggantikan hasil utama. **Butir ragu = butir yang ditandai ragu oleh salah satu pelabel**
+(pemilik proyek atau anotator kedua; keputusan 50). Untuk butir yang hanya dilabeli pemilik proyek, yang berlaku tanda
+ragunya sendiri.
 
 ### A4.e Ambang (dikunci di Kunci 1)
 
@@ -800,7 +810,7 @@ Diukur tanpa LLM, dari data yang sudah tercatat:
 Hasil dilaporkan sebagai median dan rentang, tanpa ambang. Batasannya: ini jeda menurut satu situs cek fakta
 pembanding, bukan menurut kapan pengguna menerima pesan.
 
-## A6. Pedoman "klaim sama" untuk pola pendaftaran atau tawaran (disetujui lewat lembar 2026-10-27; revisi 7: K1-K13 diputuskan; DRAF sampai A6.8 dan A6.9 diputuskan; dikunci lewat tag sebelum pelabelan, A6.5)
+## A6. Pedoman "klaim sama" untuk pola pendaftaran atau tawaran (disetujui lewat lembar 2026-10-27; revisi 7: K1-K13 diputuskan; DRAF; revisi 8: keputusan 44-51 belum diterapkan ke teks aturan di bawah, menunggu prinsip utama A6.10; dikunci lewat tag sebelum pelabelan, A6.5)
 
 Pedoman ini mengatur **label** (apa yang dianggap klaim sama oleh manusia). Ia tidak mengubah cara sistem memutuskan.
 
@@ -991,6 +1001,10 @@ dilabeli ulang; pedoman 2.0 hanya berlaku untuk set (a) dan set (b).
 
 > K2 dan K3 berasal dari aturan 9 yang disusun dalam diskusi saya dengan AI, dan koreksinya saya terima. Keputusan di bawah juga saya susun bersama asisten AI (Claude) lalu saya setujui.
 
+**Pernyataan pemakaian AI, keputusan 44-52 dan usulan prinsip utama** (pemilik proyek, 2026-10-27; dicatat apa adanya):
+
+> Keputusan dan usulan di bawah saya susun bersama asisten AI (Claude) lalu saya setujui.
+
 Akibatnya bagi tafsir: teks aturan 4, 5 (pengecualian saluran resmi), 7, dan 9, catatan wajib, definisi kapan A6 dipakai,
 dan definisi unsur adalah rumusan yang disusun bersama AI lalu disetujui manusia, bukan rumusan manusia sendiri. Ini tidak
 membatalkannya (label butir tetap dibuat manusia tanpa AI), tetapi dicatat sebagai keterbatasan pedoman 2.0. Selain itu,
@@ -1022,8 +1036,79 @@ pedoman 2.0 bagian 9. Tabel ini adalah keadaan revisi 6 dan tidak diubah.
 
 Mengikuti cara pedoman v1.0 (`testset/ANNOTATION_GUIDE.md`, `testset/GUIDE_LOCK.json`, tag `annotation-guide-v1.0`):
 
-1. Pemilik proyek memutuskan semua temuan terbuka (A6.8 dan A6.9); pedoman 2.0 dan A6 direvisi; pemilik proyek
-   memeriksa teks akhirnya.
+1. **Sebelum commit kunci (keputusan 52; revisi 8).** Urutannya:
+   - **Keputusan dan revisi.** Pemilik proyek memutuskan prinsip utama (A6.10) dan sisa temuan (A6.8, A6.9); pedoman
+     2.0 dan A6 direvisi, termasuk keputusan 44-51; pemilik proyek memeriksa teksnya.
+   - **Daftar acuan saluran resmi bertanggal** (keputusan 49) disusun dan ditampilkan di lembar pelabelan.
+   - **Uji coba pedoman (EKSPLORATIF).** Pemilik proyek melabeli 10 butir dari set evaluasi eksternal lama (sudah sekali
+     pakai) dengan pedoman draf **yang sudah direvisi menurut A6.10** (commit pedoman ditulis di lembar), mencatat waktu
+     per butir dan bagian yang membuat ragu.
+     - Lembar: `data/candidates/uji_coba_pedoman_v2/uji_coba_pedoman_v2.xlsx` (lokal, memuat kutipan Liputan6; tidak
+       di-commit), dibuat `python -m labeling.sessions.guide_trial --make` pada 2026-10-27, **sebelum diisi**.
+     - Pemilihan: benih `20261027`, acak terstratifikasi menurut label final (positif/negatif) dan ada atau tidaknya
+       kandidat berlabel PENIPUAN: positif-penipuan 3, negatif-penipuan 3, positif-non 2, negatif-non 2 (dari 35, 36, 11,
+       dan 9 butir yang tersedia; 8 butir yang dikeluarkan tidak ikut). 10 butir, 68 baris kandidat. Label final hanya
+       dipakai untuk strata dan tidak ditulis ke lembar.
+     - Kandidat = kandidat yang dulu tampil (P1: `konfirmasi_50.csv`; P2: peta blok templat 49), teks dari
+       `articles.json` saat ini. Untuk P1, judul, label, tanggal, dan Kesimpulan dicocokkan dengan `konfirmasi_50.csv`: 0
+       selisih. Kolom asal ("indeks"/"antrean") tidak ditampilkan, karena antrean sudah di-ingest 2026-10-25. Narasi dan
+       Referensi ikut ditampilkan; label TurnBackHoax tiap kandidat tampil (keputusan 41).
+     - Tidak ditampilkan: label lama atau final, keputusan dan catatan lama, keluaran sistem, skor. Urutan butir dan
+       kandidat diacak dengan `random.SystemRandom`; peta ke kode butir hanya di kunci.
+     - **Hash (dicatat sebelum diisi):**
+
+       | Berkas | SHA-256 |
+       | --- | --- |
+       | `uji_coba_pedoman_v2.xlsx` (templat) | `fd1f9d92132a078f45aed1deb6b29c70137c828b2975c1b7aa514500a1b384f5` |
+       | `kunci_uji_coba.json` | `d9304a575da6ba6a8375dc5b3b9eed21fcb5df2580cb5f10358294cf5bf60d03` |
+       | `sidik_jari_templat_uji_coba.json` | `a710b6365ef82dfac89b9ba7b69d98032e6b74637d7abe551f5adb7f553086c9` |
+       | sidik jari bukti (semua sel selain sel masukan) | `7cc0f82e923b914ceefe88ba7e944d8d4b8e54c38b40be3d9d8c8f42f568cddf` |
+
+       Hasil disimpan sebagai `uji_coba_pedoman_v2_terisi.xlsx`; templat tidak ditimpa.
+     - **Keterbatasan:** semua butir sudah pernah dilabeli dan sebagian diadjudikasi oleh pemilik proyek, jadi uji coba
+       mengukur kejelasan pedoman dan waktu, bukan kesepakatan; waktu per butir kemungkinan lebih singkat daripada pada
+       butir baru. Kandidat lama dicari dari judul Liputan6, berbeda dari cara kandidat set (a) dan (b) nanti. Daftar
+       acuan saluran resmi belum ada pada lembar ini (petunjuk lembar: pakai Kesimpulan dan Referensi saja, dan catat bila
+       tidak cukup).
+     - Alat pembaca belum dibuat; dibuat bila diminta. Membandingkan hasil uji coba dengan label lama **tidak**
+       direncanakan; bila diinginkan, diputuskan sebelum lembar dibaca. Revisi pedoman sesudah uji coba dicatat sebagai
+       revisi sebelum kunci, beserta bagian pedoman yang memicunya. Perkiraan jam set (a) tetap diukur ulang pada 10 butir
+       pertama set (a) (keputusan 31); waktu uji coba hanya indikasi awal.
+   - **Pemeriksaan independen.** Setelah revisi sesudah uji coba, pedoman 2.0 diperiksa oleh sesi agent baru yang hanya
+     membaca `testset/ANNOTATION_GUIDE_v2.md`, tanpa rancangan dan tanpa riwayat diskusi. Cara menjalankan (pemilik
+     proyek):
+     1. Buat folder kosong **di luar repositori** (misalnya `C:\pemeriksaan_pedoman_v2\`) dan salin hanya
+        `testset/ANNOTATION_GUIDE_v2.md` ke sana. Alasannya: Claude Code otomatis memuat `CLAUDE.md` dan memori proyek
+        bila dijalankan dari folder repositori; di folder baru keduanya tidak ada.
+     2. Jalankan `claude` di folder itu sebagai sesi baru, lalu tempelkan instruksi di bawah.
+     3. Simpan laporannya dan serahkan ke sesi kerja proyek untuk dicatat di sini. Setiap temuan diputuskan pemilik proyek.
+
+     Batasan: pemeriksanya model yang sama (Claude), jadi ia independen terhadap riwayat diskusi, bukan terhadap model.
+     Pemeriksaan tambahan oleh model lain atau oleh manusia yang belum mengenal proyek akan lebih independen.
+
+     Instruksi untuk sesi itu:
+
+     ```text
+     Anda memeriksa satu dokumen: ANNOTATION_GUIDE_v2.md di folder ini. Jangan membuka berkas lain, jangan mencari
+     di web, dan jangan memakai pengetahuan tentang proyek atau dokumen lain. Anggap pedoman ini satu-satunya acuan
+     bagi dua pelabel manusia yang bekerja terpisah.
+
+     Tugas:
+     1. Cari pertentangan antar-aturan, istilah yang dipakai tanpa definisi, keadaan yang tidak tercakup, dan kalimat
+        yang bisa ditafsirkan dua cara oleh dua pelabel yang sama-sama teliti.
+     2. Periksa apakah urutan langkah (bagian 5) selalu menghasilkan keputusan yang sama dengan aturan (bagian 4).
+     3. Periksa apakah setiap contoh rekaan benar menurut aturan yang dirujuknya.
+     4. Sebutkan bagian yang paling mungkin membuat dua pelabel tidak sepakat, dan mengapa.
+
+     Aturan pelaporan:
+     - Setiap temuan: kode; jenis (pertentangan | tidak didefinisikan | tidak tercakup | tafsir ganda | contoh keliru |
+       urutan langkah); kutipan kalimat pedoman yang bersangkutan; masalahnya; satu contoh rekaan yang
+       memperlihatkannya (lembaga, tautan, dan nominal karangan; jangan memakai lembaga, orang, atau kasus nyata);
+       dampak (tinggi | sedang | rendah); tingkat keyakinan Anda.
+     - Jangan menulis ulang pedoman dan jangan mengusulkan perubahan cakupan. Usulan perbaikan paling banyak satu
+       kalimat per temuan.
+     - Laporkan juga bagian yang menurut Anda jelas dan konsisten, supaya terlihat apa yang sudah diperiksa.
+     ```
 2. **Commit kunci** (Claude Code, di branch, lalu digabung ke `main` atas persetujuan pemilik proyek): status pedoman
    menjadi "DIKUNCI" dengan tanggal; `testset/GUIDE_LOCK_v2.json` berisi `sha256_ternormalisasi` (akhir baris
    dinormalkan ke LF, seperti v1.0), versi `2.0`, dan tanggal; uji baru di `tests/core/test_testset_locks.py` yang gagal
@@ -1127,6 +1212,95 @@ penipuan bertentangan pada saluran -> tidak ada artikel sah -> negatif, sesuai A
 K9 dengan aturan 9 (bila tawaran sama, lembaga yang tidak dapat dibandingkan tidak menghalangi klaim sama; bila tawaran
 juga tidak dapat dibandingkan, hasilnya bukan klaim sama dan ragu); K13 dengan A7 (label akhir = label pemilik proyek
 setelah adjudikasi).
+
+### A6.10 Penilaian prinsip utama "Kesimpulan membantah pesan" (usulan pemilik proyek, disusun bersama AI; dinilai Claude Code 2026-10-27; BELUM diputuskan)
+
+**Usulan.** Untuk pasangan pola pendaftaran atau tawaran, pesan dan artikel adalah klaim sama hanya bila pesan memuat
+unsur yang dinyatakan salah atau palsu oleh Kesimpulan artikel (tautan atau nomor tidak resmi, program yang dinyatakan
+tidak ada, permintaan biaya atau transfer, syarat palsu). Lembaga, tawaran, nominal, dan periode dipakai untuk
+memastikan pesan dan artikel membicarakan program yang sama. Ini menjadikan K4 (c) syarat utama, bukan penolak tambahan.
+Alasan pemilik proyek: setiap putaran tambalan memunculkan celah baru dan pedoman makin rumit.
+
+**Dua pengukuran sebelum menilai** (heuristik pola kata, EKSPLORATIF, luring, tidak diperiksa manusia; dibuat setelah
+usulan diterima dan sebelum keputusan; hanya hitungan yang dicatat, tanpa kutipan teks):
+
+| Yang diukur | Hasil |
+| --- | --- |
+| Kesimpulan 479 artikel PENIPUAN (indeks 1.611): jenis bantahan yang tersurat | saluran tidak resmi 269 (56%); program tidak ada atau belum dibuka 16 (3%); biaya, transfer, atau data pribadi 35 (7%); **hanya rekayasa media atau tanpa bukti 98 (20%); tidak ada penanda sama sekali 80 (17%)** |
+| Kutipan pesan 99 artikel Liputan6 sampel evaluasi eksternal | **memuat URL 12**; menyebut tautan, link, klik, atau daftar tanpa URL 22; memuat nomor telepon 0 |
+
+Pola kata bisa meleset ke dua arah; angka ini hanya menunjukkan besarnya, bukan nilai pasti. Bacaannya: sekitar
+sepertiga Kesimpulan tidak menunjuk unsur tertentu yang dibantah, dan sebagian besar kutipan Liputan6 tidak memuat
+tautannya.
+
+**Penilaian.** Arah prinsip ini benar, dan ia mengembalikan pedoman 2.0 ke jangkar pedoman v1.0 (uji Kesimpulan). Tetapi
+dalam **bentuk ketat** ("pesan memuat unsur spesifik yang dibantah") ia lebih buruk daripada pendekatan sekarang pada dua
+hal yang terukur:
+
+1. **Kesimpulan generik (sekitar 37%)**: unsur yang dibantah tidak bisa ditunjuk, jadi pelabel harus menebak, dan itu
+   sumber ketidaksepakatan baru.
+2. **Kutipan tanpa tautan (87 dari 99 tanpa URL)**: bila Kesimpulan membantah tautannya, pesan yang tautannya tidak
+   dikutip tidak memuat unsur itu, sehingga dinilai bukan klaim sama walau penipuannya sama. Set (b) akan kehilangan
+   positif yang sah karena cara Liputan6 mengutip, bukan karena isi pesannya.
+
+**Usulan bentuk yang dimodifikasi: dua pertanyaan.**
+
+- **Pertanyaan 1, program sama?** Aturan 1, 2, 3, 4 (dengan keputusan 48), 6, 8, dan 9 beserta definisi unsur; aturan 7
+  untuk lebih dari satu artikel.
+- **Pertanyaan 2, Kesimpulan membantah pesan?** Pasangan klaim sama bila Kesimpulan artikel, dibaca sebagai jawaban,
+  membantah apa yang dinyatakan atau diajak pesan. Dinilai **per jenis bantahan**, bukan per untaian teks:
+  - (a) **saluran tidak resmi**: membantah pesan yang memakai **atau merujuk** saluran yang tidak ada di daftar acuan
+    (keputusan 49), termasuk "klik tautan berikut" tanpa alamat. Pemendek URL dan nomor WhatsApp yang tidak ada di daftar
+    acuan dihitung tidak resmi, tanpa tanda ragu;
+  - (b) **program atau tawaran tidak ada atau belum dibuka**: membantah pesan yang menyatakan program itu ada atau dibuka;
+  - (c) **biaya, transfer, data pribadi, syarat, atau nominal palsu**: membantah pesan yang memuat unsur itu;
+  - (d) **bantahan menyeluruh** (konten rekayasa, tanpa bukti, atau hanya "unggahan berisi klaim ... palsu"): membantah
+    pesan yang menyatakan klaim yang dikutip Kesimpulan, jadi keputusan praktis kembali ke pertanyaan 1.
+
+  Pesan yang sesuai dengan fakta di Kesimpulan (memakai saluran yang disebut resmi, atau tidak menyebut cara mendaftar dan
+  tidak memuat unsur yang dibantah) bukan klaim sama.
+
+**Dampak pada aturan dan temuan:**
+
+| Aturan atau temuan | Bentuk ketat | Bentuk dimodifikasi |
+| --- | --- | --- |
+| N1 (pengumuman resmi tanpa saluran) | tertutup | tertutup |
+| N2 (situs resmi + transfer) | tertutup bila Kesimpulan membantah transfer; bila hanya membantah tautan, bukan klaim sama | sama |
+| N3 (ragu membengkak) | bergeser: "pemendek URL dan WhatsApp bukan resmi" adalah asumsi, karena lembaga resmi juga memakainya | tertutup lewat daftar acuan: tidak ada di daftar = tidak resmi; risiko sisa terbatas pada saluran resmi yang lupa dimasukkan ke daftar |
+| N4 (syarat palsu) | tertutup bila syaratnya dibantah Kesimpulan | sama |
+| N8 | tertutup | tertutup |
+| K1, pengecualian saluran resmi di aturan 5 | tidak diperlukan | tidak diperlukan |
+| Bagian 2.1 pedoman (verifikasi lima langkah) | masih perlu untuk menilai resmi atau tidak | diganti pencarian di daftar acuan |
+| Aturan 5 kalimat pertama (penipu berganti tautan) | tetap berlaku hanya bila bantahan dibaca per jenis | tetap berlaku (jenis a) |
+| Aturan 1-4, 6-9 | tetap (identitas program) | tetap (pertanyaan 1) |
+| K4 (c) | menjadi inti | menjadi inti |
+| K2, K5-K13, keputusan 44-50 | tidak terpengaruh | tidak terpengaruh |
+
+**Yang bisa dihapus dengan bentuk dimodifikasi:** pengecualian saluran resmi (aturan 5 kalimat kedua dan ketiga), bagian
+2.1 (diganti dua kalimat tentang daftar acuan), tanda ragu karena saluran tidak terverifikasi, dan "sumber acuan + tanggal"
+di catatan wajib (diganti "ada atau tidak di daftar acuan"). Yang ditambahkan: satu pertanyaan dengan empat jenis bantahan,
+dan "jenis bantahan" di catatan wajib.
+
+**Celah baru yang muncul (kedua bentuk, kecuali disebut lain):**
+
+| Kode | Celah |
+| --- | --- |
+| G1 | Bantahan yang bergantung waktu: Kesimpulan "program belum dibuka" bisa kedaluwarsa bila program itu kemudian benar-benar dibuka. Pengumuman resmi set (a) yang terbit sesudahnya, tanpa periode tertulis, akan dinilai dibantah (jenis b). Frekuensinya kecil (sekitar 3% Kesimpulan menurut heuristik), tetapi tepat mengenai set (a). Perlu keputusan, misalnya: jenis (b) tidak berlaku bila pesan terbit setelah tanggal artikel dan berasal dari saluran di daftar acuan |
+| G2 | Bantahan beda jenis: artikel membantah tautannya, pesan memuat permintaan transfer tanpa tautan. Kedua bentuk menyatakan bukan klaim sama. Ini konservatif dan sejalan dengan fokus salah menuduh, tetapi mengurangi positif set (b) |
+| G3 | Menilai "apakah Kesimpulan membantah pesan" adalah penilaian baru, dan dua pelabel bisa berbeda, terutama pada jenis (d). Diukur di uji coba |
+| G4 | Daftar acuan menjadi titik gagal tunggal: harus disusun sebelum pelabelan, bertanggal, dan dibekukan bersama pedoman. Saluran resmi yang tidak ada di daftar membuat pengumuman resmi tampak tidak resmi. Untuk set (a), saluran di pengumuman resmi dimasukkan ke daftar saat butir dikumpulkan |
+| G5 | Hanya bentuk ketat: pesan yang menyatakan program ada tanpa saluran, lawan artikel yang membantah tautan, dinilai bukan klaim sama, padahal mungkin pesan berantai yang sama dengan tautan terpotong |
+
+**Lebih sederhana atau lebih rumit?** Bentuk ketat lebih pendek di kertas, tetapi memindahkan kerumitan ke penilaian yang
+sulit (menunjuk unsur yang dibantah pada sekitar sepertiga Kesimpulan) dan mengubah definisi menurut cara sumber
+mengutip. Bentuk dimodifikasi tidak mengurangi jumlah aturan identitas program, tetapi menghapus pengecualian dan
+prosedur verifikasi yang terbukti memunculkan celah (K1, N1-N4, N8), dan menggantinya dengan satu pertanyaan yang sudah
+dikenal dari pedoman v1.0 ditambah satu daftar. Menurut saya itu lebih sederhana dipakai. Itu belum terbukti; uji coba
+yang akan menunjukkannya.
+
+**Rekomendasi:** bentuk dimodifikasi, dengan G1 diputuskan lebih dulu, lalu uji coba dijalankan dengan pedoman yang sudah
+direvisi menurut bentuk itu.
+
 
 ## A7. Protokol anotator kedua
 
@@ -1349,8 +1523,9 @@ selesai dilabeli.
 
 ## A12. Urutan kerja sampai Kunci 1
 
-**Langkah berikutnya (revisi 7): pemilik proyek memutuskan usulan K4 dan K11 (A6.8) dan temuan N1-N8 (A6.9), dimulai
-dari N1 (baris 2a).** Lembar persetujuan sudah diisi 2026-10-27 (baris 1), pedoman sudah direvisi menjadi draf 2.0
+**Langkah berikutnya (revisi 8): pemilik proyek memutuskan prinsip utama (A6.10, baris 2a-1).** Urutan sampai kunci:
+2a-1 -> revisi pedoman -> 2a-2 (daftar acuan) -> 2d (uji coba) -> revisi -> 2e (pemeriksaan independen) -> revisi
+-> 2b -> 2c. Lembar persetujuan sudah diisi 2026-10-27 (baris 1), pedoman sudah direvisi menjadi draf 2.0
 (baris 2), dan K1-K13 sudah diputuskan (A6.6). Pelabelan apa
 pun, termasuk latihan anotator kedua, baru dimulai setelah pedoman dikunci (baris 2c).
 
@@ -1360,7 +1535,11 @@ pun, termasuk latihan anotator kedua, baru dimulai setelah pedoman dikunci (bari
 | 2 | Merevisi pedoman sesuai lembar: **draf 2.0 selesai 2026-10-27** (`testset/ANNOTATION_GUIDE_v2.md`); pemilik proyek memeriksa teksnya | Claude Code + pemilik proyek | 0,5 (pemeriksaan) | Tidak |
 | 2a | ~~Memutuskan K1-K13 (A6.4)~~ **selesai 2026-10-27 (A6.6)**; tersisa: usulan K4 dan K11 (A6.8) dan temuan N1-N8 (A6.9), lalu pedoman 2.0 direvisi dan diperiksa ulang | Pemilik proyek, lalu Claude Code | belum diperkirakan | Ya, per temuan |
 | 2b | Menyetujui rencana penguncian pedoman (A6.5) | Pemilik proyek | 0,5 | Tidak |
-| 2c | **Mengunci pedoman 2.0:** commit kunci (Claude Code), lalu tag `annotation-guide-v2.0`, push, GitHub Release, Internet Archive (pemilik proyek) | Claude Code + pemilik proyek | 0,5 + 0,5 | Tidak |
+| 2a-1 | Memutuskan prinsip utama "Kesimpulan membantah pesan" (A6.10), lalu pedoman 2.0 direvisi (keputusan 44-51 ikut diterapkan) | Pemilik proyek, lalu Claude Code | belum diperkirakan | Tidak |
+| 2a-2 | Menyusun daftar acuan saluran resmi bertanggal (keputusan 49): lembaga yang muncul di kandidat, sumber acuan, tanggal | belum ditetapkan | belum diperkirakan | Ya |
+| 2d | **Uji coba pedoman** (A6.5 langkah 2): ~10 butir di `uji_coba_pedoman_v2.xlsx`, setelah 2a-1; waktu per butir dan bagian yang meragukan dicatat; revisi sesudahnya dicatat sebagai revisi sebelum kunci | Pemilik proyek, lalu Claude Code | ~1-2 (perkiraan) | Ya |
+| 2e | **Pemeriksaan independen** (A6.5 langkah 3): sesi agent baru yang hanya membaca pedoman 2.0; temuannya dilaporkan, revisi diputuskan pemilik proyek | Pemilik proyek menjalankan sesi | ~0,5 | Tidak |
+| 2c | **Mengunci pedoman 2.0** (setelah 2d dan 2e): commit kunci (Claude Code), lalu tag `annotation-guide-v2.0`, push, GitHub Release, Internet Archive (pemilik proyek) | Claude Code + pemilik proyek | 0,5 + 0,5 | Tidak |
 | 3 | ~~Menyetujui ambang uji pergeseran (A4.f)~~ **Selesai di revisi 5** (keputusan 20) | Pemilik proyek | -- | -- |
 | 4 | Membaca halaman hak cipta sumber set (a) dan memilih sumber (A10 no. 1) | Pemilik proyek | 1 | Ya |
 | 5 | Mengumpulkan dan melabeli set (a), 150 butir; **perkiraan jam diukur ulang setelah 10 butir pertama dilabeli** (waktu per butir dicatat, keputusan 31) | Pemilik proyek | 15-25 (tebakan awal) | **Ya**, misalnya 10-20 butir per sesi |
