@@ -3,7 +3,7 @@
 
 # Rancangan Versi 2
 
-**Status (2026-10-27, revisi 6): lembar persetujuan pedoman sudah diisi; pedoman A6 direvisi dan ditulis sebagai dokumen berdiri sendiri [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) (DRAF). Pedoman belum boleh dipakai dan belum dikunci: 13 temuan konsistensi (A6.4) menunggu keputusan pemilik proyek. Versi 2 mengukur
+**Status (2026-10-27, revisi 7): temuan K1-K13 sudah diputuskan dan diterapkan (A6.6); pedoman 2.0 [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) masih DRAF. Pedoman belum boleh dipakai dan belum dikunci: usulan K4 dan K11 (A6.8) dan 8 temuan konsistensi kedua (A6.9, N1 berat) menunggu keputusan pemilik proyek. Versi 2 mengukur
 sistem Versi 1 tanpa mengubah keputusannya: pedoman yang dipertegas, anotator kedua, set uji (a) dan (b), dan tombol
 salin klarifikasi. Pemeriksaan entitas dan "pola mirip" tidak masuk (A2.7, keputusan 13-14).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
 pengukurannya; isinya dipertahankan, dan setiap bagiannya diberi tanda **[MASIH BERLAKU]**, **[SEBAGIAN
@@ -30,7 +30,7 @@ bahwa perilaku sistem membaik. Perbaikan perilaku sistem dicatat sebagai arah ve
 **Riwayat revisi Bagian A.** Versi pertama `b1691c0`; revisi 1 `1ebbba4` (keputusan pertama, koreksi A-E, tambahan
 F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-26): ruang lingkup dipersempit
 (keputusan 13-15), tinjauan kunci dua tahap, alat bantu tampilan nominal dan saluran (A11.3), arah perbaikan sistem
-(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31).
+(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31); revisi 7 (2026-10-27): keputusan atas K1-K13 (keputusan 32-43), perbandingan pilihan K1, usulan K4 dan K11, pemeriksaan konsistensi kedua.
 
 **Keputusan pemilik proyek:**
 
@@ -67,6 +67,18 @@ F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-
 | 29 | Induk dan anak lembaga | Belum diatur; ditandai ragu dan dicatat saat pelabelan | berlaku |
 | 30 | Pedoman 2.0 | Dokumen berdiri sendiri `testset/ANNOTATION_GUIDE_v2.md`; dikunci lewat tag `annotation-guide-v2.0` sebelum pelabelan apa pun (A6.5) | rencana, menunggu persetujuan |
 | 31 | Perkiraan jam set (a) | Tidak ditebak ulang; diukur ulang setelah 10 butir pertama dilabeli (A12) | berlaku |
+| 32 | K1: saluran resmi | Pengecualian aturan 5: saluran resmi terverifikasi di satu sisi lawan tidak resmi di sisi lain = pertentangan, bukan klaim sama; cara verifikasi ditulis (A6); istilah "butir penipuan" diganti "pola pendaftaran atau tawaran" | berlaku |
+| 33 | K2: ragu di aturan 9 | Hanya untuk keadaan kedua (tawaran tidak dapat dibandingkan, bukti tambahan kurang); bukan untuk penolakan karena pertentangan | berlaku |
+| 34 | K3: saluran | Berbeda = netral; sama persis = bukti pendukung; resmi lawan tidak resmi = pertentangan | berlaku |
+| 35 | K4: prioritas | Untuk pasangan A6, A6 didahulukan bila bertentangan dengan v1.0; penyelesaian tiga titik masih usulan (A6.8) | prinsip berlaku |
+| 36 | K5: unsur inti | Lembaga atau tokoh, tawaran, saluran, nominal, periode | berlaku |
+| 37 | K6: jenis periode | Hanya dibandingkan dengan jenis yang sama; jenis berbeda = tidak dapat dibandingkan, kecuali satu sisi memuat keduanya | berlaku |
+| 38 | K7: nominal | Jumlah uang yang ditawarkan atau diminta; armada, kuota peserta, dan sejenisnya bukan nominal | berlaku |
+| 39 | K8: lembaga umum | Lawan lembaga tertentu = tidak dapat dibandingkan | berlaku |
+| 40 | K9: tokoh lawan lembaganya | Tidak dapat dibandingkan, ragu; keputusan lewat aturan 9; dikumpulkan untuk versi berikutnya | berlaku |
+| 41 | K10: label kandidat | Label TurnBackHoax tiap kandidat tampil di lembar pelabelan (metadata, bukan keluaran sistem) | berlaku |
+| 42 | K12: aturan 3 | Gelombang yang hanya terlihat dari tanggal terbit = sama; tahun atau periode tertulis di kedua teks dan berbeda = bukan sama | berlaku |
+| 43 | K13: butir ragu di metrik | Metrik utama memakai label akhir; sensitivitas tanpa butir ragu (A4.d, dikunci di Kunci 1) | berlaku |
 
 **Pembacaan hasil uji kelayakan A2.5 (dari pemilik proyek), beserta tanggapan saya.** Dari 10 kecocokan palsu, 7
 menurut adjudikasi adalah kesalahan label. Jadi kesalahan sistem yang terbukti pada kecocokan palsu hanya 3, dan
@@ -651,6 +663,11 @@ Sistem Versi 1 hanya punya dua jawaban, jadi perhitungannya langsung:
 
 Keputusan per butir = keputusan modus dari 3 run, seperti evaluasi sebelumnya.
 
+**Butir ragu (keputusan 43; dikunci di Kunci 1).** Metrik utama memakai label akhir semua butir, termasuk butir yang
+ditandai ragu. Analisis sensitivitas menghitung ulang setiap metrik tanpa butir ragu, seperti di evaluasi eksternal.
+Hasil sensitivitas tidak menggantikan hasil utama. Siapa yang menandai "butir ragu" untuk keperluan ini belum
+ditetapkan (A6.9 N7).
+
 ### A4.e Ambang (dikunci di Kunci 1)
 
 | Metrik | Set | Memadai / lolos | Gugur |
@@ -783,69 +800,108 @@ Diukur tanpa LLM, dari data yang sudah tercatat:
 Hasil dilaporkan sebagai median dan rentang, tanpa ambang. Batasannya: ini jeda menurut satu situs cek fakta
 pembanding, bukan menurut kapan pengguna menerima pesan.
 
-## A6. Pedoman "klaim sama" untuk penipuan berulang (disetujui lewat lembar 2026-10-27; DRAF sampai A6.4 diputuskan; dikunci lewat tag sebelum pelabelan, A6.5)
+## A6. Pedoman "klaim sama" untuk pola pendaftaran atau tawaran (disetujui lewat lembar 2026-10-27; revisi 7: K1-K13 diputuskan; DRAF sampai A6.8 dan A6.9 diputuskan; dikunci lewat tag sebelum pelabelan, A6.5)
 
 Pedoman ini mengatur **label** (apa yang dianggap klaim sama oleh manusia). Ia tidak mengubah cara sistem memutuskan.
 
 **Teks untuk pelabelan** ada di dokumen yang berdiri sendiri, [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md)
 (pedoman 2.0), untuk pemilik proyek dan anotator kedua. Dokumen itu memuat aturan yang sama dengan bagian ini, ditambah
-definisi, satu contoh rekaan per aturan, urutan langkah, cara mengisi catatan wajib, dan cara menandai ragu. Bila isi
-aturan di kedua tempat berbeda, itu cacat yang harus dilaporkan, bukan ditafsirkan. Teks aturan di bawah adalah hasil
-lembar persetujuan dan jawaban pemilik proyek (A6.3); **riwayat teks sebelumnya ada di revisi 5 (`9b94077`)**.
+definisi, contoh rekaan, urutan langkah, cara mengisi catatan wajib, dan cara menandai ragu. Bila isi aturan di kedua
+tempat berbeda, itu cacat yang harus dilaporkan, bukan ditafsirkan. Riwayat teks: revisi 5 (`9b94077`), revisi 6
+(`35d14e1`).
 
-Pedoman v1.0 dan Aturan A/B evaluasi eksternal tetap menjadi dasar. Unsur inti penipuan: **lembaga atau tokoh
-yang dicatut, tawaran (jenis program atau keuntungan), dan saluran (tautan atau nomor)**.
+**Nama (keputusan 32).** Sejak revisi 7 istilah "butir penipuan" diganti **"pola pendaftaran atau tawaran"**, karena
+pengumuman resmi bukan penipuan tetapi tetap dinilai dengan A6.
+
+**Dasar dan prioritas (keputusan 35).** Pedoman v1.0 dan Aturan A/B evaluasi eksternal tetap menjadi dasar. Untuk
+pasangan yang memakai A6, **A6 didahulukan bila bertentangan dengan v1.0**. Penyelesaian tiga titik tabrakan yang
+diketahui (klaim lebih umum, keluarga artikel, jangkar KIA lawan Narasi) masih usulan (A6.8).
+
+**Unsur inti pola pendaftaran atau tawaran (keputusan 36):** lembaga atau tokoh, tawaran (jenis program atau
+keuntungan), saluran (tautan, akun, atau nomor), nominal, dan periode.
 
 **Kapan A6 dipakai (keputusan 26).** Ditentukan per pasangan pesan-artikel. Sebuah pasangan memakai A6 bila (a) artikelnya
 berlabel PENIPUAN di TurnBackHoax, atau (b) pesannya meminta pembaca mendaftar, mengisi data pribadi, mentransfer uang,
 atau menghubungi tautan atau nomor atas nama lembaga atau tokoh. Pasangan lain memakai pedoman v1.0 (klaim inti, unsur
-inti, uji dua arah, uji Kesimpulan). Pedoman A6 hanya menambah aturan untuk pasangan penipuan. Bila ragu, catat
-keraguannya dan alasan pilihan aturan yang dipakai.
+inti, uji dua arah, uji Kesimpulan). Bila ragu, catat keraguannya dan alasan pilihan aturan yang dipakai. **Lembar
+pelabelan menampilkan label TurnBackHoax setiap kandidat** (keputusan 41): itu metadata artikel, bukan keluaran sistem.
 
-**Periode (keputusan 27).** "Periode" berarti tahun, atau nama gelombang atau tahap program (misalnya "Gelombang 2",
-"Tahap II"). Tanggal batas pendaftaran atau tanggal hari tidak termasuk, karena penipuan daur ulang hampir selalu
-memperbarui tanggalnya, sehingga kalau tanggal dihitung, aturan 3 kehilangan maknanya. Tanggal yang berbeda tetap
-dicatat di catatan wajib.
+**Definisi unsur:**
+
+- **Periode (keputusan 27 dan 37):** tahun, atau nama gelombang atau tahap program (misalnya "Gelombang 2", "Tahap II").
+  Tanggal batas pendaftaran atau tanggal hari tidak termasuk, karena penipuan daur ulang hampir selalu memperbarui
+  tanggalnya; tanggal yang berbeda tetap dicatat di catatan wajib. **Periode hanya dibandingkan dengan jenis yang sama**
+  (tahun dengan tahun, nama gelombang atau tahap dengan nama gelombang atau tahap). Jenis berbeda berarti tidak dapat
+  dibandingkan, kecuali satu sisi memuat keduanya; maka yang dibandingkan adalah jenis yang ada di kedua sisi.
+- **Nominal (keputusan 38):** jumlah uang yang ditawarkan atau diminta. Jumlah armada, kuota peserta, dan sejenisnya
+  bukan nominal.
+- **Lembaga umum (keputusan 39):** "pemerintah", "kementerian" tanpa nama, dan sejenisnya, lawan lembaga tertentu, berarti
+  tidak dapat dibandingkan, sejalan dengan aturan 2.
+- **Tokoh lawan lembaga yang dipimpinnya (keputusan 40):** tidak dapat dibandingkan dan ditandai ragu. Keputusannya dari
+  unsur lain lewat aturan 9. Kasus seperti ini dikumpulkan saat pelabelan untuk ditinjau di versi pedoman berikutnya.
+- **Saluran resmi yang terverifikasi (keputusan 32):** domain, akun, atau nomor milik lembaga yang disebut, yang
+  dicocokkan pelabel dengan **sumber acuan**: (a) situs resmi lembaga itu, dibuka dari alamat yang sudah diketahui atau
+  diketik sendiri, bukan dari tautan di pesan atau di sumber hoaks; atau (b) saluran yang dinyatakan resmi di Kesimpulan
+  atau Referensi artikel TurnBackHoax. Cara memverifikasi:
+  1. Yang dicocokkan adalah **teks alamat**. Tautan di pesan atau di sumber hoaks **tidak dibuka**.
+  2. Cocok bila host sama persis dengan saluran di sumber acuan, atau subdomain sejatinya (`daftar.contoh.go.id` dari
+     `contoh.go.id`). Nama yang mirip (`contoh-go-id.example`, `contoh.go.id.example`), subdomain layanan hosting, dan
+     pemendek URL tidak pernah dihitung resmi kecuali persis tercantum di sumber acuan. Nomor telepon atau WhatsApp resmi
+     hanya bila tercantum di sumber acuan.
+  3. Sumber acuan dan tanggal pemeriksaan dicatat di catatan wajib.
+  4. Pada set (a), saluran yang disebut di dalam pengumuman yang diambil dari situs resmi lembaga (A4.a) dianggap
+     terverifikasi; sumber acuannya adalah URL butir itu.
+  5. Bila status resmi suatu saluran tidak dapat dipastikan: saluran **tidak dapat dibandingkan**, dan pasangan
+     **ditandai ragu**.
+
+**Aturan:**
 
 1. **Lembaga atau tokoh berbeda, tawaran sama -> BUKAN klaim sama.**
 2. **Lembaga atau tokoh tidak disebut di salah satu sisi -> tidak dapat dibandingkan, bukan pertentangan.**
-   Keputusan bergantung pada unsur inti lain.
-3. **Gelombang berbeda (tahun atau tanggal berbeda), lembaga dan tawaran sama -> klaim sama**, kecuali tahun atau
-   periode disebut eksplisit di kedua sisi dan berbeda (Aturan A; keputusan 6).
+   Keputusan bergantung pada unsur inti lain. Lembaga umum lawan lembaga tertentu juga tidak dapat dibandingkan.
+3. **Gelombang berbeda yang hanya terlihat dari tanggal terbit, lembaga dan tawaran sama -> klaim sama. Tahun atau
+   periode yang tertulis di kedua teks dan berbeda -> BUKAN klaim sama** (Aturan A; keputusan 6 dan 42). Tahun atau
+   periode yang hanya tertulis di satu sisi: tidak dapat dibandingkan.
 4. **Nominal berbeda pada tawaran yang sama -> BUKAN klaim sama bila nominal disebut eksplisit di kedua sisi.** Ini
-   berlaku juga bila gelombangnya terlihat berbeda dari tanggal terbit (kasus P2-21). Bila tahun atau periode disebut
-   eksplisit di kedua sisi dan berbeda, butir sudah bukan klaim sama menurut aturan 3, apa pun nominalnya. Bila hanya
-   satu sisi menyebut nominal: tidak dapat dibandingkan. *Aturan ini diubah dua kali setelah melihat data, keduanya
-   sebelum Kunci 1: pertama setelah A2.5 (P2-21, keputusan 9), kedua 2026-10-27 lewat lembar persetujuan, karena
-   kalimat keputusan 9 ("gelombang jelas berbeda tetap klaim sama walau nominal berbeda") bertentangan dengan
-   pengecualian aturan 3 (keputusan 23).*
-5. **Tautan atau nomor berbeda, lembaga dan tawaran sama -> klaim sama.** Penipu sering berganti tautan. Tautan atau
-   nomor yang sama persis dengan sumber hoaks di artikel adalah bukti pendukung yang kuat, tetapi bukan syarat.
+   berlaku juga bila gelombangnya terlihat berbeda dari tanggal terbit (kasus P2-21). Bila tahun atau periode tertulis di
+   kedua teks dan berbeda, butir sudah bukan klaim sama menurut aturan 3, apa pun nominalnya. Bila hanya satu sisi
+   menyebut nominal: tidak dapat dibandingkan. *Aturan ini diubah dua kali setelah melihat data, keduanya sebelum
+   Kunci 1: pertama setelah A2.5 (P2-21, keputusan 9), kedua 2026-10-27 lewat lembar persetujuan, karena kalimat
+   keputusan 9 bertentangan dengan pengecualian aturan 3 (keputusan 23).*
+5. **Tautan atau nomor berbeda, lembaga dan tawaran sama -> klaim sama.** Penipu sering berganti tautan. Saluran berbeda
+   bersifat **netral**; saluran yang sama persis dengan sumber hoaks di artikel adalah **bukti pendukung** yang kuat,
+   tetapi bukan syarat. **Pengecualian saluran resmi (keputusan 32 dan 34):** bila satu sisi memakai saluran resmi
+   lembaga yang terverifikasi dan sisi lain tidak, saluran **bertentangan** dan pasangan itu **BUKAN klaim sama**. Bila
+   kedua sisi bukan saluran resmi, kalimat pertama aturan ini tetap berlaku.
 6. **Judul sama, isi tawaran berbeda -> BUKAN klaim sama.** Yang dibandingkan adalah isi pesan dengan Narasi, bukan
    judul dengan judul.
 7. **Bila lebih dari satu artikel cocok dengan pesan (lembaga dan tawaran sama), semua artikel yang sah dicatat, dan
    jawaban dinilai benar bila memilih salah satunya.** Sebuah artikel hanya sah bila, terhadap pesan itu, ia lolos
-   semua aturan lain (aturan 1-6, 8, dan 9; keputusan 24): tidak ada pertentangan tahun atau periode yang eksplisit
-   (aturan 3), dan tidak ada pertentangan nominal yang eksplisit (aturan 4). Contoh P2-1 (dua artikel dengan sasaran
-   sama tetapi tawaran berbeda): hanya artikel dengan tawaran yang sama yang sah.
+   semua aturan lain (aturan 1-6, 8, dan 9; keputusan 24): tidak ada pertentangan tahun atau periode (aturan 3),
+   nominal (aturan 4), atau saluran resmi (aturan 5). Contoh P2-1 (dua artikel dengan sasaran sama tetapi tawaran
+   berbeda): hanya artikel dengan tawaran yang sama yang sah.
 8. **Tawaran berbeda (program spesifik berbeda) -> BUKAN klaim sama.** Istilah umum ("bansos", "bantuan",
    "lowongan") dibandingkan dengan program spesifik dihitung tidak dapat dibandingkan.
-9. **Aturan bawaan (keputusan 28). Klaim sama membutuhkan tawaran yang sama dan tidak ada unsur inti yang bertentangan.
-   Bila tawaran tidak dapat dibandingkan, klaim sama hanya bila lembaga atau tokoh sama dan setidaknya satu unsur lain
-   (saluran, nominal, atau periode) sama. Selain itu: bukan klaim sama, dan butir ditandai ragu.** Alasan (pemilik
-   proyek): semua aturan lain berangkat dari "lembaga dan tawaran sama", sehingga tidak ada keputusan ketika tawaran
-   tidak dapat dibandingkan; di celah inilah keputusan "narasi sama" dulu muncul. Aturan ini sengaja condong ke "bukan
-   klaim sama" ketika bukti kurang, sejalan dengan fokus Versi 2 pada salah menuduh.
+9. **Aturan bawaan (keputusan 28, 33, 34).** Klaim sama membutuhkan tawaran yang sama dan tidak ada unsur inti yang
+   bertentangan. Bila tawaran tidak dapat dibandingkan, klaim sama hanya bila lembaga atau tokoh sama, setidaknya satu
+   unsur lain (saluran sama persis, nominal, atau periode) sama, dan tidak ada unsur inti yang bertentangan. Bila
+   keadaan kedua ini tidak memenuhi syarat: bukan klaim sama, dan butir ditandai ragu. **Penolakan karena ada unsur inti
+   yang bertentangan tidak ditandai ragu oleh aturan ini.** Saluran berbeda tidak dihitung bertentangan, kecuali
+   pengecualian saluran resmi (aturan 5). Alasan (pemilik proyek): aturan lain berangkat dari "lembaga dan tawaran
+   sama", sehingga tidak ada keputusan ketika tawaran tidak dapat dibandingkan; di celah inilah keputusan "narasi sama"
+   dulu muncul. Aturan ini sengaja condong ke "bukan klaim sama" ketika bukti kurang, sejalan dengan fokus Versi 2 pada
+   salah menuduh.
 
 **Hubungan induk dan anak lembaga (keputusan 29)** (misalnya Pertamina dan anak perusahaannya) tidak diatur sekarang.
 Kasus seperti itu ditandai ragu dan dicatat saat pelabelan.
 
-**Catatan wajib (keputusan 25).** Setiap label pada butir penipuan, baik positif maupun negatif, wajib mencatat lembaga
-atau tokoh, tawaran, saluran, nominal, dan tahun atau periode di kedua sisi, beserta statusnya (sama, bertentangan,
-tidak dapat dibandingkan). Untuk label negatif yang menolak kandidat terdekat, sebutkan minimal satu unsur yang
-bertentangan dan aturan yang dipakai; "kandidat terdekat" berarti **kandidat yang paling mirip menurut penilaian
-anotator, tanpa skor retrieval**. Bila tidak ada unsur yang bertentangan, tulis alasannya secara eksplisit. Catatan
-adjudikasi sebelumnya sering hanya berbunyi "narasi sama", tanpa menyebut unsur yang dibandingkan.
+**Catatan wajib (keputusan 25).** Setiap label pada pasangan pola pendaftaran atau tawaran, baik positif maupun negatif,
+wajib mencatat lembaga atau tokoh, tawaran, saluran, nominal, dan tahun atau periode di kedua sisi, beserta statusnya
+(sama, bertentangan, tidak dapat dibandingkan), dan untuk saluran juga sumber acuan verifikasinya bila ada. Untuk label
+negatif yang menolak kandidat terdekat, sebutkan minimal satu unsur yang bertentangan dan aturan yang dipakai;
+"kandidat terdekat" berarti **kandidat yang paling mirip menurut penilaian anotator, tanpa skor retrieval**. Bila tidak
+ada unsur yang bertentangan, tulis alasannya secara eksplisit. Catatan adjudikasi sebelumnya sering hanya berbunyi
+"narasi sama", tanpa menyebut unsur yang dibandingkan.
 
 **Contoh dari 11 butir adjudikasi yang berbeda dengan label final** (`rancangan_evaluasi_eksternal.md` 11.9). Teks
 pesan Liputan6 tidak dikutip; yang ditulis hanya kode butir, artikel TurnBackHoax, dan pola perbedaannya:
@@ -875,11 +931,12 @@ dan **tidak** diperbaiki Versi 2:
 
 | Aturan pedoman | Perilaku generator Versi 1 yang teramati | Akibat di metrik |
 | --- | --- | --- |
-| 3. Gelombang berbeda -> sama (periode = tahun atau nama gelombang/tahap; tanggal tidak dihitung) | sering menolak pasangan lintas gelombang (6 dari 9 penolakan palsu evaluasi eksternal ada di pasangan > 30 hari) | penolakan palsu pada set (b) |
+| 3. Gelombang yang hanya terlihat dari tanggal terbit -> sama | sering menolak pasangan lintas gelombang (6 dari 9 penolakan palsu evaluasi eksternal ada di pasangan > 30 hari) | penolakan palsu pada set (b) |
 | 1. Tokoh berbeda -> bukan sama | tidak selalu dibedakan (P2-17) | kecocokan palsu |
 | Tindakan berbeda (pedoman v1.0) | tidak selalu dibedakan (P2-33) | kecocokan palsu |
 | 4. Nominal eksplisit berbeda -> bukan sama, juga lintas gelombang (keputusan 23) | belum diukur khusus; P2-21 dijawab "ditemukan" padahal menurut aturan ini bukan klaim sama (A6.2) | kecocokan palsu |
-| 9. Bukti kurang -> bukan sama, ragu | belum diukur | pasangan berbukti tipis yang dijawab "ditemukan" dihitung kecocokan palsu; cara butir ragu dihitung belum diputuskan (A6.4 K13) |
+| 5. Pengecualian saluran resmi -> bukan sama | belum diukur; generator tidak memeriksa apakah saluran resmi | salah menuduh pada set (a), kecocokan palsu pada set (b) |
+| 9. Bukti kurang -> bukan sama, ragu | belum diukur | pasangan berbukti tipis yang dijawab "ditemukan" dihitung kecocokan palsu; butir ragu dilaporkan juga tanpa ragu (A4.d) |
 
 ### A6.2 Dampak aturan 4 baru: P2-21 (contoh perubahan yang merugikan sistem)
 
@@ -913,13 +970,13 @@ dilabeli ulang; pedoman 2.0 hanya berlaku untuk set (a) dan set (b).
 - **Keputusan di lembar:** Setuju untuk aturan 1, 2, 3, 5, 6, 8; Ubah untuk aturan 4, aturan 7, catatan wajib, dan
   cakupan pedoman v1.0. **Jawaban dan tambahan pemilik proyek di luar lembar (2026-10-27):** empat klarifikasi (aturan 7
   merujuk aturan 1-6, 8, dan 9; "kandidat terdekat"; definisi penipuan per pasangan; arti "periode"), aturan 9, dan
-  catatan induk-anak lembaga.
+  catatan induk-anak lembaga. **Keputusan atas temuan K1-K13 (2026-10-27, revisi 7):** A6.6.
 - **Peran Claude Code:** memeriksa lembar (keutuhan berkas, analisis per perubahan) dan melaporkan pertentangan
   rujukan aturan 7, dampak pada P2-21, serta empat hal yang perlu diklarifikasi. Usulan untuk "kandidat terdekat" dan
-  "penipuan per pasangan" berasal dari laporan itu dan diterima pemilik proyek. Teks pedoman 2.0 dan contoh rekaannya
-  disusun Claude Code dari keputusan di atas.
+  "penipuan per pasangan" berasal dari laporan itu dan diterima pemilik proyek. Claude Code juga menemukan K1-K13
+  (A6.4) dan menyusun teks pedoman 2.0 serta contoh rekaannya dari keputusan pemilik proyek.
 
-**Pernyataan pemakaian AI** (pemilik proyek, 2026-10-27; dicatat apa adanya, aturan wajib #5):
+**Pernyataan pemakaian AI, lembar persetujuan** (pemilik proyek, 2026-10-27; dicatat apa adanya, aturan wajib #5):
 
 > Saya memakai asisten AI Claude (Anthropic) lewat aplikasi Claude dalam diskusi saat mengisi lembar ini. Rinciannya:
 >
@@ -930,40 +987,43 @@ dilabeli ulang; pedoman 2.0 hanya berlaku untuk set (a) dan set (b).
 >
 > Semua keputusan Setuju/Ubah adalah keputusan saya. Label butir set (a) dan (b) akan saya buat sendiri tanpa AI. Saya juga mengakui templat lembar ikut tertimpa. Ke depan, hash templat di-commit sebelum diisi.
 
-Akibatnya bagi tafsir: teks aturan 4, 7, 9, catatan wajib, dan definisi penipuan adalah rumusan AI yang disetujui manusia,
-bukan rumusan manusia sendiri. Ini tidak membatalkannya (label butir tetap dibuat manusia), tetapi dicatat sebagai
-keterbatasan pedoman 2.0.
+**Pernyataan pemakaian AI, keputusan K1-K13** (pemilik proyek, 2026-10-27; dicatat apa adanya):
 
-### A6.4 Pemeriksaan konsistensi pedoman 2.0 (2026-10-27; TEMUAN, BELUM DIPERBAIKI)
+> K2 dan K3 berasal dari aturan 9 yang disusun dalam diskusi saya dengan AI, dan koreksinya saya terima. Keputusan di bawah juga saya susun bersama asisten AI (Claude) lalu saya setujui.
 
-Diperiksa: aturan 1-9, catatan wajib, definisi penipuan, definisi periode, dan pedoman v1.0. Setiap temuan menunggu
-keputusan pemilik proyek; pilihan yang ditulis hanya usulan. Kode temuan sama dengan pedoman 2.0 bagian 9.
+Akibatnya bagi tafsir: teks aturan 4, 5 (pengecualian saluran resmi), 7, dan 9, catatan wajib, definisi kapan A6 dipakai,
+dan definisi unsur adalah rumusan yang disusun bersama AI lalu disetujui manusia, bukan rumusan manusia sendiri. Ini tidak
+membatalkannya (label butir tetap dibuat manusia tanpa AI), tetapi dicatat sebagai keterbatasan pedoman 2.0. Selain itu,
+dua AI terlibat (Claude di aplikasi, dalam diskusi pemilik proyek; Claude Code, yang memeriksa dan menulis teks), jadi
+pemeriksaan konsistensi oleh Claude Code bukan pemeriksaan yang independen terhadap rumusan itu.
 
-| Kode | Jenis | Temuan | Pilihan (usulan) |
+### A6.4 Pemeriksaan konsistensi pertama (2026-10-27, revisi 6; keputusannya di A6.6)
+
+Diperiksa: aturan 1-9, catatan wajib, definisi penipuan, definisi periode, dan pedoman v1.0. Kode temuan sama dengan
+pedoman 2.0 bagian 9. Tabel ini adalah keadaan revisi 6 dan tidak diubah.
+
+| Kode | Jenis | Temuan | Pilihan (usulan revisi 6) |
 | --- | --- | --- | --- |
-| **K1** | **pertentangan, berat** | Pengumuman resmi set (a) yang mengajak mendaftar lewat tautan resmi memenuhi definisi penipuan (b), jadi pasangannya dengan artikel PENIPUAN berlembaga dan bertawaran sama dinilai dengan A6. Aturan 5 lalu menyatakan **klaim sama** (tautan berbeda tidak menolak). Itu bertentangan dengan A4.a, yang menetapkan label set (a) "belum ditemukan", dan dengan metrik salah menuduh. A6 mengandaikan kedua sisi adalah penipuan; tidak ada aturan untuk saluran resmi lawan saluran penipuan. | (i) saluran resmi (domain resmi lembaga, atau saluran yang disebut Kesimpulan atau Referensi artikel sebagai saluran resmi) lawan saluran sumber hoaks = bertentangan; (ii) kriteria (b) hanya untuk pesan yang bukan pengumuman dari sumber resmi; (iii) set (a) dinilai dengan pedoman v1.0 saja |
-| **K2** | ambiguitas | Aturan 9: "Selain itu: bukan klaim sama, dan butir ditandai ragu." Bila dibaca harfiah, setiap pasangan yang ditolak karena pertentangan jelas (misalnya lembaga berbeda, aturan 1) juga ditandai ragu, sehingga ragu kehilangan maknanya. | ragu hanya untuk cabang "tawaran tidak dapat dibandingkan dan syarat tambahan tidak terpenuhi" |
-| **K3** | pertentangan | Saluran termasuk unsur inti. Saluran yang disebut di kedua sisi dan berbeda berstatus "bertentangan" menurut definisi status, sehingga kalimat pertama aturan 9 ("tidak ada unsur inti yang bertentangan") menolak pasangan yang menurut aturan 5 klaim sama. | nyatakan bahwa saluran berbeda tidak dihitung pertentangan (statusnya "berbeda, tidak menolak") |
-| **K4** | tumpang tindih dengan v1.0 | Belum ada urutan prioritas untuk pasangan penipuan bila A6 dan v1.0 berbeda: (a) v1.0 "lebih umum -> TIDAK SAMA" lawan aturan 8 + 9 (istilah umum -> tidak dapat dibandingkan -> bisa klaim sama); (b) v1.0 "cocok dengan lebih dari satu artikel tanpa unsur pembeda (keluarga tautan pendaftaran bantuan) -> TIDAK SAMA, ambigu" lawan aturan 7 (semua yang sah dicatat, jawaban benar bila memilih salah satu); (c) v1.0 berjangkar pada KIA (judul) lawan aturan 6 (Narasi, bukan judul). | satu kalimat: "untuk pasangan penipuan, bila A6 dan v1.0 berbeda, A6 yang berlaku" (atau sebaliknya), ditambah daftar ketiga titik itu |
-| **K5** | ambiguitas | Nominal dan periode tidak tercantum sebagai unsur inti, padahal pertentangannya menolak (aturan 3, 4) dan aturan 9 menyebutnya "unsur lain". Kalimat pertama aturan 9 karena itu tidak jelas mencakup pertentangan nominal dan periode. Hasilnya sama selama aturan 3 dan 4 diterapkan lebih dulu, tetapi teksnya bisa dibaca berbeda oleh anotator kedua. | sebut unsur yang dibandingkan secara lengkap: lembaga atau tokoh, tawaran, saluran, nominal, periode |
-| **K6** | tidak tercakup | Periode berbeda jenis: satu sisi menyebut tahun, sisi lain nama gelombang (misalnya "2026" lawan "Gelombang 2"). Keduanya eksplisit, tetapi tidak jelas apakah "berbeda". | jenis berbeda = tidak dapat dibandingkan |
-| **K7** | tidak tercakup | "Nominal" tidak didefinisikan: uang atau nilai bantuan saja, atau juga kuota peserta, jumlah armada (P1-31), dan angka lain. A2.5 menunjukkan risikonya (pola sempat membaca jumlah reaksi media sosial sebagai uang). | nominal = jumlah uang atau nilai bantuan yang dijanjikan kepada penerima |
-| **K8** | tidak tercakup | Lembaga umum ("pemerintah", "kementerian") lawan lembaga tertentu (pola P1-31). Aturan 8 mengatur istilah umum hanya untuk tawaran. Bisa dibaca sebagai "tidak disebut" (aturan 2), "tidak dapat dibandingkan", atau induk-anak (ragu). | perlakukan seperti aturan 8: tidak dapat dibandingkan |
-| **K9** | tidak tercakup | Tokoh lawan lembaga yang dipimpinnya (misalnya kepala daerah lawan pemerintah daerahnya). Mirip induk-anak, tetapi catatan induk-anak hanya menyebut lembaga. | samakan dengan induk-anak: ragu dan dicatat |
-| **K10** | prosedur | Kriteria (a) definisi penipuan butuh label TurnBackHoax tiap kandidat. A7 belum menyatakan bahwa label itu tampil di lembar pelabelan; tanpa itu kriteria (a) tidak bisa dipakai. Label artikel juga bukan keluaran sistem, jadi menampilkannya tidak melanggar kebutaan A7. | tampilkan label TurnBackHoax per kandidat di lembar pelabelan |
-| **K11** | tidak tercakup | Pedoman v1.0 mewajibkan kolom `kekhususan` per butir dan memakai nilai `batas` (dilaporkan terpisah). Pedoman 2.0 memakai tanda ragu. Belum ditetapkan apakah `kekhususan` tetap diisi pada set Versi 2, dan apa hubungan `batas` dengan ragu. | ragu menggantikan `batas`; `kekhususan` tidak dipakai di Versi 2 (atau tetap diisi untuk pasangan non-penipuan) |
-| **K12** | rumusan | Aturan 3 menulis "gelombang berbeda (tahun atau tanggal berbeda)", sedangkan definisi periode mengecualikan tanggal. Isinya konsisten (tanggal berbeda tetap klaim sama), tetapi kata "tahun" muncul di kalimat utama dan di pengecualian, jadi mudah salah baca. | tulis ulang: "gelombang berbeda (terlihat dari tanggal terbit, tanggal di pesan, atau tahun yang hanya disebut satu sisi)" |
-| **K13** | prosedur | Aturan 9 akan membuat ragu lebih sering muncul, tetapi belum ditetapkan bagaimana butir ragu dipakai dalam metrik (misalnya disertakan di hasil utama dan dilaporkan sensitivitasnya, seperti evaluasi eksternal). | tetapkan di `testset/v2.meta.json` sebelum pelabelan, bukan sesudahnya |
-
-Yang **diperiksa dan tidak bertentangan:** aturan 3 dan 4 setelah keputusan 23; aturan 2 dengan aturan 9 (lembaga tidak
-disebut, tawaran sama, tanpa pertentangan -> klaim sama); aturan 7 dengan aturan 3, 4, dan 8; catatan wajib dengan
-kebutaan anotator kedua (kandidat terdekat menurut anotator, bukan skor).
+| **K1** | **pertentangan, berat** | Pengumuman resmi set (a) yang mengajak mendaftar lewat tautan resmi memenuhi definisi penipuan (b), jadi pasangannya dengan artikel PENIPUAN berlembaga dan bertawaran sama dinilai dengan A6. Aturan 5 lalu menyatakan **klaim sama** (tautan berbeda tidak menolak). Itu bertentangan dengan A4.a, yang menetapkan label set (a) "belum ditemukan", dan dengan metrik salah menuduh. A6 mengandaikan kedua sisi adalah penipuan; tidak ada aturan untuk saluran resmi lawan saluran penipuan. | (i) saluran resmi lawan saluran sumber hoaks = bertentangan; (ii) kriteria (b) hanya untuk pesan yang bukan pengumuman dari sumber resmi; (iii) set (a) dinilai dengan pedoman v1.0 saja |
+| **K2** | ambiguitas | Aturan 9: "Selain itu: bukan klaim sama, dan butir ditandai ragu." Bila dibaca harfiah, setiap pasangan yang ditolak karena pertentangan jelas juga ditandai ragu. | ragu hanya untuk cabang "tawaran tidak dapat dibandingkan dan syarat tambahan tidak terpenuhi" |
+| **K3** | pertentangan | Saluran yang disebut di kedua sisi dan berbeda berstatus "bertentangan", sehingga kalimat pertama aturan 9 menolak pasangan yang menurut aturan 5 klaim sama. | saluran berbeda tidak dihitung pertentangan |
+| **K4** | tumpang tindih dengan v1.0 | Belum ada urutan prioritas untuk pasangan penipuan bila A6 dan v1.0 berbeda: (a) "lebih umum"; (b) keluarga artikel; (c) KIA lawan Narasi. | satu kalimat prioritas, ditambah penyelesaian ketiga titik |
+| **K5** | ambiguitas | Nominal dan periode tidak tercantum sebagai unsur inti. | sebut unsur secara lengkap |
+| **K6** | tidak tercakup | Periode berbeda jenis (tahun lawan nama gelombang). | jenis berbeda = tidak dapat dibandingkan |
+| **K7** | tidak tercakup | "Nominal" tidak didefinisikan. | jumlah uang atau nilai bantuan |
+| **K8** | tidak tercakup | Lembaga umum ("pemerintah") lawan lembaga tertentu. | tidak dapat dibandingkan |
+| **K9** | tidak tercakup | Tokoh lawan lembaga yang dipimpinnya. | ragu dan dicatat |
+| **K10** | prosedur | Kriteria (a) butuh label TurnBackHoax tiap kandidat tampil di lembar pelabelan. | tampilkan label |
+| **K11** | tidak tercakup | Hubungan `kekhususan` dan `batas` v1.0 dengan tanda ragu. | ragu menggantikan `batas` |
+| **K12** | rumusan | "Tahun atau tanggal berbeda" di aturan 3 mudah salah baca. | rumuskan ulang |
+| **K13** | prosedur | Pemakaian butir ragu dalam metrik belum ditetapkan. | tetapkan sebelum pelabelan |
 
 ### A6.5 Rencana penguncian pedoman 2.0 (usulan; menunggu persetujuan pemilik proyek)
 
 Mengikuti cara pedoman v1.0 (`testset/ANNOTATION_GUIDE.md`, `testset/GUIDE_LOCK.json`, tag `annotation-guide-v1.0`):
 
-1. Pemilik proyek memutuskan K1-K13; pedoman 2.0 dan A6 direvisi; pemilik proyek memeriksa teks akhirnya.
+1. Pemilik proyek memutuskan semua temuan terbuka (A6.8 dan A6.9); pedoman 2.0 dan A6 direvisi; pemilik proyek
+   memeriksa teks akhirnya.
 2. **Commit kunci** (Claude Code, di branch, lalu digabung ke `main` atas persetujuan pemilik proyek): status pedoman
    menjadi "DIKUNCI" dengan tanggal; `testset/GUIDE_LOCK_v2.json` berisi `sha256_ternormalisasi` (akhir baris
    dinormalkan ke LF, seperti v1.0), versi `2.0`, dan tanggal; uji baru di `tests/core/test_testset_locks.py` yang gagal
@@ -982,13 +1042,100 @@ Mengikuti cara pedoman v1.0 (`testset/ANNOTATION_GUIDE.md`, `testset/GUIDE_LOCK.
    pedomannya; versi pedoman dicatat per butir. Kasus tak tercakup selama pelabelan ditangani seperti v1.0: ditandai
    ragu, dicatat sebagai kasus terbuka, diputuskan dengan aturan terdekat, tanpa merevisi pedoman di tengah jalan.
 
+### A6.6 Keputusan atas K1-K13 (pemilik proyek, 2026-10-27; disusun bersama AI, A6.3)
+
+| Temuan | Keputusan | Nomor keputusan | Diterapkan di revisi 7 |
+| --- | --- | --- | --- |
+| K1 | Aturan 5 ditambah pengecualian saluran resmi; istilah "butir penipuan" diganti "pola pendaftaran atau tawaran"; cara verifikasi saluran resmi ditulis; perbandingan dengan alternatif diminta (A6.7) | 32 | ya |
+| K2 | Ragu di aturan 9 hanya untuk keadaan kedua (tawaran tidak dapat dibandingkan, bukti tambahan kurang) | 33 | ya |
+| K3 | Saluran berbeda netral, sama persis = bukti pendukung, resmi lawan tidak resmi = pertentangan; aturan 9 disesuaikan | 34 | ya |
+| K4 | Untuk pasangan A6, A6 didahulukan bila bertentangan dengan v1.0; penyelesaian tiga titik diusulkan untuk disetujui | 35 | prinsip ya; tiga titik usulan (A6.8) |
+| K5 | Nominal dan periode masuk daftar unsur inti | 36 | ya |
+| K6 | Periode hanya dibandingkan dengan jenis yang sama; jenis berbeda = tidak dapat dibandingkan, kecuali satu sisi memuat keduanya | 37 | ya |
+| K7 | Nominal = jumlah uang yang ditawarkan atau diminta; armada, kuota peserta, dan sejenisnya bukan nominal | 38 | ya |
+| K8 | Lembaga umum lawan lembaga tertentu = tidak dapat dibandingkan | 39 | ya |
+| K9 | Tokoh lawan lembaga yang dipimpinnya = tidak dapat dibandingkan, ragu; keputusan dari unsur lain lewat aturan 9; dikumpulkan untuk versi berikutnya | 40 | ya |
+| K10 | Label TurnBackHoax tiap kandidat ditampilkan di lembar pelabelan | 41 | ya (A6, A7) |
+| K11 | Hubungan `kekhususan`, `batas`, dan ragu diusulkan untuk disetujui | -- | usulan (A6.8) |
+| K12 | Aturan 3 dirumuskan ulang: gelombang yang hanya terlihat dari tanggal terbit = sama; tahun atau periode tertulis di kedua teks dan berbeda = bukan sama | 42 | ya |
+| K13 | Metrik utama memakai label akhir, ditambah sensitivitas tanpa butir ragu; ditulis di A4 sebagai bagian yang dikunci | 43 | ya (A4.d) |
+
+**Satu kalimat yang ditambahkan Claude Code saat menerapkan K12 (perlu diperiksa pemilik proyek):** "Tahun atau periode
+yang hanya tertulis di satu sisi: tidak dapat dibandingkan." Kalimat ini tidak ada di keputusan K12, tetapi mengikuti
+definisi status unsur dan pengecualian aturan 3 sebelumnya ("kecuali disebut eksplisit di kedua sisi"); tanpanya,
+keadaan itu tidak tercakup rumusan baru.
+
+### A6.7 K1: pengecualian saluran resmi lawan alternatif "set (a) tanpa A6"
+
+Pemilik proyek meminta kedua pilihan dibandingkan sebelum diterapkan. **Penilaian Claude Code: alternatif tidak lebih
+baik secara keseluruhan, jadi pengecualian saluran resmi diterapkan.** Satu celah tetap ada pada keduanya (temuan N1, A6.9).
+
+| Sisi | Pengecualian saluran resmi (diterapkan) | Set (a) tanpa A6, label dari cara set disusun |
+| --- | --- | --- |
+| Beban pelabel, set (a) | Rendah: saluran di pengumuman resmi terverifikasi lewat asal butir (cara verifikasi butir 4); yang diperiksa hanya sisi artikel | Paling rendah: tidak ada pelabelan klaim sama; hanya pemeriksaan pengecualian A4.a ("tidak pernah dinyatakan salah oleh TurnBackHoax") |
+| Beban pelabel, set (b) | Bertambah: setiap saluran perlu dicocokkan dengan sumber acuan, dan sumber acuan dicatat | Tidak berubah, tetapi set (b) tetap tanpa aturan saluran resmi |
+| Risiko ketidaksepakatan | Ada: domain tiruan yang terlihat resmi, akun media sosial, nomor WhatsApp, dan pemendek URL; dua pelabel bisa memakai sumber acuan berbeda. Dikurangi dengan aturan "host persis atau subdomain sejati" dan larangan menebak | Nol di set (a), karena tidak ada pelabelan; tetapi pemeriksaan pengecualian A4.a tetap butuh aturan, dan tanpa A6 aturannya v1.0 yang tidak mengenal saluran |
+| Pesan set (b) yang meneruskan pengumuman resmi | **Tertangani** bila pengumumannya menyebut saluran resmi | **Tidak tertangani:** aturan 5 akan menilainya klaim sama dengan artikel penipuan berlembaga dan bertawaran sama |
+| Pengukuran kesepakatan set (a) (A7, keputusan 11) | Tetap bisa dijalankan seperti rencana | Kehilangan isi: 40 butir set (a) untuk anotator kedua tidak punya label klaim sama untuk dibandingkan; A7 harus dirancang ulang |
+| Pengumuman resmi tanpa saluran | **Tidak tertangani** (N1) | Tertangani di set (a) karena label ditetapkan dari cara set disusun; tidak tertangani di set (b) |
+
+Alasan utama: pengecualian dibutuhkan untuk set (b) apa pun pilihannya, dan alternatif mengorbankan rencana kesepakatan
+set (a) yang sudah disetujui. Celah N1 lebih tepat ditutup dengan uji Kesimpulan (usulan K4 titik c, A6.8) daripada
+dengan membebaskan set (a) dari A6.
+
+### A6.8 Usulan untuk K4 (tiga titik) dan K11 (menunggu persetujuan pemilik proyek)
+
+**K4, dengan prinsip "A6 didahulukan untuk pasangan A6":**
+
+| Titik | v1.0 | Usulan untuk pasangan A6 | Alasan |
+| --- | --- | --- | --- |
+| (a) Klaim lebih umum | "lebih umum -> TIDAK SAMA" (`kekhususan=umum`) | Aturan 8 dan 9 menggantikan baris itu: istilah umum -> tawaran tidak dapat dibandingkan -> aturan 9 | Pada pola pendaftaran, istilah umum ("bantuan") sering hanya gaya bahasa, sementara lembaga dan saluran bisa sama persis dengan sumber hoaks. Aturan 9 tetap konservatif: butuh lembaga atau tokoh sama dan satu unsur lain sama, selain itu bukan klaim sama dan ragu. Konsekuensi: sedikit lebih banyak positif dibanding v1.0, hanya bila ada bukti tambahan |
+| (b) Keluarga artikel | "cocok dengan lebih dari satu artikel tanpa unsur pembeda -> TIDAK SAMA, `ambigu`" | Aturan 7 menggantikan baris itu: semua artikel sah dicatat, jawaban benar bila memilih salah satunya | Baris v1.0 dibuat karena set uji v1 hanya punya satu artikel target; A4.d Versi 2 menerima artikel sah mana pun, dan setiap artikel wajib lolos aturan sendiri-sendiri. Risiko: keluarga besar memudahkan jawaban "benar". Mitigasi yang diusulkan: jumlah artikel sah dicatat per butir, dan akurasi butir dengan lebih dari satu artikel sah dilaporkan terpisah (deskriptif) |
+| (c) Jangkar KIA lawan Narasi | KIA (judul) adalah jangkar; uji dua arah dan uji Kesimpulan | Unsur dibandingkan dengan Narasi (aturan 6); KIA hanya untuk mengenali topik. Uji dua arah digantikan perbandingan unsur. **Uji Kesimpulan dipertahankan sebagai uji penolak:** bila Kesimpulan artikel membenarkan isi pesan (misalnya menyatakan programnya memang ada, atau saluran di pesan memang resmi), pasangan bukan klaim sama | Judul artikel pola pendaftaran ("Tautan Pendaftaran X") jarang memuat lembaga, nominal, atau saluran; Narasi yang memuatnya. Uji Kesimpulan sebagai penolak menutup N1 (pengumuman resmi tanpa saluran) dan pesan set (b) yang meneruskan pengumuman resmi, tanpa beban verifikasi tambahan, karena Kesimpulan artikel penipuan umumnya menyebut bahwa program atau saluran resminya berbeda dari yang beredar |
+
+**K11:**
+
+1. **Ragu menggantikan `batas` di seluruh set Versi 2** (pasangan A6 maupun v1.0). Alasan: keduanya berarti "tidak pasti
+   menurut pedoman", tetapi set uji v1 mengeluarkan `batas` dari hitungan utama, sedangkan keputusan 43 memasukkan butir
+   ragu ke metrik utama dan mengeluarkannya hanya di sensitivitas. Dua tanda dengan perlakuan berbeda akan membingungkan
+   pelabel dan metrik.
+2. **`kekhususan` diisi hanya untuk butir yang semua pasangannya dinilai dengan v1.0**, tanpa nilai `batas`. Untuk butir
+   dengan pasangan A6, kolom itu diisi `a6`. Alasan: catatan wajib sudah merekam unsur secara lebih rinci, dan nilai
+   seperti `umum` atau `spesifik_inti` akan bertabrakan dengan status unsur A6 (titik a). Hasil per `kekhususan`
+   dilaporkan hanya untuk butir non-A6, sebagai deskripsi.
+3. **`ambigu` v1.0 tidak dipakai untuk pasangan A6** (aturan 7 menggantikannya, titik b).
+
+### A6.9 Pemeriksaan konsistensi kedua (2026-10-27, revisi 7; TEMUAN, BELUM DIPERBAIKI)
+
+Diperiksa ulang: definisi unsur, aturan 1-9 setelah revisi 7, catatan wajib, kapan A6 dipakai, dan hubungannya dengan
+v1.0, A4, dan A7, terutama dampak K1 terhadap aturan 5, 7, dan 9. Kode N agar tidak tertukar dengan K.
+
+| Kode | Jenis | Temuan | Pilihan (usulan) |
+| --- | --- | --- | --- |
+| **N1** | **pertentangan, berat** | **K1 baru tertutup sebagian.** Pengecualian saluran resmi hanya bekerja bila kedua sisi menyebut saluran. Pengumuman resmi yang tidak menyebut tautan atau nomor ("Pendaftaran Program X Tahun 2027 dibuka mulai 1 Maret") lawan artikel PENIPUAN "Tautan Pendaftaran Program X" dengan lembaga dan tawaran sama: saluran tidak dapat dibandingkan, tidak ada pertentangan, sehingga aturan 9 kalimat pertama menyatakan **klaim sama**. Itu bertentangan dengan label set (a) (A4.a). Hal yang sama terjadi pada pesan set (b) yang meneruskan pengumuman resmi tanpa saluran. | uji Kesimpulan sebagai uji penolak (usulan K4 titik c); atau label set (a) dari cara set disusun (A6.7) |
+| **N2** | **pertentangan, sedang** | **Sisi yang memakai saluran resmi bisa tetap hoaks.** Pesan penipuan kadang menyebut situs resmi sambil meminta transfer ke rekening atau nomor lain. Bila Narasi artikel memakai saluran resmi itu dan pesan yang dicek memakai tautan tiruan untuk penipuan yang sama, pengecualian menyatakan bukan klaim sama. Lagi pula satu sisi bisa memuat saluran resmi dan tidak resmi sekaligus, dan keadaan itu belum diatur. | pengecualian hanya berlaku bila saluran resmi adalah satu-satunya saluran di sisi itu; sisi campuran -> saluran tidak dapat dibandingkan, ragu |
+| **N3** | ambiguitas, sedang | **Ragu bisa membengkak.** Menurut cara verifikasi butir 5, setiap saluran yang status resminya tidak dapat dipastikan membuat pasangan ragu. Pemendek URL dan nomor WhatsApp sangat umum di pesan penipuan, dan lembaga resmi pun kadang memakai pemendek. Bila dibaca harfiah, banyak pasangan set (b) yang kedua sisinya jelas penipuan menjadi ragu, sehingga analisis sensitivitas tanpa butir ragu (keputusan 43) kehilangan banyak butir. | verifikasi hanya menentukan bila sisi lain saluran resmi yang terverifikasi; bila tidak ada sisi yang terverifikasi resmi, aturan 5 kalimat pertama berlaku tanpa ragu |
+| **N4** | tumpang tindih, sedang | **Tindakan dan syarat tidak termasuk unsur A6.** Dengan A6 didahulukan (keputusan 35), tidak jelas apakah unsur v1.0 "tindakan" dan "kondisi pembeda" masih dipakai pada pasangan A6, karena ketiadaan aturan bukan pertentangan. Contoh: pesan resmi lawan hoaks yang menyebut saluran resmi yang sama tetapi menambah syarat palsu ("tanpa tes"); semua unsur A6 sama, sehingga A6 menyatakan klaim sama. Ini juga jenis kesalahan sistem P2-33. | unsur v1.0 yang tidak diatur A6 (tindakan, kondisi pembeda) tetap dibandingkan; perbedaannya = pertentangan |
+| **N5** | tidak tercakup, ringan | **Nominal dengan peran berbeda.** Keputusan 38 mencakup uang yang ditawarkan dan yang diminta. Pesan menawarkan Rp2 juta, artikel menyebut biaya pendaftaran Rp100 ribu: keduanya nominal, tetapi tidak jelas apakah dibandingkan. | nominal hanya dibandingkan dengan peran yang sama (ditawarkan dengan ditawarkan, diminta dengan diminta) |
+| **N6** | prosedur, ringan | **Verifikasi bergantung pada waktu dan akses.** Domain resmi bisa berubah antara tanggal pesan dan tanggal pelabelan, dan anotator kedua butuh akses internet untuk sumber acuan (a). A7 belum menyebut keduanya. | tanggal pemeriksaan dicatat (sudah di catatan wajib); A7 menyebut bahwa anotator kedua boleh membuka situs resmi lembaga dengan cara verifikasi yang sama |
+| **N7** | prosedur, ringan | **"Butir ragu" untuk sensitivitas belum didefinisikan pemiliknya**: tanda ragu dari pemilik proyek pada label akhir, dari salah satu anotator, atau dari keduanya. | butir ragu = ditandai ragu pada label akhir pemilik proyek; tanda ragu anotator kedua dilaporkan terpisah |
+| N8 | rumusan, ringan | Di aturan 9, "saluran sama" pada keadaan kedua ditulis "saluran sama persis", sedangkan kalimat pertama aturan 5 menyebut "sama persis dengan sumber hoaks di artikel". Untuk set (a), "sama persis" bisa berarti kedua sisi memakai saluran resmi yang sama (lihat N4). | nyatakan bahwa saluran resmi yang sama di kedua sisi bukan bukti pendukung pola penipuan |
+
+Yang **diperiksa dan tidak bertentangan:** aturan 7 dengan pengecualian saluran resmi (pesan resmi -> setiap artikel
+penipuan bertentangan pada saluran -> tidak ada artikel sah -> negatif, sesuai A4.a); aturan 9 setelah K2 dan K3
+(penolakan karena pertentangan tidak lagi ragu, saluran berbeda tidak lagi menolak); aturan 3 dan 4 setelah K12; K8 dan
+K9 dengan aturan 9 (bila tawaran sama, lembaga yang tidak dapat dibandingkan tidak menghalangi klaim sama; bila tawaran
+juga tidak dapat dibandingkan, hasilnya bukan klaim sama dan ragu); K13 dengan A7 (label akhir = label pemilik proyek
+setelah adjudikasi).
+
 ## A7. Protokol anotator kedua
 
 - **Jumlah dan pembagian (disesuaikan dengan kunci dua tahap):** 80 butir. **40 dari set (a)** dilabeli sebelum
   Kunci 1, dan **40 dari set (b)** (20 positif dan 20 negatif menurut label pemilik proyek) dilabeli sebelum
   Kunci 2. Pemilihan acak berbenih dan terstratifikasi. Anotator kedua tidak tahu proporsinya.
 - **Yang dilihat anotator kedua:** pedoman A6 dan pedoman v1.0, pesan, dan daftar kandidat artikel yang sama dengan
-  yang dilihat pemilik proyek, dalam urutan acak. **Tidak** melihat label pemilik proyek, keluaran sistem, skor
+  yang dilihat pemilik proyek, dalam urutan acak, **beserta label TurnBackHoax setiap kandidat** (keputusan 41;
+  metadata artikel, bukan keluaran sistem). **Tidak** melihat label pemilik proyek, keluaran sistem, skor
   retrieval, maupun catatan adjudikasi.
 - **Latihan:** 5 butir latihan dari set lama yang sudah sekali pakai, tidak dihitung.
 - **Berkas:** dibuat kode dengan sel terkunci, seperti sesi buta sebelumnya; hash templat di-commit sebelum diisi.
@@ -1202,15 +1349,16 @@ selesai dilabeli.
 
 ## A12. Urutan kerja sampai Kunci 1
 
-**Langkah berikutnya (revisi 6): pemilik proyek memutuskan 13 temuan konsistensi pedoman (A6.4, baris 2a).** Lembar
-persetujuan sudah diisi 2026-10-27 (baris 1) dan pedoman sudah direvisi menjadi draf 2.0 (baris 2). Pelabelan apa
+**Langkah berikutnya (revisi 7): pemilik proyek memutuskan usulan K4 dan K11 (A6.8) dan temuan N1-N8 (A6.9), dimulai
+dari N1 (baris 2a).** Lembar persetujuan sudah diisi 2026-10-27 (baris 1), pedoman sudah direvisi menjadi draf 2.0
+(baris 2), dan K1-K13 sudah diputuskan (A6.6). Pelabelan apa
 pun, termasuk latihan anotator kedua, baru dimulai setelah pedoman dikunci (baris 2c).
 
 | No | Pekerjaan | Siapa | Perkiraan jam | Bisa dicicil? |
 | --- | --- | --- | --- | --- |
 | 1 | ~~Menyetujui pedoman A6 lewat lembar persetujuan~~ **Selesai 2026-10-27** (A6.3) | Pemilik proyek | -- | -- |
 | 2 | Merevisi pedoman sesuai lembar: **draf 2.0 selesai 2026-10-27** (`testset/ANNOTATION_GUIDE_v2.md`); pemilik proyek memeriksa teksnya | Claude Code + pemilik proyek | 0,5 (pemeriksaan) | Tidak |
-| 2a | Memutuskan 13 temuan konsistensi (A6.4), lalu pedoman 2.0 direvisi dan diperiksa ulang | Pemilik proyek, lalu Claude Code | belum diperkirakan | Ya, per temuan |
+| 2a | ~~Memutuskan K1-K13 (A6.4)~~ **selesai 2026-10-27 (A6.6)**; tersisa: usulan K4 dan K11 (A6.8) dan temuan N1-N8 (A6.9), lalu pedoman 2.0 direvisi dan diperiksa ulang | Pemilik proyek, lalu Claude Code | belum diperkirakan | Ya, per temuan |
 | 2b | Menyetujui rencana penguncian pedoman (A6.5) | Pemilik proyek | 0,5 | Tidak |
 | 2c | **Mengunci pedoman 2.0:** commit kunci (Claude Code), lalu tag `annotation-guide-v2.0`, push, GitHub Release, Internet Archive (pemilik proyek) | Claude Code + pemilik proyek | 0,5 + 0,5 | Tidak |
 | 3 | ~~Menyetujui ambang uji pergeseran (A4.f)~~ **Selesai di revisi 5** (keputusan 20) | Pemilik proyek | -- | -- |

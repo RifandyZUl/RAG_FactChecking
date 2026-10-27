@@ -12,15 +12,16 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 
 *(2026-10-27, pedoman Versi 2; branch `pedoman-a6-v2`, BELUM digabung)*
 
-> **Lembar persetujuan pedoman A6 diisi pemilik proyek 2026-10-27** (dengan bantuan AI, pernyataan lengkap di
-> `docs/rancangan/rancangan_v2.md` A6.3; templat ikut tertimpa, hash kedua berkas di A6.3). Rancangan revisi 6:
-> keputusan 23-31 (keputusan 9 DIGANTIKAN 23: nominal eksplisit berbeda -> bukan klaim sama, juga lintas gelombang;
-> akibatnya P2-21 bukan klaim sama, perubahan yang merugikan sistem; angka evaluasi eksternal TIDAK berubah).
-> **Pedoman 2.0 = `testset/ANNOTATION_GUIDE_v2.md`, DRAF: belum boleh dipakai melabeli.** 13 temuan konsistensi
-> (A6.4, K1-K13; K1 berat: pesan resmi set (a) bisa dinilai klaim sama dengan artikel penipuan lewat aturan 5)
-> menunggu keputusan pemilik proyek; jangan diperbaiki tanpa diminta. Penguncian (A6.5, usulan): `GUIDE_LOCK_v2.json`
-> + uji kunci, tag `annotation-guide-v2.0` + Release + Internet Archive oleh pemilik proyek, SEBELUM pelabelan apa
-> pun (pedoman tidak lagi dikunci di Kunci 1). Jangan membuat tag atau push.
+> **Lembar persetujuan pedoman A6 diisi pemilik proyek 2026-10-27** (dengan bantuan AI; pernyataan lengkap di
+> `docs/rancangan/rancangan_v2.md` A6.3; templat ikut tertimpa, hash kedua berkas di A6.3). Revisi 6: keputusan
+> 23-31 (keputusan 9 DIGANTIKAN 23: nominal eksplisit berbeda -> bukan klaim sama, juga lintas gelombang; P2-21 jadi
+> bukan klaim sama, merugikan sistem; angka evaluasi eksternal TIDAK berubah). **Revisi 7: K1-K13 diputuskan
+> (keputusan 32-43, A6.6; juga disusun bersama AI):** istilah "pola pendaftaran atau tawaran", pengecualian saluran
+> resmi di aturan 5 + cara verifikasi, butir ragu di metrik (A4.d). **Pedoman 2.0 = `testset/ANNOTATION_GUIDE_v2.md`,
+> masih DRAF: belum boleh dipakai melabeli.** Terbuka: usulan K4 (3 titik) dan K11 (A6.8), temuan N1-N8 (A6.9; N1
+> berat: pengumuman resmi TANPA saluran tetap dinilai klaim sama dengan artikel penipuan). Jangan diperbaiki tanpa
+> diminta. Penguncian (A6.5, usulan): `GUIDE_LOCK_v2.json` + uji kunci, tag `annotation-guide-v2.0` + Release +
+> Internet Archive oleh pemilik proyek, SEBELUM pelabelan apa pun. Jangan membuat tag, menggabung, atau push.
 
 *(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
 
