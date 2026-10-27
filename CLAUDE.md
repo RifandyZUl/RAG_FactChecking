@@ -35,6 +35,12 @@ sesi** (mis. setelah sesi terputus) -- sebelum bagian lain di berkas ini.
 > (pedoman bagian 3.1). Menunggu keputusan: usulan protokol anotator kedua A7.1 (pengaman 1: 40 butir acak sebelum
 > Kunci 1; pengaman 2: semua butir "ditemukan" + acak 2k setelah evaluasi; set b 60 butir) dan temuan berat A6.14
 > H2 (indeks set a belum ditetapkan) dan H3 (cara mencari artikel pembanding S2 belum ditetapkan).
+> **Revisi 11 (2026-10-27):** keputusan 61-65. A7.1 DISETUJUI (pengaman 1 + 2; hasil utama pengaman 2 = setelah
+> pengeluaran, tanpa pengeluaran dilaporkan berdampingan); H2: indeks set (a) = salinan beku sebelum pemeriksaan S2,
+> dipakai juga untuk evaluasi set (a), sidik jari di Kunci 1 (A4.c: set a dan set b memakai indeks beku BERBEDA);
+> H3: pembanding S2 = 5 teratas embedding + 3 teratas kata kunci judul, tanpa skor. **Menunggu:** skenario beban
+> anotator kedua (keputusan 63: set b 60 atau 40 butir), verifikasi daftar acuan, lalu uji coba 10 butir. Temuan
+> ringan R1-R13 ditinjau setelah uji coba; revisi pedoman di atas kertas tetap berhenti.
 
 *(2026-10-25, riwayat git ditulis ulang -- lihat "RIWAYAT GIT DITULIS ULANG" di bawah; hash di seluruh catatan ini adalah hash riwayat asli, pemetaannya di `docs/riwayat/pemetaan_hash.md`)*
 

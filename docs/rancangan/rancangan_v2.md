@@ -3,7 +3,7 @@
 
 # Rancangan Versi 2
 
-**Status (2026-10-27, revisi 10): pedoman 2.0 [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) berbentuk dua pertanyaan dan dipakai untuk set (b); label set (a) ditetapkan dari susunannya (keputusan 60). Masih DRAF, belum dikunci. Menunggu keputusan pemilik proyek: usulan protokol anotator kedua (A7.1) dan dua temuan berat (A6.14 H2, H3). Draf daftar acuan sedang diverifikasi pemilik proyek (A6.12). Revisi pedoman berikutnya hanya berdasarkan uji coba lalu pemeriksaan independen (A12). Versi 2 mengukur
+**Status (2026-10-27, revisi 11): pedoman 2.0 [`testset/ANNOTATION_GUIDE_v2.md`](../../testset/ANNOTATION_GUIDE_v2.md) berbentuk dua pertanyaan dan dipakai untuk set (b); label set (a) ditetapkan dari susunannya (keputusan 60). Masih DRAF, belum dikunci. Protokol anotator kedua A7.1 disetujui (keputusan 61-63) dan temuan berat H2 dan H3 diputuskan (keputusan 64-65); skenario beban anotator kedua menunggu jawaban anotator (A7.1, A8). Draf daftar acuan sedang diverifikasi pemilik proyek (A6.12). Revisi pedoman berikutnya hanya berdasarkan uji coba lalu pemeriksaan independen (A12). Versi 2 mengukur
 sistem Versi 1 tanpa mengubah keputusannya: pedoman yang dipertegas, anotator kedua, set uji (a) dan (b), dan tombol
 salin klarifikasi. Pemeriksaan entitas dan "pola mirip" tidak masuk (A2.7, keputusan 13-14).** Bagian A di bawah adalah rancangan yang berlaku. Bagian B adalah rancangan 2026-10-03 beserta
 pengukurannya; isinya dipertahankan, dan setiap bagiannya diberi tanda **[MASIH BERLAKU]**, **[SEBAGIAN
@@ -30,7 +30,7 @@ bahwa perilaku sistem membaik. Perbaikan perilaku sistem dicatat sebagai arah ve
 **Riwayat revisi Bagian A.** Versi pertama `b1691c0`; revisi 1 `1ebbba4` (keputusan pertama, koreksi A-E, tambahan
 F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-26): ruang lingkup dipersempit
 (keputusan 13-15), tinjauan kunci dua tahap, alat bantu tampilan nominal dan saluran (A11.3), arah perbaikan sistem
-(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31); revisi 7 (2026-10-27): keputusan atas K1-K13 (keputusan 32-43), perbandingan pilihan K1, usulan K4 dan K11, pemeriksaan konsistensi kedua; revisi 8 (2026-10-27): keputusan 44-52, penilaian prinsip utama (A6.10), uji coba pedoman dan pemeriksaan independen sebelum kunci (A6.5), lembar uji coba; revisi 9 (2026-10-27): bentuk dua pertanyaan, keputusan 44-51 diterapkan, keputusan 53-58, draf daftar acuan (A6.12), pemeriksaan konsistensi ketiga (A6.13); revisi 10 (2026-10-27): keputusan 59-60 (set a berlabel menurut susunannya), usulan A7.1, pemeriksaan dampak (A6.14).
+(A13); revisi 4 `c5be0cd` (2026-10-26): uji pergeseran (A4.f) menggantikan penghapusan uji kemunduran, keputusan 16-19; revisi 5 (2026-10-26): ambang uji pergeseran disetujui dengan label "Tidak terdeteksi pergeseran", uji pergeseran mengapit setiap evaluasi, kuota A8 dihitung ulang, rancangan dibekukan (keputusan 20-22); revisi 6 (2026-10-27): lembar persetujuan pedoman diisi, A6 direvisi, pedoman 2.0 berdiri sendiri, pemeriksaan konsistensi dan rencana penguncian pedoman (keputusan 23-31); revisi 7 (2026-10-27): keputusan atas K1-K13 (keputusan 32-43), perbandingan pilihan K1, usulan K4 dan K11, pemeriksaan konsistensi kedua; revisi 8 (2026-10-27): keputusan 44-52, penilaian prinsip utama (A6.10), uji coba pedoman dan pemeriksaan independen sebelum kunci (A6.5), lembar uji coba; revisi 9 (2026-10-27): bentuk dua pertanyaan, keputusan 44-51 diterapkan, keputusan 53-58, draf daftar acuan (A6.12), pemeriksaan konsistensi ketiga (A6.13); revisi 10 (2026-10-27): keputusan 59-60 (set a berlabel menurut susunannya), usulan A7.1, pemeriksaan dampak (A6.14); revisi 11 (2026-10-27): keputusan 61-65 (A7.1 disetujui, hasil utama pengaman 2, dua skenario beban anotator kedua, indeks set a, cara mencari pembanding S2).
 
 **Keputusan pemilik proyek:**
 
@@ -96,6 +96,11 @@ F-H); revisi 2 `8bce7d9` (hasil uji ekstraksi LLM: berhenti); revisi 3 (2026-10-
 | 58 | Urutan | Berhenti merevisi di atas kertas; revisi berikutnya hanya dari uji coba 10 butir, lalu pemeriksaan independen | berlaku (A12) |
 | 59 | Aturan 10 | "Bila Kesimpulan memuat beberapa jenis bantahan, cukup satu jenis yang membantah pesan" (pilihan penulisan Claude Code di revisi 9) disetujui | berlaku |
 | 60 | H1, diperluas | Butir yang asal-usulnya terverifikasi dari situs resmi lembaga di daftar acuan (set a) dianggap memakai saluran resmi dan tidak dapat dinilai dibantah oleh jenis bantahan apa pun, termasuk (c); hanya untuk butir yang asal-usulnya diketahui; pesan set (b) tetap dinilai biasa. Akibatnya label set (a) = "bukan klaim sama" menurut susunannya, dan A6 dipakai untuk set (b) | berlaku (pedoman bagian 3.1) |
+| 61 | A7.1 | Pengaman 1 (40 butir acak sebelum Kunci 1, aturan 0-1 / >= 2) dan pengaman 2 (semua butir "ditemukan" + 2k acak, buta terhadap jawaban sistem) disetujui seperti usulan; keputusan 11 digantikan | berlaku |
+| 62 | Hasil utama pengaman 2 | Salah menuduh setelah pengeluaran; hasil tanpa pengeluaran wajib dilaporkan berdampingan. Bias yang tersisa dicatat (A7.1 butir 3) | berlaku (dikunci di Kunci 1) |
+| 63 | Beban anotator kedua | Dua skenario: (1) set (b) 60 butir bila anotator sanggup ~7-14 jam; (2) set (b) tetap 40 butir, pengaman 1 dan 2 tidak dikurangi | **menunggu jawaban anotator**; skenario dicatat setelahnya |
+| 64 | H2: indeks set (a) | Salinan indeks dibekukan sebelum pemeriksaan S2, dipakai juga untuk evaluasi set (a); sidik jarinya dicatat di Kunci 1. Set (a) dan set (b) memakai indeks beku berbeda (A4.c) | berlaku |
+| 65 | H3: pembanding S2 | 5 teratas embedding + 3 teratas kata kunci judul, tanpa skor, sama untuk kedua pemeriksa | berlaku |
 
 **Pembacaan hasil uji kelayakan A2.5 (dari pemilik proyek), beserta tanggapan saya.** Dari 10 kecocokan palsu, 7
 menurut adjudikasi adalah kesalahan label. Jadi kesalahan sistem yang terbukti pada kecocokan palsu hanya 3, dan
@@ -520,10 +525,10 @@ kode, dan satu kunci di Januari tidak melindungi pedoman selama pelabelan set (b
 | | **Kunci 1** (setelah pedoman dan set (a) selesai) | **Kunci 2** (Januari 2027, sebelum evaluasi set (b)) |
 | --- | --- | --- |
 | Pedoman | **Sudah dikunci lebih dulu** lewat tag `annotation-guide-v2.0` (A6.5); Kunci 1 mencatat tag dan hash-nya | -- |
-| Set (a) | 150 butir yang sudah dilabeli dan lolos ambang kesepakatan (A7); **usulan revisi 10: lolos pengaman 1, sidik jari indeks set (a), dan aturan pengaman 2 (A7.1)** | -- |
+| Set (a) | 150 butir yang lolos pengaman 1 (A7.1, keputusan 61; menggantikan "lolos ambang kesepakatan"), daftar acuan terverifikasi, dan aturan pengaman 2 | -- |
 | Set (b) | **Prosedur saja:** periode, benih `20261026`, aturan pemilihan dan penghentian, pengecualian 100 `l6_id` lama | Butir yang sudah dilabeli dan lolos kappa |
 | Metrik dan ambang | Semua (A4.d, A4.e), termasuk ambang uji pergeseran (A4.f) | -- |
-| Indeks | -- | Indeks beku dan sidik jarinya (A4.c) |
+| Indeks | **Indeks set (a)** dan sidik jarinya, dibekukan sebelum pemeriksaan S2 (A4.c, keputusan 64) | Indeks beku set (b) dan sidik jarinya (A4.c) |
 | Bukti | `testset/v2.meta.json` versi 1, tag `testset-v2-kunci1`, GitHub Release, Internet Archive | `testset/v2.meta.json` versi 2, tag `testset-v2-kunci2`, GitHub Release, Internet Archive |
 
 **Kapan evaluasi dijalankan (keputusan 17):** evaluasi set (a) segera setelah Kunci 1, dan evaluasi set (b) setelah
@@ -603,11 +608,11 @@ membaca sendiri halaman hak cipta tiap situs.
 - "Pesan" diambil dari teks pengumuman resmi apa adanya (judul atau kalimat inti), tidak ditulis ulang. Data
   pribadi diperiksa dan dibersihkan seperti set uji sebelumnya.
 - Setiap butir harus benar menurut sumber resmi pada tanggal terbitnya, dan klaimnya tidak pernah dinyatakan
-  salah oleh TurnBackHoax (diperiksa manusia terhadap indeks beku).
+  salah oleh TurnBackHoax (diperiksa manusia terhadap **indeks set (a)**, A4.c; cara mencari pembanding di A7.1 butir 1).
 - Label yang diharapkan: "belum ditemukan" (tidak ada artikel yang memeriksa klaim yang sama). **Sejak keputusan 60
   (revisi 10), label ini ditetapkan dari cara set disusun, bukan dengan pedoman 2.0; kebenarannya bergantung pada
-  pemeriksaan syarat penyusunan (A7.1). Indeks dan cara mencari artikel pembanding untuk pemeriksaan itu belum
-  ditetapkan (A6.14 H2, H3).**
+  pemeriksaan syarat penyusunan (A7.1). Indeksnya ditetapkan di A4.c (keputusan 64) dan cara mencari artikel
+  pembanding di A7.1 butir 1 (keputusan 65).**
 - Batasan yang dicatat: pengumuman resmi bahasanya lebih rapi daripada pesan berantai, jadi set ini mengukur pesan
   benar yang ditulis resmi.
 
@@ -657,7 +662,22 @@ konklusif.
 - **Ambang pada 50 butir per jenis:** positif memadai bila benar >= 37/50; kecocokan palsu gugur bila >= 10/50,
   lolos bila <= 4/50.
 
-### A4.c Indeks evaluasi Versi 2 (dikunci di Kunci 2)
+### A4.c Indeks evaluasi Versi 2 (indeks set a dikunci di Kunci 1, indeks set b di Kunci 2)
+
+**Dua indeks beku (keputusan 64, revisi 11).** **Indeks set (a)** adalah salinan indeks produksi yang dibekukan
+sebelum pemeriksaan S2 dimulai (A7.1); pemeriksaan S2, pengaman 1, evaluasi set (a), dan pengaman 2 semuanya memakai
+salinan itu, dan sidik jarinya (7 kunci) dicatat di Kunci 1. Dengan begitu tidak ada artikel yang terbit setelah
+pemeriksaan ikut menilai butir yang sudah dinyatakan bersih. **Indeks set (b)** dibuat di Kunci 2 seperti di bawah.
+
+**Artinya bagi perbandingan:** kedua indeks berbeda isi (indeks set b lebih besar, sampai pertengahan Januari 2027),
+jadi tingkat salah menuduh set (a) dan angka set (b) **diukur pada basis data yang berbeda** dan tidak boleh dibaca
+sebagai dua angka dari satu keadaan sistem. Masing-masing sah untuk indeksnya sendiri. Bila salah menuduh bergantung
+pada jumlah artikel (lebih banyak artikel penipuan berpola sama, lebih banyak kandidat yang mirip), angka set (a)
+pada indeks yang lebih kecil bisa lebih rendah daripada bila diukur pada indeks set (b); arah dan besarnya tidak
+diukur. Perilaku sistem di antara keduanya diawasi uji pergeseran (A4.f), yang memakai `archive/v1`, bukan kedua
+indeks ini.
+
+**Indeks set (b):**
 
 - Setelah antrean sampai pertengahan Januari 2027 di-ingest, indeks produksi **disalin** menjadi indeks beku,
   misalnya `data/backups/snapshot_v2_<tanggal>/`. Indeks tidak disimpan di `archive/` dan tidak di-commit.
@@ -953,6 +973,10 @@ dilabeli ulang; pedoman 2.0 hanya berlaku untuk set (a) dan set (b).
 **Pernyataan pemakaian AI, keputusan 59-60** (pemilik proyek, 2026-10-27; dicatat apa adanya):
 
 > Keputusan di bawah saya susun bersama asisten AI (Claude). Catat seperti sebelumnya.
+
+**Pernyataan pemakaian AI, keputusan 61-65** (pemilik proyek, 2026-10-27; dicatat apa adanya):
+
+> Laporan revisi 10 sudah saya baca. Saya cek hitungan peluang sampelnya dan hasilnya benar. Keputusan di bawah saya susun bersama asisten AI (Claude). Catat seperti sebelumnya.
 
 Draf daftar acuan saluran resmi (A6.12) disusun Claude Code dan diverifikasi pemilik proyek; ia data acuan, bukan label.
 
@@ -1344,7 +1368,7 @@ aturan 5 dan 9 ("saluran sama persis dengan sumber hoaks" pada aturan 9 tidak me
 Diperiksa: A4.a, A4.c, A4.d, A3.2, A7, A8, A12, dan aturan G1 (keputusan 54). Temuan berat dilaporkan; yang ringan dicatat
 untuk ditinjau setelah uji coba.
 
-**Temuan berat (BELUM diperbaiki; usulan penyelesaiannya ada di A7.1 butir 1):**
+**Temuan berat (diputuskan di revisi 11: H2 = keputusan 64, H3 = keputusan 65; teksnya di A4.c dan A7.1 butir 1):**
 
 | Kode | Temuan |
 | --- | --- |
@@ -1387,7 +1411,7 @@ aturan 10 dengan bagian 3.1 pedoman (pengecualian set a mendahului semua jenis b
   butir yang tidak sepakat dibahas, lalu 20 butir baru dilabeli ulang oleh keduanya. Bila < 0,40, evaluasi ditunda.
   Dengan 40 butir per set, interval kappa masih lebar, jadi ambang dibaca dari estimasi titik dan intervalnya
   dilaporkan apa adanya.
-- **[Akan digantikan A7.1 bila disetujui: sejak keputusan 60, label klaim sama set (a) tidak lagi dibandingkan.]**
+- **[Digantikan A7.1 (keputusan 61): sejak keputusan 60, label klaim sama set (a) tidak lagi dibandingkan.]**
   **Set (a): ukuran kesepakatan dan ambangnya (keputusan 11; ditetapkan 2026-10-26, sebelum ada data).** Sebagian
   besar butir set (a) kemungkinan dilabeli "tidak sama" oleh keduanya. Bila hampir semua butir jatuh di satu kategori,
   kappa bisa rendah walau kesepakatannya tinggi (paradoks prevalensi). Karena itu untuk set (a) dilaporkan kesepakatan
@@ -1406,7 +1430,7 @@ aturan 10 dengan bagian 3.1 pedoman (pengecualian set a mendahului semua jenis b
 - **Label akhir:** tetap ditetapkan pemilik proyek. Butir yang tidak sepakat diadjudikasi pemilik proyek tanpa melihat
   keluaran sistem, dan hasilnya dicatat.
 
-### A7.1 Usulan protokol anotator kedua setelah keputusan 60 (revisi 10; USULAN, menunggu persetujuan pemilik proyek)
+### A7.1 Protokol anotator kedua setelah keputusan 60 (usulan revisi 10; disetujui revisi 11, keputusan 61-65; jumlah set b menunggu keputusan 63)
 
 **Mengapa A7 perlu diubah.** Sejak keputusan 60, label set (a) selalu "bukan klaim sama" menurut susunannya. Dua pelabel
 yang membandingkan label klaim sama pada set (a) pasti sepakat, sehingga ukuran kesepakatan set (a) di A7 (keputusan 11)
@@ -1435,13 +1459,20 @@ ambangnya (1-3 butir).** Sampel acak cukup untuk menangkap kegagalan prosedur ya
 untuk butir tunggal. Butir tunggal hanya mengubah metrik bila sistem menjawab "ditemukan" padanya, jadi pengaman kedua
 diarahkan ke butir-butir itu.
 
-**Usulan:**
+**Protokol (disetujui):**
 
-1. **Prosedur pemeriksaan S2 ditetapkan dulu** (lihat juga A6.14 H2 dan H3): indeks set (a) adalah salinan beku yang dibuat
-   sebelum pemeriksaan S2 dimulai, dengan sidik jari dicatat; evaluasi set (a) memakai indeks yang sama. Kandidat untuk
-   setiap butir dicari dengan cara yang sama untuk kedua pemeriksa (misalnya 5 teratas embedding dan 3 teratas kata kunci
-   judul, seperti pemeriksaan celah 11.2, tanpa skor dan diurutkan menurut tanggal), dan pencarian tambahan oleh pemeriksa
+1. **Prosedur pemeriksaan S2 (keputusan 64 dan 65).** Indeks set (a) adalah salinan beku yang dibuat sebelum pemeriksaan
+   S2 dimulai, dengan sidik jari dicatat di Kunci 1; evaluasi set (a) dan pengaman 2 memakai indeks yang sama (A4.c).
+   Kandidat untuk setiap butir: **5 teratas embedding ditambah 3 teratas kata kunci judul**, seperti pemeriksaan celah
+   11.2, tanpa skor dan diurutkan menurut tanggal, **sama untuk kedua pemeriksa**. Pencarian tambahan oleh pemeriksa
    dicatat.
+
+   **Ketergantungan pada retriever sistem (dicatat, keputusan 65).** Embedding kandidat memakai model dan indeks yang
+   sama dengan sistem. Dampaknya terbatas: artikel bantahan yang tidak terambil sebagai kandidat kemungkinan besar juga
+   tidak terambil oleh sistem, sehingga sistem pun tidak bisa menjawab "ditemukan" dengan artikel itu, dan butirnya
+   tidak menambah salah menuduh. Yang tidak tertutup: artikel bantahan yang terlewat pemeriksa tetapi tetap muncul di
+   top-3 sistem (pencarian sistem memakai teks butir, sedangkan kata kunci pemeriksa memakai judul); kasus ini
+   tertangkap pengaman 2 bila sistem menjawab "ditemukan".
 2. **Pengaman 1, sebelum Kunci 1 (wajib).** Pemilik proyek memeriksa S1 dan S2 pada semua 150 butir. Anotator kedua
    memeriksa S1 dan S2 pada **40 butir acak berbenih**, tanpa melihat hasil pemeriksaan pemilik proyek. Aturan:
    - butir yang dinilai gagal oleh **salah satu** pemeriksa dikeluarkan dan diganti butir baru yang diperiksa keduanya
@@ -1457,17 +1488,41 @@ diarahkan ke butir-butir itu.
    oleh sistem (k butir) ditambah butir acak berbenih dari yang dijawab "belum ditemukan" sebanyak 2k (paling sedikit 10),
    dicampur dalam urutan acak. Anotator kedua memeriksa S2 pada campuran itu **tanpa tahu jawaban sistem**. Aturan:
    - butir yang dinilai pernah dibantah oleh anotator kedua dikeluarkan dari set (a);
-   - hasil utama = salah menuduh setelah pengeluaran; sensitivitas = tanpa pengeluaran; keduanya dilaporkan;
+   - **hasil utama = salah menuduh setelah pengeluaran (keputusan 62); hasil tanpa pengeluaran wajib dilaporkan
+     berdampingan;**
    - bila ada butir dari bagian acak "belum ditemukan" yang dinilai pernah dibantah, itu tanda kegagalan prosedur: laporkan,
      dan anotator kedua memeriksa seluruh set (a) sebelum hasil diumumkan.
 
-   Risiko yang tersisa: pengeluaran setelah keluaran sistem diketahui bisa berpihak. Pembatasnya: aturannya dikunci lebih
-   dulu, pemeriksanya anotator kedua yang tidak tahu jawaban sistem, butir sistem dicampur dengan butir acak, dan hasil
-   tanpa pengeluaran tetap dilaporkan. **Pilihan untuk pemilik proyek:** hasil utama tanpa pengeluaran (lebih sederhana,
-   tetapi kesalahan set (a) merugikan sistem).
-4. **Set (b): 60 butir** (30 positif dan 30 negatif menurut label pemilik proyek), naik dari 40, karena sisa beban
-   anotator kedua dialihkan ke sana. Interval kappa menyempit kira-kira dengan faktor akar(40/60) = 0,82 (perkiraan kasar).
-   Ambang kappa 0,60 (keputusan 7) tetap, dengan AC1 dan kesepakatan mentah sebagai pendamping.
+   **Alasan hasil utama (pemilik proyek):** butir yang pernah dibantah TurnBackHoax bukan pesan benar, sehingga
+   menghitungnya sebagai salah menuduh adalah kesalahan pengukuran, dan pemeriksanya buta terhadap jawaban sistem.
+   Pembatas risiko keberpihakan: aturannya dikunci lebih dulu, butir sistem dicampur dengan butir acak, dan hasil tanpa
+   pengeluaran tetap dilaporkan.
+
+   **Bias yang tersisa (dicatat):** butir tercemar di kelompok "belum ditemukan" hanya diperiksa lewat sampel 2k, jadi
+   sebagian tetap ada di penyebut. Akibatnya penyebut sedikit terlalu besar dan angka salah menuduh setelah pengeluaran
+   **sedikit terlalu rendah** (menguntungkan sistem). Besarnya kecil bila pengaman 1 lolos, tetapi tidak diukur.
+4. **Set (b): dua skenario (keputusan 63; skenario dicatat setelah pemilik proyek bertanya ulang kepada anotator).**
+   - **Skenario 1, anotator sanggup (~7-14 jam):** set (b) **60 butir** (30 positif dan 30 negatif menurut label
+     pemilik proyek).
+   - **Skenario 2, anotator tidak sanggup:** set (b) **tetap 40 butir** (20 dan 20, seperti A7). **Pengaman 1 dan 2
+     tidak dikurangi** di kedua skenario.
+
+   Ambang kappa 0,60 (keputusan 7) tetap di kedua skenario, dibaca dari estimasi titik, dengan AC1 dan kesepakatan
+   mentah sebagai pendamping. **Lebar interval kappa yang diharapkan** (simulasi, 400 set data per sel, interval
+   bootstrap persentil 2.000 ulangan, benih `20261027`; label pemilik proyek 50/50 dan anotator kedua sepakat dengan
+   peluang yang sama untuk positif dan negatif, jadi kesepakatan peluang 0,5; ini asumsi, bukan pengukuran):
+
+   | Kappa sebenarnya | 40 butir: lebar interval 95% (median) | 60 butir | 40 butir: peluang estimasi titik >= 0,60 | 60 butir |
+   | --- | --- | --- | --- | --- |
+   | 0,60 | 0,49 (kira-kira +-0,25) | 0,41 (+-0,20) | 60% | 58% |
+   | 0,70 | 0,45 (+-0,22) | 0,36 (+-0,18) | 87% | 91% |
+   | 0,80 | 0,35 (+-0,18) | 0,30 (+-0,15) | 98% | 100% |
+
+   Bacaannya: pada kedua skenario interval kappa tetap lebar, sehingga ambang dibaca dari estimasi titik dan interval
+   dilaporkan apa adanya. Skenario 1 menyempitkan interval sekitar 0,05-0,09; peluang lolos ambang hampir sama, karena
+   yang menentukan peluang lolos adalah kappa sebenarnya, bukan jumlah butir. Pada kappa sebenarnya 0,60 hasilnya
+   seperti melempar koin di kedua skenario. Untuk pembanding: kappa uji ulang evaluasi eksternal (30 butir) 0,63
+   [0,31; 0,91].
 5. **Latihan:** 5 butir dari set lama yang sudah sekali pakai, seperti sebelumnya, ditambah 3 butir latihan pemeriksaan S1
    dan S2 (tidak dihitung).
 
@@ -1482,12 +1537,18 @@ baru diukur di set (b), sebelum Kunci 2.
 | --- | --- | --- | --- |
 | Pemilik proyek | Menyusun set (a) dan memeriksa S1 dan S2 | 150 (+ pengganti) | 15-25 (tebakan awal, diukur ulang setelah 10 butir, keputusan 31) |
 | Pemilik proyek | Set (b) | ~100 (paling banyak 200 diproses) | 8-12 |
-| Pemilik proyek | Adjudikasi set (b) | ~10-15 | 1-2 |
+| Pemilik proyek | Adjudikasi set (b) | ~10-15 (skenario 2: ~7-10) | 1-2 |
 | Anotator kedua | Latihan | 5 + 3 | ~0,5-1 |
 | Anotator kedua | Pengaman 1 (S1, S2) | 40 | ~2-3,5 (3-5 menit per butir) |
 | Anotator kedua | Pengaman 2 (S2) | 3k, paling sedikit 10; bila k = 2-13, sekitar 10-39 | ~0,5-3,5 |
-| Anotator kedua | Set (b) | 60 | ~4-6 (4-6 menit per butir) |
-| **Anotator kedua, jumlah** | | **~118-147** | **~7-14** |
+| Anotator kedua | Set (b), skenario 1 | 60 | ~4-6 (4-6 menit per butir) |
+| Anotator kedua | Set (b), skenario 2 | 40 | ~2,7-4 |
+| **Anotator kedua, skenario 1** | | **~118-147** | **~7-14** |
+| **Anotator kedua, skenario 2** | | **~98-127** | **~6-12** |
+
+Kesediaan awal anotator sekitar 4-6 jam. **Skenario 2 pun melebihinya**: pengaman 1 dan 2 saja ~2,5-7 jam. Batas
+bawah skenario 2 (~6 jam) hanya tercapai bila k kecil dan pemeriksaan cepat. Jadi yang perlu ditanyakan ke anotator
+bukan hanya 60 lawan 40 butir set (b), tetapi juga apakah ~6-12 jam masih bisa diterima.
 
 Sebelumnya anotator kedua 80 + 5 butir, sekitar 5-8 jam. Kenaikannya terutama dari pengaman 2 dan tambahan 20 butir set (b).
 Perkiraan menit per butir anotator kedua diambil dari perkiraan lama (5-8 jam untuk 85 butir), bukan pengukuran.
@@ -1504,8 +1565,10 @@ Perkiraan menit per butir anotator kedua diambil dari perkiraan lama (5-8 jam un
 | Adjudikasi butir yang tidak sepakat dengan anotator kedua | ~15-20 | 1-2 |
 | **Jumlah** | **~250** | **~26-42 jam** |
 
-Anotator kedua: 80 butir + 5 latihan, sekitar 5-8 jam, dibagi dua tahap. **Usulan revisi 10 (A7.1): sekitar 118-147
-butir dan 7-14 jam; set (a) hanya diperiksa syarat penyusunannya.** Angka jam ini perkiraan kasar, bukan
+Anotator kedua (A7.1, keputusan 61-63; set a hanya diperiksa syarat penyusunannya), dua skenario menunggu jawaban
+anotator: **skenario 1** (set b 60 butir) sekitar 118-147 butir dan 7-14 jam; **skenario 2** (set b 40 butir, pengaman
+1 dan 2 tidak dikurangi) sekitar 98-127 butir dan 6-12 jam. Kesediaan awal anotator sekitar 4-6 jam; keduanya
+melebihinya. Rencana lama (80 butir + 5 latihan, 5-8 jam) tidak berlaku lagi. Angka jam ini perkiraan kasar, bukan
 pengukuran.
 
 **Kuota Gemini** (`gemini-3.5-flash-lite`, RPD 500; biasanya 1 permintaan per pemeriksaan):
@@ -1676,13 +1739,14 @@ selesai dilabeli.
 
 ## A12. Urutan kerja sampai Kunci 1
 
-**Langkah berikutnya (revisi 10): pemilik proyek memutuskan usulan A7.1 dan temuan berat H2 dan H3 (A6.14), dan
-menyelesaikan verifikasi daftar acuan (A6.12, baris 2a-2).** H2 dan H3 tidak mengubah pedoman 2.0; keduanya prosedur
-set (a) di rancangan.
+**Langkah berikutnya (revisi 11): pemilik proyek memverifikasi daftar acuan (A6.12, baris 2a-2), lalu uji coba 10
+butir. Pemilik proyek juga menanyakan ulang kesediaan anotator kedua (keputusan 63).** A7.1, H2, dan H3 sudah
+diputuskan (keputusan 61-65); tidak satu pun mengubah pedoman 2.0.
 
-**Revisi pedoman di atas kertas tetap berhenti (keputusan 58).** Revisi 10 hanya menuliskan keputusan 60, yang
-menutup H1. Urutan sampai kunci, tanpa revisi pedoman lain di antaranya:
+**Revisi pedoman di atas kertas tetap berhenti (keputusan 58).** Temuan ringan R1-R13 ditinjau setelah uji coba.
+Urutan sampai kunci, tanpa revisi pedoman lain di antaranya:
 
+1. verifikasi daftar acuan (2a-2); ~~keputusan A7.1, H2, H3~~ selesai (revisi 11);
 1. keputusan A7.1, H2, H3, dan verifikasi daftar acuan (2a-2);
 2. **uji coba 10 butir** (2d), dengan pedoman revisi 10 dan daftar acuan terverifikasi;
 3. revisi pedoman **hanya berdasarkan hasil uji coba** (termasuk temuan ringan R1-R13 yang ternyata muncul);
@@ -1706,8 +1770,8 @@ Pelabelan set uji apa pun, termasuk latihan anotator kedua, baru dimulai setelah
 | 3 | ~~Menyetujui ambang uji pergeseran (A4.f)~~ **Selesai di revisi 5** (keputusan 20) | Pemilik proyek | -- | -- |
 | 4 | Membaca halaman hak cipta sumber set (a) dan memilih sumber (A10 no. 1) | Pemilik proyek | 1 | Ya |
 | 5 | Mengumpulkan dan melabeli set (a), 150 butir; **perkiraan jam diukur ulang setelah 10 butir pertama dilabeli** (waktu per butir dicatat, keputusan 31) | Pemilik proyek | 15-25 (tebakan awal) | **Ya**, misalnya 10-20 butir per sesi |
-| 6 | Mencari anotator kedua; latihan 5 butir; melabeli 40 butir set (a). **Usulan revisi 10 (A7.1): latihan 5 + 3 butir dan pengaman 1 (pemeriksaan S1 dan S2 pada 40 butir set a)** | Pemilik proyek dan anotator kedua | 3-4 (anotator); usulan ~2,5-4,5 | Ya |
-| 7 | Menghitung kesepakatan set (a) (mentah, kappa, AC1, PABAK) dan mengadjudikasi yang tidak sepakat. **Usulan revisi 10 (A7.1): diganti hitungan butir yang dinilai berbeda pada pengaman 1, dan pengeluaran atau pemeriksaan penuh menurut aturannya** | Claude Code + pemilik proyek | 1-2 | Tidak |
+| 6 | Mencari anotator kedua dan memastikan skenario beban (keputusan 63); latihan 5 + 3 butir; **pengaman 1** (pemeriksaan S1 dan S2 pada 40 butir acak set a, A7.1) | Pemilik proyek dan anotator kedua | ~2,5-4,5 (anotator) | Ya |
+| 7 | Menghitung butir yang dinilai berbeda pada pengaman 1, lalu pengeluaran dan penggantian butir, atau pemeriksaan penuh set (a) bila >= 2 (A7.1; menggantikan perhitungan kesepakatan set a) | Claude Code + pemilik proyek | 1-2 | Tidak |
 | 8a | Menambah pencatatan versi (medan respons API, versi pustaka, revisi model embedding, sidik jari indeks) ke skrip evaluasi; uji offline | Claude Code + tinjauan pemilik proyek | 1-2 + 0,5 | Tidak |
 | 8 | Menulis `testset/v2.meta.json` versi 1 (pedoman, set a, prosedur set b, metrik, ambang, ambang uji pergeseran) | Claude Code + tinjauan pemilik proyek | 2 + 1 | Tidak |
 | 9 | Kunci 1: commit, tag `testset-v2-kunci1`, push, GitHub Release, Internet Archive (A3.4) | Pemilik proyek | 0,5 | Tidak |
