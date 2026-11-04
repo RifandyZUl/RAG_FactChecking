@@ -13,6 +13,7 @@
 testset/** text eol=crlf
 # Pengecualian: pedoman anotasi tersimpan LF di salinan kerja sejak dikunci (hash-nya ternormalisasi).
 testset/ANNOTATION_GUIDE.md text eol=lf
+testset/ANNOTATION_GUIDE_v2.md text eol=lf
 
 # Biner: tidak pernah dikonversi.
 *.png binary
